@@ -149,13 +149,18 @@
         padding: 2rem 1.25rem 4rem;
         font-family: Onest, system-ui, -apple-system, "Segoe UI", sans-serif;
         color: #b6bcc6;
-        line-height: 1.65;
+        line-height: 1.55;
         font-size: 1rem;
+        font-optical-sizing: auto;
       }
-      .seo-shell h1, .seo-shell h2, .seo-shell h3 { color: #e7ecf2; line-height: 1.2; letter-spacing: -0.02em; }
-      .seo-shell h1 { font-size: clamp(1.9rem, 5vw, 2.6rem); margin: 1.5rem 0 0.75rem; }
-      .seo-shell h2 { font-size: 1.3rem; margin: 2.25rem 0 0.5rem; }
-      .seo-shell h3 { font-size: 1.05rem; margin: 1.5rem 0 0.4rem; }
+      /* Tracking and leading follow the ramp in src/lib/tokens/type.js: tighter
+         and closer together as the size goes up. Stated per level rather than
+         shared, because one `-0.02em` across three sizes is only right for one
+         of them. */
+      .seo-shell h1, .seo-shell h2, .seo-shell h3 { color: #e7ecf2; }
+      .seo-shell h1 { font-size: clamp(1.9rem, 5vw, 2.6rem); margin: 1.5rem 0 0.75rem; line-height: 1.08; letter-spacing: -0.028em; }
+      .seo-shell h2 { font-size: 1.3rem; margin: 2.25rem 0 0.5rem; line-height: 1.28; letter-spacing: -0.019em; }
+      .seo-shell h3 { font-size: 1.05rem; margin: 1.5rem 0 0.4rem; line-height: 1.4; letter-spacing: -0.008em; }
       .seo-shell a { color: #72b5f8; }
       .seo-shell .seo-shell-lead { font-size: 1.1rem; color: #b6bcc6; }
       .seo-shell ul, .seo-shell ol, .seo-shell dl { padding-left: 1.2rem; }

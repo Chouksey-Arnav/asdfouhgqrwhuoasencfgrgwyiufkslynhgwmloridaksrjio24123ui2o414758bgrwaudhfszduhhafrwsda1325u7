@@ -134,9 +134,9 @@ export default function PrepMedabrain({
                 display: 'flex', flexDirection: 'column', boxShadow: `-8px 0 40px rgba(0,0,0,0.6)`,
               }}
             >
-              <div style={{ padding: '16px 18px', borderBottom: `1px solid ${C.b1}`, background: `linear-gradient(120deg,${tint(accent, 0.12)},rgba(255,255,255,0.02))`, flexShrink: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 10, background: accentGrad(accent), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 14px ${tint(accent, 0.4)}` }}>
+              <div style={{ padding: '16px 16px', borderBottom: `1px solid ${C.b1}`, background: `linear-gradient(120deg,${tint(accent, 0.12)},rgba(255,255,255,0.02))`, flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 8, background: accentGrad(accent), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 14px ${tint(accent, 0.4)}` }}>
                     <Brain size={17} color="#fff" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -144,29 +144,29 @@ export default function PrepMedabrain({
                     <div style={{ fontSize: 10.5, color: C.t3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitle}</div>
                   </div>
                   {messages.length > 0 && (
-                    <button onClick={() => onMessagesChange([])} title="New conversation" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: C.t3 }}>
+                    <button onClick={() => onMessagesChange([])} title="New conversation" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: C.t3 }}>
                       <RotateCcw size={15} />
                     </button>
                   )}
-                  <button onClick={() => onOpenChange(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: C.t3 }}>
+                  <button onClick={() => onOpenChange(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: C.t3 }}>
                     <X size={17} />
                   </button>
                 </div>
               </div>
 
-              <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {messages.length === 0 && (
                   <div style={{ ...glass({ padding: 16 }), background: `linear-gradient(120deg,${tint(accent, 0.08)},rgba(255,255,255,0.02))`, border: `1px solid ${tint(accent, 0.22)}` }}>
-                    <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6, marginBottom: 12 }}>
+                    <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, marginBottom: 12 }}>
                       {lesson
                         ? `Ask me anything about "${lesson.title}" — I'm grounded in this lesson's actual content, not just general knowledge.`
                         : `Ask me anything about your ${pathwayLabel} pathway — what to study next, or help understanding a topic.`}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       {suggestions.map(s => (
                         <button key={s} onClick={() => send(s)} style={{
                           textAlign: 'left', fontSize: 12, color: C.t1, background: 'rgba(255,255,255,0.04)',
-                          border: `1px solid ${C.b1}`, borderRadius: 9, padding: '9px 12px', cursor: 'pointer', fontFamily: C.FB,
+                          border: `1px solid ${C.b1}`, borderRadius: 8, padding: '8px 12px', cursor: 'pointer', fontFamily: C.FB,
                         }}>{s}</button>
                       ))}
                     </div>
@@ -175,11 +175,11 @@ export default function PrepMedabrain({
                 {messages.map((m, i) => (
                   <div key={i} style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '90%' }}>
                     {m.role === 'user' ? (
-                      <div style={{ background: tint(accent, 0.18), border: `1px solid ${tint(accent, 0.32)}`, borderRadius: '12px 12px 2px 12px', padding: '9px 13px', fontSize: 13, color: C.t1 }}>{m.content}</div>
+                      <div style={{ background: tint(accent, 0.18), border: `1px solid ${tint(accent, 0.32)}`, borderRadius: '12px 12px 2px 12px', padding: '8px 12px', fontSize: 13, color: C.t1 }}>{m.content}</div>
                     ) : m.role === 'error' ? (
-                      <div style={{ background: C.roseDim, border: `1px solid ${tint(C.rose, 0.3)}`, borderRadius: 12, padding: '9px 13px', fontSize: 12.5, color: C.roseL }}>{m.content}</div>
+                      <div style={{ background: C.roseDim, border: `1px solid ${tint(C.rose, 0.3)}`, borderRadius: 12, padding: '8px 12px', fontSize: 12.5, color: C.roseL }}>{m.content}</div>
                     ) : (
-                      <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.b1}`, borderRadius: '12px 12px 12px 2px', padding: '9px 13px' }}>
+                      <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.b1}`, borderRadius: '12px 12px 12px 2px', padding: '8px 12px' }}>
                         <div style={{ fontSize: 13 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content) }} />
                       </div>
                     )}
@@ -192,14 +192,14 @@ export default function PrepMedabrain({
                 )}
               </div>
 
-              <form onSubmit={e => { e.preventDefault(); send(); }} style={{ padding: 14, borderTop: `1px solid ${C.b1}`, display: 'flex', gap: 8, flexShrink: 0 }}>
+              <form onSubmit={e => { e.preventDefault(); send(); }} style={{ padding: 12, borderTop: `1px solid ${C.b1}`, display: 'flex', gap: 8, flexShrink: 0 }}>
                 <input
                   value={input} onChange={e => setInput(e.target.value)}
                   placeholder={lesson ? 'Ask about this lesson…' : 'Ask about your pathway…'} disabled={loading}
-                  style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.b2}`, borderRadius: 10, padding: '10px 13px', color: C.t1, fontSize: 13, fontFamily: C.FB, outline: 'none' }}
+                  style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.b2}`, borderRadius: 8, padding: '8px 12px', color: C.t1, fontSize: 13, fontFamily: C.FB, outline: 'none' }}
                 />
                 <button type="submit" disabled={loading || !input.trim()} style={{
-                  width: 40, height: 40, borderRadius: 10, border: 'none', flexShrink: 0,
+                  width: 40, height: 40, borderRadius: 8, border: 'none', flexShrink: 0,
                   background: accentGrad(accent), display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: loading || !input.trim() ? 'default' : 'pointer', opacity: loading || !input.trim() ? 0.5 : 1,
                 }}>

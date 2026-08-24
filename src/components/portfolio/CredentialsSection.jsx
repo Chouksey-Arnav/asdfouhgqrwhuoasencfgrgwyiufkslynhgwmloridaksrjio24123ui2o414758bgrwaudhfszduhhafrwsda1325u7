@@ -110,31 +110,31 @@ function CredentialBrief({ credential, stateCode, age, accent }) {
   }
 
   return (
-    <div style={{ ...glass2({ padding: 15 }), background: `linear-gradient(130deg, ${tint(color, 0.07)}, transparent 60%)`, border: `1px solid ${tint(color, 0.24)}` }}>
-      <div style={R({ gap: 8, flexWrap: 'wrap', marginBottom: 7 })}>
+    <div style={{ ...glass2({ padding: 16 }), background: `linear-gradient(130deg, ${tint(color, 0.07)}, transparent 60%)`, border: `1px solid ${tint(color, 0.24)}` }}>
+      <div style={R({ gap: 8, flexWrap: 'wrap', marginBottom: 8 })}>
         <TypeChip type={credential.type} />
         {credential.cteCommon && <span style={pill(tint(C.green, 0.13), C.greenL, { fontSize: 9.5 })}>often free in high school CTE</span>}
-        {naming.matched && <span style={pill(tint(C.blue, 0.13), C.blueL, { fontSize: 9.5 })}><MapPin size={9} style={{ marginRight: 3 }} />{naming.stateCode} name</span>}
+        {naming.matched && <span style={pill(tint(C.blue, 0.13), C.blueL, { fontSize: 9.5 })}><MapPin size={9} style={{ marginRight: 4 }} />{naming.stateCode} name</span>}
       </div>
 
       <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1, fontFamily: C.FD, lineHeight: 1.45 }}>{naming.name}</div>
       {naming.matched && naming.name !== naming.base && (
-        <div style={{ fontSize: 10.5, color: C.t3, marginTop: 3 }}>Nationally this is the {naming.base}. We store both, and export the name on your certificate.</div>
+        <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4 }}>Nationally this is the {naming.base}. We store both, and export the name on your certificate.</div>
       )}
       {!naming.matched && naming.varies && (
-        <div style={{ fontSize: 10.5, color: C.t3, marginTop: 3 }}>This credential is renamed in several states. We have nothing recorded for {stateCode || 'your state'}, so this is the national name — check your own certificate.</div>
+        <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4 }}>This credential is renamed in several states. We have nothing recorded for {stateCode || 'your state'}, so this is the national name — check your own certificate.</div>
       )}
 
-      <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.65, marginTop: 8 }}>{credential.summary}</div>
+      <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, marginTop: 8 }}>{credential.summary}</div>
       {credential.issuerNote && (
-        <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.6, marginTop: 7 }}>{credential.issuerNote}</div>
+        <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.55, marginTop: 8 }}>{credential.issuerNote}</div>
       )}
 
       {/* The "this is not a certification" line. Said once, without scolding. */}
       {warn && (
-        <div style={{ ...glass2({ padding: 11, marginTop: 11 }), display: 'flex', gap: 8, alignItems: 'flex-start', background: tint(C.amber, 0.08), border: `1px solid ${tint(C.amber, 0.25)}` }}>
-          <Info size={13} color={C.amberL} style={{ flexShrink: 0, marginTop: 1 }} />
-          <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>
+        <div style={{ ...glass2({ padding: 12, marginTop: 12 }), display: 'flex', gap: 8, alignItems: 'flex-start', background: tint(C.amber, 0.08), border: `1px solid ${tint(C.amber, 0.25)}` }}>
+          <Info size={13} color={C.amberL} style={{ flexShrink: 0, marginTop: 4 }} />
+          <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>
             <strong style={{ color: C.amberL }}>Not a certification. </strong>{warn}
             {' '}It will be exported under <strong style={{ color: C.t1 }}>{t.resumeHeading}</strong>.
           </span>
@@ -143,13 +143,13 @@ function CredentialBrief({ credential, stateCode, age, accent }) {
 
       {/* Age gate. The EMT case is why this is a block rather than a sentence. */}
       {gate.headline && (
-        <div style={{ ...glass2({ padding: 11, marginTop: 9 }), display: 'flex', gap: 8, alignItems: 'flex-start', background: tint(gate.blocking ? C.rose : C.blue, 0.08), border: `1px solid ${tint(gate.blocking ? C.rose : C.blue, 0.25)}` }}>
-          <GraduationCap size={13} color={gate.blocking ? C.rose : C.blueL} style={{ flexShrink: 0, marginTop: 1 }} />
-          <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>
+        <div style={{ ...glass2({ padding: 12, marginTop: 8 }), display: 'flex', gap: 8, alignItems: 'flex-start', background: tint(gate.blocking ? C.rose : C.blue, 0.08), border: `1px solid ${tint(gate.blocking ? C.rose : C.blue, 0.25)}` }}>
+          <GraduationCap size={13} color={gate.blocking ? C.rose : C.blueL} style={{ flexShrink: 0, marginTop: 4 }} />
+          <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>
             <strong style={{ color: gate.blocking ? C.rose : C.blueL }}>{gate.headline}</strong>
-            {gate.detail && <div style={{ marginTop: 5 }}>{gate.detail}</div>}
+            {gate.detail && <div style={{ marginTop: 4 }}>{gate.detail}</div>}
             {gate.underageStatus && (
-              <div style={{ marginTop: 5 }}>Log it as <strong style={{ color: C.t1 }}>{gate.underageStatus}</strong> until you convert — that is the accurate word for what you hold.</div>
+              <div style={{ marginTop: 4 }}>Log it as <strong style={{ color: C.t1 }}>{gate.underageStatus}</strong> until you convert — that is the accurate word for what you hold.</div>
             )}
           </div>
         </div>
@@ -157,22 +157,22 @@ function CredentialBrief({ credential, stateCode, age, accent }) {
 
       {/* The diploma wall, which is separate from the age wall. */}
       {prov && (
-        <div style={{ ...glass2({ padding: 11, marginTop: 9 }), display: 'flex', gap: 8, alignItems: 'flex-start', background: C.s2 }}>
-          <AlertTriangle size={13} color={C.t3} style={{ flexShrink: 0, marginTop: 1 }} />
-          <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>
+        <div style={{ ...glass2({ padding: 12, marginTop: 8 }), display: 'flex', gap: 8, alignItems: 'flex-start', background: C.s2 }}>
+          <AlertTriangle size={13} color={C.t3} style={{ flexShrink: 0, marginTop: 4 }} />
+          <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>
             <strong style={{ color: C.t1 }}>Before you graduate: </strong>{prov.rule}
-            {prov.note && <div style={{ marginTop: 5, color: C.t3 }}>{prov.note}</div>}
+            {prov.note && <div style={{ marginTop: 4, color: C.t3 }}>{prov.note}</div>}
           </div>
         </div>
       )}
 
       {facts.length > 0 && (
-        <div style={{ ...R({ gap: 14, flexWrap: 'wrap' }), marginTop: 12 }}>
+        <div style={{ ...R({ gap: 12, flexWrap: 'wrap' }), marginTop: 12 }}>
           {facts.map(f => (
             <div key={f.k}>
-              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3 }}>{f.k}</div>
-              <div style={{ fontSize: 12, color: C.t1, fontFamily: C.FM, marginTop: 2 }}>{f.v}</div>
-              <div style={{ fontSize: 9.5, color: C.t3, marginTop: 1 }}>
+              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3 }}>{f.k}</div>
+              <div style={{ fontSize: 12, color: C.t1, fontFamily: C.FM, marginTop: 4 }}>{f.v}</div>
+              <div style={{ fontSize: 9.5, color: C.t3, marginTop: 4 }}>
                 {f.basis === 'issuer-published' ? 'published by the issuer' : f.basis === 'state-varies' ? 'varies by state' : 'typical — our estimate'}
               </div>
             </div>
@@ -354,7 +354,7 @@ export default function CredentialsSection({
   const stateName = US_STATES.find(s => s.code === stateCode)?.name || null;
 
   return (
-    <div style={CC({ gap: 18 })}>
+    <div style={CC({ gap: 16 })}>
       <SectionIntro icon={BadgeCheck} color={accent} color2={C.cyan} m={isMobile}
         title="Skills & Certifications"
         blurb={`Built on a real credential database of ${CREDENTIALS.length} entries, not a free-text box. Pick from the menu and we fill in the issuing body, the renewal cycle, the age rules, and — where it matters — your own state's name for the credential.`}
@@ -365,26 +365,26 @@ export default function CredentialsSection({
         ] : []} />
 
       {/* ── The two settings that change what the catalog says back to you ──── */}
-      <div style={{ ...glass2({ padding: 14 }), display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+      <div style={{ ...glass2({ padding: 12 }), display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div style={{ minWidth: 200, flex: 1 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 5 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, marginBottom: 4 }}>
             <MapPin size={10} style={{ marginRight: 4, verticalAlign: '-1px' }} />Your state
           </div>
           <select style={inp()} value={stateCode} onChange={e => setStateCode(e.target.value)}>
             <option value="">Not set — we'll show national names</option>
             {US_STATES.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
           </select>
-          <div style={{ fontSize: 10.5, color: C.t3, marginTop: 5, lineHeight: 1.55 }}>
+          <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4, lineHeight: 1.55 }}>
             A CNA is an STNA in Ohio, an LNA in New Hampshire, a NAC in Washington. Set this and we show — and export — the name that is actually on your certificate.
           </div>
         </div>
         <div style={{ minWidth: 130 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 5 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, marginBottom: 4 }}>
             <GraduationCap size={10} style={{ marginRight: 4, verticalAlign: '-1px' }} />Your age
           </div>
           <input type="number" min="10" max="25" style={inp({ width: 110 })} value={age ?? ''}
             placeholder="—" onChange={e => setAge(e.target.value ? Number(e.target.value) : null)} />
-          <div style={{ fontSize: 10.5, color: C.t3, marginTop: 5, lineHeight: 1.55 }}>
+          <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4, lineHeight: 1.55 }}>
             {gradeStage && age === typicalAgeForGrade(gradeStage)
               ? 'Guessed from your school year — correct it if it is wrong.'
               : 'Used to check the age rules, which is where students get stuck most often.'}
@@ -401,8 +401,8 @@ export default function CredentialsSection({
       )}
 
       {unclassified > 0 && (
-        <div style={{ ...glass2({ padding: 12 }), display: 'flex', gap: 9, alignItems: 'flex-start', background: C.s2 }}>
-          <Info size={13} color={C.t3} style={{ flexShrink: 0, marginTop: 1 }} />
+        <div style={{ ...glass2({ padding: 12 }), display: 'flex', gap: 8, alignItems: 'flex-start', background: C.s2 }}>
+          <Info size={13} color={C.t3} style={{ flexShrink: 0, marginTop: 4 }} />
           <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>
             {unclassified} {unclassified === 1 ? 'record was' : 'records were'} added before we tracked credential type, so {unclassified === 1 ? 'it is' : 'they are'} shown as unclassified. Delete and re-add from the menu to classify {unclassified === 1 ? 'it' : 'them'} — we will not re-file your records behind your back.
           </span>
@@ -410,10 +410,10 @@ export default function CredentialsSection({
       )}
 
       {/* ── Add ─────────────────────────────────────────────────────────────── */}
-      <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(accent, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(accent, 0.2)}` }}>
+      <div style={{ ...glass({ padding: 16 }), background: `linear-gradient(120deg,${tint(accent, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(accent, 0.2)}` }}>
         <SectionTitle icon={Plus} color={accent}>Add a Skill or Certification</SectionTitle>
-        <form onSubmit={addEntry} style={CC({ gap: 11 })}>
-          <div style={R({ gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' })}>
+        <form onSubmit={addEntry} style={CC({ gap: 12 })}>
+          <div style={R({ gap: 8, flexWrap: 'wrap', alignItems: 'flex-start' })}>
             <SuggestInput
               value={name} onChange={changeName} onPick={pickFromMenu}
               getOptions={nameOptions}
@@ -433,11 +433,11 @@ export default function CredentialsSection({
 
           {/* Not in the catalog. Allowed, typed by the student, and flagged for review. */}
           {isFreeform && (
-            <div style={{ ...glass2({ padding: 14 }), background: C.s2, border: `1px dashed ${C.b2 || C.b1}` }}>
-              <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.6, marginBottom: 9 }}>
+            <div style={{ ...glass2({ padding: 12 }), background: C.s2, border: `1px dashed ${C.b2 || C.b1}` }}>
+              <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.6, marginBottom: 8 }}>
                 <strong style={{ color: C.t1 }}>Not in our database.</strong> That is fine — add it anyway. Tell us which kind it is so it lands under the right heading on your résumé, and we will check whether it belongs in the catalog.
               </div>
-              <div style={R({ gap: 6, flexWrap: 'wrap', marginBottom: 10 })}>
+              <div style={R({ gap: 4, flexWrap: 'wrap', marginBottom: 8 })}>
                 {Object.entries(CREDENTIAL_TYPES).map(([key, t]) => (
                   <button key={key} type="button" onClick={() => setFreeformType(key)}
                     title={t.blurb}
@@ -448,25 +448,25 @@ export default function CredentialsSection({
                 ))}
               </div>
               {freeformType && (
-                <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.6, marginBottom: 10 }}>{CREDENTIAL_TYPES[freeformType].blurb}</div>
+                <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.6, marginBottom: 8 }}>{CREDENTIAL_TYPES[freeformType].blurb}</div>
               )}
               <button type="button" onClick={suggestCredential} disabled={suggested}
-                style={{ ...btnSm(suggested ? C.s3 : tint(accent, 0.16), { fontSize: 11.5, color: suggested ? C.t3 : accent, display: 'inline-flex', alignItems: 'center', gap: 5 }) }}>
+                style={{ ...btnSm(suggested ? C.s3 : tint(accent, 0.16), { fontSize: 11.5, color: suggested ? C.t3 : accent, display: 'inline-flex', alignItems: 'center', gap: 4 }) }}>
                 <Send size={11} />{suggested ? 'Sent for review' : 'Suggest it for the database'}
               </button>
             </div>
           )}
 
-          <div style={R({ gap: 10, flexWrap: 'wrap', alignItems: 'center' })}>
+          <div style={R({ gap: 8, flexWrap: 'wrap', alignItems: 'center' })}>
             <div>
-              <div style={{ fontSize: 9.5, color: C.t3, marginBottom: 3 }}>Earned</div>
+              <div style={{ fontSize: 9.5, color: C.t3, marginBottom: 4 }}>Earned</div>
               <input type="date" style={inp({ width: 'auto' })} value={earnedDate} onChange={e => changeEarnedDate(e.target.value)} />
             </div>
             <div>
-              <div style={{ fontSize: 9.5, color: C.t3, marginBottom: 3 }}>Expires</div>
+              <div style={{ fontSize: 9.5, color: C.t3, marginBottom: 4 }}>Expires</div>
               <input type="date" style={inp({ width: 'auto' })} value={expiryDate} onChange={e => { setExpiryDate(e.target.value); setExpiryAuto(false); }} />
             </div>
-            {expiryAuto && expiryDate && <span style={pill(tint(accent, 0.12), accent, { fontSize: 10, alignSelf: 'flex-end', marginBottom: 9 })}>auto-filled · editable</span>}
+            {expiryAuto && expiryDate && <span style={pill(tint(accent, 0.12), accent, { fontSize: 10, alignSelf: 'flex-end', marginBottom: 8 })}>auto-filled · editable</span>}
           </div>
           <input style={inp()} placeholder="Certificate link (optional)" value={certificateUrl} onChange={e => setCertificateUrl(e.target.value)} />
           <button type="submit" style={{ ...btn(accent), alignSelf: 'flex-start' }}><Plus size={14} />Add to Portfolio</button>
@@ -475,7 +475,7 @@ export default function CredentialsSection({
 
       {!loading && entries.length === 0 && (
         <div style={glass({ padding: 24, textAlign: 'center' })}>
-          <div style={{ width: 46, height: 46, borderRadius: 14, background: tint(accent, 0.12), border: `1px solid ${tint(accent, 0.28)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+          <div style={{ width: 46, height: 46, borderRadius: 12, background: tint(accent, 0.12), border: `1px solid ${tint(accent, 0.28)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
             <BadgeCheck size={20} color={accent} />
           </div>
           <div style={{ fontSize: 13, color: C.t2 }}>Nothing logged yet. Start with whatever you already have — a BLS card counts.</div>
@@ -489,17 +489,17 @@ export default function CredentialsSection({
           const sc = expired ? C.rose : soon ? C.amber : C.green;
           const cat = e.credential_id ? getCredential(e.credential_id) : null;
           return (
-            <div key={e.id} style={{ ...glass2({ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px' }), borderLeft: `3px solid ${sc}`, background: `linear-gradient(120deg,${tint(sc, 0.05)},rgba(255,255,255,0.02) 55%)`, opacity: expired ? 0.7 : 1 }}>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: tint(accent, 0.13), border: `1px solid ${tint(accent, 0.25)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><BadgeCheck size={15} color={accent} /></div>
+            <div key={e.id} style={{ ...glass2({ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }), borderLeft: `3px solid ${sc}`, background: `linear-gradient(120deg,${tint(sc, 0.05)},rgba(255,255,255,0.02) 55%)`, opacity: expired ? 0.7 : 1 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 8, background: tint(accent, 0.13), border: `1px solid ${tint(accent, 0.25)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><BadgeCheck size={15} color={accent} /></div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+                <div style={R({ gap: 8, flexWrap: 'wrap' })}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{e.name}</span>
                   {e.credential_type
                     ? <TypeChip type={e.credential_type} small />
                     : <span style={pill(C.s3, C.t3, { fontSize: 9 })}>unclassified</span>}
                   {e.state_code && <span style={pill(tint(C.blue, 0.12), C.blueL, { fontSize: 9 })}>{e.state_code}</span>}
                 </div>
-                <div style={{ fontSize: 11, color: C.t3, marginTop: 3 }}>
+                <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>
                   {[
                     e.issuing_body,
                     e.expiry_date ? `expires ${new Date(e.expiry_date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}` : null,
@@ -507,13 +507,13 @@ export default function CredentialsSection({
                   ].filter(Boolean).join(' · ')}
                 </div>
                 {cat?.notACertification && (
-                  <div style={{ fontSize: 10.5, color: C.amberL, marginTop: 3, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <div style={{ fontSize: 10.5, color: C.amberL, marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                     <Sparkles size={10} />Course completion card, not a certification — filed accordingly.
                   </div>
                 )}
                 {e.certificate_url && <a href={e.certificate_url} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: accent, marginTop: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}>View certificate<ExternalLink size={10} /></a>}
               </div>
-              <div style={{ ...R({ gap: 6 }), flexShrink: 0 }}>
+              <div style={{ ...R({ gap: 4 }), flexShrink: 0 }}>
                 {expired && <span style={pill(C.roseDim, C.rose, { fontSize: 10 })}><AlertTriangle size={10} style={{ marginRight: 4 }} />Expired</span>}
                 {soon && <span style={pill(C.amberDim, C.amberL, { fontSize: 10 })}><CalendarClock size={10} style={{ marginRight: 4 }} />Renew soon</span>}
                 {!expired && !soon && <span style={pill(C.greenDim, C.greenL, { fontSize: 10 })}><ShieldCheck size={10} style={{ marginRight: 4 }} />Active</span>}

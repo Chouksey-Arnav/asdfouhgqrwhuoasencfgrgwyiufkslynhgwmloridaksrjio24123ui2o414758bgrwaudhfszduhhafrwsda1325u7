@@ -435,7 +435,7 @@ class LandingPageV2Class extends React.Component {
           style: `display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:${on ? 700 : 600};padding:10px 16px;border-radius:999px;`
             + `background:${on ? `color-mix(in srgb, ${t.color} 13%, transparent)` : 'rgba(255,255,255,0.55)'};`
             + `border:1px solid ${on ? `color-mix(in srgb, ${t.color} 30%, transparent)` : 'rgba(15,23,42,0.11)'};`
-            + `color:${on ? t.color : '#45536b'};transition:all .18s ease;`,
+            + `color:${on ? t.color : '#45536b'};transition:background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease, opacity .18s ease;`,
           dot: `width:7px;height:7px;border-radius:50%;background:${on ? t.color : 'rgba(15,23,42,0.22)'};`,
         };
       }),
@@ -456,7 +456,7 @@ class LandingPageV2Class extends React.Component {
           badgeStyle: `font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#c21a3e;background:rgba(194,26,62,0.12);padding:3px 8px;border-radius:999px;`,
           style: `display:flex;align-items:flex-start;gap:13px;width:100%;text-align:left;font-family:inherit;cursor:pointer;padding:15px 17px;border-radius:13px;`
             + `background:${done ? 'rgba(6,113,86,0.08)' : 'rgba(255,255,255,0.75)'};border:1px solid ${done ? 'rgba(6,113,86,0.26)' : 'rgba(15,23,42,0.11)'};`
-            + `border-left:3px solid ${done ? '#067156' : st.color};transition:all .2s ease;`,
+            + `border-left:3px solid ${done ? '#067156' : st.color};transition:background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease, opacity .2s ease;`,
           check: `width:26px;height:26px;flex-shrink:0;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:${done ? '#fff' : st.color};`
             + `background:${done ? '#067156' : `color-mix(in srgb, ${st.color} 14%, transparent)`};border:1px solid ${done ? '#067156' : `color-mix(in srgb, ${st.color} 26%, transparent)`};`,
           mark: done ? '\u2713' : '\u2192',
@@ -475,7 +475,7 @@ class LandingPageV2Class extends React.Component {
           pick: () => this.setState({ oppFilter: f.id }),
           style: `cursor:pointer;font-family:inherit;font-size:12px;font-weight:${on ? 700 : 600};padding:8px 14px;border-radius:999px;`
             + `background:${on ? 'rgba(11,113,102,0.13)' : 'rgba(255,255,255,0.6)'};border:1px solid ${on ? 'rgba(11,113,102,0.3)' : 'rgba(15,23,42,0.11)'};`
-            + `color:${on ? '#0b7166' : '#45536b'};transition:all .16s ease;`,
+            + `color:${on ? '#0b7166' : '#45536b'};transition:background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease, opacity .16s ease;`,
         };
       }),
       opps: OPPS.filter((o) => s.oppFilter === 'all' || o.track === s.oppFilter).map((o) => {
@@ -487,7 +487,7 @@ class LandingPageV2Class extends React.Component {
           trackLabel: on ? 'Tracked \u2713' : 'Track it',
           toggle: () => this.toggleTrack(o.id),
           trackStyle: `flex-shrink:0;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;padding:9px 15px;border-radius:10px;`
-            + `background:${on ? '#0b7166' : 'rgba(255,255,255,0.85)'};color:${on ? '#fff' : '#0b7166'};border:1px solid ${on ? '#0b7166' : 'rgba(11,113,102,0.34)'};transition:all .18s ease;`,
+            + `background:${on ? '#0b7166' : 'rgba(255,255,255,0.85)'};color:${on ? '#fff' : '#0b7166'};border:1px solid ${on ? '#0b7166' : 'rgba(11,113,102,0.34)'};transition:background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease, opacity .18s ease;`,
           chips: o.chips.map((c) => ({
             label: c.label,
             style: `font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;color:${c.color};background:color-mix(in srgb, ${c.color} 12%, transparent);border:1px solid color-mix(in srgb, ${c.color} 24%, transparent);`,
@@ -504,14 +504,14 @@ class LandingPageV2Class extends React.Component {
           points: `${on ? p.points : 0}/${p.points}`,
           toggle: () => this.toggleActPart(p.id),
           style: `display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:inherit;cursor:pointer;padding:12px 14px;border-radius:11px;`
-            + `background:${on ? 'rgba(2,107,151,0.08)' : 'rgba(255,255,255,0.72)'};border:1px solid ${on ? 'rgba(2,107,151,0.28)' : 'rgba(15,23,42,0.11)'};transition:all .18s ease;`,
+            + `background:${on ? 'rgba(2,107,151,0.08)' : 'rgba(255,255,255,0.72)'};border:1px solid ${on ? 'rgba(2,107,151,0.28)' : 'rgba(15,23,42,0.11)'};transition:background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease, opacity .18s ease;`,
           box: `width:20px;height:20px;flex-shrink:0;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:#fff;`
             + `background:${on ? '#026b97' : 'transparent'};border:1px solid ${on ? '#026b97' : 'rgba(15,23,42,0.22)'};`,
           mark: on ? '\u2713' : '',
         };
       }),
       actScore: String(actScore),
-      actBar: `width:${actScore}%;height:100%;border-radius:99px;background:${actVerdict.color};transition:width .5s cubic-bezier(.16,1,.3,1);`,
+      actBar: `width:100%;transform:scaleX(${(actScore) / 100});transform-origin:left;height:100%;border-radius:99px;background:${actVerdict.color};transition:transform .5s cubic-bezier(.16,1,.3,1);`,
       actVerdict: actVerdict.label,
       actVerdictStyle: `display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:800;padding:6px 13px;border-radius:999px;color:${actVerdict.color};background:color-mix(in srgb, ${actVerdict.color} 12%, transparent);border:1px solid color-mix(in srgb, ${actVerdict.color} 26%, transparent);`,
 
@@ -522,7 +522,7 @@ class LandingPageV2Class extends React.Component {
           kind: q.kind,
           pick: () => this.setState({ ivIndex: i, ivScored: false }),
           style: `display:flex;flex-direction:column;gap:5px;width:100%;text-align:left;font-family:inherit;cursor:pointer;padding:13px 15px;border-radius:12px;`
-            + `background:${on ? 'rgba(194,26,62,0.08)' : 'rgba(255,255,255,0.72)'};border:1px solid ${on ? 'rgba(194,26,62,0.28)' : 'rgba(15,23,42,0.11)'};transition:all .18s ease;`,
+            + `background:${on ? 'rgba(194,26,62,0.08)' : 'rgba(255,255,255,0.72)'};border:1px solid ${on ? 'rgba(194,26,62,0.28)' : 'rgba(15,23,42,0.11)'};transition:background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease, opacity .18s ease;`,
           kindStyle: `font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:${on ? '#c21a3e' : '#6d798d'};`,
         };
       }),
@@ -538,7 +538,7 @@ class LandingPageV2Class extends React.Component {
         label: r.label,
         note: r.note,
         pct: `${r.pct}%`,
-        bar: `width:${r.pct}%;height:100%;border-radius:99px;background:${r.pct >= 75 ? '#067156' : r.pct >= 55 ? '#905808' : '#c21a3e'};transition:width .7s cubic-bezier(.16,1,.3,1);`,
+        bar: `width:100%;transform:scaleX(${(r.pct) / 100});transform-origin:left;height:100%;border-radius:99px;background:${r.pct >= 75 ? '#067156' : r.pct >= 55 ? '#905808' : '#c21a3e'};transition:transform .7s cubic-bezier(.16,1,.3,1);`,
       })),
     };
   }
@@ -559,7 +559,7 @@ class LandingPageV2Class extends React.Component {
           blurb: v.blurb,
           pick: () => this.setState({ rmView: v.id }),
           style: `display:flex;flex-direction:column;gap:3px;text-align:left;cursor:pointer;font-family:inherit;padding:11px 15px;border-radius:12px;`
-            + `background:${on ? 'rgba(109,49,212,0.1)' : 'rgba(255,255,255,0.6)'};border:1px solid ${on ? 'rgba(109,49,212,0.3)' : 'rgba(15,23,42,0.11)'};transition:all .18s ease;`,
+            + `background:${on ? 'rgba(109,49,212,0.1)' : 'rgba(255,255,255,0.6)'};border:1px solid ${on ? 'rgba(109,49,212,0.3)' : 'rgba(15,23,42,0.11)'};transition:background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease, opacity .18s ease;`,
           labelStyle: `font-size:13px;font-weight:700;color:${on ? '#6d31d4' : '#1f2836'};`,
         };
       }),
@@ -580,12 +580,12 @@ class LandingPageV2Class extends React.Component {
           trackStyle: `font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;color:${it.color};background:color-mix(in srgb, ${it.color} 12%, transparent);border:1px solid color-mix(in srgb, ${it.color} 24%, transparent);`,
           cardStyle: `flex-shrink:0;width:266px;text-align:left;font-family:inherit;cursor:pointer;padding:16px;border-radius:15px;`
             + `background:${on ? '#ffffff' : 'rgba(255,255,255,0.66)'};border:1px solid ${on ? `color-mix(in srgb, ${it.color} 42%, transparent)` : 'rgba(15,23,42,0.11)'};`
-            + `box-shadow:${on ? '0 14px 30px -14px rgba(15,23,42,0.28)' : 'none'};transform:translateY(${on ? '-4px' : '0'});transition:all .22s cubic-bezier(.16,1,.3,1);`,
-          nodeStyle: `width:${on ? 16 : 11}px;height:${on ? 16 : 11}px;border-radius:50%;background:${it.color};box-shadow:0 0 0 ${on ? 5 : 0}px color-mix(in srgb, ${it.color} 18%, transparent);transition:all .22s ease;`,
+            + `box-shadow:${on ? '0 14px 30px -14px rgba(15,23,42,0.28)' : 'none'};transform:translateY(${on ? '-4px' : '0'});transition:background-color .22s cubic-bezier(.16,1,.3,1), border-color .22s cubic-bezier(.16,1,.3,1), color .22s cubic-bezier(.16,1,.3,1), box-shadow .22s cubic-bezier(.16,1,.3,1), transform .22s cubic-bezier(.16,1,.3,1), opacity .22s cubic-bezier(.16,1,.3,1);`,
+          nodeStyle: `width:${on ? 16 : 11}px;height:${on ? 16 : 11}px;border-radius:50%;background:${it.color};box-shadow:0 0 0 ${on ? 5 : 0}px color-mix(in srgb, ${it.color} 18%, transparent);transition:background-color .22s ease, border-color .22s ease, color .22s ease, box-shadow .22s ease, transform .22s ease, opacity .22s ease;`,
           rowStyle: `display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:inherit;cursor:pointer;padding:13px 15px;border-radius:12px;`
-            + `background:${on ? '#ffffff' : 'rgba(255,255,255,0.6)'};border:1px solid ${on ? `color-mix(in srgb, ${it.color} 38%, transparent)` : 'rgba(15,23,42,0.09)'};transition:all .18s ease;`,
+            + `background:${on ? '#ffffff' : 'rgba(255,255,255,0.6)'};border:1px solid ${on ? `color-mix(in srgb, ${it.color} 38%, transparent)` : 'rgba(15,23,42,0.09)'};transition:background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease, opacity .18s ease;`,
           month: it.month,
-          barStyle: `width:${it.load}%;height:8px;border-radius:99px;background:${it.color};opacity:${on ? 1 : 0.55};transition:all .22s ease;`,
+          barStyle: `width:${it.load}%;height:8px;border-radius:99px;background:${it.color};opacity:${on ? 1 : 0.55};transition:background-color .22s ease, border-color .22s ease, color .22s ease, box-shadow .22s ease, transform .22s ease, opacity .22s ease;`,
         };
       }),
       rmSel: {
@@ -639,7 +639,7 @@ class LandingPageV2Class extends React.Component {
           pick: () => this.setState({ planDay: i }),
           style: `width:44px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:${on ? 700 : 600};padding:9px 0;border-radius:11px;`
             + `background:${on ? 'rgba(144,88,8,0.13)' : 'rgba(255,255,255,0.6)'};border:1px solid ${on ? 'rgba(144,88,8,0.32)' : 'rgba(15,23,42,0.09)'};`
-            + `color:${on ? '#905808' : '#5d6b85'};transition:all .16s ease;`,
+            + `color:${on ? '#905808' : '#5d6b85'};transition:background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease, opacity .16s ease;`,
         };
       }),
       planDayLabel: day.label,
@@ -653,7 +653,7 @@ class LandingPageV2Class extends React.Component {
           meta: r.meta,
           toggle: () => this.togglePlanRow(r.id),
           style: `display:flex;align-items:center;gap:13px;width:100%;text-align:left;font-family:inherit;cursor:pointer;padding:14px 16px;border-radius:13px;`
-            + `background:${done ? 'rgba(6,113,86,0.07)' : 'rgba(255,255,255,0.76)'};border:1px solid ${done ? 'rgba(6,113,86,0.24)' : 'rgba(15,23,42,0.11)'};transition:all .2s ease;`,
+            + `background:${done ? 'rgba(6,113,86,0.07)' : 'rgba(255,255,255,0.76)'};border:1px solid ${done ? 'rgba(6,113,86,0.24)' : 'rgba(15,23,42,0.11)'};transition:background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease, opacity .2s ease;`,
           box: `width:22px;height:22px;flex-shrink:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:#fff;`
             + `background:${done ? '#067156' : 'transparent'};border:1px solid ${done ? '#067156' : `color-mix(in srgb, ${r.color} 40%, transparent)`};`,
           mark: done ? '\u2713' : '',
@@ -678,7 +678,7 @@ class LandingPageV2Class extends React.Component {
           qStyle: `flex:1;font-size:16px;font-weight:700;font-family:'Bricolage Grotesque',sans-serif;color:#1f2836;`,
           sign: on ? '\u2212' : '+',
           signStyle: `width:26px;height:26px;flex-shrink:0;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:15px;color:#1a5fcc;background:rgba(26,95,204,0.1);border:1px solid rgba(26,95,204,0.22);`,
-          bodyStyle: `overflow:hidden;max-height:${on ? 260 : 0}px;opacity:${on ? 1 : 0};transition:max-height .45s cubic-bezier(.16,1,.3,1), opacity .3s ease;`,
+          bodyStyle: `overflow:hidden;max-height:${on ? 260 : 0}px;opacity:${on ? 1 : 0};transition:opacity .3s ease, transform .3s cubic-bezier(.16,1,.3,1);`,
         };
       }),
       featureGroups: FEATURES.map((g) => ({
@@ -717,14 +717,14 @@ class LandingPageV2Class extends React.Component {
           style: `display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:${on ? 700 : 600};padding:10px 16px;border-radius:999px;`
             + `background:${on ? `color-mix(in srgb, ${t.color} 13%, transparent)` : 'rgba(255,255,255,0.55)'};`
             + `border:1px solid ${on ? `color-mix(in srgb, ${t.color} 30%, transparent)` : 'rgba(15,23,42,0.11)'};`
-            + `color:${on ? t.color : '#45536b'};transition:all .18s ease;`,
+            + `color:${on ? t.color : '#45536b'};transition:background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease, opacity .18s ease;`,
           dot: `width:7px;height:7px;border-radius:50%;background:${on ? t.color : 'rgba(15,23,42,0.22)'};`,
         };
       }),
       diagPrompt: q.q,
       diagKind: q.type === 'scenario' ? 'Scenario' : 'Work style',
       diagStep: `Question ${Math.min(s.diagIndex + 1, DIAG.length)} of ${DIAG.length}`,
-      diagBar: `width:${((s.diagDone ? DIAG.length : s.diagIndex) / DIAG.length) * 100}%;height:100%;border-radius:99px;background:linear-gradient(90deg,#6d31d4,#a422b8);transition:width .5s cubic-bezier(.16,1,.3,1);`,
+      diagBar: `width:100%;transform:scaleX(${(((s.diagDone ? DIAG.length : s.diagIndex) / DIAG.length) * 100) / 100});transform-origin:left;height:100%;border-radius:99px;background:linear-gradient(90deg,#6d31d4,#a422b8);transition:transform .5s cubic-bezier(.16,1,.3,1);`,
       diagDone: s.diagDone,
       diagNotDone: !s.diagDone,
       quizNotChecked: !s.quizChecked,
@@ -733,7 +733,7 @@ class LandingPageV2Class extends React.Component {
       diagResults: ranked.map((r, i) => ({
         label: PATHWAYS[r.id].label,
         pct: `${Math.round((r.score / top) * (i === 0 ? 94 : 88))}%`,
-        bar: `width:${Math.round((r.score / top) * (i === 0 ? 94 : 88))}%;height:100%;border-radius:99px;background:${PATHWAYS[r.id].color};transition:width .8s cubic-bezier(.16,1,.3,1);`,
+        bar: `width:100%;transform:scaleX(${(Math.round((r.score / top) * (i === 0 ? 94 : 88))) / 100});transform-origin:left;height:100%;border-radius:99px;background:${PATHWAYS[r.id].color};transition:transform .8s cubic-bezier(.16,1,.3,1);`,
         chip: `font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;color:${PATHWAYS[r.id].color};background:color-mix(in srgb, ${PATHWAYS[r.id].color} 13%, transparent);`,
         rank: i === 0 ? 'Best fit' : `#${i + 1}`,
         color: PATHWAYS[r.id].color,
@@ -765,7 +765,7 @@ class LandingPageV2Class extends React.Component {
           pick: () => this.pickQuiz(i),
           mark: String.fromCharCode(65 + i),
           markStyle: `width:24px;height:24px;flex-shrink:0;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:${col};background:${picked || (s.quizChecked && right) ? 'rgba(255,255,255,0.85)' : 'rgba(15,23,42,0.05)'};border:1px solid ${bd};`,
-          style: `display:flex;align-items:flex-start;gap:11px;width:100%;text-align:left;cursor:${s.quizChecked ? 'default' : 'pointer'};font-family:inherit;font-size:14px;line-height:1.5;color:${col};padding:13px 15px;border-radius:12px;background:${bg};border:1px solid ${bd};transition:all .16s ease;`,
+          style: `display:flex;align-items:flex-start;gap:11px;width:100%;text-align:left;cursor:${s.quizChecked ? 'default' : 'pointer'};font-family:inherit;font-size:14px;line-height:1.5;color:${col};padding:13px 15px;border-radius:12px;background:${bg};border:1px solid ${bd};transition:background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease, opacity .16s ease;`,
         };
       }),
       checkQuiz: this.checkQuiz,
@@ -1825,7 +1825,7 @@ class LandingPageV2Class extends React.Component {
                                 {arr(v.diagOptions).map((o, __k6) => (
                                   <Fragment key={__k6}>
                                     {' '}
-                                    <button className="mspv2-hover-7" onClick={o.pick} style={css("text-align: left; width: 100%; font-family: inherit; font-size: 14.5px; line-height: 1.5; color: #1f2836; background: rgba(255,255,255,0.75); border: 1px solid rgba(15,23,42,0.11); border-radius: 13px; padding: 15px 17px; cursor: pointer; transition: all .16s ease;")}>
+                                    <button className="mspv2-hover-7" onClick={o.pick} style={css("text-align: left; width: 100%; font-family: inherit; font-size: 14.5px; line-height: 1.5; color: #1f2836; background: rgba(255,255,255,0.75); border: 1px solid rgba(15,23,42,0.11); border-radius: 13px; padding: 15px 17px; cursor: pointer; transition: background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease, opacity .16s ease;")}>
                                       {hole(o.text)}
                                     </button>
                                     {' '}
@@ -2146,7 +2146,7 @@ class LandingPageV2Class extends React.Component {
                                   {arr(v.coachSuggestions).map((s, __k8) => (
                                     <Fragment key={__k8}>
                                       {' '}
-                                      <button className="mspv2-hover-8" onClick={s.ask} style={css("text-align: left; font-family: inherit; font-size: 13.5px; color: #1f2836; background: rgba(255,255,255,0.85); border: 1px solid rgba(15,23,42,0.11); border-radius: 11px; padding: 11px 14px; cursor: pointer; transition: all .16s ease;")}>
+                                      <button className="mspv2-hover-8" onClick={s.ask} style={css("text-align: left; font-family: inherit; font-size: 13.5px; color: #1f2836; background: rgba(255,255,255,0.85); border: 1px solid rgba(15,23,42,0.11); border-radius: 11px; padding: 11px 14px; cursor: pointer; transition: background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease, opacity .16s ease;")}>
                                         {hole(s.text)}
                                       </button>
                                       {' '}

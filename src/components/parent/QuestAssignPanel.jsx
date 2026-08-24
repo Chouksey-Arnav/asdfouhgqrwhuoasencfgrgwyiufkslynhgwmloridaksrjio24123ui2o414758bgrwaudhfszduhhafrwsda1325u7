@@ -68,24 +68,24 @@ function ParentQuestRow({ quest, ev, onWithdraw, busy, hue }) {
 
   return (
     <div style={{
-      ...glass2({ padding: 14 }),
+      ...glass2({ padding: 12 }),
       border: `1px solid ${tint(ev.done ? tone.color : color, 0.28)}`,
       background: `linear-gradient(135deg, ${tint(ev.done ? tone.color : color, 0.07)}, transparent 72%)`,
     }}>
       <div style={R({ gap: 12, alignItems: 'flex-start' })}>
         <div style={{
-          width: 34, height: 34, borderRadius: 11, flexShrink: 0,
+          width: 34, height: 34, borderRadius: 12, flexShrink: 0,
           background: tint(color, 0.15), border: `1px solid ${tint(color, 0.3)}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}><Icon size={16} color={color} /></div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+          <div style={R({ gap: 8, flexWrap: 'wrap' })}>
             <span style={{ fontSize: 13.5, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{quest.title}</span>
             <span style={pill(
               mine ? tint(C.violet, 0.15) : tint(C.t3, 0.14),
               mine ? C.violetL : C.t3,
-              { fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.06em' },
+              { fontSize: 9, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' },
             )}>{mine ? 'You asked' : 'They chose'}</span>
             <span style={pill(tint(C.amber, 0.13), C.amberL, { fontSize: 9.5, fontFamily: C.FM, fontWeight: 800 })}>{quest.xp} XP</span>
           </div>
@@ -94,10 +94,10 @@ function ParentQuestRow({ quest, ev, onWithdraw, busy, hue }) {
             <div style={{ fontSize: 11, color: C.t3, marginTop: 4, fontStyle: 'italic' }}>“{quest.note}”</div>
           )}
 
-          <div style={{ marginTop: 9, height: 6, borderRadius: 4, background: tint(C.t3, 0.14), overflow: 'hidden' }}>
+          <div style={{ marginTop: 8, height: 6, borderRadius: 4, background: tint(C.t3, 0.14), overflow: 'hidden' }}>
             <div style={{ width: `${ev.pct}%`, height: '100%', borderRadius: 4, background: `linear-gradient(90deg, ${color}, ${tone.color})` }} />
           </div>
-          <div style={{ ...R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }), marginTop: 6 }}>
+          <div style={{ ...R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }), marginTop: 4 }}>
             <span style={{ fontSize: 11, color: C.t2, fontFamily: C.FM }}>
               {ev.progress}/{ev.target}
               {ev.minActiveDays > 0 && <span style={{ color: C.t3 }}> · {ev.activeDays}/{ev.minActiveDays} days</span>}
@@ -110,7 +110,7 @@ function ParentQuestRow({ quest, ev, onWithdraw, busy, hue }) {
           <button
             onClick={onWithdraw} disabled={busy}
             title="Withdraw this quest" aria-label="Withdraw this quest"
-            style={{ ...btnG({ padding: 6, borderRadius: 8, flexShrink: 0 }), opacity: busy ? 0.5 : 0.7 }}
+            style={{ ...btnG({ padding: 4, borderRadius: 8, flexShrink: 0 }), opacity: busy ? 0.5 : 0.7 }}
           >{busy ? <Loader2 size={12} className="spin" /> : <X size={12} />}</button>
         )}
       </div>
@@ -166,17 +166,17 @@ export default function QuestAssignPanel({ students = [], hueFor, m = false }) {
 
   if (loading) {
     return (
-      <div style={{ ...R({ gap: 9, justifyContent: 'center' }), padding: 40, color: C.t3, fontSize: 13 }}>
+      <div style={{ ...R({ gap: 8, justifyContent: 'center' }), padding: 40, color: C.t3, fontSize: 13 }}>
         <Loader2 size={15} className="spin" />Loading quests…
       </div>
     );
   }
 
   return (
-    <div style={CC({ gap: 18 })}>
+    <div style={CC({ gap: 16 })}>
       <div>
-        <div style={{ fontSize: 18, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Quests</div>
-        <div style={{ fontSize: 12.5, color: C.t3, marginTop: 4, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Quests</div>
+        <div style={{ fontSize: 12.5, color: C.t3, marginTop: 4, lineHeight: 1.55 }}>
           The one thing here you can put in front of them. Pick from a fixed set of multi-week commitments —
           each one caps how much a single day can contribute, so none of them can be crammed the night before.
           They earn a large amount of XP for finishing, they can see who asked, and they can say no.
@@ -184,7 +184,7 @@ export default function QuestAssignPanel({ students = [], hueFor, m = false }) {
       </div>
 
       {!available && (
-        <div style={{ ...R({ gap: 9 }), ...glass2({ padding: 14 }), border: `1px solid ${tint(C.amber, 0.26)}` }}>
+        <div style={{ ...R({ gap: 8 }), ...glass2({ padding: 12 }), border: `1px solid ${tint(C.amber, 0.26)}` }}>
           <ShieldOff size={14} color={C.amberL} style={{ flexShrink: 0 }} />
           <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>
             Quests are not switched on for this deployment yet.
@@ -194,7 +194,7 @@ export default function QuestAssignPanel({ students = [], hueFor, m = false }) {
 
       {students.length === 0 && (
         <div style={{ ...glass({ padding: 24, textAlign: 'center' }) }}>
-          <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.55 }}>
             Connect to a student first — quests are set on a connection, not on an account.
           </div>
         </div>
@@ -216,11 +216,11 @@ export default function QuestAssignPanel({ students = [], hueFor, m = false }) {
         const recommended = recommendQuests(signalsFrom(s.summary), activeIds).slice(0, 6);
 
         return (
-          <div key={s.studentId} style={glass({ ...CC({ gap: 14 }), borderColor: tint(hue, 0.26) })}>
-            <div style={R({ gap: 10, justifyContent: 'space-between', flexWrap: 'wrap' })}>
-              <div style={R({ gap: 9 })}>
+          <div key={s.studentId} style={glass({ ...CC({ gap: 12 }), borderColor: tint(hue, 0.26) })}>
+            <div style={R({ gap: 8, justifyContent: 'space-between', flexWrap: 'wrap' })}>
+              <div style={R({ gap: 8 })}>
                 <Swords size={15} color={hue} />
-                <span style={{ fontSize: 15, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{name}</span>
+                <span style={{ fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{name}</span>
                 <span style={pill(tint(hue, 0.13), hue, { fontSize: 10.5, fontWeight: 700 })}>
                   {live.length} running · {mineActive}/{MAX_PARENT_ACTIVE} from you
                 </span>
@@ -230,7 +230,7 @@ export default function QuestAssignPanel({ students = [], hueFor, m = false }) {
                 disabled={mineActive >= MAX_PARENT_ACTIVE || !available}
                 title={mineActive >= MAX_PARENT_ACTIVE ? `You have already set ${MAX_PARENT_ACTIVE} quests — leave them room to choose their own.` : undefined}
                 style={{
-                  ...btn(`linear-gradient(135deg, ${hue}, ${tint(hue, 0.65)})`, { fontSize: 12, padding: '8px 15px', color: onTint(hue) }),
+                  ...btn(`linear-gradient(135deg, ${hue}, ${tint(hue, 0.65)})`, { fontSize: 12, padding: '8px 16px', color: onTint(hue) }),
                   opacity: (mineActive >= MAX_PARENT_ACTIVE || !available) ? 0.45 : 1,
                   cursor: (mineActive >= MAX_PARENT_ACTIVE || !available) ? 'not-allowed' : 'pointer',
                 }}
@@ -239,12 +239,12 @@ export default function QuestAssignPanel({ students = [], hueFor, m = false }) {
 
             {/* Running */}
             {rows.length === 0 ? (
-              <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.6, padding: '4px 0' }}>
+              <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.55, padding: '4px 0px' }}>
                 Nothing running. The suggestions below are ranked from what their dashboard already shows —
                 the top one is usually the right one.
               </div>
             ) : (
-              <div style={CC({ gap: 10 })}>
+              <div style={CC({ gap: 8 })}>
                 {rows.map(({ assignment, ev }) => (
                   <ParentQuestRow
                     key={assignment.id} quest={assignment} ev={ev} hue={hue}
@@ -258,7 +258,7 @@ export default function QuestAssignPanel({ students = [], hueFor, m = false }) {
             {/* Suggestions — the top three, inline, so setting one is a single tap */}
             {recommended.length > 0 && mineActive < MAX_PARENT_ACTIVE && available && (
               <div style={{ borderTop: `1px solid ${C.b1}`, paddingTop: 12 }}>
-                <div style={{ fontSize: 10.5, fontWeight: 800, color: C.t3, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 9 }}>
+                <div style={{ fontSize: 10.5, fontWeight: 800, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8 }}>
                   Suggested for {name.split(' ')[0]}
                 </div>
                 <div style={CC({ gap: 8 })}>
@@ -267,18 +267,18 @@ export default function QuestAssignPanel({ students = [], hueFor, m = false }) {
                     const Icon = questIcon(r.quest.icon);
                     const tier = QUEST_TIERS[r.quest.tier];
                     return (
-                      <div key={r.id} style={{ ...R({ gap: 11, alignItems: 'flex-start' }), padding: '10px 12px', borderRadius: 10, background: tint(color, 0.06), border: `1px solid ${tint(color, 0.2)}` }}>
-                        <Icon size={14} color={color} style={{ flexShrink: 0, marginTop: 2 }} />
+                      <div key={r.id} style={{ ...R({ gap: 12, alignItems: 'flex-start' }), padding: '8px 12px', borderRadius: 8, background: tint(color, 0.06), border: `1px solid ${tint(color, 0.2)}` }}>
+                        <Icon size={14} color={color} style={{ flexShrink: 0, marginTop: 4 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+                          <div style={R({ gap: 4, flexWrap: 'wrap' })}>
                             <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{r.quest.title}</span>
-                            <span style={pill(tint(tier.color, 0.14), tier.color, { fontSize: 9, fontWeight: 800, textTransform: 'uppercase' })}>{tier.label}</span>
+                            <span style={pill(tint(tier.color, 0.14), tier.color, { fontSize: 9, fontWeight: 800})}>{tier.label}</span>
                           </div>
-                          <div style={{ fontSize: 11, color: C.t2, marginTop: 3, lineHeight: 1.5 }}>{r.reason}</div>
+                          <div style={{ fontSize: 11, color: C.t2, marginTop: 4, lineHeight: 1.5 }}>{r.reason}</div>
                         </div>
                         <button
                           onClick={() => { setPickerFor(s.studentId); setPickError(null); }}
-                          style={{ ...btnG({ fontSize: 11, padding: '5px 11px', flexShrink: 0 }) }}
+                          style={{ ...btnG({ fontSize: 11, padding: '4px 12px', flexShrink: 0 }) }}
                         >Set</button>
                       </div>
                     );
@@ -290,10 +290,10 @@ export default function QuestAssignPanel({ students = [], hueFor, m = false }) {
             {/* Closed */}
             {history.length > 0 && (
               <div style={{ borderTop: `1px solid ${C.b1}`, paddingTop: 12 }}>
-                <div style={{ ...R({ gap: 6 }), fontSize: 10.5, fontWeight: 800, color: C.t3, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 9 }}>
+                <div style={{ ...R({ gap: 4 }), fontSize: 10.5, fontWeight: 800, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8 }}>
                   <History size={11} />Recently closed
                 </div>
-                <div style={CC({ gap: 6 })}>
+                <div style={CC({ gap: 4 })}>
                   {history.map((h) => (
                     <div key={h.id} style={{ ...R({ gap: 8, flexWrap: 'wrap' }), fontSize: 11.5, color: C.t3 }}>
                       <span style={{ color: h.status === 'claimed' ? C.greenL : C.t3, fontWeight: 700 }}>
@@ -313,10 +313,10 @@ export default function QuestAssignPanel({ students = [], hueFor, m = false }) {
       {/* What this screen will not pretend ------------------------------------ */}
       {students.length > 0 && (
         <div style={{ ...glass({ padding: 16 }), border: `1px solid ${C.b1}` }}>
-          <div style={{ ...R({ gap: 7 }), fontSize: 10.5, fontWeight: 800, color: C.t3, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 9 }}>
+          <div style={{ ...R({ gap: 8 }), fontSize: 10.5, fontWeight: 800, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8 }}>
             <Info size={11} />Worth knowing
           </div>
-          <div style={{ ...CC({ gap: 8 }), fontSize: 12, color: C.t2, lineHeight: 1.6 }}>
+          <div style={{ ...CC({ gap: 8 }), fontSize: 12, color: C.t2, lineHeight: 1.55 }}>
             <div><b style={{ color: C.t1 }}>They can decline.</b> A quest that cannot be refused is an instruction, and this app does not let anyone instruct. A declined quest shows up here as declined — it does not quietly disappear.</div>
             <div><b style={{ color: C.t1 }}>Progress comes from their device.</b> The app measures the work where it happens and reports the total here. It is the same number they see on their own progress bar, not an independent audit.</div>
             <div><b style={{ color: C.t1 }}>Three at once, at most.</b> Filling their board leaves them nothing to choose, and a quest nobody chose is the kind that gets declined.</div>

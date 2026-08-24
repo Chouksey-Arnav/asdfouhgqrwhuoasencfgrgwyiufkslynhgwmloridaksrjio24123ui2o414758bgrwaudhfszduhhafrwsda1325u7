@@ -50,7 +50,7 @@ export default function HealthCareerScholarships({ accent = C.green, pathwayFina
 
   return (
     <div style={CC({ gap: 12 })}>
-      <p style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.65, margin: 0 }}>
+      <p style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, margin: 0 }}>
         Nearly every scholarship with "nursing" or "medical" in its name requires you to be enrolled
         in the program already — which is why searching for one as a senior feels like there is
         nothing out there. There is. It is mostly local, mostly unadvertised, and mostly won by the
@@ -58,7 +58,7 @@ export default function HealthCareerScholarships({ accent = C.green, pathwayFina
         below are not awards at all but places to look, with the question to ask and who to ask it of.
       </p>
 
-      <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+      <div style={R({ gap: 4, flexWrap: 'wrap' })}>
         {STAGE_TABS.map(t => (
           <button key={t.id} type="button" onClick={() => setStage(t.id)}
             style={pill(stage === t.id ? tint(accent, 0.18) : C.b0, stage === t.id ? accent : C.t3, {
@@ -68,7 +68,7 @@ export default function HealthCareerScholarships({ accent = C.green, pathwayFina
             {t.label}
           </button>
         ))}
-        <span style={{ width: 1, alignSelf: 'stretch', background: C.b1, margin: '0 4px' }} />
+        <span style={{ width: 1, alignSelf: 'stretch', background: C.b1, margin: '0px 4px' }} />
         <button type="button" onClick={() => setPathwayFilter('all')}
           style={pill(pathwayFilter === 'all' ? tint(accent, 0.18) : C.b0, pathwayFilter === 'all' ? accent : C.t3,
             { cursor: 'pointer', border: `1px solid ${C.b1}`, fontSize: 10.5 })}>All</button>
@@ -86,7 +86,7 @@ export default function HealthCareerScholarships({ accent = C.green, pathwayFina
       </div>
 
       {entries.length === 0 ? (
-        <div style={glass2({ padding: 18, textAlign: 'center' })}>
+        <div style={glass2({ padding: 16, textAlign: 'center' })}>
           <div style={{ fontSize: 12.5, color: C.t2 }}>
             Nothing health-specific in this combination. Try "Everything", or the general scholarship
             database below — most of the large national awards are open to any intended major.
@@ -108,15 +108,15 @@ export default function HealthCareerScholarships({ accent = C.green, pathwayFina
                 background: `linear-gradient(120deg,${tint(color, discovery ? 0.06 : 0.04)},rgba(255,255,255,0.02) 55%)`,
               }}>
                 <button type="button" onClick={() => setOpenId(open ? null : s.id)} aria-expanded={open}
-                  style={{ all: 'unset', boxSizing: 'border-box', display: 'block', width: '100%', cursor: 'pointer', padding: 14 }}>
-                  <div style={R({ gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' })}>
-                    <Icon size={15} color={color} style={{ flexShrink: 0, marginTop: 2 }} />
+                  style={{ all: 'unset', boxSizing: 'border-box', display: 'block', width: '100%', cursor: 'pointer', padding: 12 }}>
+                  <div style={R({ gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' })}>
+                    <Icon size={15} color={color} style={{ flexShrink: 0, marginTop: 4 }} />
                     <div style={{ flex: 1, minWidth: 190 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{s.name}</div>
-                      <div style={{ fontSize: 11, color: C.t3, marginTop: 2 }}>
+                      <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>
                         {s.org}{s.amount ? ` · ${s.amount}` : ''}
                       </div>
-                      <div style={R({ gap: 6, marginTop: 7, flexWrap: 'wrap' })}>
+                      <div style={R({ gap: 4, marginTop: 8, flexWrap: 'wrap' })}>
                         <span style={pill(tint(color, 0.14), color, { fontSize: 9 })}>
                           {discovery ? 'Where to look — not an application' : (OPEN_TO[notYet ? 'undergrad' : 'senior']?.label)}
                         </span>
@@ -132,16 +132,16 @@ export default function HealthCareerScholarships({ accent = C.green, pathwayFina
                 </button>
 
                 {open && (
-                  <div style={{ padding: '0 14px 14px', borderTop: `1px solid ${C.b1}`, paddingTop: 12, ...CC({ gap: 9 }) }}>
+                  <div style={{ padding: '0px 12px 12px', borderTop: `1px solid ${C.b1}`, paddingTop: 12, ...CC({ gap: 8 }) }}>
                     <Line title="Who's eligible">{s.eligibility}</Line>
                     {s.deadline && <Line title="Typical timing">{s.deadline}</Line>}
                     {s.howToFind && (
                       <div style={{
-                        ...glass2({ padding: 11 }), border: `1px solid ${tint(C.violet, 0.24)}`,
+                        ...glass2({ padding: 12 }), border: `1px solid ${tint(C.violet, 0.24)}`,
                         background: tint(C.violet, 0.05),
                       }}>
-                        <div style={{ ...R({ gap: 8, alignItems: 'flex-start' }), fontSize: 12, color: C.t2, lineHeight: 1.62 }}>
-                          <Search size={12} color={C.violetL} style={{ flexShrink: 0, marginTop: 3 }} />
+                        <div style={{ ...R({ gap: 8, alignItems: 'flex-start' }), fontSize: 12, color: C.t2, lineHeight: 1.55 }}>
+                          <Search size={12} color={C.violetL} style={{ flexShrink: 0, marginTop: 4 }} />
                           <span><b style={{ color: C.t1 }}>How to find it:</b> {s.howToFind}</span>
                         </div>
                       </div>
@@ -177,7 +177,7 @@ export default function HealthCareerScholarships({ accent = C.green, pathwayFina
 
 function Line({ title, children }) {
   return (
-    <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.62 }}>
+    <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }}>
       <b style={{ color: C.t1 }}>{title}:</b> {children}
     </div>
   );

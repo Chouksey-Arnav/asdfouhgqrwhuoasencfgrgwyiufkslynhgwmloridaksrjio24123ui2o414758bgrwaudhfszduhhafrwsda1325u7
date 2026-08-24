@@ -181,15 +181,15 @@ export default function SatReviewLogPanel({
           {/* ── Patterns ── */}
           {patterns.length > 0 && (
             <SatCard title="Patterns we can see" icon={Sparkles} iconColor={C.violet} m={isMobile}>
-              <div style={CC({ gap: 11 })}>
+              <div style={CC({ gap: 12 })}>
                 {patterns.slice(0, 3).map(p => (
                   <div key={p.id} style={{
-                    ...glass2({ padding: 14 }),
+                    ...glass2({ padding: 12 }),
                     borderColor: tint(p.severity >= 3 ? C.rose : C.amber, 0.28),
                     background: satWash(p.severity >= 3 ? C.rose : C.amber, 0.06),
                   }}>
                     <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, lineHeight: 1.5 }}>{p.title}</div>
-                    <div style={{ fontSize: 11.5, color: C.t2, marginTop: 6, lineHeight: 1.65 }}>{p.body}</div>
+                    <div style={{ fontSize: 11.5, color: C.t2, marginTop: 4, lineHeight: 1.55 }}>{p.body}</div>
                     {p.cta && (
                       <button
                         onClick={() => {
@@ -197,7 +197,7 @@ export default function SatReviewLogPanel({
                           else if (p.cta.action === 'timed') onNavigate?.('practice');
                           else setFilter('all');
                         }}
-                        style={{ ...btnG({ padding: '6px 12px', fontSize: 11.5 }), marginTop: 10 }}
+                        style={{ ...btnG({ padding: '4px 12px', fontSize: 11.5 }), marginTop: 8 }}
                       >
                         {p.cta.label} <ChevronRight size={12} />
                       </button>
@@ -237,7 +237,7 @@ export default function SatReviewLogPanel({
           <Segmented options={FILTERS} value={filter} onChange={setFilter} accent={accent} label="Show" />
 
           {/* ── Entries ── */}
-          <div style={CC({ gap: 11 })}>
+          <div style={CC({ gap: 12 })}>
             {visible.length === 0 && (
               <div style={{ ...glass2({ padding: 20, textAlign: 'center' }), fontSize: 12.5, color: C.t3 }}>
                 Nothing in this filter.
@@ -254,7 +254,7 @@ export default function SatReviewLogPanel({
                     onClick={() => setExpanded(isOpen ? null : entry.id)}
                     style={{ width: '100%', textAlign: 'left', padding: isMobile ? 14 : 16, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: C.FB }}
                   >
-                    <div style={{ ...R({ gap: 9, flexWrap: 'wrap' }), marginBottom: 8 }}>
+                    <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginBottom: 8 }}>
                       <span style={pill(tint(meta.color, 0.14), meta.color, { fontSize: 10 })}>{meta.label}</span>
                       {SOURCE_LABELS[entry.source] && (
                         <span style={pill('rgba(255,255,255,0.04)', C.t3, { fontSize: 10 })}>
@@ -276,7 +276,7 @@ export default function SatReviewLogPanel({
                       <ChevronDown size={14} color={C.t3} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }} />
                     </div>
                     <div style={{
-                      fontSize: 12.5, color: C.t1, lineHeight: 1.6,
+                      fontSize: 12.5, color: C.t1, lineHeight: 1.55,
                       overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: isOpen ? 99 : 2, WebkitBoxOrient: 'vertical',
                     }}>
                       {q.q}
@@ -288,12 +288,12 @@ export default function SatReviewLogPanel({
                       <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
                         <div style={{ padding: isMobile ? '0 14px 14px' : '0 16px 16px' }}>
                           {q.stimulus && (
-                            <div style={{ ...glass2({ padding: 12 }), fontSize: 12, color: C.t2, lineHeight: 1.7, whiteSpace: 'pre-wrap', marginBottom: 12 }}>
+                            <div style={{ ...glass2({ padding: 12 }), fontSize: 12, color: C.t2, lineHeight: 1.55, whiteSpace: 'pre-wrap', marginBottom: 12 }}>
                               {q.stimulus}
                             </div>
                           )}
                           <div style={{ ...glass2({ padding: 12 }), marginBottom: 12 }}>
-                            <div style={{ fontSize: 10, fontWeight: 700, color: C.green, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: C.green, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 4 }}>
                               Correct answer{q.format === 'mcq' ? `: ${['A', 'B', 'C', 'D'][q.ans]}` : ''}
                             </div>
                             {q.format === 'mcq' ? (
@@ -306,9 +306,9 @@ export default function SatReviewLogPanel({
                                 {q.sprAccept.values.join('  or  ')}
                               </div>
                             ) : null}
-                            <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.7 }}>{q.exp}</div>
+                            <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }}>{q.exp}</div>
                             {q.trap && (
-                              <div style={{ marginTop: 10, fontSize: 11, color: C.amberL }}>
+                              <div style={{ marginTop: 8, fontSize: 11, color: C.amberL }}>
                                 Trap: {TRAP_TAGS[q.trap] || q.trap.replace(/_/g, ' ')}
                               </div>
                             )}
@@ -318,18 +318,18 @@ export default function SatReviewLogPanel({
                               request per question, never preloaded. */}
                           {explanations[entry.questionId]?.text ? (
                             <div style={{ ...glass2({ padding: 12 }), marginBottom: 12, borderColor: tint(C.violet, 0.25) }}>
-                              <div style={{ ...R({ gap: 6 }), marginBottom: 7 }}>
+                              <div style={{ ...R({ gap: 4 }), marginBottom: 8 }}>
                                 <Sparkles size={12} color={C.violetL} />
-                                <span style={{ fontSize: 10, fontWeight: 700, color: C.violetL, textTransform: 'uppercase', letterSpacing: '.08em' }}>Explained another way</span>
+                                <span style={{ fontSize: 10, fontWeight: 700, color: C.violetL, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>Explained another way</span>
                               </div>
-                              <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.75 }}
+                              <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }}
                                 dangerouslySetInnerHTML={{ __html: renderMarkdown(explanations[entry.questionId].text) }} />
                             </div>
                           ) : (
                             <button
                               onClick={() => askForExplanation(entry)}
                               disabled={explanations[entry.questionId]?.loading}
-                              style={{ ...btnG({ padding: '7px 13px', fontSize: 11.5 }), marginBottom: 12 }}
+                              style={{ ...btnG({ padding: '8px 12px', fontSize: 11.5 }), marginBottom: 12 }}
                             >
                               <Sparkles size={12} />
                               {explanations[entry.questionId]?.loading ? 'Thinking…' : 'Explain this differently'}
@@ -340,16 +340,16 @@ export default function SatReviewLogPanel({
                               is the moment a student is most likely to watch
                               something: they have just read why they were
                               wrong and the gap is concrete. */}
-                          <div style={{ marginBottom: 14 }}>
+                          <div style={{ marginBottom: 12 }}>
                             <SatSkillVideos skill={q.skill} limit={2} isMobile={isMobile} />
                           </div>
 
                           {!entry.resolved && (
                             <>
-                              <div style={{ fontSize: 11, fontWeight: 700, color: C.t3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8 }}>
                                 {entry.errorType ? 'Change your answer' : 'Why did you miss this?'}
                               </div>
-                              <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+                              <div style={R({ gap: 8, flexWrap: 'wrap' })}>
                                 {ERROR_TYPE_IDS.map(t => (
                                   <button
                                     key={t} onClick={() => triage(entry, t)}
@@ -362,11 +362,11 @@ export default function SatReviewLogPanel({
                                   </button>
                                 ))}
                               </div>
-                              <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 14 }}>
-                                <button onClick={() => onNavigate?.('practice', { skill: q.skill })} style={btnG({ padding: '7px 13px', fontSize: 11.5 })}>
+                              <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 12 }}>
+                                <button onClick={() => onNavigate?.('practice', { skill: q.skill })} style={btnG({ padding: '8px 12px', fontSize: 11.5 })}>
                                   Drill {meta.label} <ChevronRight size={12} />
                                 </button>
-                                <button onClick={() => clearEntry(entry)} style={btnG({ padding: '7px 13px', fontSize: 11.5 })}>
+                                <button onClick={() => clearEntry(entry)} style={btnG({ padding: '8px 12px', fontSize: 11.5 })}>
                                   <Trash2 size={12} /> I have got this now
                                 </button>
                               </div>

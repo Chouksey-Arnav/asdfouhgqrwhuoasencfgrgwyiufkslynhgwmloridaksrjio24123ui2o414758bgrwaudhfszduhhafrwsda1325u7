@@ -60,12 +60,12 @@ export default function AgeBlockedStep({ account, onSignedOut }) {
   }, []);
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '32px 24px', gap: 18 }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '32px 24px', gap: 16 }}>
       <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(245,158,11,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <ShieldAlert size={26} color={C.amberL} />
       </div>
 
-      <h2 style={{ margin: 0, fontSize: 23, fontWeight: 800, fontFamily: C.FD, color: C.t1, letterSpacing: '-0.02em', lineHeight: 1.25 }}>
+      <h2 style={{ margin: 0, fontSize: 23, fontWeight: 800, fontFamily: C.FD, color: C.t1, letterSpacing: 'calc(-0.43px + var(--msp-letter-spacing))', lineHeight: 1.25 }}>
         Come back in a few years — we'll be here.
       </h2>
 
@@ -75,13 +75,13 @@ export default function AgeBlockedStep({ account, onSignedOut }) {
         genuinely it — it isn't about you, and it isn't something you did wrong.
       </p>
 
-      <p style={{ margin: 0, maxWidth: 380, fontSize: 14.5, lineHeight: 1.7, color: C.t2 }}>
+      <p style={{ margin: 0, maxWidth: 380, fontSize: 14.5, lineHeight: 1.54, color: C.t2 }}>
         On your {LEGAL.minAge}th birthday, sign up again and everything here is yours. In the
         meantime, Khan Academy and your school library are excellent, free, and
         very happy to have you.
       </p>
 
-      <p style={{ margin: 0, maxWidth: 380, fontSize: 14.5, lineHeight: 1.7, color: C.t2 }}>
+      <p style={{ margin: 0, maxWidth: 380, fontSize: 14.5, lineHeight: 1.54, color: C.t2 }}>
         And we're not done building. We're already working on a version of
         MedSchoolPrep made for middle schoolers — and, someday, maybe one for
         elementary schoolers too, for kids who already know medicine is the
@@ -91,15 +91,15 @@ export default function AgeBlockedStep({ account, onSignedOut }) {
 
       <div
         style={{
-          maxWidth: 400, width: '100%', padding: '14px 16px', borderRadius: 12,
+          maxWidth: 400, width: '100%', padding: '12px 16px', borderRadius: 12,
           background: failed ? C.roseDim : C.surf,
           border: `1px solid ${failed ? 'rgba(244,63,94,0.3)' : C.b1}`,
           fontSize: 13, lineHeight: 1.65, color: C.t2,
-          display: 'flex', gap: 10, alignItems: 'flex-start', textAlign: 'left',
+          display: 'flex', gap: 8, alignItems: 'flex-start', textAlign: 'left',
         }}
       >
-        {busy ? <Loader2 className="spin" size={15} color={C.t3} style={{ flexShrink: 0, marginTop: 2 }} />
-              : <Mail size={15} color={failed ? C.roseL : C.t3} style={{ flexShrink: 0, marginTop: 2 }} />}
+        {busy ? <Loader2 className="spin" size={15} color={C.t3} style={{ flexShrink: 0, marginTop: 4 }} />
+              : <Mail size={15} color={failed ? C.roseL : C.t3} style={{ flexShrink: 0, marginTop: 4 }} />}
         <span>
           {busy && 'Deleting the account and everything in it…'}
           {!busy && !failed && (
@@ -125,7 +125,7 @@ export default function AgeBlockedStep({ account, onSignedOut }) {
         onClick={() => { AuthAPI.clearToken(); if (onSignedOut) onSignedOut(); else window.location.assign('/'); }}
         disabled={busy}
         style={{
-          marginTop: 4, padding: '11px 24px', borderRadius: 11, border: `1px solid ${C.b2}`,
+          marginTop: 4, padding: '12px 24px', borderRadius: 12, border: `1px solid ${C.b2}`,
           background: C.surfHi, color: C.t1, fontSize: 14, fontWeight: 600,
           fontFamily: 'inherit', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1,
         }}

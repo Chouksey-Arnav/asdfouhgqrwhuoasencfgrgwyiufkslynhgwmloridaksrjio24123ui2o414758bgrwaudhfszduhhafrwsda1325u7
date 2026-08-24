@@ -66,24 +66,24 @@ export default function SatToolkitPanel({ accent = C.teal, isMobile = false }) {
 
       {/* ── The calculator ── */}
       <div style={glass({ padding: isMobile ? 14 : 18 })}>
-        <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), justifyContent: 'space-between', marginBottom: 12 }}>
-          <div style={R({ gap: 6 })}>
+        <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={R({ gap: 4 })}>
             {Object.values(CALC_MODES).map(m => (
               <button key={m.id} onClick={() => setMode(m.id)} title={m.blurb} style={calcChromeButton(mode === m.id, accent)}>
                 {m.id === 'graphing' ? <LineChart size={11} /> : <Calculator size={11} />} {m.label}
               </button>
             ))}
           </div>
-          <div style={R({ gap: 6, flexWrap: 'wrap' })}>
-            <span style={pill(tint(C.t3, 0.1), C.t3, { fontSize: 10, gap: 5, border: `1px solid ${C.b1}` })}>
+          <div style={R({ gap: 4, flexWrap: 'wrap' })}>
+            <span style={pill(tint(C.t3, 0.1), C.t3, { fontSize: 10, gap: 4, border: `1px solid ${C.b1}` })}>
               <Keyboard size={10} /> Alt+C anywhere
             </span>
-            <button onClick={openReference} style={btnG({ padding: '6px 12px', fontSize: 11.5 })}>
+            <button onClick={openReference} style={btnG({ padding: '4px 12px', fontSize: 11.5 })}>
               <BookOpen size={12} /> Formula sheet
             </button>
             <button
               onClick={() => { resetCalculator(calcRef.current, mode); toast('Graph cleared.'); }}
-              style={btnG({ padding: '6px 12px', fontSize: 11.5 })}
+              style={btnG({ padding: '4px 12px', fontSize: 11.5 })}
             >
               <Trash2 size={12} /> Clear
             </button>
@@ -98,9 +98,9 @@ export default function SatToolkitPanel({ accent = C.teal, isMobile = false }) {
           style={{ height: isMobile ? 380 : 520, borderRadius: 12, overflow: 'hidden', border: `1px solid ${C.b1}` }}
         />
 
-        <div style={{ ...R({ gap: 7, alignItems: 'flex-start' }), marginTop: 12 }}>
-          <Info size={12} color={C.t4} style={{ marginTop: 2, flexShrink: 0 }} />
-          <span style={{ fontSize: 10.5, color: C.t4, lineHeight: 1.6 }}>
+        <div style={{ ...R({ gap: 8, alignItems: 'flex-start' }), marginTop: 12 }}>
+          <Info size={12} color={C.t4} style={{ marginTop: 4, flexShrink: 0 }} />
+          <span style={{ fontSize: 10.5, color: C.t4, lineHeight: 1.55 }}>
             Anything you type here stays put — switch tabs, answer a set, come back, and your
             expressions are still on the axes. Desmos is loaded from desmos.com, so it needs a
             connection; the rest of the SAT tab works offline.
@@ -111,15 +111,15 @@ export default function SatToolkitPanel({ accent = C.teal, isMobile = false }) {
 
       {/* ── Policy facts ── */}
       <SatCard title="What the exam actually allows" icon={Info} iconColor={C.blue} m={isMobile}>
-        <div style={CC({ gap: 9 })}>
+        <div style={CC({ gap: 8 })}>
           {CALCULATOR_FACTS.map((f, i) => (
-            <div key={i} style={{ ...R({ gap: 10, alignItems: 'flex-start' }), ...glass2({ padding: '11px 13px' }) }}>
+            <div key={i} style={{ ...R({ gap: 8, alignItems: 'flex-start' }), ...glass2({ padding: '12px 12px' }) }}>
               <span style={{
-                width: 18, height: 18, borderRadius: 6, flexShrink: 0, marginTop: 1,
+                width: 18, height: 18, borderRadius: 4, flexShrink: 0, marginTop: 4,
                 background: tint(C.blue, 0.16), color: C.blueL, fontSize: 9.5, fontWeight: 800,
                 fontFamily: C.FM, display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>{i + 1}</span>
-              <span style={{ fontSize: 12, color: C.t2, lineHeight: 1.65 }}>{f}</span>
+              <span style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }}>{f}</span>
             </div>
           ))}
         </div>
@@ -127,12 +127,12 @@ export default function SatToolkitPanel({ accent = C.teal, isMobile = false }) {
 
       {/* ── The playbook ── */}
       <SatCard title="The Desmos playbook" icon={Sparkles} iconColor={accent} m={isMobile}>
-        <div style={{ fontSize: 12, color: C.t3, marginBottom: 14, lineHeight: 1.65 }}>
+        <div style={{ fontSize: 12, color: C.t3, marginBottom: 12, lineHeight: 1.55 }}>
           Ten techniques, ranked by how often they save time on a real Math module. Press
           "Show me" on any of them and the expressions load into the calculator above.
         </div>
 
-        <div style={CC({ gap: 10 })}>
+        <div style={CC({ gap: 8 })}>
           {DESMOS_PLAYS.map((play, i) => {
             const isOpen = expanded === play.id;
             return (
@@ -144,16 +144,16 @@ export default function SatToolkitPanel({ accent = C.teal, isMobile = false }) {
                     background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: C.FB,
                   }}
                 >
-                  <div style={R({ gap: 11 })}>
+                  <div style={R({ gap: 12 })}>
                     <span style={{
-                      width: 24, height: 24, borderRadius: 7, flexShrink: 0,
+                      width: 24, height: 24, borderRadius: 8, flexShrink: 0,
                       background: tint(accent, 0.16), border: `1px solid ${tint(accent, 0.28)}`,
                       color: accent, fontSize: 10.5, fontWeight: 800, fontFamily: C.FM,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>{i + 1}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{play.title}</div>
-                      <div style={{ fontSize: 11, color: C.t3, marginTop: 3, lineHeight: 1.5 }}>{play.when}</div>
+                      <div style={{ fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>{play.when}</div>
                     </div>
                     <ChevronDown size={14} color={C.t3} style={{ flexShrink: 0, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }} />
                   </div>
@@ -163,14 +163,14 @@ export default function SatToolkitPanel({ accent = C.teal, isMobile = false }) {
                   {isOpen && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
                       <div style={{ padding: isMobile ? '0 13px 13px 48px' : '0 15px 15px 50px' }}>
-                        <ol style={{ margin: 0, paddingLeft: 16, color: C.t2, fontSize: 12, lineHeight: 1.85 }}>
+                        <ol style={{ margin: 0, paddingLeft: 16, color: C.t2, fontSize: 12, lineHeight: 1.55 }}>
                           {play.steps.map((s, si) => <li key={si}>{s}</li>)}
                         </ol>
 
                         {play.caution && (
-                          <div style={{ ...R({ gap: 7, alignItems: 'flex-start' }), marginTop: 11 }}>
-                            <AlertTriangle size={12} color={C.amberL} style={{ marginTop: 2, flexShrink: 0 }} />
-                            <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>{play.caution}</span>
+                          <div style={{ ...R({ gap: 8, alignItems: 'flex-start' }), marginTop: 12 }}>
+                            <AlertTriangle size={12} color={C.amberL} style={{ marginTop: 4, flexShrink: 0 }} />
+                            <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>{play.caution}</span>
                           </div>
                         )}
 
@@ -179,7 +179,7 @@ export default function SatToolkitPanel({ accent = C.teal, isMobile = false }) {
                             onClick={() => loadPlay(play)}
                             disabled={status !== 'ready'}
                             style={satBtn(accent, {
-                              marginTop: 13, padding: '7px 14px', fontSize: 12,
+                              marginTop: 12, padding: '8px 12px', fontSize: 12,
                               opacity: status === 'ready' ? 1 : 0.45,
                               cursor: status === 'ready' ? 'pointer' : 'not-allowed',
                             })}

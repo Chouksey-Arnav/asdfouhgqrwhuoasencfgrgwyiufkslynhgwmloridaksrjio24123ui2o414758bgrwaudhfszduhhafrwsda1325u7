@@ -55,15 +55,15 @@ function HistoryRow({ quest, m }) {
   const color = quest.status === 'claimed' ? meta.color : C.t3;
   const chain = chainFor(quest.questId);
   return (
-    <div style={{ ...glass2({ padding: '10px 13px' }), ...R({ gap: 11 }), opacity: quest.status === 'claimed' ? 1 : 0.75 }}>
+    <div style={{ ...glass2({ padding: '8px 12px' }), ...R({ gap: 12 }), opacity: quest.status === 'claimed' ? 1 : 0.75 }}>
       <div style={{
-        width: 28, height: 28, borderRadius: 9, flexShrink: 0,
+        width: 28, height: 28, borderRadius: 8, flexShrink: 0,
         background: tint(color, 0.13), border: `1px solid ${tint(color, 0.24)}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}><Icon size={13} color={color} /></div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{quest.title}</div>
-        <div style={{ fontSize: 10.5, color: C.t3, marginTop: 2 }}>
+        <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4 }}>
           {meta.label}
           {chain && ` · ${chain.label} ${chain.step}/${chain.of}`}
           {quest.assignedBy === 'parent' && quest.assignerName && ` · asked by ${quest.assignerName}`}
@@ -154,14 +154,14 @@ export default function QuestBoard({
         right={(
           <button
             onClick={() => { setPickError(null); setPicking(true); }}
-            style={{ ...btn(`linear-gradient(135deg, ${C.violet}, ${C.fuchsia})`, { fontSize: 12.5, padding: '9px 16px', color: onTint(C.violet) }) }}
+            style={{ ...btn(`linear-gradient(135deg, ${C.violet}, ${C.fuchsia})`, { fontSize: 12.5, padding: '8px 16px', color: onTint(C.violet) }) }}
           ><Plus size={14} />Take on a quest</button>
         )}
         m={m}
       />
 
       {!available && (
-        <div style={{ ...R({ gap: 9 }), ...glass2({ padding: 14 }), border: `1px solid ${tint(C.amber, 0.26)}` }}>
+        <div style={{ ...R({ gap: 8 }), ...glass2({ padding: 12 }), border: `1px solid ${tint(C.amber, 0.26)}` }}>
           <ShieldOff size={14} color={C.amberL} style={{ flexShrink: 0 }} />
           <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }}>
             Long quests are not switched on for this deployment yet. Nothing is lost — the board will
@@ -171,7 +171,7 @@ export default function QuestBoard({
       )}
 
       {error && (
-        <div style={{ ...R({ gap: 9 }), ...glass2({ padding: 13 }), border: `1px solid ${tint(C.rose, 0.28)}` }}>
+        <div style={{ ...R({ gap: 8 }), ...glass2({ padding: 12 }), border: `1px solid ${tint(C.rose, 0.28)}` }}>
           <Info size={14} color={C.roseL} style={{ flexShrink: 0 }} />
           <div style={{ fontSize: 12, color: C.roseL, lineHeight: 1.5 }}>{error}</div>
         </div>
@@ -191,7 +191,7 @@ export default function QuestBoard({
             m={m}
           />
           {everythingClaimedToday && tomorrow.length > 0 && (
-            <div style={{ marginTop: 10 }}><TomorrowPeek quests={tomorrow} m={m} /></div>
+            <div style={{ marginTop: 8 }}><TomorrowPeek quests={tomorrow} m={m} /></div>
           )}
         </div>
       )}
@@ -204,7 +204,7 @@ export default function QuestBoard({
         </SectionTitle>
 
         {loading && !rows.length ? (
-          <div style={{ ...R({ gap: 8, justifyContent: 'center' }), padding: 30, color: C.t3, fontSize: 12.5 }}>
+          <div style={{ ...R({ gap: 8, justifyContent: 'center' }), padding: 28, color: C.t3, fontSize: 12.5 }}>
             <Loader2 size={14} className="spin" />Loading your quests…
           </div>
         ) : rows.length === 0 ? (
@@ -262,13 +262,13 @@ export default function QuestBoard({
       {/* 5. How this works --------------------------------------------------- */}
       <div style={{ ...glass({ padding: m ? 15 : 18 }), border: `1px solid ${C.b1}` }}>
         <SectionTitle icon={Info} color={C.t3}>How quests work</SectionTitle>
-        <div style={{ ...CC({ gap: 9 }), fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>
+        <div style={{ ...CC({ gap: 8 }), fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>
           <div><b style={{ color: C.t1 }}>Today&rsquo;s three reset at midnight.</b> One quick, one session-sized, one push. They are drawn fresh every morning and they are the same three on every device you use. Clearing all three pays a bonus worth more than any single one of them.</div>
           <div><b style={{ color: C.t1 }}>A long quest&rsquo;s day can only count so much.</b> Every long quest caps what one calendar day contributes. A card quest capped at 25 a day cannot be finished in an afternoon, no matter how many cards you review — the extra still earns normal XP, it just does not move the quest.</div>
           <div><b style={{ color: C.t1 }}>Some also need a minimum number of days.</b> Hitting the target early does not finish a quest that still owes days of work. The card tells you both numbers.</div>
           <div><b style={{ color: C.t1 }}>Anyone can ask, nobody can order.</b> A quest a parent assigns shows their name and their note. Declining it is a real answer and it is visible to them — it is not a way to make it quietly vanish.</div>
           <div><b style={{ color: C.t1 }}>The XP is paid once.</b> Every claim is deduped on the server, so claiming on your phone and your laptop pays exactly once.</div>
-          <div style={{ ...R({ gap: 6, flexWrap: 'wrap' }), marginTop: 3 }}>
+          <div style={{ ...R({ gap: 4, flexWrap: 'wrap' }), marginTop: 4 }}>
             {Object.values(QUEST_TIERS).map((t) => (
               <span key={t.id} style={pill(tint(t.color, 0.14), t.color, { fontSize: 10, fontWeight: 700 })}>{t.label} · {t.xp.toLocaleString()} XP</span>
             ))}

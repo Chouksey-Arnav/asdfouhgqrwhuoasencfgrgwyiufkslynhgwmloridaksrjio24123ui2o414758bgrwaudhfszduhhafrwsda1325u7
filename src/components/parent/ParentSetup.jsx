@@ -26,7 +26,7 @@ import toast from 'react-hot-toast';
 import {
   Loader2, ShieldCheck, ArrowRight, ArrowLeft, UserCog, GraduationCap, Check, Info,
 } from 'lucide-react';
-import { C, glass, glass2, btn, btnG, inp, lbl, CC, R, tint, onTint } from '../../lib/theme';
+import { C, glass, glass2, btn, btnG, inp, lbl, CC, R, tint, onTint, CONTROL_TRANSITION } from '../../lib/theme';
 import * as ParentAPI from '../../lib/parentApi';
 
 const RELATIONSHIPS = ['Mother', 'Father', 'Stepmother', 'Stepfather', 'Grandparent', 'Legal guardian', 'Other'];
@@ -41,10 +41,10 @@ const STEPS = [
 function Field({ label, hint, error, children }) {
   return (
     <div>
-      <label style={lbl({ marginBottom: 6 })}>{label}</label>
+      <label style={lbl({ marginBottom: 4 })}>{label}</label>
       {children}
-      {hint && !error && <div style={{ fontSize: 11.5, color: C.t3, marginTop: 6, lineHeight: 1.5 }}>{hint}</div>}
-      {error && <div style={{ fontSize: 12, color: C.roseL, marginTop: 6 }}>{error}</div>}
+      {hint && !error && <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>{hint}</div>}
+      {error && <div style={{ fontSize: 12, color: C.roseL, marginTop: 4 }}>{error}</div>}
     </div>
   );
 }
@@ -55,7 +55,7 @@ function Choices({ options, value, onChange, allowOther = true }) {
   const [other, setOther] = useState(!!value && !known);
   return (
     <div style={CC({ gap: 8 })}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {options.map((opt) => {
           const on = !other && value === opt;
           return (
@@ -63,7 +63,7 @@ function Choices({ options, value, onChange, allowOther = true }) {
               key={opt} type="button" aria-pressed={on}
               onClick={() => { setOther(false); onChange(opt); }}
               style={{
-                padding: '7px 13px', borderRadius: 999, cursor: 'pointer', fontSize: 12.5,
+                padding: '8px 12px', borderRadius: 999, cursor: 'pointer', fontSize: 12.5,
                 fontFamily: C.FB, fontWeight: on ? 700 : 500,
                 background: on ? tint(C.violet, 0.14) : C.surf2,
                 border: `1px solid ${on ? tint(C.violet, 0.45) : C.b1}`,
@@ -77,7 +77,7 @@ function Choices({ options, value, onChange, allowOther = true }) {
             type="button" aria-pressed={other}
             onClick={() => { setOther(true); onChange(''); }}
             style={{
-              padding: '7px 13px', borderRadius: 999, cursor: 'pointer', fontSize: 12.5,
+              padding: '8px 12px', borderRadius: 999, cursor: 'pointer', fontSize: 12.5,
               fontFamily: C.FB, fontWeight: other ? 700 : 500,
               background: other ? tint(C.violet, 0.14) : C.surf2,
               border: `1px solid ${other ? tint(C.violet, 0.45) : C.b1}`,
@@ -209,21 +209,21 @@ export default function ParentSetup({ user, onDone, onSkip }) {
   const Icon = STEPS[step].icon;
 
   return (
-    <div style={CC({ gap: 18 })}>
-      <div style={glass({ ...CC({ gap: 6 }) })}>
+    <div style={CC({ gap: 16 })}>
+      <div style={glass({ ...CC({ gap: 4 }) })}>
         <div style={R({ gap: 12 })}>
           <div style={{
-            width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: 'flex',
+            width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: 'flex',
             alignItems: 'center', justifyContent: 'center',
             background: tint(C.violet, 0.13), border: `1px solid ${tint(C.violet, 0.28)}`,
           }}>
             <Icon size={18} color={C.violet} />
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 11, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 11, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
               Step {step + 1} of {STEPS.length}
             </div>
-            <div style={{ fontSize: 19, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
+            <div style={{ fontSize: 19, letterSpacing: 'calc(-0.23px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
               {step === 0 && 'Who you are'}
               {step === 1 && 'Who you are here for'}
               {step === 2 && 'Confirm and finish'}
@@ -233,10 +233,10 @@ export default function ParentSetup({ user, onDone, onSkip }) {
 
         {/* Segmented progress rather than a percentage: three named beats, and you can see which
             one you are in. Same reasoning as the student onboarding's chapter bar. */}
-        <div style={{ display: 'flex', gap: 5, marginTop: 4 }}>
+        <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
           {STEPS.map((s, i) => (
             <div key={s.key} style={{
-              flex: 1, height: 4, borderRadius: 3,
+              flex: 1, height: 4, borderRadius: 4,
               background: i <= step ? C.violet : C.b1,
               transition: 'background .25s',
             }} />
@@ -244,10 +244,10 @@ export default function ParentSetup({ user, onDone, onSkip }) {
         </div>
       </div>
 
-      <div style={glass({ ...CC({ gap: 18 }) })}>
+      <div style={glass({ ...CC({ gap: 16 }) })}>
         {step === 0 && (
           <>
-            <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.65, margin: 0 }}>
+            <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.55, margin: 0 }}>
               Your student sees these details when your request reaches them. That is the whole
               point of asking: it is how they know the request is from you and not from a stranger
               who happened to learn their email address.
@@ -274,7 +274,7 @@ export default function ParentSetup({ user, onDone, onSkip }) {
 
         {step === 1 && (
           <>
-            <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.65, margin: 0 }}>
+            <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.55, margin: 0 }}>
               This does not connect you to them — only they can do that, by accepting a request
               sent to their own email address. What you type here is shown to them when it
               arrives, so they can see the request is meant for them.
@@ -287,9 +287,9 @@ export default function ParentSetup({ user, onDone, onSkip }) {
             <Field label="What year are they in?" hint="Optional — it helps us frame the dashboard around the right deadlines.">
               <Choices options={GRADES} value={form.studentGrade} onChange={(v) => set({ studentGrade: v })} allowOther={false} />
             </Field>
-            <div style={glass2({ ...R({ gap: 10, alignItems: 'flex-start' }) })}>
-              <Info size={15} color={C.blueL} style={{ flexShrink: 0, marginTop: 2 }} />
-              <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6 }}>
+            <div style={glass2({ ...R({ gap: 8, alignItems: 'flex-start' }) })}>
+              <Info size={15} color={C.blueL} style={{ flexShrink: 0, marginTop: 4 }} />
+              <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>
                 You will invite them by email on the next screen. Nothing about them — not a
                 streak, not a score, not whether they have an account at all — reaches you before
                 they accept.
@@ -300,7 +300,7 @@ export default function ParentSetup({ user, onDone, onSkip }) {
 
         {step === 2 && (
           <>
-            <div style={glass2({ ...CC({ gap: 10 }) })}>
+            <div style={glass2({ ...CC({ gap: 8 }) })}>
               {[
                 ['You', form.fullName],
                 ['Relationship', form.relationship],
@@ -310,7 +310,7 @@ export default function ParentSetup({ user, onDone, onSkip }) {
                 ['Account email', user?.email],
               ].map(([k, v]) => (
                 <div key={k} style={R({ gap: 12, alignItems: 'baseline' })}>
-                  <span style={{ fontSize: 11, color: C.t3, letterSpacing: '.08em', textTransform: 'uppercase', width: 110, flexShrink: 0 }}>{k}</span>
+                  <span style={{ fontSize: 11, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', width: 110, flexShrink: 0 }}>{k}</span>
                   <span style={{ fontSize: 13.5, color: C.t1, fontWeight: 600, minWidth: 0, overflowWrap: 'anywhere' }}>{v || '—'}</span>
                 </div>
               ))}
@@ -324,21 +324,21 @@ export default function ParentSetup({ user, onDone, onSkip }) {
               onClick={() => set({ attested: !form.attested })}
               style={{
                 display: 'flex', gap: 12, alignItems: 'flex-start', textAlign: 'left', width: '100%',
-                padding: 14, borderRadius: 12, cursor: 'pointer', fontFamily: C.FB,
+                padding: 12, borderRadius: 12, cursor: 'pointer', fontFamily: C.FB,
                 background: form.attested ? tint(C.green, 0.09) : C.surf2,
                 border: `1px solid ${form.attested ? tint(C.green, 0.45) : C.b1}`,
-                transition: 'all .15s',
+                transition: CONTROL_TRANSITION,
               }}
             >
               <div style={{
-                width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1, display: 'flex',
+                width: 20, height: 20, borderRadius: 4, flexShrink: 0, marginTop: 4, display: 'flex',
                 alignItems: 'center', justifyContent: 'center',
                 background: form.attested ? C.green : 'transparent',
                 border: `1.5px solid ${form.attested ? C.green : C.b2}`,
               }}>
                 {form.attested && <Check size={13} color={onTint(C.green)} />}
               </div>
-              <span style={{ fontSize: 13, color: C.t2, lineHeight: 1.6 }}>
+              <span style={{ fontSize: 13, color: C.t2, lineHeight: 1.55 }}>
                 {attestation || `I confirm I am the parent or legal guardian of ${form.studentFullName || 'the student named above'}, that the details I have given are accurate, and I understand this student must approve my request before I can see anything, and can end my access at any time.`}
               </span>
             </button>
@@ -346,7 +346,7 @@ export default function ParentSetup({ user, onDone, onSkip }) {
           </>
         )}
 
-        <div style={R({ gap: 8, flexWrap: 'wrap', marginTop: 2 })}>
+        <div style={R({ gap: 8, flexWrap: 'wrap', marginTop: 4 })}>
           {step > 0 && (
             <button type="button" onClick={() => setStep((s) => s - 1)} style={btnG()}>
               <ArrowLeft size={13} /> Back

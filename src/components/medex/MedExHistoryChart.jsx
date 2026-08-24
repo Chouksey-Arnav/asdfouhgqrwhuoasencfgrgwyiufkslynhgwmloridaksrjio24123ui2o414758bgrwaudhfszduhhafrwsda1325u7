@@ -176,7 +176,7 @@ export default function MedExHistoryChart({
       </svg>
 
       {/* Hover readout — outside the SVG so it can use real typography */}
-      <div style={{ minHeight: 34, marginTop: 6 }}>
+      <div style={{ minHeight: 34, marginTop: 4 }}>
         {hover != null ? (
           <HoverRow row={series[hover]} prev={series[hover - 1] || null} />
         ) : (

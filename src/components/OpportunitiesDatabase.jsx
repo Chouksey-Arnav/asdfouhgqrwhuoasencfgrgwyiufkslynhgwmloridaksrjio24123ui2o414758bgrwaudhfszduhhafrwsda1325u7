@@ -158,7 +158,7 @@ export default function OpportunitiesDatabase({ accent = C.blue, onTrack, tracke
   }
 
   return (
-    <div style={CC({ gap: 14 })}>
+    <div style={CC({ gap: 12 })}>
       <div style={R({ gap: 8 })}>
         <Search size={14} color={C.t3} />
         <input
@@ -169,7 +169,7 @@ export default function OpportunitiesDatabase({ accent = C.blue, onTrack, tracke
         />
       </div>
 
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
         {OPPORTUNITY_TYPES.map(t => (
           <button key={t} onClick={() => setType(t)}
             style={pill(type === t ? tint(accent, 0.22) : C.surf2, type === t ? onTint(accent) : C.t3,
@@ -179,7 +179,7 @@ export default function OpportunitiesDatabase({ accent = C.blue, onTrack, tracke
         ))}
         <button onClick={() => setShowFilters(f => !f)} aria-expanded={showFilters}
           style={pill(activeFilters ? tint(C.violet, 0.2) : C.surf2, activeFilters ? onTint(C.violet) : C.t3,
-            { cursor: 'pointer', border: `1px solid ${activeFilters ? tint(C.violet, 0.35) : C.b1}`, gap: 5, marginLeft: 'auto' })}>
+            { cursor: 'pointer', border: `1px solid ${activeFilters ? tint(C.violet, 0.35) : C.b1}`, gap: 4, marginLeft: 'auto' })}>
           <SlidersHorizontal size={11} />Filters{activeFilters ? ` · ${activeFilters}` : ''}
         </button>
       </div>
@@ -187,7 +187,7 @@ export default function OpportunitiesDatabase({ accent = C.blue, onTrack, tracke
       {/* Secondary facets. Every chip row is generated from the exported constants in
           src/data/opportunities.js, so a new value in the data can never end up unreachable. */}
       {showFilters && (
-        <div style={{ ...glass2({ padding: 14 }), display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ ...glass2({ padding: 12 }), display: 'flex', flexDirection: 'column', gap: 12 }}>
           <FacetRow icon={Users} label="Grade" options={OPPORTUNITY_GRADES} value={grade} onChange={setGrade} accent={accent} format={g => `Grade ${g}`} />
           <FacetRow icon={Trophy} label="Selectivity" options={['Open', 'Competitive', 'Elite']} value={effort} onChange={setEffort} accent={accent} />
           <FacetRow icon={Wallet} label="Cost" options={OPPORTUNITY_COSTS} value={cost} onChange={setCost} accent={accent} />
@@ -195,7 +195,7 @@ export default function OpportunitiesDatabase({ accent = C.blue, onTrack, tracke
           <FacetRow icon={CalendarRange} label="When" options={OPPORTUNITY_SEASONS} value={season} onChange={setSeason} accent={accent} />
           <FacetRow icon={Compass} label="Reach" options={OPPORTUNITY_LEVELS} value={level} onChange={setLevel} accent={accent} />
           <div style={R({ gap: 8, flexWrap: 'wrap', paddingTop: 4, borderTop: `1px solid ${C.b1}` })}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: C.t3, textTransform: 'uppercase', letterSpacing: '.08em' }}>Sort</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>Sort</span>
             {[['relevance', 'Best match'], ['accessible', 'Easiest to join'], ['selective', 'Most selective'], ['name', 'A–Z']].map(([id, label]) => (
               <button key={id} onClick={() => setSort(id)}
                 style={pill(sort === id ? tint(accent, 0.2) : C.surf2, sort === id ? onTint(accent) : C.t3,
@@ -213,7 +213,7 @@ export default function OpportunitiesDatabase({ accent = C.blue, onTrack, tracke
         </div>
       )}
 
-      <div style={{ fontSize: 11, color: C.t3, display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ fontSize: 11, color: C.t3, display: 'flex', alignItems: 'center', gap: 4 }}>
         <Info size={11} />
         Reference info only — {results.length} of {OPPORTUNITIES.length} real programs shown. Confirm current details with the program before applying; anything you Track lands on your Tracked tab with a daily Meta Brain report on it.
       </div>
@@ -226,12 +226,12 @@ export default function OpportunitiesDatabase({ accent = C.blue, onTrack, tracke
             const state = stateOf(o);
             return (
               <div key={o.id} style={{ ...glass2({ padding: 0, overflow: 'hidden' }), borderLeft: `3px solid ${state === 'tracked' ? C.green : ec}` }}>
-                <div style={{ ...R({ gap: 12, padding: 14, cursor: 'pointer' }) }} onClick={() => setExpandedId(isOpen ? null : o.id)}>
+                <div style={{ ...R({ gap: 12, padding: 12, cursor: 'pointer' }) }} onClick={() => setExpandedId(isOpen ? null : o.id)}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{o.name}</div>
-                    <div style={{ fontSize: 11, color: C.t3, marginTop: 2 }}>{o.org} · {o.type} · {o.level}</div>
+                    <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>{o.org} · {o.type} · {o.level}</div>
                     {(o.cost || o.season || o.format || o.grades) && (
-                      <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 6 }}>
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
                         {o.cost && <span style={pill(tint(o.cost === 'Free' || o.cost === 'Free + stipend' || o.cost === 'Paid role' ? C.green : C.t3, 0.13), o.cost === 'Free' || o.cost === 'Free + stipend' || o.cost === 'Paid role' ? C.greenL : C.t3, { fontSize: 9 })}>{o.cost}</span>}
                         {o.season && <span style={pill('rgba(255,255,255,0.06)', C.t3, { fontSize: 9 })}>{o.season}</span>}
                         {o.format && <span style={pill('rgba(255,255,255,0.06)', C.t3, { fontSize: 9 })}>{o.format}</span>}
@@ -244,7 +244,7 @@ export default function OpportunitiesDatabase({ accent = C.blue, onTrack, tracke
                   {isOpen ? <ChevronUp size={15} color={C.t3} /> : <ChevronDown size={15} color={C.t3} />}
                 </div>
                 {isOpen && (
-                  <div style={{ padding: '0 14px 14px', borderTop: `1px solid ${C.b1}`, marginTop: 2, paddingTop: 12 }}>
+                  <div style={{ padding: '0px 12px 12px', borderTop: `1px solid ${C.b1}`, marginTop: 4, paddingTop: 12 }}>
                     <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.6, marginBottom: 8 }}>{o.desc}</p>
                     <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.7 }}>
                       <div><b style={{ color: C.t2 }}>Eligibility:</b> {o.eligibility}</div>
@@ -252,7 +252,7 @@ export default function OpportunitiesDatabase({ accent = C.blue, onTrack, tracke
                       {o.season && <div><b style={{ color: C.t2 }}>Runs:</b> {o.season}{o.format ? ` · ${o.format}` : ''}</div>}
                       {o.grades && <div><b style={{ color: C.t2 }}>Typical grades:</b> {o.grades.join(', ')}</div>}
                     </div>
-                    <div style={{ marginTop: 8, display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                    <div style={{ marginTop: 8, display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                       <span style={pill(`${ec}18`, ec, { fontSize: 9 })}>{o.effort}</span>
                       {(o.tags || []).map(t => <span key={t} style={pill('rgba(255,255,255,0.06)', C.t3, { fontSize: 9 })}>{t}</span>)}
                     </div>
@@ -277,7 +277,7 @@ export default function OpportunitiesDatabase({ accent = C.blue, onTrack, tracke
           </div>
           {!aiLookup && (
             <>
-              <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.6, marginBottom: 10 }}>
+              <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.6, marginBottom: 8 }}>
                 "{query.trim()}" isn't in our {OPPORTUNITIES.length}-program curated list. Meta Brain can try to tell you what it knows from general knowledge — or you can just add it as a custom entry below.
               </p>
               {askMedabrain && (
@@ -292,8 +292,8 @@ export default function OpportunitiesDatabase({ accent = C.blue, onTrack, tracke
           {aiLookup?.content && !aiLookup.loading && (
             <div>
               <div style={{ fontSize: 13, color: C.t2 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(aiLookup.content) }} />
-              <div style={{ ...R({ gap: 6, marginTop: 4 }), fontSize: 10, color: C.t4 }}>AI-generated, unverified — not from the curated database above.</div>
-              <button style={{ ...btn(C.violetGrad, { fontSize: 12 }), marginTop: 10 }} onClick={addAiResultAsCustom}><Plus size={13} />Add as custom activity</button>
+              <div style={{ ...R({ gap: 4, marginTop: 4 }), fontSize: 10, color: C.t4 }}>AI-generated, unverified — not from the curated database above.</div>
+              <button style={{ ...btn(C.violetGrad, { fontSize: 12 }), marginTop: 8 }} onClick={addAiResultAsCustom}><Plus size={13} />Add as custom activity</button>
             </div>
           )}
         </div>
@@ -307,7 +307,7 @@ export default function OpportunitiesDatabase({ accent = C.blue, onTrack, tracke
 function FacetRow({ icon: Icon, label, options, value, onChange, accent, format = (v) => v }) {
   return (
     <div style={R({ gap: 8, flexWrap: 'wrap' })}>
-      <span style={{ fontSize: 10, fontWeight: 700, color: C.t3, textTransform: 'uppercase', letterSpacing: '.08em', display: 'inline-flex', alignItems: 'center', gap: 5, minWidth: 92 }}>
+      <span style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', display: 'inline-flex', alignItems: 'center', gap: 4, minWidth: 92 }}>
         <Icon size={11} />{label}
       </span>
       {options.map(opt => {

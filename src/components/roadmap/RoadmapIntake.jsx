@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Check, Sparkles, Wand2, X, Info } from 'lucide-react';
-import { C, glass, glass2, btn, btnG, R, CC, tint, inp, accentFill, onTint } from '../../lib/theme';
+import { C, glass, glass2, btn, btnG, R, CC, tint, inp, accentFill, onTint, CONTROL_TRANSITION } from '../../lib/theme';
 import CollegeAutocomplete from '../CollegeAutocomplete';
 import { QUESTIONS, isAnswered, intakeProgress, buildPrefill, buildDefaults } from '../../lib/roadmap/intake';
 
@@ -87,7 +87,7 @@ export default function RoadmapIntake({
       {/* Progress rail. Segments rather than a bar: thirteen is a countable
           number, and seeing exactly how many remain is the difference between
           "this is nearly over" and "this might go on forever". */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 22 }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 20 }}>
         {QUESTIONS.map((item, i) => {
           const answered = isAnswered(item, answers[item.id]) && (seen.has(item.id) || !prefill.source[item.id]);
           return (
@@ -97,7 +97,7 @@ export default function RoadmapIntake({
               aria-label={`Question ${i + 1}`}
               onClick={() => setIdx(i)}
               style={{
-                flex: 1, height: 4, borderRadius: 2, border: 0, padding: 0, cursor: 'pointer',
+                flex: 1, height: 4, borderRadius: 4, border: 0, padding: 0, cursor: 'pointer',
                 background: i === idx ? accent : answered ? tint(accent, 0.5) : C.s4,
                 transition: 'background .2s',
               }}
@@ -106,8 +106,8 @@ export default function RoadmapIntake({
         })}
       </div>
 
-      <div style={R({ justifyContent: 'space-between', marginBottom: 14 })}>
-        <span style={{ fontSize: 10.5, fontWeight: 800, color: accent, letterSpacing: '.12em', textTransform: 'uppercase' }}>
+      <div style={R({ justifyContent: 'space-between', marginBottom: 12 })}>
+        <span style={{ fontSize: 10.5, fontWeight: 800, color: accent, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
           Question {idx + 1} of {QUESTIONS.length}
         </span>
         {onCancel && (
@@ -127,21 +127,21 @@ export default function RoadmapIntake({
         >
           <h2 style={{
             fontSize: isMobile ? 21 : 27, fontWeight: 800, color: C.t1, fontFamily: C.FD,
-            letterSpacing: '-.03em', margin: 0, lineHeight: 1.25,
+            letterSpacing: 'calc(-0.03em + var(--msp-letter-spacing))', margin: 0, lineHeight: 1.25,
           }}>{q.question}</h2>
 
           {/* Every question says why it is being asked. Non-negotiable for the
               money, citizenship and family ones — a teenager asked about their
               household finances by an app is owed a reason in the same breath. */}
-          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 10, marginBottom: 20, maxWidth: 620 }}>
-            <Info size={13} color={C.t4} style={{ flexShrink: 0, marginTop: 2 }} />
-            <p style={{ fontSize: isMobile ? 12 : 13, color: C.t3, lineHeight: 1.65, margin: 0 }}>{q.help}</p>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 8, marginBottom: 20, maxWidth: 620 }}>
+            <Info size={13} color={C.t4} style={{ flexShrink: 0, marginTop: 4 }} />
+            <p style={{ fontSize: isMobile ? 12 : 13, color: C.t3, lineHeight: 1.55, margin: 0 }}>{q.help}</p>
           </div>
 
           {wasPrefilled && !seen.has(q.id) && (
             <div style={{
               ...R({ gap: 8 }), background: tint(accent, 0.09), border: `1px solid ${tint(accent, 0.22)}`,
-              borderRadius: 9, padding: '9px 13px', marginBottom: 16,
+              borderRadius: 8, padding: '8px 12px', marginBottom: 16,
             }}>
               <Wand2 size={13} color={accent} />
               <span style={{ fontSize: 11.5, color: C.t2 }}>
@@ -158,7 +158,7 @@ export default function RoadmapIntake({
         <button onClick={() => go(-1)} disabled={idx === 0} style={{ ...btnG({ opacity: idx === 0 ? 0.35 : 1 }) }}>
           <ChevronLeft size={14} /> Back
         </button>
-        <div style={R({ gap: 10 })}>
+        <div style={R({ gap: 8 })}>
           {q.optional && !canAdvance && (
             <button onClick={() => go(1)} style={btnG({ fontSize: 12 })}>Skip</button>
           )}
@@ -185,7 +185,7 @@ export default function RoadmapIntake({
 function QuestionBody({ q, value, onChange, accent, isMobile }) {
   if (q.kind === 'single') {
     return (
-      <div style={CC({ gap: 9 })}>
+      <div style={CC({ gap: 8 })}>
         {q.options.map((o) => (
           <Choice key={o.value} selected={value === o.value} onClick={() => onChange(o.value)} accent={accent} isMobile={isMobile}
             label={o.label} sublabel={o.sublabel} />
@@ -200,11 +200,11 @@ function QuestionBody({ q, value, onChange, accent, isMobile }) {
     return (
       <>
         {q.max && (
-          <div style={{ fontSize: 11, color: atMax ? C.amber : C.t4, marginBottom: 10, fontWeight: atMax ? 700 : 500 }}>
+          <div style={{ fontSize: 11, color: atMax ? C.amber : C.t4, marginBottom: 8, fontWeight: atMax ? 700 : 500 }}>
             {atMax ? `That is your ${q.max}. Deselect one to choose differently.` : `Choose up to ${q.max} — ${q.max - list.length} left.`}
           </div>
         )}
-        <div style={CC({ gap: 9 })}>
+        <div style={CC({ gap: 8 })}>
           {q.options.map((o) => {
             const on = list.includes(o.value);
             const blocked = !on && atMax;
@@ -230,9 +230,9 @@ function QuestionBody({ q, value, onChange, accent, isMobile }) {
           onChange={(e) => onChange(e.target.value.slice(0, q.maxLength || 1200))}
           placeholder={q.placeholder}
           rows={isMobile ? 7 : 9}
-          style={{ ...inp({ resize: 'vertical', lineHeight: 1.7, fontSize: 13.5, minHeight: 150 }) }}
+          style={{ ...inp({ resize: 'vertical', lineHeight: 1.55, fontSize: 13.5, minHeight: 150 }) }}
         />
-        <div style={{ fontSize: 10.5, color: C.t4, marginTop: 7, textAlign: 'right' }}>
+        <div style={{ fontSize: 10.5, color: C.t4, marginTop: 8, textAlign: 'right' }}>
           {text.length} / {q.maxLength || 1200}
         </div>
       </div>
@@ -250,17 +250,17 @@ function Choice({ selected, disabled, onClick, label, sublabel, accent, isMobile
       onClick={disabled ? undefined : onClick}
       aria-pressed={selected}
       style={{
-        display: 'flex', alignItems: 'center', gap: 13, width: '100%', textAlign: 'left',
+        display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left',
         padding: isMobile ? '13px 14px' : '15px 18px', borderRadius: 12,
         border: `1px solid ${selected ? tint(accent, 0.5) : C.b1}`,
         background: selected ? tint(accent, 0.11) : C.surf2,
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.4 : 1,
-        transition: 'all .15s', fontFamily: C.FB,
+        transition: CONTROL_TRANSITION, fontFamily: C.FB,
       }}
     >
       <span style={{
-        width: 20, height: 20, borderRadius: 6, flexShrink: 0,
+        width: 20, height: 20, borderRadius: 4, flexShrink: 0,
         border: `1.5px solid ${selected ? accent : C.b2}`,
         background: selected ? accent : 'transparent',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -269,7 +269,7 @@ function Choice({ selected, disabled, onClick, label, sublabel, accent, isMobile
       </span>
       <span style={{ minWidth: 0 }}>
         <span style={{ display: 'block', fontSize: isMobile ? 13.5 : 14.5, fontWeight: selected ? 700 : 600, color: C.t1 }}>{label}</span>
-        {sublabel && <span style={{ display: 'block', fontSize: 11.5, color: C.t3, marginTop: 3, lineHeight: 1.5 }}>{sublabel}</span>}
+        {sublabel && <span style={{ display: 'block', fontSize: 11.5, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>{sublabel}</span>}
       </span>
     </motion.button>
   );
@@ -299,13 +299,13 @@ function SchoolPicker({ value, onChange, max, accent, placeholder }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: list.length ? 14 : 0 }}>
         {list.map((s) => (
           <span key={s} style={{
-            display: 'inline-flex', alignItems: 'center', gap: 7, padding: '7px 10px 7px 13px',
+            display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 8px 8px 12px',
             borderRadius: 999, background: tint(accent, 0.12), border: `1px solid ${tint(accent, 0.3)}`,
             fontSize: 12.5, fontWeight: 600, color: C.t1,
           }}>
             {s}
             <button type="button" aria-label={`Remove ${s}`} onClick={() => onChange(list.filter((x) => x !== s))}
-              style={{ background: 'transparent', border: 0, cursor: 'pointer', display: 'flex', padding: 2 }}>
+              style={{ background: 'transparent', border: 0, cursor: 'pointer', display: 'flex', padding: 4 }}>
               <X size={12} color={C.t3} />
             </button>
           </span>
@@ -322,7 +322,7 @@ function SchoolPicker({ value, onChange, max, accent, placeholder }) {
       ) : (
         <div style={{ fontSize: 11.5, color: C.t3 }}>That is {max} — remove one to add another.</div>
       )}
-      <div style={{ fontSize: 11, color: C.t4, marginTop: 10, lineHeight: 1.6 }}>
+      <div style={{ fontSize: 11, color: C.t4, marginTop: 8, lineHeight: 1.55 }}>
         Not sure yet? Leave it and the roadmap will make building this list an early item — but it
         will be a much more generic roadmap until you do.
       </div>
@@ -344,10 +344,10 @@ function ReviewScreen({ answers, prefillSource, seen, accent, isMobile, onEdit, 
   const assumed = QUESTIONS.filter((q) => prefillSource[q.id] && !seen.has(q.id));
   return (
     <div>
-      <h2 style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.03em', margin: 0 }}>
+      <h2 style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.03em + var(--msp-letter-spacing))', margin: 0 }}>
         Before we build it
       </h2>
-      <p style={{ fontSize: 13, color: C.t3, lineHeight: 1.7, marginTop: 10, marginBottom: 22, maxWidth: 620 }}>
+      <p style={{ fontSize: 13, color: C.t3, lineHeight: 1.55, marginTop: 8, marginBottom: 20, maxWidth: 620 }}>
         Everything below goes into your roadmap. Anything marked <b style={{ color: accent }}>assumed</b> is
         something we filled in from what you told us earlier and you did not change — worth a look,
         because a wrong assumption here becomes a wrong year.
@@ -355,8 +355,8 @@ function ReviewScreen({ answers, prefillSource, seen, accent, isMobile, onEdit, 
 
       {assumed.length > 0 && (
         <div style={{
-          ...R({ gap: 9 }), background: tint(accent, 0.09), border: `1px solid ${tint(accent, 0.22)}`,
-          borderRadius: 10, padding: '11px 14px', marginBottom: 18,
+          ...R({ gap: 8 }), background: tint(accent, 0.09), border: `1px solid ${tint(accent, 0.22)}`,
+          borderRadius: 8, padding: '12px 12px', marginBottom: 16,
         }}>
           <Wand2 size={14} color={accent} />
           <span style={{ fontSize: 12, color: C.t2 }}>
@@ -372,7 +372,7 @@ function ReviewScreen({ answers, prefillSource, seen, accent, isMobile, onEdit, 
           const empty = !isAnswered(q, v) || v == null || (Array.isArray(v) && !v.length) || (typeof v === 'string' && !v.trim());
           return (
             <button key={q.id} type="button" onClick={() => onEdit(q.id)} style={{
-              ...glass2({ padding: '12px 15px' }), display: 'flex', gap: 12, alignItems: 'flex-start',
+              ...glass2({ padding: '12px 16px' }), display: 'flex', gap: 12, alignItems: 'flex-start',
               textAlign: 'left', width: '100%', cursor: 'pointer', fontFamily: C.FB,
               border: `1px solid ${isAssumed ? tint(accent, 0.3) : C.b1}`,
             }}>
@@ -384,8 +384,8 @@ function ReviewScreen({ answers, prefillSource, seen, accent, isMobile, onEdit, 
               </div>
               {isAssumed && (
                 <span style={{
-                  flexShrink: 0, fontSize: 9.5, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase',
-                  color: accent, background: tint(accent, 0.14), padding: '3px 8px', borderRadius: 20,
+                  flexShrink: 0, fontSize: 9.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', 
+                  color: accent, background: tint(accent, 0.14), padding: '4px 8px', borderRadius: 16,
                 }}>Assumed</span>
               )}
             </button>
@@ -393,7 +393,7 @@ function ReviewScreen({ answers, prefillSource, seen, accent, isMobile, onEdit, 
         })}
       </div>
 
-      <div style={{ ...R({ justifyContent: 'space-between', marginTop: 26, flexWrap: 'wrap', gap: 12 }) }}>
+      <div style={{ ...R({ justifyContent: 'space-between', marginTop: 24, flexWrap: 'wrap', gap: 12 }) }}>
         <button onClick={onBack} style={btnG()}><ChevronLeft size={14} /> Back</button>
         <button onClick={onSubmit} style={{ ...btn(accentFill(accent)), color: onTint(accent), fontSize: 14, padding: '12px 24px' }}>
           <Sparkles size={15} /> Build my roadmap

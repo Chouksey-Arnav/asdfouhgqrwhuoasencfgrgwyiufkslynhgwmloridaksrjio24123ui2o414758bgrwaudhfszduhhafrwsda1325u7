@@ -32,7 +32,7 @@ export default function MedExChip({ state = null, onClick = null, showDelta = tr
       type={onClick ? 'button' : undefined}
       title={`MedEx Score ${score} of 1000 — ${headline.band.label}, measured against ${headline.program.name}`}
       style={{
-        ...pill(tint(color, 0.14), color, { gap: 5, fontFamily: C.FM }),
+        ...pill(tint(color, 0.14), color, { gap: 4, fontFamily: C.FM }),
         border: `1px solid ${tint(color, 0.26)}`,
         cursor: onClick ? 'pointer' : 'default',
       }}

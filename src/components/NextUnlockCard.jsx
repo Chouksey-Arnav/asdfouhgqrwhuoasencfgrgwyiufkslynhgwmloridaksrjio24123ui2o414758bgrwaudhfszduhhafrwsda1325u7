@@ -27,9 +27,9 @@ function ProgressBar({ progress, accent }) {
   const [have, need] = progress;
   if (!(need > 0) || have >= need) return null;
   return (
-    <div style={{ marginTop: 7 }}>
-      <div style={{ height: 3, borderRadius: 2, background: C.s3, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${Math.round((have / need) * 100)}%`, background: accent, borderRadius: 2, transition: 'width .4s' }} />
+    <div style={{ marginTop: 8 }}>
+      <div style={{ height: 3, borderRadius: 4, background: C.s3, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: '100%', transform: `scaleX(${(Math.round((have / need) * 100)) / 100})`, transformOrigin: 'left', background: accent, borderRadius: 4, transition: 'transform 200ms cubic-bezier(0.4, 0, 0.2, 1)' }} />
       </div>
       <div style={{ fontSize: 9.5, color: C.t4, fontFamily: C.FM, marginTop: 4 }}>{have} of {need}</div>
     </div>
@@ -49,24 +49,24 @@ function MarqueeRow({ item }) {
   const gold = C.gold;
   return (
     <div style={{
-      padding: '14px 15px', borderRadius: 12,
+      padding: '12px 16px', borderRadius: 12,
       background: `linear-gradient(135deg,${tint(gold, 0.16)},${tint(gold, 0.04)})`,
       border: `1px solid ${tint(gold, 0.42)}`,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <CalendarClock size={14} color={gold} style={{ flexShrink: 0 }} />
         <span style={{ fontSize: 13.5, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{item.label}</span>
         <span style={{
-          fontSize: 8.5, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase',
+          fontSize: 8.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', 
           color: gold, background: tint(gold, 0.15), border: `1px solid ${tint(gold, 0.35)}`,
-          borderRadius: 999, padding: '3px 7px',
+          borderRadius: 999, padding: '4px 8px',
         }}>Milestone</span>
       </div>
       {item.reward && (
         <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginBottom: 8 }}>{item.reward}</div>
       )}
-      <div style={{ display: 'flex', gap: 7, alignItems: 'flex-start' }}>
-        <Lock size={12} color={C.t4} style={{ flexShrink: 0, marginTop: 2 }} />
+      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+        <Lock size={12} color={C.t4} style={{ flexShrink: 0, marginTop: 4 }} />
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.5 }}>{item.hint}</div>
           <ProgressBar progress={item.progress} accent={gold} />
@@ -93,13 +93,13 @@ export default function NextUnlockCard({
   if (variant === 'rail') {
     const it = shown[0];
     return (
-      <div style={{ margin: '4px 10px 0', padding: '10px 12px', borderRadius: 9, background: C.s2, border: `1px dashed ${C.b2}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+      <div style={{ margin: '4px 8px 0px', padding: '8px 12px', borderRadius: 8, background: C.s2, border: `1px dashed ${C.b2}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
           <Lock size={11} color={C.t4} />
-          <span style={{ fontSize: 9.5, fontWeight: 700, color: C.t4, letterSpacing: '.08em', textTransform: 'uppercase' }}>{title}</span>
+          <span style={{ fontSize: 9.5, fontWeight: 700, color: C.t4, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>{title}</span>
         </div>
         <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t2, fontFamily: C.FD }}>{it.label}</div>
-        <div style={{ fontSize: 11, color: C.t4, lineHeight: 1.45, marginTop: 3 }}>{it.hint}</div>
+        <div style={{ fontSize: 11, color: C.t4, lineHeight: 1.45, marginTop: 4 }}>{it.hint}</div>
         <ProgressBar progress={it.progress} accent={accent} />
       </div>
     );
@@ -111,7 +111,7 @@ export default function NextUnlockCard({
   // A teenager reading this should think "there's more coming", not "I'm
   // locked out of the paid bit".
   return (
-    <div style={glass({ padding: 18 })}>
+    <div style={glass({ padding: 16 })}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
         <div style={{ width: 26, height: 26, borderRadius: 8, background: tint(accent, 0.16), border: `1px solid ${tint(accent, 0.35)}`, display: 'grid', placeItems: 'center' }}>
           <Sparkles size={13} color={accent} />
@@ -123,11 +123,11 @@ export default function NextUnlockCard({
       </div>
       <div style={{ display: 'grid', gap: 8 }}>
         {shown.map(it => it.marquee ? <MarqueeRow key={it.id} item={it} /> : (
-          <div key={it.id} style={{ display: 'flex', gap: 10, padding: '10px 12px', borderRadius: 10, background: C.s2, border: `1px dashed ${C.b2}` }}>
-            <Lock size={13} color={C.t4} style={{ flexShrink: 0, marginTop: 2 }} />
+          <div key={it.id} style={{ display: 'flex', gap: 8, padding: '8px 12px', borderRadius: 8, background: C.s2, border: `1px dashed ${C.b2}` }}>
+            <Lock size={13} color={C.t4} style={{ flexShrink: 0, marginTop: 4 }} />
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t2 }}>{it.label}</div>
-              <div style={{ fontSize: 11.5, color: C.t4, lineHeight: 1.5, marginTop: 2 }}>{it.hint}</div>
+              <div style={{ fontSize: 11.5, color: C.t4, lineHeight: 1.5, marginTop: 4 }}>{it.hint}</div>
               <ProgressBar progress={it.progress} accent={accent} />
             </div>
           </div>
@@ -153,7 +153,7 @@ export function LockedPill({ item, m = false }) {
       title={item.hint}
       aria-label={`${item.label} — locked. ${item.hint}`}
       style={{
-        display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0,
+        display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0,
         padding: m ? '8px 12px' : '8px 14px', borderRadius: 999,
         border: `1px dashed ${C.b2}`, background: 'transparent',
         color: C.t4, fontWeight: 500, fontSize: 12.5, fontFamily: C.FB,

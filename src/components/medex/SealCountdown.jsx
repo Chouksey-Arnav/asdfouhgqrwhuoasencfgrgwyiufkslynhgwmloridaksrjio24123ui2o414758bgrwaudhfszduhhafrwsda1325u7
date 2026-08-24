@@ -60,7 +60,7 @@ export default function SealCountdown({
 
   if (compact) {
     return (
-      <span style={{ ...pill(tint(tone, 0.14), tone, { gap: 5, fontFamily: C.FM, fontSize: 10.5 }) }}
+      <span style={{ ...pill(tint(tone, 0.14), tone, { gap: 4, fontFamily: C.FM, fontSize: 10.5 }) }}
         title={`Your MedEx Score seals ${cd.target.toLocaleString(undefined, { weekday: 'long', hour: 'numeric', minute: '2-digit' })}`}>
         <Timer size={10} />{cd.short}
       </span>
@@ -70,7 +70,7 @@ export default function SealCountdown({
   return (
     <div style={{
       background: tint(tone, 0.07), border: `1px solid ${tint(tone, 0.22)}`,
-      borderRadius: 12, padding: '11px 13px',
+      borderRadius: 12, padding: '12px 12px',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <Lock size={12} color={tone} style={{ flexShrink: 0 }} />
@@ -88,7 +88,7 @@ export default function SealCountdown({
         )}
       </div>
 
-      <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.45, marginTop: 5 }}>
+      <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.45, marginTop: 4 }}>
         {hasBanked
           ? positive
             ? `Everything you have logged this week is worth ${Math.round(banked)} points, and it lands on your official score when the week closes.`
@@ -98,12 +98,13 @@ export default function SealCountdown({
 
       {showBar && (
         <div style={{
-          marginTop: 9, height: 4, borderRadius: 3, background: C.b1, overflow: 'hidden',
+          marginTop: 8, height: 4, borderRadius: 4, background: C.b1, overflow: 'hidden',
         }}>
           <div style={{
-            width: `${Math.round(cd.progress * 100)}%`, height: '100%', borderRadius: 3,
+            width: '100%', height: '100%', borderRadius: 4,
+            transform: `scaleX(${Math.round(cd.progress * 100) / 100})`, transformOrigin: 'left',
             background: `linear-gradient(90deg, ${tint(tone, 0.5)}, ${tone})`,
-            transition: 'width 1s linear',
+            transition: 'transform 200ms linear',
           }} />
         </div>
       )}

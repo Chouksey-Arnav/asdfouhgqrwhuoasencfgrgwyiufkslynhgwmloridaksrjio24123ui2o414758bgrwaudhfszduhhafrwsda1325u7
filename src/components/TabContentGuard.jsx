@@ -115,17 +115,17 @@ export default function TabContentGuard({ tabKey, reducedMotion = false, childre
 
   if (state.phase === 'failed') {
     return (
-      <div style={{ minHeight: 'min(60vh, 460px)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 18, padding: 40, textAlign: 'center' }}>
+      <div style={{ minHeight: 'min(60vh, 460px)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, padding: 40, textAlign: 'center' }}>
         <div style={{ width: 60, height: 60, borderRadius: '50%', background: C.roseDim, border: `1px solid ${C.rose}40`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <AlertTriangle size={26} color={C.rose} />
         </div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: C.t1, fontFamily: C.FD, margin: 0 }}>Oops! Loading issue.</h2>
-        <p style={{ color: C.t2, maxWidth: 420, lineHeight: 1.7, fontSize: 14, margin: 0 }}>
+        <h2 style={{ fontSize: 20, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))', fontWeight: 700, color: C.t1, fontFamily: C.FD, margin: 0 }}>Oops! Loading issue.</h2>
+        <p style={{ color: C.t2, maxWidth: 420, lineHeight: 1.55, fontSize: 14, margin: 0 }}>
           This section didn’t finish loading. Refresh the page and it’ll come right back —
           nothing you’ve done is lost. If it keeps happening, contact our support team at{' '}
           <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: C.blueL }}>{SUPPORT_EMAIL}</a>.
         </p>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
           <button type="button" style={btn()} onClick={() => window.location.reload()}>Refresh the page</button>
           <button type="button" style={btnG()} onClick={() => setState({ key: tabKey, phase: 'motion' })}>Try again</button>
         </div>

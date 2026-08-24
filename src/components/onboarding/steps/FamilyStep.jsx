@@ -47,19 +47,19 @@ export function FamilyStep({ value, onChange, onNext, h }) {
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* The ledger. Both sides, same weight, side by side where there's room. */}
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8 }}>
           {[
             { g: yes, icon: 'shield-check', t: "They'd see", b: SHARED },
             { g: no, icon: 'eye-off', t: "They'd never see", b: PRIVATE },
           ].map(({ g: cg, icon, t, b }) => (
             <div key={t} style={{
-              padding: '15px 16px', borderRadius: R.md,
+              padding: '16px 16px', borderRadius: R.md,
               background: `linear-gradient(150deg, ${cg.softer}, transparent 70%), ${C.surf}`,
               border: `1px solid ${cg.edgeSoft}`, boxShadow: C.shadowSm,
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 9 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <span style={{
-                  width: 28, height: 28, borderRadius: 9, flexShrink: 0,
+                  width: 28, height: 28, borderRadius: 8, flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   background: cg.soft, border: `1px solid ${cg.edgeSoft}`, color: cg.ink,
                 }}><Icon name={icon} size={15} /></span>
@@ -87,7 +87,7 @@ export function FamilyStep({ value, onChange, onNext, h }) {
               placeholder="parent@example.com"
               style={{
                 width: '100%', boxSizing: 'border-box',
-                padding: '13px 14px 13px 40px', borderRadius: R.md, fontSize: 14,
+                padding: '12px 12px 12px 40px', borderRadius: R.md, fontSize: 14,
                 background: C.inputBg, color: C.t1, fontFamily: C.FB, outline: 'none',
                 border: `1px solid ${invalid ? C.rose : focusField === 'email' ? g.edge : C.inputBorder}`,
                 transition: 'border-color .18s',
@@ -95,8 +95,8 @@ export function FamilyStep({ value, onChange, onNext, h }) {
               }}
             />
           </div>
-          {invalid && <div style={{ fontSize: 12, color: C.roseL, marginTop: 7 }}>That doesn't look like an email address.</div>}
-          <p style={body(12, { marginTop: 9, marginBottom: 0, color: C.t3 })}>
+          {invalid && <div style={{ fontSize: 12, color: C.roseL, marginTop: 8 }}>That doesn't look like an email address.</div>}
+          <p style={body(12, { marginTop: 8, marginBottom: 0, color: C.t3 })}>
             We'll send them one request after your account is created. They have to make their own
             parent account and say who they are — they never sign in as you, and nothing is shared
             until you both agree.
@@ -115,7 +115,7 @@ export function FamilyStep({ value, onChange, onNext, h }) {
                   key={rel} type="button" aria-pressed={on}
                   onClick={() => onChange({ parentRelationship: on ? '' : rel })}
                   style={{
-                    padding: '8px 15px', borderRadius: R.pill, cursor: 'pointer', fontSize: 13,
+                    padding: '8px 16px', borderRadius: R.pill, cursor: 'pointer', fontSize: 13,
                     fontFamily: C.FB, fontWeight: on ? 700 : 500,
                     background: on ? `linear-gradient(135deg, ${g.soft}, ${g.softer})` : C.surf,
                     border: `1px solid ${on ? g.edge : C.b1}`,
@@ -134,7 +134,7 @@ export function FamilyStep({ value, onChange, onNext, h }) {
       </ContinueButton>
       {/* An explicit, equally-weighted way out. A skip link that looks like an afterthought is a
           dark pattern with better manners. */}
-      <div style={{ textAlign: 'center', marginTop: 2, marginBottom: 10 }}>
+      <div style={{ textAlign: 'center', marginTop: 4, marginBottom: 8 }}>
         <TextLink onClick={() => { onChange({ parentInviteEmail: '', parentRelationship: '' }); onNext(); }}>
           Not right now
         </TextLink>

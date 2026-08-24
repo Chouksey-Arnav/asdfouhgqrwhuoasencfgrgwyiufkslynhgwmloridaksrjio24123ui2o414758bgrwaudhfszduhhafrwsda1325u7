@@ -14,7 +14,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Flame, Snowflake } from 'lucide-react';
-import { C, glass2, R, pill, tint } from '../../lib/theme';
+import { C, glass2, R, pill, tint, CONTROL_TRANSITION } from '../../lib/theme';
 import { STREAK_ACTIONS, buildMonthGrid, monthSummary, WEEKDAY_LETTERS } from '../../lib/streak';
 
 const MONTH_FMT = { month: 'long', year: 'numeric' };
@@ -66,9 +66,9 @@ export default function StreakCalendar({
       </div>
 
       {/* Weekday header — Monday-first, matching the perfect-week window */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4, marginBottom: 6 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4, marginBottom: 4 }}>
         {WEEKDAY_LETTERS.map((d, i) => (
-          <div key={i} style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, color: C.t4, letterSpacing: '.08em' }}>{d}</div>
+          <div key={i} style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, color: C.t4, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>{d}</div>
         ))}
       </div>
 
@@ -84,7 +84,7 @@ export default function StreakCalendar({
       </div>
 
       {/* Legend */}
-      <div style={R({ gap: 14, marginTop: 12, flexWrap: 'wrap' })}>
+      <div style={R({ gap: 12, marginTop: 12, flexWrap: 'wrap' })}>
         <Legend swatch={<div style={{ width: 11, height: 11, borderRadius: 4, background: accent, boxShadow: `0 0 8px ${accent}70` }} />} label="Goal earned" />
         <Legend swatch={<div style={{ width: 11, height: 11, borderRadius: 4, background: tint(accent, 0.3), border: `1px solid ${tint(accent, 0.5)}` }} />} label="Partial" />
         <Legend swatch={<Snowflake size={11} color={C.blueL} />} label="Freeze used" />
@@ -104,7 +104,7 @@ function MonthButton({ children, onClick, disabled, label }) {
       style={{
         width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
         background: C.surfHi, border: `1px solid ${C.b1}`, color: disabled ? C.t4 : C.t2,
-        cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.4 : 1, transition: 'all .15s',
+        cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.4 : 1, transition: CONTROL_TRANSITION,
       }}
     >{children}</button>
   );
@@ -112,7 +112,7 @@ function MonthButton({ children, onClick, disabled, label }) {
 
 function Legend({ swatch, label }) {
   return (
-    <span style={R({ gap: 5 })}>
+    <span style={R({ gap: 4 })}>
       {swatch}
       <span style={{ fontSize: 10.5, color: C.t3 }}>{label}</span>
     </span>
@@ -140,7 +140,7 @@ function DayCell({ cell, size, accent, selected, onSelect }) {
       title={label} aria-label={label}
       disabled={future}
       style={{
-        height: size, borderRadius: 10, padding: 0, position: 'relative',
+        height: size, borderRadius: 8, padding: 0, position: 'relative',
         background: bg,
         border: selected ? `1.5px solid ${accent}`
           : isToday ? `1.5px solid ${tint(accent, 0.55)}`
@@ -169,8 +169,8 @@ function DayDetail({ cell, accent, goalCredits }) {
   const entries = Object.entries(cell.counts || {}).filter(([, n]) => n > 0);
   const target = cell.pct && cell.credits ? Math.round((cell.credits / cell.pct) * 100) : goalCredits;
   return (
-    <div style={glass2({ marginTop: 12, padding: 14, borderColor: tint(accent, 0.3) })}>
-      <div style={R({ justifyContent: 'space-between', marginBottom: entries.length ? 10 : 0, flexWrap: 'wrap', gap: 6 })}>
+    <div style={glass2({ marginTop: 12, padding: 12, borderColor: tint(accent, 0.3) })}>
+      <div style={R({ justifyContent: 'space-between', marginBottom: entries.length ? 10 : 0, flexWrap: 'wrap', gap: 4 })}>
         <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>
           {cell.date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
         </div>
@@ -179,7 +179,7 @@ function DayDetail({ cell, accent, goalCredits }) {
         </span>
       </div>
       {entries.length ? (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
           {entries.map(([action, n]) => (
             <span key={action} style={pill(C.s3, C.t2, { fontSize: 10.5 })}>
               {STREAK_ACTIONS[action]?.short || action}{n > 1 ? ` ×${n}` : ''}

@@ -57,6 +57,28 @@
 
 import { THEMES, HC_OVERLAYS, HUE_NAMES } from './tokens/semantic.js';
 import { componentTokens } from './tokens/components.js';
+import { eyebrow } from './tokens/type.js';
+import { RADIUS } from './tokens/space.js';
+import { DUR, EASE, tr } from './tokens/motion.js';
+
+// The non-colour token layers are re-exported from here so a component has one
+// import for "the design system" rather than four. They are separate FILES
+// because they are separate concerns with separate lints; they are one import
+// because nobody should have to remember which file `SP.lg` lives in.
+export { SIZE, type, ls, lh, tracking, leading, eyebrow } from './tokens/type.js';
+export { SP, RADIUS, GRID, nested, snapRadius, onGrid, isLayoutSpace } from './tokens/space.js';
+export { DUR, EASE, MOTION, tr, exit, LOADING, MAX_INTERACTIVE } from './tokens/motion.js';
+
+/**
+ * The transition every control shares: paint-only properties plus transform,
+ * at the hover duration. Never `all` — `all` includes width, height and
+ * padding, which is how a button animation ends up doing layout on every frame.
+ */
+export const CONTROL_TRANSITION = tr(
+  ['background-color', 'border-color', 'color', 'box-shadow', 'transform', 'opacity'],
+  DUR.hover,
+  EASE.state,
+);
 
 /** Legacy surface slot → semantic surface step. */
 const LEGACY_SURFACES = { bg: 'canvas', s0: 'canvasSubtle', s1: 'default', s2: 'inset', s3: 'raised', s4: 'hover', s5: 'pressed' };
@@ -556,16 +578,26 @@ export const glass2 = (x={}) => ({ background:C.cmp.cardQuietBg, border:`1px sol
 // `color` is measured against the fill rather than pinned to onAccent: a couple
 // of call sites pass a SURFACE token as the button background, and Balanced's
 // onAccent is dark ink meant for a light accent fill. See onFill().
-export const btn    = (bg=C.blueGrad,x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px 20px', borderRadius:9, border:'none', background:bg, color:onFill(bg), fontWeight:600, fontSize:13, fontFamily:C.FB, cursor:'pointer', letterSpacing:'.01em', // A softer halo than the original 0 4px 16px @35%: the old one read as a lit
+export const btn    = (bg=C.blueGrad,x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:8, padding:'12px 20px', borderRadius:RADIUS.sm, border:'none', background:bg, color:onFill(bg), fontWeight:600, fontSize:13, fontFamily:C.FB, cursor:'pointer', // A softer halo than the original 0 4px 16px @35%: the old one read as a lit
 // object on every screen that had more than one button on it.
-boxShadow:bg===C.blueGrad?`0 3px 12px ${tint(C.blue,0.22)},inset 0 1px 0 ${C.cmp.buttonSolidTopHighlight}`:C.shadowSm, transition:'all .18s cubic-bezier(.16,1,.3,1)', ...x });
-export const btnSm  = (bg=C.surfHi,x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:4, padding:'6px 14px', borderRadius:7, border:`1px solid ${C.cmp.buttonQuietBorder}`, background:bg, color:C.cmp.buttonQuietFg, fontWeight:600, fontSize:12, fontFamily:C.FB, cursor:'pointer', transition:'all .15s', ...x });
-export const btnG   = (x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:6, padding:'9px 18px', borderRadius:9, border:`1px solid ${C.cmp.buttonGhostBorder}`, background:'transparent', color:C.cmp.buttonGhostFg, fontWeight:500, fontSize:13, fontFamily:C.FB, cursor:'pointer', transition:'all .15s', ...x });
-export const inp    = (x={}) => ({ background:C.cmp.inputBg, border:`1px solid ${C.cmp.inputBorder}`, borderRadius:10, padding:'10px 14px', color:C.cmp.inputFg, fontSize:13, fontFamily:C.FB, outline:'none', width:'100%', transition:'border-color .15s,box-shadow .15s', ...x });
-export const lbl    = (x={}) => ({ fontSize:10, fontWeight:700, color:C.cmp.kickerFg, letterSpacing:'.1em', textTransform:'uppercase', display:'block', marginBottom:7, ...x });
+boxShadow:bg===C.blueGrad?`0 3px 12px ${tint(C.blue,0.22)},inset 0 1px 0 ${C.cmp.buttonSolidTopHighlight}`:C.shadowSm, transition:CONTROL_TRANSITION, ...x });
+export const btnSm  = (bg=C.surfHi,x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:4, padding:'8px 12px', borderRadius:RADIUS.sm, border:`1px solid ${C.cmp.buttonQuietBorder}`, background:bg, color:C.cmp.buttonQuietFg, fontWeight:600, fontSize:12, fontFamily:C.FB, cursor:'pointer', transition:CONTROL_TRANSITION, ...x });
+export const btnG   = (x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:8, padding:'12px 20px', borderRadius:RADIUS.sm, border:`1px solid ${C.cmp.buttonGhostBorder}`, background:'transparent', color:C.cmp.buttonGhostFg, fontWeight:500, fontSize:13, fontFamily:C.FB, cursor:'pointer', transition:CONTROL_TRANSITION, ...x });
+export const inp    = (x={}) => ({ background:C.cmp.inputBg, border:`1px solid ${C.cmp.inputBorder}`, borderRadius:RADIUS.sm, padding:'12px 16px', color:C.cmp.inputFg, fontSize:13, fontFamily:C.FB, outline:'none', width:'100%', transition:tr(['border-color','box-shadow'], DUR.focus), ...x });
+/**
+ * The eyebrow label — the small line that names a section above its heading.
+ *
+ * This used to be 10px, weight 700, `.1em` of tracking and `textTransform:
+ * uppercase`. All-caps is measurably slower to read (the word-shape cue that
+ * fluent reading leans on disappears — every word becomes the same rectangle),
+ * and it is worst for exactly the students this app is built for. 13px with
+ * +0.4 of tracking is the effect the caps were reaching for, and it keeps the
+ * word shapes. See src/lib/tokens/type.js.
+ */
+export const lbl    = (x={}) => ({ ...eyebrow(), color:C.cmp.kickerFg, display:'block', marginBottom:8, ...x });
 export const R      = (x={}) => ({ display:'flex', alignItems:'center', gap:12, ...x });
 export const CC     = (x={}) => ({ display:'flex', flexDirection:'column', gap:12, ...x });
-export const G      = (cols=2,gap=14,x={},m=false) => ({ display:'grid', gridTemplateColumns:m?(cols<=2?'1fr':'repeat(2,1fr)'):`repeat(${cols},1fr)`, gap, ...x });
+export const G      = (cols=2,gap=16,x={},m=false) => ({ display:'grid', gridTemplateColumns:m?(cols<=2?'1fr':'repeat(2,1fr)'):`repeat(${cols},1fr)`, gap, ...x });
 /**
  * A grid that reflows by the space it actually has, rather than by a guess about the device.
  *
@@ -584,4 +616,4 @@ export const G      = (cols=2,gap=14,x={},m=false) => ({ display:'grid', gridTem
 export const autoGrid = (min=220, gap=12, x={}) => ({
   display:'grid', gap, gridTemplateColumns:`repeat(auto-fit,minmax(min(100%,${min}px),1fr))`, ...x,
 });
-export const pill   = (bg,color,x={}) => ({ display:'inline-flex', alignItems:'center', padding:'3px 11px', borderRadius:20, fontSize:11, fontWeight:600, letterSpacing:'.04em', background:bg, color, ...x });
+export const pill   = (bg,color,x={}) => ({ display:'inline-flex', alignItems:'center', padding:'4px 12px', borderRadius:RADIUS.pill, fontSize:11, fontWeight:600, letterSpacing:`calc(0.2px + var(--msp-letter-spacing))`, background:bg, color, ...x });

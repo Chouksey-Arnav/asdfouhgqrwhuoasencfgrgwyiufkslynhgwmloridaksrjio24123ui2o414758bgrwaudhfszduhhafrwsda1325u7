@@ -128,7 +128,7 @@ function ShareKit({ share, copy, onResend, resending }) {
     <div style={glass2({ ...CC({ gap: 12 }), borderColor: tint(C.blue, 0.26), background: tint(C.blue, 0.04) })}>
       <div>
         <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{copy.shareTitle}</div>
-        <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6, marginTop: 4 }}>{copy.shareBody}</div>
+        <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.55, marginTop: 4 }}>{copy.shareBody}</div>
       </div>
 
       <button
@@ -136,13 +136,13 @@ function ShareKit({ share, copy, onResend, resending }) {
         onClick={() => doCopy('code', share.formattedCode)}
         aria-label={`Copy the invitation code ${share.formattedCode}`}
         style={{
-          ...R({ gap: 10, justifyContent: 'space-between' }),
-          width: '100%', padding: '12px 14px', borderRadius: 10, cursor: 'pointer',
+          ...R({ gap: 8, justifyContent: 'space-between' }),
+          width: '100%', padding: '12px 12px', borderRadius: 8, cursor: 'pointer',
           background: C.surf2, border: `1px solid ${C.b1}`, fontFamily: C.FB,
         }}
       >
         <span style={{
-          fontSize: 21, fontWeight: 800, letterSpacing: '.14em', color: C.t1,
+          fontSize: 21, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t1,
           fontFamily: 'ui-monospace,SFMono-Regular,Menlo,monospace',
         }}>
           {share.formattedCode}
@@ -203,13 +203,13 @@ function ThreadFold({ link, role, initiallyOpen }) {
   }, [link.id, open]);
 
   return (
-    <div style={CC({ gap: 10 })}>
+    <div style={CC({ gap: 8 })}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         style={{
-          ...R({ gap: 8 }), width: '100%', padding: '9px 12px', borderRadius: 9, cursor: 'pointer',
+          ...R({ gap: 8 }), width: '100%', padding: '8px 12px', borderRadius: 8, cursor: 'pointer',
           background: unread ? tint(C.amber, 0.07) : 'transparent',
           border: `1px solid ${unread ? tint(C.amber, 0.28) : C.b1}`,
           color: C.t2, fontSize: 12.5, fontWeight: 600, fontFamily: C.FB, textAlign: 'left',
@@ -330,7 +330,7 @@ export default function ConnectionsPanel({ role = 'student', onChanged }) {
   return (
     <div style={CC({ gap: 12 })}>
       {links.length === 0 && !showForm && (
-        <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.6 }}>{copy.empty}</div>
+        <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.55 }}>{copy.empty}</div>
       )}
 
       {links.map((link) => {
@@ -341,13 +341,13 @@ export default function ConnectionsPanel({ role = 'student', onChanged }) {
         // has to be made against a screen that says what is being agreed to. See InviteScreen.
         const needsMyAnswer = link.status === 'pending' && !link.isOutgoing;
         return (
-          <div key={link.id} style={CC({ gap: 10 })}>
+          <div key={link.id} style={CC({ gap: 8 })}>
             <div style={glass2({ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' })}>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {link.counterparty.name || link.counterparty.email}
                 </div>
-                <div style={{ fontSize: 11.5, color: C.t3, marginTop: 2 }}>
+                <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4 }}>
                   {link.relationship ? `${link.relationship} · ` : ''}
                   {link.status === 'active' ? copy.activeNote
                     : needsMyAnswer ? 'Asked to connect — check your email to respond'
@@ -355,13 +355,13 @@ export default function ConnectionsPanel({ role = 'student', onChanged }) {
                 </div>
               </div>
               <span style={pill(meta.bg, meta.color)}>
-                <Icon size={11} style={{ marginRight: 5 }} /> {meta.label}
+                <Icon size={11} style={{ marginRight: 4 }} /> {meta.label}
               </span>
               <button
                 type="button"
                 onClick={() => handleRemove(link)}
                 aria-label={link.status === 'active' ? 'End this connection' : 'Remove this invitation'}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.t3, display: 'flex', padding: 6 }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.t3, display: 'flex', padding: 4 }}
               >
                 <X size={15} />
               </button>
@@ -388,11 +388,11 @@ export default function ConnectionsPanel({ role = 'student', onChanged }) {
               <Mail size={14} color={C.t3} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
               <input
                 autoFocus type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com" autoComplete="email" style={inp({ paddingLeft: 34 })}
+                placeholder="name@example.com" autoComplete="email" style={inp({ paddingLeft: 32 })}
               />
             </div>
             {role === 'student' && (
-              <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginTop: 6 }}>
+              <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginTop: 4 }}>
                 Use an address they can actually open — that is where their sign-in code goes, and
                 it is the only way this connects.
               </div>
@@ -425,7 +425,7 @@ export default function ConnectionsPanel({ role = 'student', onChanged }) {
             </button>
             <button type="button" onClick={() => { setShowForm(false); setError(''); }} style={btnG()}>Cancel</button>
           </div>
-          <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55 }}>
             {role === 'student'
               ? "Send it and they get an email with a button that connects them in one press — no password, no code to wait for. Or take the link and text it to them yourself; it works the same way, and they'll get a 6-digit code at the address above to prove it's them. Nothing is shared until they accept, and either of you can end it at any time."
               : "They'll get an email explaining exactly what would be shared. Nothing is shared until they accept, and either of you can end it at any time."}

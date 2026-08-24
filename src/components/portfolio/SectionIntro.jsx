@@ -32,15 +32,15 @@ export default function SectionIntro({ icon: Icon, color = C.blue, color2, title
         </div>
       )}
       <div style={{ flex: 1, minWidth: 180 }}>
-        <div style={{ fontSize: m ? 15 : 16.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em' }}>{title}</div>
-        {blurb && <div style={{ fontSize: m ? 11 : 11.5, color: C.t3, marginTop: 4, lineHeight: 1.6, maxWidth: 620 }}>{blurb}</div>}
+        <div style={{ fontSize: m ? 15 : 16.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>{title}</div>
+        {blurb && <div style={{ fontSize: m ? 11 : 11.5, color: C.t3, marginTop: 4, lineHeight: 1.55, maxWidth: 620 }}>{blurb}</div>}
       </div>
       {(stats.length > 0 || right) && (
-        <div style={R({ gap: 7, flexWrap: 'wrap', justifyContent: 'flex-end' })}>
+        <div style={R({ gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' })}>
           {stats.map((s, i) => {
             const sc = s.color || color;
             return (
-              <span key={i} style={pill(tint(sc, 0.13), sc, { fontSize: 11, fontWeight: 700, padding: '5px 11px', border: `1px solid ${tint(sc, 0.26)}`, gap: 5 })}>
+              <span key={i} style={pill(tint(sc, 0.13), sc, { fontSize: 11, fontWeight: 700, padding: '4px 12px', border: `1px solid ${tint(sc, 0.26)}`, gap: 4 })}>
                 {s.icon}{s.value != null && <b style={{ fontFamily: C.FM }}>{s.value}</b>} {s.label}
               </span>
             );

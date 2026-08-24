@@ -60,13 +60,13 @@ function DayStrip({ ev, color, m }) {
   }
 
   return (
-    <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }} aria-hidden="true">
+    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }} aria-hidden="true">
       {days.map(({ key, row, future }) => (
         <div
           key={key}
           title={row ? `${key}: ${row.credited} counted${row.capped ? ` (${row.raw - row.credited} over the daily cap)` : ''}` : key}
           style={{
-            width: m ? 7 : 9, height: m ? 7 : 9, borderRadius: 2,
+            width: m ? 7 : 9, height: m ? 7 : 9, borderRadius: 4,
             background: row ? (row.capped ? C.amber : color) : future ? 'transparent' : tint(C.t3, 0.16),
             border: `1px solid ${row ? 'transparent' : tint(C.t3, future ? 0.12 : 0.2)}`,
             opacity: row ? (row.credited >= ev.spec.dailyCap ? 1 : 0.6) : 1,
@@ -114,7 +114,7 @@ export default function QuestCard({
       {/* 1. Who asked ------------------------------------------------------- */}
       {assigned && (
         <div style={{
-          ...R({ gap: 8 }), marginBottom: 12, padding: '7px 11px', borderRadius: 9,
+          ...R({ gap: 8 }), marginBottom: 12, padding: '8px 12px', borderRadius: 8,
           background: tint(C.violet, 0.1), border: `1px solid ${tint(C.violet, 0.24)}`,
         }}>
           <Users size={12} color={C.violetL} style={{ flexShrink: 0 }} />
@@ -125,17 +125,17 @@ export default function QuestCard({
         </div>
       )}
 
-      <div style={{ ...R({ gap: 13, alignItems: 'flex-start' }) }}>
+      <div style={{ ...R({ gap: 12, alignItems: 'flex-start' }) }}>
         <div style={{
-          width: m ? 38 : 44, height: m ? 38 : 44, borderRadius: 13, flexShrink: 0,
+          width: m ? 38 : 44, height: m ? 38 : 44, borderRadius: 12, flexShrink: 0,
           background: tint(color, 0.16), border: `1.5px solid ${tint(color, 0.34)}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}><Icon size={m ? 17 : 20} color={color} /></div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }) }}>
-            <div style={{ fontSize: m ? 14 : 15.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em' }}>{quest.title}</div>
-            <span style={pill(tint(tier.color, 0.16), tier.color, { fontSize: 9.5, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase' })}>{tier.label}</span>
+            <div style={{ fontSize: m ? 14 : 15.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>{quest.title}</div>
+            <span style={pill(tint(tier.color, 0.16), tier.color, { fontSize: 9.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'})}>{tier.label}</span>
             <span style={pill(tint(C.amber, 0.14), C.amberL, { fontSize: 10, fontFamily: C.FM, fontWeight: 800 })}>+{ev.xp} XP</span>
           </div>
           {def?.blurb && <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>{def.blurb}</div>}
@@ -147,26 +147,26 @@ export default function QuestCard({
             disabled={busy}
             title={assigned ? 'Decline this quest' : 'Drop this quest'}
             aria-label={assigned ? 'Decline this quest' : 'Drop this quest'}
-            style={{ ...btnG({ padding: 6, borderRadius: 8, flexShrink: 0 }), opacity: busy ? 0.5 : 0.7 }}
+            style={{ ...btnG({ padding: 4, borderRadius: 8, flexShrink: 0 }), opacity: busy ? 0.5 : 0.7 }}
           ><X size={13} /></button>
         )}
       </div>
 
       {/* 2. Where they are --------------------------------------------------- */}
-      <div style={{ marginTop: 14 }}>
-        <div style={{ ...R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }), marginBottom: 6 }}>
+      <div style={{ marginTop: 12 }}>
+        <div style={{ ...R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }), marginBottom: 4 }}>
           <div style={{ fontSize: 12.5, color: C.t1, fontWeight: 700, fontFamily: C.FM }}>
             {ev.progress} <span style={{ color: C.t3, fontWeight: 500 }}>/ {ev.target} {metric.label || ''}</span>
           </div>
-          <div style={{ ...R({ gap: 5 }), fontSize: 11, color: tone.color, fontWeight: 700 }}>
+          <div style={{ ...R({ gap: 4 }), fontSize: 11, color: tone.color, fontWeight: 700 }}>
             {ev.done ? <Check size={11} /> : ev.state === 'lost' ? <AlertTriangle size={11} /> : <Clock size={11} />}
             {ev.done ? 'Complete' : `${ev.daysLeft}d left · due ${fmtDate(ev.dueAt)}`}
           </div>
         </div>
-        <div style={{ height: 8, borderRadius: 5, background: tint(C.t3, 0.14), overflow: 'hidden', position: 'relative' }}>
+        <div style={{ height: 8, borderRadius: 4, background: tint(C.t3, 0.14), overflow: 'hidden', position: 'relative' }}>
           <motion.div
             initial={{ width: 0 }} animate={{ width: `${ev.pct}%` }} transition={{ duration: 0.5 }}
-            style={{ height: '100%', borderRadius: 5, background: `linear-gradient(90deg, ${color}, ${tone.color})` }}
+            style={{ height: '100%', borderRadius: 4, background: `linear-gradient(90deg, ${color}, ${tone.color})` }}
           />
           {/* Where an evenly-paced student would be right now. A bar with no reference
               point cannot show "behind" — it can only show "not finished". */}
@@ -184,7 +184,7 @@ export default function QuestCard({
 
         {/* The day floor, alongside — never folded into the percentage. */}
         {ev.minActiveDays > 0 && (
-          <div style={{ ...R({ gap: 6 }), marginTop: 7, fontSize: 10.5, color: ev.daysMet ? C.greenL : C.t3 }}>
+          <div style={{ ...R({ gap: 4 }), marginTop: 8, fontSize: 10.5, color: ev.daysMet ? C.greenL : C.t3 }}>
             <ShieldCheck size={11} color={ev.daysMet ? C.greenL : C.t3} />
             <span>
               {ev.activeDays} of {ev.minActiveDays} required days of work
@@ -196,20 +196,20 @@ export default function QuestCard({
 
       {/* 3. What today looks like -------------------------------------------- */}
       <div style={{
-        ...R({ gap: 8 }), marginTop: 12, padding: '8px 11px', borderRadius: 9,
+        ...R({ gap: 8 }), marginTop: 12, padding: '8px 12px', borderRadius: 8,
         background: tint(tone.color, 0.09), border: `1px solid ${tint(tone.color, 0.22)}`,
       }}>
         <div style={{ fontSize: 11.5, color: C.t1, fontWeight: 600, lineHeight: 1.5, flex: 1, minWidth: 0 }}>
           {questHeadline(ev)}
         </div>
-        <span style={pill(tint(tone.color, 0.14), tone.color, { fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.06em', flexShrink: 0 })}>{tone.label}</span>
+        <span style={pill(tint(tone.color, 0.14), tone.color, { fontSize: 9.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', flexShrink: 0 })}>{tone.label}</span>
       </div>
 
       {/* 4. The day strip ----------------------------------------------------- */}
       {!compact && (
         <div style={{ marginTop: 12 }}>
           <DayStrip ev={ev} color={color} m={m} />
-          <div style={{ fontSize: 9.5, color: C.t3, marginTop: 5 }}>
+          <div style={{ fontSize: 9.5, color: C.t3, marginTop: 4 }}>
             One square per day. At most {ev.spec.dailyCap} {metric.unit || 'unit'}{ev.spec.dailyCap === 1 ? '' : 's'} count per day
             {ev.byDay.some((d) => d.capped) && <span style={{ color: C.amberL }}> — amber days went over the cap</span>}.
           </div>
@@ -218,17 +218,17 @@ export default function QuestCard({
 
       {/* 5. One button -------------------------------------------------------- */}
       {!compact && (
-        <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 14 }}>
+        <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 12 }}>
           {ev.done ? (
             <motion.button
               whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
               onClick={onClaim} disabled={busy}
-              style={{ ...btn(`linear-gradient(135deg, ${C.green}, ${C.greenL})`, { fontSize: 13, padding: '10px 20px', color: onTint(C.green) }), opacity: busy ? 0.6 : 1 }}
+              style={{ ...btn(`linear-gradient(135deg, ${C.green}, ${C.greenL})`, { fontSize: 13, padding: '8px 20px', color: onTint(C.green) }), opacity: busy ? 0.6 : 1 }}
             ><Gift size={14} />Claim +{ev.xp} XP</motion.button>
           ) : (
             <button
               onClick={() => onGo?.(dest)}
-              style={{ ...btn(`linear-gradient(135deg, ${color}, ${tint(color, 0.7)})`, { fontSize: 12.5, padding: '9px 18px', color: onTint(color) }) }}
+              style={{ ...btn(`linear-gradient(135deg, ${color}, ${tint(color, 0.7)})`, { fontSize: 12.5, padding: '8px 16px', color: onTint(color) }) }}
             >{dest.label}<ChevronRight size={13} /></button>
           )}
           {def?.proof && (

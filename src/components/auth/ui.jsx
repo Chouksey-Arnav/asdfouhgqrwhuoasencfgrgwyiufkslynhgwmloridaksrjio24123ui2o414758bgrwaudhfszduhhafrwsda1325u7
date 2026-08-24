@@ -54,10 +54,10 @@ export function PasswordStrengthMeter({ password }) {
     <div style={{ marginTop: 8 }}>
       <div style={{ display: 'flex', gap: 4 }}>
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} style={{ height: 4, flex: 1, borderRadius: 2, background: i < score ? meta.color : C.b1, transition: 'background .2s' }} />
+          <div key={i} style={{ height: 4, flex: 1, borderRadius: 4, background: i < score ? meta.color : C.b1, transition: 'background .2s' }} />
         ))}
       </div>
-      <div style={{ fontSize: 11, color: meta.color, marginTop: 5, fontWeight: 600 }}>{meta.label}</div>
+      <div style={{ fontSize: 11, color: meta.color, marginTop: 4, fontWeight: 600 }}>{meta.label}</div>
     </div>
   );
 }
@@ -67,7 +67,7 @@ export function PasswordChecklist({ password }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
       {items.map((item) => (
-        <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11.5, color: item.met ? C.greenL : C.t3 }}>
+        <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5, color: item.met ? C.greenL : C.t3 }}>
           <span style={{ width: 14, height: 14, borderRadius: '50%', border: `1.5px solid ${item.met ? C.greenL : C.t4}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             {item.met && <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.greenL }} />}
           </span>
@@ -168,8 +168,8 @@ export function OtpBoxes({ value, onChange, autoFocus = true }) {
           onKeyDown={(e) => handleKeyDown(i, e)}
           className="msp-otp-box"
           style={inp({
-            width: '100%', textAlign: 'center', padding: '12px 0', fontSize: 20, fontWeight: 700,
-            fontFamily: C.FM, letterSpacing: 0,
+            width: '100%', textAlign: 'center', padding: '12px 0px', fontSize: 20, fontWeight: 700,
+            fontFamily: C.FM, letterSpacing: 'var(--msp-letter-spacing)',
           })}
         />
       ))}
@@ -194,7 +194,7 @@ export function ResendTimer({ onResend, busy, seconds = 60 }) {
   }
 
   return (
-    <button type="button" onClick={handleClick} disabled={remaining > 0 || busy} className="msp-auth-link" style={{ color: remaining > 0 ? C.t3 : C.blueL, fontSize: 12.5, fontWeight: 600, cursor: remaining > 0 ? 'default' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+    <button type="button" onClick={handleClick} disabled={remaining > 0 || busy} className="msp-auth-link" style={{ color: remaining > 0 ? C.t3 : C.blueL, fontSize: 12.5, fontWeight: 600, cursor: remaining > 0 ? 'default' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
       {busy && <Loader2 className="spin" size={12} />}
       {remaining > 0 ? `Resend code in 0:${String(remaining).padStart(2, '0')}` : 'Resend code'}
     </button>
@@ -209,9 +209,9 @@ export function FieldError({ children }) {
 // "or" rule between the OAuth button and the email/password form.
 export function OrDivider({ label = 'or' }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <div style={{ flex: 1, height: 1, background: C.b1 }} />
-      <span style={{ fontSize: 11, color: C.t3, textTransform: 'uppercase', letterSpacing: '.05em' }}>{label}</span>
+      <span style={{ fontSize: 11, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>{label}</span>
       <div style={{ flex: 1, height: 1, background: C.b1 }} />
     </div>
   );
@@ -239,7 +239,7 @@ export function OrDivider({ label = 'or' }) {
 export function ConsentNotice() {
   const link = { color: C.blueL, fontWeight: 600, textDecoration: 'underline' };
   return (
-    <p style={{ margin: 0, fontSize: 11.5, lineHeight: 1.6, color: C.t3 }}>
+    <p style={{ margin: 0, fontSize: 11.5, lineHeight: 1.55, color: C.t3 }}>
       By creating an account you agree to our{' '}
       <a href={LEGAL_VIEWS.terms} target="_blank" rel="noopener noreferrer" style={link}>Terms of Service</a>
       {' '}and{' '}
@@ -252,7 +252,7 @@ export function ConsentNotice() {
 
 export function BackButton({ onClick, label = 'Back' }) {
   return (
-    <button type="button" onClick={onClick} className="msp-auth-link" style={{ display: 'flex', alignItems: 'center', gap: 6, color: C.t3, fontSize: 12, marginBottom: 18 }}>
+    <button type="button" onClick={onClick} className="msp-auth-link" style={{ display: 'flex', alignItems: 'center', gap: 4, color: C.t3, fontSize: 12, marginBottom: 16 }}>
       <ArrowLeft size={13} /> {label}
     </button>
   );

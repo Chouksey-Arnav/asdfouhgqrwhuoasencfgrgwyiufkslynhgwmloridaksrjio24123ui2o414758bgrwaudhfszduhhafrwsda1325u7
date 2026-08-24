@@ -83,7 +83,7 @@ export default function QuestCompleteOverlay({
         >
           <div style={{ position: 'absolute', top: -80, left: '50%', transform: 'translateX(-50%)', width: 260, height: 260, borderRadius: '50%', background: `radial-gradient(circle, ${tint(color, 0.3)}, transparent 68%)`, pointerEvents: 'none' }} />
 
-          <button onClick={onClose} aria-label="Close" style={{ ...btnG({ padding: 6, borderRadius: 8 }), position: 'absolute', top: 12, right: 12 }}><X size={14} /></button>
+          <button onClick={onClose} aria-label="Close" style={{ ...btnG({ padding: 4, borderRadius: 8 }), position: 'absolute', top: 12, right: 12 }}><X size={14} /></button>
 
           <div style={{ position: 'relative' }}>
             <motion.div
@@ -98,31 +98,31 @@ export default function QuestCompleteOverlay({
               }}
             ><Icon size={34} color="#fff" /></motion.div>
 
-            <div style={{ fontSize: 10.5, fontWeight: 800, color, letterSpacing: '.14em', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, color, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
               {tier.label} quest complete
               {chain && ` · ${chain.label} ${chain.step}/${chain.of}`}
             </div>
-            <h2 style={{ fontSize: m ? 22 : 26, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.03em', margin: '8px 0 0' }}>
+            <h2 style={{ fontSize: m ? 22 : 26, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.03em + var(--msp-letter-spacing))', margin: '8px 0px 0px' }}>
               {quest.title}
             </h2>
 
             {/* The sentence. Days first, XP last. */}
-            <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.65, marginTop: 12, maxWidth: 360, marginLeft: 'auto', marginRight: 'auto' }}>
+            <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.55, marginTop: 12, maxWidth: 360, marginLeft: 'auto', marginRight: 'auto' }}>
               {ev.target} {metric.label || 'steps'}, across <b style={{ color: C.t1 }}>{ev.activeDays} separate days</b> of work in {days} days.
               {ev.spec.dailyCap > 0 && ' There was no way to rush this one.'}
             </div>
 
             {quest.assignedBy === 'parent' && (
-              <div style={{ ...R({ gap: 7, justifyContent: 'center' }), marginTop: 12, fontSize: 11.5, color: C.violetL }}>
+              <div style={{ ...R({ gap: 8, justifyContent: 'center' }), marginTop: 12, fontSize: 11.5, color: C.violetL }}>
                 <Users size={12} />{quest.assignerName || 'A parent'} asked for this one — they will see it is done.
               </div>
             )}
 
             <div style={{ ...R({ gap: 8, justifyContent: 'center', flexWrap: 'wrap' }), marginTop: 16 }}>
-              <span style={{ ...pill(tint(C.green, 0.14), C.greenL, { fontSize: 11, fontWeight: 700 }), display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ ...pill(tint(C.green, 0.14), C.greenL, { fontSize: 11, fontWeight: 700 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 <CalendarCheck size={11} />{ev.activeDays} active days
               </span>
-              <span style={{ ...pill(tint(C.amber, 0.14), C.amberL, { fontSize: 11, fontWeight: 800, fontFamily: C.FM }), display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ ...pill(tint(C.amber, 0.14), C.amberL, { fontSize: 11, fontWeight: 800, fontFamily: C.FM }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 <Trophy size={11} />+{ev.xp} XP
               </span>
             </div>
@@ -131,12 +131,12 @@ export default function QuestCompleteOverlay({
               whileHover={reducedMotion ? {} : { scale: 1.04 }} whileTap={{ scale: 0.97 }}
               onClick={onClaim} disabled={busy}
               style={{
-                ...btn(`linear-gradient(135deg, ${C.green}, ${C.greenL})`, { marginTop: 22, fontSize: 14, padding: '12px 28px', color: onTint(C.green) }),
+                ...btn(`linear-gradient(135deg, ${C.green}, ${C.greenL})`, { marginTop: 20, fontSize: 14, padding: '12px 28px', color: onTint(C.green) }),
                 opacity: busy ? 0.6 : 1,
               }}
             ><Gift size={16} />Claim {ev.xp} XP</motion.button>
 
-            <div style={{ fontSize: 10.5, color: C.t3, marginTop: 11 }}>
+            <div style={{ fontSize: 10.5, color: C.t3, marginTop: 12 }}>
               Not now? It stays claimable — nothing expires once it is finished.
             </div>
 
@@ -145,21 +145,21 @@ export default function QuestCompleteOverlay({
                 who wants to stop here should never have to decline anything. */}
             {next && onTakeNext && (
               <div style={{
-                ...glass2({ padding: 13 }), marginTop: 18, textAlign: 'left',
+                ...glass2({ padding: 12 }), marginTop: 16, textAlign: 'left',
                 border: `1px solid ${tint(chain?.color || color, 0.26)}`,
                 background: tint(chain?.color || color, 0.06),
               }}>
-                <div style={{ ...R({ gap: 6 }), fontSize: 9.5, fontWeight: 800, color: chain?.color || color, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 6 }}>
+                <div style={{ ...R({ gap: 4 }), fontSize: 9.5, fontWeight: 800, color: chain?.color || color, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 4 }}>
                   <Route size={10} />Next on {chain?.label || 'this road'}
                 </div>
-                <div style={R({ gap: 10, flexWrap: 'wrap' })}>
+                <div style={R({ gap: 8, flexWrap: 'wrap' })}>
                   <div style={{ flex: 1, minWidth: 150 }}>
                     <div style={{ fontSize: 13, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{next.title}</div>
-                    <div style={{ fontSize: 10.5, color: C.t3, marginTop: 3, lineHeight: 1.45 }}>{next.blurb}</div>
+                    <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4, lineHeight: 1.45 }}>{next.blurb}</div>
                   </div>
                   <button
                     onClick={() => onTakeNext(next.id)} disabled={busy}
-                    style={{ ...btnG({ fontSize: 11.5, padding: '7px 13px' }), flexShrink: 0, opacity: busy ? 0.6 : 1 }}
+                    style={{ ...btnG({ fontSize: 11.5, padding: '8px 12px' }), flexShrink: 0, opacity: busy ? 0.6 : 1 }}
                   >Take it on · +{questXP(next)}<ChevronRight size={12} /></button>
                 </div>
               </div>

@@ -130,7 +130,7 @@ export const chapterHue = (key) => hue(CHAPTER_HUES[key] || ['blue', 'indigo']);
  */
 export const meta = (size = 10, x = {}) => ({
   fontFamily: C.FM, fontSize: size, fontWeight: 600,
-  letterSpacing: '.16em', textTransform: 'uppercase',
+  letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', 
   ...x,
 });
 
@@ -143,13 +143,13 @@ export const display = (size, x = {}) => ({
 
 /** Body copy. One line-height for everything the student actually reads. */
 export const body = (size = 14, x = {}) => ({
-  fontFamily: C.FB, fontSize: size, lineHeight: 1.62, color: C.t2, ...x,
+  fontFamily: C.FB, fontSize: size, lineHeight: 1.55, color: C.t2, ...x,
 });
 
 /** A number set in mono and locked to tabular width so it can't jitter. */
 export const numeral = (size, x = {}) => ({
   fontFamily: C.FM, fontSize: size, fontWeight: 700,
-  fontVariantNumeric: 'tabular-nums', letterSpacing: '-.01em', ...x,
+  fontVariantNumeric: 'tabular-nums', letterSpacing: 'calc(-0.01em + var(--msp-letter-spacing))', ...x,
 });
 
 /** Two-digit chapter/step numerals: 01, 02 … */

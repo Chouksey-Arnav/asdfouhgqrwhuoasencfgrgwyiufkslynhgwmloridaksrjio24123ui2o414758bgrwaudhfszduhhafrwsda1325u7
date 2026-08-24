@@ -156,13 +156,13 @@ export default function LoginView({ initialEmail = '', parentMode = false, onBac
     return (
       <div style={CC({ gap: 16 })}>
         <div style={{
-          width: 38, height: 38, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: 38, height: 38, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: tint(C.amber, 0.13), border: `1px solid ${tint(C.amber, 0.3)}`,
         }}>
           <GraduationCap size={18} color={C.amberL} />
         </div>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 6 }}>
+          <div style={{ fontSize: 20, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>
             That's a student account
           </div>
           <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.65 }}>
@@ -182,7 +182,7 @@ export default function LoginView({ initialEmail = '', parentMode = false, onBac
         >
           <Users size={13} /> Create a parent account instead
         </button>
-        <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6, textAlign: 'center' }}>
+        <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.55, textAlign: 'center' }}>
           If your student already invited you, open their link or enter their 8-character code at{' '}
           <a href={PARENT_HUB_PATH} style={{ color: C.blueL, fontWeight: 600 }}>medschoolprep.cloud/parents</a> —
           that makes the parent account for you, at whichever address they invited.
@@ -199,8 +199,8 @@ export default function LoginView({ initialEmail = '', parentMode = false, onBac
         <form onSubmit={codeSent ? submitCode : requestCode}>
           <div style={CC({ gap: 16 })}>
             <div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>{heading}</div>
-              <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.6 }}>
+              <div style={{ fontSize: 20, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>{heading}</div>
+              <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.55 }}>
                 {codeSent
                   ? <>Enter the 6-digit code we sent to <strong style={{ color: C.t1 }}>{email.trim()}</strong>.</>
                   : <>{sub} We'll email you a 6-digit code — no password needed.</>}
@@ -216,7 +216,7 @@ export default function LoginView({ initialEmail = '', parentMode = false, onBac
                 then taps Resend, which is the exact loop the reuse exists to prevent. */}
             {codeSent && reusedCode && (
               <div style={{ ...R({ gap: 8, alignItems: 'flex-start' }), fontSize: 12, color: C.t3, lineHeight: 1.55 }}>
-                <Inbox size={13} color={C.t3} style={{ flexShrink: 0, marginTop: 2 }} />
+                <Inbox size={13} color={C.t3} style={{ flexShrink: 0, marginTop: 4 }} />
                 <span>You asked a moment ago, so we didn't send a second one — the code already in your inbox still works.</span>
               </div>
             )}
@@ -259,7 +259,7 @@ export default function LoginView({ initialEmail = '', parentMode = false, onBac
             )}
 
             {!codeSent && parentMode && (
-              <div style={{ textAlign: 'center', fontSize: 12.5, color: C.t3, lineHeight: 1.6 }}>
+              <div style={{ textAlign: 'center', fontSize: 12.5, color: C.t3, lineHeight: 1.55 }}>
                 Not connected yet?{' '}
                 <button type="button" onClick={() => onGoSignup(email.trim())} className="msp-auth-link" style={{ color: C.blueL, fontWeight: 600 }}>
                   Create a parent account
@@ -280,7 +280,7 @@ export default function LoginView({ initialEmail = '', parentMode = false, onBac
       <form onSubmit={handleSubmit}>
         <div style={CC({ gap: 16 })}>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>{heading}</div>
+            <div style={{ fontSize: 20, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>{heading}</div>
             <div style={{ fontSize: 13, color: C.t2 }}>{sub}</div>
           </div>
 
@@ -298,7 +298,7 @@ export default function LoginView({ initialEmail = '', parentMode = false, onBac
 
           <FieldError>{error}</FieldError>
           {noPassword && (
-            <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.6 }}>
+            <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.55 }}>
               This account signs in with an emailed code — we've switched the form over for you.
             </div>
           )}
@@ -341,12 +341,12 @@ export default function LoginView({ initialEmail = '', parentMode = false, onBac
               href={PARENT_HUB_PATH}
               onClick={(e) => { if (onGoParents && !e.metaKey && !e.ctrlKey && !e.shiftKey && e.button === 0) { e.preventDefault(); onGoParents(); } }}
               style={{
-                ...R({ gap: 9, alignItems: 'flex-start' }), textDecoration: 'none',
-                padding: '11px 13px', borderRadius: 10,
+                ...R({ gap: 8, alignItems: 'flex-start' }), textDecoration: 'none',
+                padding: '12px 12px', borderRadius: 8,
                 background: tint(C.violet, 0.07), border: `1px solid ${tint(C.violet, 0.26)}`,
               }}
             >
-              <Users size={15} color={C.violetL} style={{ flexShrink: 0, marginTop: 1 }} />
+              <Users size={15} color={C.violetL} style={{ flexShrink: 0, marginTop: 4 }} />
               <span style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>
                 <strong style={{ color: C.t1 }}>Are you a parent?</strong> You get your own account
                 and a dashboard for your student's progress — you never sign in as them.

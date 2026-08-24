@@ -162,10 +162,10 @@ export default function SatDiagnosticPanel({
           }}>
             <div style={{ ...R({ gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' }) }}>
               <div style={{ flex: 1, minWidth: 220 }}>
-                <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em' }}>
+                <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>
                   Turn this into a plan
                 </div>
-                <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7, marginTop: 6, maxWidth: 620 }}>
+                <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, marginTop: 4, maxWidth: 620 }}>
                   Medabrain will read everything below — your skill-by-skill result, how heavily the exam
                   tests each of them, your pacing and your target — and write you a specific few weeks of
                   work. It runs on the deepest model available, so give it a moment.
@@ -179,22 +179,22 @@ export default function SatDiagnosticPanel({
         )}
 
         <SatCard title="Your prescription" icon={Target} iconColor={C.rose} m={isMobile}>
-          <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7, marginBottom: 16 }}>
+          <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, marginBottom: 16 }}>
             Ranked by leverage — how weak you were, multiplied by how heavily the real exam tests it.
             Each of these was measured from only a question or two, so treat the order as a starting hypothesis.
           </div>
           <div style={CC({ gap: 12 })}>
             {weakest.map((s, i) => (
-              <div key={s.skill} style={glass2({ padding: 14 })}>
-                <div style={{ ...R({ gap: 10 }), justifyContent: 'space-between', marginBottom: 7 }}>
-                  <div style={R({ gap: 9 })}>
-                    <span style={{ width: 20, height: 20, borderRadius: 6, background: tint(s.color, 0.18), color: s.color, fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: C.FM }}>{i + 1}</span>
+              <div key={s.skill} style={glass2({ padding: 12 })}>
+                <div style={{ ...R({ gap: 8 }), justifyContent: 'space-between', marginBottom: 8 }}>
+                  <div style={R({ gap: 8 })}>
+                    <span style={{ width: 20, height: 20, borderRadius: 4, background: tint(s.color, 0.18), color: s.color, fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: C.FM }}>{i + 1}</span>
                     <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{s.label}</span>
                   </div>
                   <span style={pill(tint(s.color, 0.14), s.color, { fontSize: 10 })}>{s.sectionLabel}</span>
                 </div>
-                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6, marginBottom: 8 }}>{s.blurb}</div>
-                <div style={R({ gap: 10 })}>
+                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginBottom: 8 }}>{s.blurb}</div>
+                <div style={R({ gap: 8 })}>
                   <div style={{ flex: 1 }}><Bar pct={s.mastery * 100} color={s.color} h={4} /></div>
                   <span style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM, whiteSpace: 'nowrap' }}>
                     {s.correct}/{s.attempts} · ~{(s.examShare * 98).toFixed(1)} per exam
@@ -202,7 +202,7 @@ export default function SatDiagnosticPanel({
                 </div>
                 <button
                   onClick={() => onNavigate?.('practice', { skill: s.skill })}
-                  style={{ ...btnG({ padding: '6px 12px', fontSize: 11.5 }), marginTop: 10 }}
+                  style={{ ...btnG({ padding: '4px 12px', fontSize: 11.5 }), marginTop: 8 }}
                 >
                   Drill this <ChevronRight size={12} />
                 </button>
@@ -211,17 +211,17 @@ export default function SatDiagnosticPanel({
           </div>
 
           {strongest.length > 0 && (
-            <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${C.b1}` }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.green, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>
+            <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${C.b1}` }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.green, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8 }}>
                 Already solid
               </div>
-              <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7 }}>
+              <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>
                 {strongest.map(s => s.label).join(' · ')} — spend less time here.
               </div>
             </div>
           )}
 
-          <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), marginTop: 20 }}>
+          <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 20 }}>
             <button onClick={() => onNavigate?.('practice')} style={satBtn(accent)}>
               Start practicing <ChevronRight size={14} />
             </button>
@@ -268,10 +268,10 @@ export default function SatDiagnosticPanel({
             ['You can stop and resume', 'Progress is saved as you answer.'],
           ].map(([t, b]) => (
             <div key={t} style={R({ gap: 12, alignItems: 'flex-start' })}>
-              <div style={{ width: 5, height: 5, borderRadius: '50%', background: accent, marginTop: 7, flexShrink: 0 }} />
+              <div style={{ width: 5, height: 5, borderRadius: '50%', background: accent, marginTop: 8, flexShrink: 0 }} />
               <div>
                 <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{t}</div>
-                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6, marginTop: 2 }}>{b}</div>
+                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginTop: 4 }}>{b}</div>
               </div>
             </div>
           ))}
@@ -279,7 +279,7 @@ export default function SatDiagnosticPanel({
         <button onClick={begin} style={satBtn(accent, { marginTop: 20 })}>
           {last ? <><RotateCcw size={14} /> Retake diagnostic</> : <>Start the diagnostic <ChevronRight size={14} /></>}
         </button>
-        <div style={{ fontSize: 10.5, color: C.t4, marginTop: 12, lineHeight: 1.6 }}>{SCORE_DISCLAIMER}</div>
+        <div style={{ fontSize: 10.5, color: C.t4, marginTop: 12, lineHeight: 1.55 }}>{SCORE_DISCLAIMER}</div>
       </SatCard>
     </div>
   );

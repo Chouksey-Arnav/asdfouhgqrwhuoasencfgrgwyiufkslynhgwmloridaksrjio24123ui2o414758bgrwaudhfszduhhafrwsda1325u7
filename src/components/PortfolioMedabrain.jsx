@@ -192,9 +192,9 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
               }}
             >
               {/* Header */}
-              <div style={{ padding: '16px 18px', borderBottom: `1px solid ${C.b1}`, background: `linear-gradient(120deg,${tint(C.violet, 0.12)},rgba(255,255,255,0.02))`, flexShrink: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg,${C.violet},${C.indigo})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 14px ${tint(C.violet, 0.4)}` }}>
+              <div style={{ padding: '16px 16px', borderBottom: `1px solid ${C.b1}`, background: `linear-gradient(120deg,${tint(C.violet, 0.12)},rgba(255,255,255,0.02))`, flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 8, background: `linear-gradient(135deg,${C.violet},${C.indigo})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 14px ${tint(C.violet, 0.4)}` }}>
                     <Brain size={17} color="#fff" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -202,11 +202,11 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
                     <div style={{ fontSize: 10.5, color: C.t3 }}>Portfolio Intelligence · sees your full tracker</div>
                   </div>
                   {messages.length > 0 && (
-                    <button onClick={() => { setMessages([]); setActionStatus({}); }} title="New conversation" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: C.t3 }}>
+                    <button onClick={() => { setMessages([]); setActionStatus({}); }} title="New conversation" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: C.t3 }}>
                       <RotateCcw size={15} />
                     </button>
                   )}
-                  <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: C.t3 }}>
+                  <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: C.t3 }}>
                     <X size={17} />
                   </button>
                 </div>
@@ -216,17 +216,17 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
               </div>
 
               {/* Messages */}
-              <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {messages.length === 0 && (
                   <div style={{ ...glass({ padding: 16 }), background: `linear-gradient(120deg,${tint(C.violet, 0.08)},rgba(255,255,255,0.02))`, border: `1px solid ${tint(C.violet, 0.22)}` }}>
-                    <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6, marginBottom: 12 }}>
+                    <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, marginBottom: 12 }}>
                       Ask me anything about your application Portfolio — I read your full college list, essays, deadlines, financial aid, activities, research, skills, clinical hours, and recommenders to answer, not just a summary.
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       {SUGGESTIONS.map(s => (
                         <button key={s} onClick={() => send(s)} style={{
                           textAlign: 'left', fontSize: 12, color: C.t1, background: 'rgba(255,255,255,0.04)',
-                          border: `1px solid ${C.b1}`, borderRadius: 9, padding: '9px 12px', cursor: 'pointer', fontFamily: C.FB,
+                          border: `1px solid ${C.b1}`, borderRadius: 8, padding: '8px 12px', cursor: 'pointer', fontFamily: C.FB,
                         }}>{s}</button>
                       ))}
                     </div>
@@ -235,12 +235,12 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
                 {messages.map((m, i) => (
                   <div key={i} style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '90%', width: m.role === 'assistant' ? '90%' : undefined }}>
                     {m.role === 'user' ? (
-                      <div style={{ background: tint(C.violet, 0.18), border: `1px solid ${tint(C.violet, 0.32)}`, borderRadius: '12px 12px 2px 12px', padding: '9px 13px', fontSize: 13, color: C.t1 }}>{m.content}</div>
+                      <div style={{ background: tint(C.violet, 0.18), border: `1px solid ${tint(C.violet, 0.32)}`, borderRadius: '12px 12px 2px 12px', padding: '8px 12px', fontSize: 13, color: C.t1 }}>{m.content}</div>
                     ) : m.role === 'error' ? (
-                      <div style={{ background: C.roseDim, border: `1px solid ${tint(C.rose, 0.3)}`, borderRadius: 12, padding: '9px 13px', fontSize: 12.5, color: C.roseL }}>{m.content}</div>
+                      <div style={{ background: C.roseDim, border: `1px solid ${tint(C.rose, 0.3)}`, borderRadius: 12, padding: '8px 12px', fontSize: 12.5, color: C.roseL }}>{m.content}</div>
                     ) : (
                       <div>
-                        <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.b1}`, borderRadius: '12px 12px 12px 2px', padding: '9px 13px' }}>
+                        <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.b1}`, borderRadius: '12px 12px 12px 2px', padding: '8px 12px' }}>
                           <div style={{ fontSize: 13 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content) }} />
                         </div>
 
@@ -249,9 +249,9 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
                           <button
                             onClick={() => { goDest(m.directive.navigate); setOpen(false); }}
                             style={{
-                              marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700,
+                              marginTop: 4, display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700,
                               color: C.violet, background: tint(C.violet, 0.1), border: `1px solid ${tint(C.violet, 0.3)}`,
-                              borderRadius: 8, padding: '7px 11px', cursor: 'pointer', fontFamily: C.FB,
+                              borderRadius: 8, padding: '8px 12px', cursor: 'pointer', fontFamily: C.FB,
                             }}
                           >
                             <MapPin size={13} /> Take me to {labelForDestination(m.directive.navigate)}
@@ -265,8 +265,8 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
                           const status = actionStatus[key] || 'pending';
                           return (
                             <div key={ai} style={{
-                              marginTop: 6, background: tint(C.amber, 0.08), border: `1px solid ${tint(C.amber, 0.3)}`,
-                              borderRadius: 9, padding: '9px 11px',
+                              marginTop: 4, background: tint(C.amber, 0.08), border: `1px solid ${tint(C.amber, 0.3)}`,
+                              borderRadius: 8, padding: '8px 12px',
                             }}>
                               <div style={{ fontSize: 12, color: C.t1, lineHeight: 1.5, marginBottom: status === 'pending' ? 8 : 0 }}>
                                 {status === 'done' ? <><Check size={12} style={{ verticalAlign: -1 }} /> Done — </> : null}
@@ -278,16 +278,16 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
                                 <div style={{ display: 'flex', gap: 8 }}>
                                   <button onClick={() => approveAction(i, ai, action)} style={{
                                     fontSize: 11.5, fontWeight: 800, color: '#fff', background: C.violet, border: 'none',
-                                    borderRadius: 7, padding: '6px 12px', cursor: 'pointer', fontFamily: C.FB,
+                                    borderRadius: 8, padding: '4px 12px', cursor: 'pointer', fontFamily: C.FB,
                                   }}>Allow</button>
                                   <button onClick={() => denyAction(i, ai)} style={{
                                     fontSize: 11.5, fontWeight: 700, color: C.t3, background: 'transparent',
-                                    border: `1px solid ${C.b2}`, borderRadius: 7, padding: '6px 12px', cursor: 'pointer', fontFamily: C.FB,
+                                    border: `1px solid ${C.b2}`, borderRadius: 8, padding: '4px 12px', cursor: 'pointer', fontFamily: C.FB,
                                   }}>Deny</button>
                                 </div>
                               )}
                               {status === 'working' && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: C.t3 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: C.t3 }}>
                                   <Loader2 size={11} className="spin" /> Making the change…
                                 </div>
                               )}
@@ -306,14 +306,14 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
               </div>
 
               {/* Composer */}
-              <form onSubmit={e => { e.preventDefault(); send(); }} style={{ padding: 14, borderTop: `1px solid ${C.b1}`, display: 'flex', gap: 8, flexShrink: 0 }}>
+              <form onSubmit={e => { e.preventDefault(); send(); }} style={{ padding: 12, borderTop: `1px solid ${C.b1}`, display: 'flex', gap: 8, flexShrink: 0 }}>
                 <input
                   value={input} onChange={e => setInput(e.target.value)}
                   placeholder="Ask about your portfolio…" disabled={loading}
-                  style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.b2}`, borderRadius: 10, padding: '10px 13px', color: C.t1, fontSize: 13, fontFamily: C.FB, outline: 'none' }}
+                  style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.b2}`, borderRadius: 8, padding: '8px 12px', color: C.t1, fontSize: 13, fontFamily: C.FB, outline: 'none' }}
                 />
                 <button type="submit" disabled={loading || !input.trim()} style={{
-                  width: 40, height: 40, borderRadius: 10, border: 'none', flexShrink: 0,
+                  width: 40, height: 40, borderRadius: 8, border: 'none', flexShrink: 0,
                   background: `linear-gradient(135deg,${C.violet},${C.indigo})`, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: loading || !input.trim() ? 'default' : 'pointer', opacity: loading || !input.trim() ? 0.5 : 1,
                 }}>

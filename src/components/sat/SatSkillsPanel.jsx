@@ -76,7 +76,7 @@ export default function SatSkillsPanel({ accent = C.sky, satData, isMobile = fal
       />
 
       {/* Filters */}
-      <div style={R({ gap: 14, flexWrap: 'wrap' })}>
+      <div style={R({ gap: 12, flexWrap: 'wrap' })}>
         <Segmented label="Sort" options={SORTS} value={sort} onChange={setSort} accent={accent} />
         <Segmented
           label="Section" accent={accent} value={sectionFilter} onChange={setSectionFilter}
@@ -85,7 +85,7 @@ export default function SatSkillsPanel({ accent = C.sky, satData, isMobile = fal
       </div>
 
       {/* Skill rows */}
-      <div style={CC({ gap: 10 })}>
+      <div style={CC({ gap: 8 })}>
         {rows.map(s => {
           const isOpen = expanded === s.skill;
           const strategy = strategyFor(s.skill);
@@ -95,13 +95,13 @@ export default function SatSkillsPanel({ accent = C.sky, satData, isMobile = fal
           return (
             <div key={s.skill} style={{
               background: C.surf, border: `1px solid ${isOpen ? tint(accent, 0.35) : C.b1}`,
-              borderRadius: 14, overflow: 'hidden', boxShadow: C.shadowSm, transition: 'border-color .18s ease',
+              borderRadius: 12, overflow: 'hidden', boxShadow: C.shadowSm, transition: 'border-color .18s ease',
             }}>
               <button
                 onClick={() => setExpanded(isOpen ? null : s.skill)}
                 style={{ width: '100%', textAlign: 'left', padding: isMobile ? 14 : 16, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: C.FB }}
               >
-                <div style={{ ...R({ gap: 9, flexWrap: 'wrap' }), marginBottom: 9 }}>
+                <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginBottom: 8 }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{s.label}</span>
                   <span style={pill(tint(s.color, 0.13), s.color, { fontSize: 9.5 })}>{s.domainLabel}</span>
                   {pacingOff && (
@@ -138,26 +138,26 @@ export default function SatSkillsPanel({ accent = C.sky, satData, isMobile = fal
                 {isOpen && (
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
                     <div style={{ padding: isMobile ? '0 14px 14px' : '0 16px 16px' }}>
-                      <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.7, marginBottom: 12 }}>{s.blurb}</div>
+                      <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, marginBottom: 12 }}>{s.blurb}</div>
 
                       {strategy && (
-                        <div style={{ ...glass2({ padding: 14 }), borderColor: tint(C.amber, 0.22) }}>
-                          <div style={{ ...R({ gap: 6 }), marginBottom: 8 }}>
+                        <div style={{ ...glass2({ padding: 12 }), borderColor: tint(C.amber, 0.22) }}>
+                          <div style={{ ...R({ gap: 4 }), marginBottom: 8 }}>
                             <Lightbulb size={13} color={C.amberL} />
-                            <span style={{ fontSize: 10.5, fontWeight: 700, color: C.amberL, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+                            <span style={{ fontSize: 10.5, fontWeight: 700, color: C.amberL, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>
                               How to attack it
                             </span>
                           </div>
-                          <div style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.7, fontWeight: 600, marginBottom: 10 }}>
+                          <div style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.55, fontWeight: 600, marginBottom: 8 }}>
                             {strategy.approach}
                           </div>
-                          <ol style={{ margin: 0, paddingLeft: 18, color: C.t2, fontSize: 12, lineHeight: 1.8 }}>
+                          <ol style={{ margin: 0, paddingLeft: 16, color: C.t2, fontSize: 12, lineHeight: 1.55 }}>
                             {strategy.steps.map((st, i) => <li key={i}>{st}</li>)}
                           </ol>
                           {strategy.watchFor && (
-                            <div style={{ ...R({ gap: 7, alignItems: 'flex-start' }), marginTop: 12, paddingTop: 10, borderTop: `1px solid ${C.b1}` }}>
-                              <AlertTriangle size={12} color={C.roseL} style={{ marginTop: 2, flexShrink: 0 }} />
-                              <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.65 }}>{strategy.watchFor}</span>
+                            <div style={{ ...R({ gap: 8, alignItems: 'flex-start' }), marginTop: 12, paddingTop: 8, borderTop: `1px solid ${C.b1}` }}>
+                              <AlertTriangle size={12} color={C.roseL} style={{ marginTop: 4, flexShrink: 0 }} />
+                              <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>{strategy.watchFor}</span>
                             </div>
                           )}
                         </div>
@@ -167,13 +167,13 @@ export default function SatSkillsPanel({ accent = C.sky, satData, isMobile = fal
                           just read "how to attack it" and does not follow it
                           needs someone to teach the underlying rule, not a
                           bigger drill button. */}
-                      <div style={{ marginTop: 14 }}>
+                      <div style={{ marginTop: 12 }}>
                         <SatSkillVideos skill={s.skill} limit={2} isMobile={isMobile} />
                       </div>
 
                       <button
                         onClick={() => onNavigate?.('practice', { skill: s.skill })}
-                        style={satBtn(s.color, { marginTop: 14, padding: '8px 16px', fontSize: 12 })}
+                        style={satBtn(s.color, { marginTop: 12, padding: '8px 16px', fontSize: 12 })}
                       >
                         Drill this skill <ChevronRight size={13} />
                       </button>

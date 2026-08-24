@@ -93,16 +93,16 @@ export default function OnboardingShell({ stepKey, steps = [], answers = {}, onB
               ) : <div style={{ width: showProgress ? 36 : 0, flexShrink: 0 }} />}
 
               {showProgress && (
-                <div style={{ flex: 1, display: 'flex', gap: 5, alignItems: 'center' }}>
+                <div style={{ flex: 1, display: 'flex', gap: 4, alignItems: 'center' }}>
                   {(chapter ? meta_.segments : [{ key: 'all', fill: 0 }]).map(seg => {
                     const sg = chapterHue(seg.key);
                     return (
-                      <div key={seg.key} style={{ flex: 1, height: 6, borderRadius: 3, background: C.s3, overflow: 'hidden' }}>
+                      <div key={seg.key} style={{ flex: 1, height: 6, borderRadius: 4, background: C.s3, overflow: 'hidden' }}>
                         <motion.div
                           animate={{ width: `${Math.round(seg.fill * 100)}%` }}
                           transition={SETTLE}
                           style={{
-                            height: '100%', borderRadius: 3, background: sg.bar,
+                            height: '100%', borderRadius: 4, background: sg.bar,
                             boxShadow: seg.fill > 0 ? `0 0 8px ${sg.edge}` : 'none',
                           }}
                         />
@@ -114,7 +114,7 @@ export default function OnboardingShell({ stepKey, steps = [], answers = {}, onB
 
               {/* The counter, as an instrument readout rather than a sentence. */}
               {showProgress && chapter && meta_.isQuestion && (
-                <span style={{ ...numeral(11, { color: C.t3 }), flexShrink: 0, letterSpacing: '.04em' }}>
+                <span style={{ ...numeral(11, { color: C.t3 }), flexShrink: 0, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>
                   {pad2(meta_.questionNumber)}<span style={{ color: C.t4 }}>/{pad2(meta_.questionTotal)}</span>
                 </span>
               )}
@@ -124,8 +124,8 @@ export default function OnboardingShell({ stepKey, steps = [], answers = {}, onB
                 phone, where there is no rail — proof that the answers are being
                 kept. */}
             {showProgress && chapter && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 11, paddingLeft: showBack ? 48 : 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12, paddingLeft: showBack ? 48 : 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {!showRail && <ChapterMark mark={chapter.mark} chapterKey={chapter.key} size={28} pulse={false} />}
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '2px 8px' }}>
                     {!showRail && !isMobile && (
@@ -136,7 +136,7 @@ export default function OnboardingShell({ stepKey, steps = [], answers = {}, onB
                   <motion.span key={meta_.encouragement} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} transition={GLIDE_FAST}
                     style={{
                       fontSize: 11.5, fontWeight: 700, color: g.ink, background: g.soft,
-                      border: `1px solid ${g.edgeSoft}`, padding: '4px 10px', borderRadius: R.pill,
+                      border: `1px solid ${g.edgeSoft}`, padding: '4px 8px', borderRadius: R.pill,
                       whiteSpace: 'nowrap', flexShrink: 0,
                     }}>
                     {meta_.encouragement}
@@ -179,7 +179,7 @@ export default function OnboardingShell({ stepKey, steps = [], answers = {}, onB
         </div>
 
         {footer && (
-          <div style={{ position: 'relative', zIndex: 2, padding: '10px 24px 28px', maxWidth: 640, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+          <div style={{ position: 'relative', zIndex: 2, padding: '8px 24px 28px', maxWidth: 640, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
             {footer}
           </div>
         )}

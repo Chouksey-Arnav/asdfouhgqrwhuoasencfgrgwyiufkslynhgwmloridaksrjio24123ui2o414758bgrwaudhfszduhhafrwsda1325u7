@@ -107,7 +107,7 @@ function InviteEntry() {
   };
 
   return (
-    <form onSubmit={submit} style={CC({ gap: 10 })}>
+    <form onSubmit={submit} style={CC({ gap: 8 })}>
       <label htmlFor="msp-invite-input" style={{ fontSize: 12.5, fontWeight: 600, color: C.t2 }}>
         Paste the link they sent you — or type the 8-character code
       </label>
@@ -127,7 +127,7 @@ function InviteEntry() {
             borderColor: error ? C.rose : C.inputBorder,
           })}
         />
-        <button type="submit" style={btn(C.blueGrad, { padding: '10px 20px', whiteSpace: 'nowrap' })}>
+        <button type="submit" style={btn(C.blueGrad, { padding: '8px 20px', whiteSpace: 'nowrap' })}>
           <KeyRound size={14} /> Continue
         </button>
       </div>
@@ -164,14 +164,14 @@ function SectionHead({ eyebrow, title, body, hue = C.blue }) {
   return (
     <div style={{ ...CC({ gap: 8 }), marginBottom: 20, maxWidth: 720 }}>
       {eyebrow && (
-        <div style={{ fontSize: 11, fontWeight: 700, color: hue, letterSpacing: '.12em', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: hue, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
           {eyebrow}
         </div>
       )}
-      <h2 style={{ fontSize: 'clamp(21px,2.4vw,28px)', fontFamily: C.FD, fontWeight: 800, color: C.t1, margin: 0, letterSpacing: '-.02em' }}>
+      <h2 style={{ fontSize: 'clamp(21px,2.4vw,28px)', fontFamily: C.FD, fontWeight: 800, color: C.t1, margin: 0, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>
         {title}
       </h2>
-      {body && <p style={{ fontSize: 14, color: C.t2, lineHeight: 1.65, margin: 0 }}>{body}</p>}
+      {body && <p style={{ fontSize: 14, color: C.t2, lineHeight: 1.55, margin: 0 }}>{body}</p>}
     </div>
   );
 }
@@ -180,20 +180,20 @@ function SectionHead({ eyebrow, title, body, hue = C.blue }) {
 function Track({ steps, accent, title, sub, badge }) {
   return (
     <div style={glass({ padding: 'clamp(20px,2.4vw,28px)', ...CC({ gap: 16 }), height: '100%' })}>
-      <div style={CC({ gap: 7 })}>
+      <div style={CC({ gap: 8 })}>
         <span style={{
-          ...R({ gap: 6 }), width: 'fit-content', padding: '5px 11px', borderRadius: 999,
+          ...R({ gap: 4 }), width: 'fit-content', padding: '4px 12px', borderRadius: 999,
           background: tint(accent, 0.12), border: `1px solid ${tint(accent, 0.3)}`,
-          fontSize: 11, fontWeight: 700, color: onTint(accent), letterSpacing: '.04em',
+          fontSize: 11, fontWeight: 700, color: onTint(accent), letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',
         }}>
           <Clock size={12} /> {badge}
         </span>
-        <div style={{ fontSize: 18, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{title}</div>
-        <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.6 }}>{sub}</div>
+        <div style={{ fontSize: 18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{title}</div>
+        <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.55 }}>{sub}</div>
       </div>
       <div style={CC({ gap: 12 })}>
         {steps.map(({ n, title: t, body }) => (
-          <div key={n} style={R({ gap: 13, alignItems: 'flex-start' })}>
+          <div key={n} style={R({ gap: 12, alignItems: 'flex-start' })}>
             <div style={{
               width: 27, height: 27, borderRadius: 8, flexShrink: 0, display: 'flex',
               alignItems: 'center', justifyContent: 'center', fontFamily: C.FD, fontWeight: 800, fontSize: 13,
@@ -201,7 +201,7 @@ function Track({ steps, accent, title, sub, badge }) {
             }}>{n}</div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: C.t1 }}>{t}</div>
-              <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6, marginTop: 3 }}>{body}</div>
+              <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, marginTop: 4 }}>{body}</div>
             </div>
           </div>
         ))}
@@ -250,15 +250,15 @@ export default function ParentsLanding({ onSignUp, onLogin, onHome, onOpenLegal,
         backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
       }}>
         <div className="msp-parents-wrap" style={{ padding: '12px clamp(20px, 4vw, 56px)', ...R({ gap: 12 }) }}>
-          <a href="/" onClick={nav(onHome)} style={{ ...R({ gap: 10 }), textDecoration: 'none', marginRight: 'auto' }}>
+          <a href="/" onClick={nav(onHome)} style={{ ...R({ gap: 8 }), textDecoration: 'none', marginRight: 'auto' }}>
             <AnimatedLogo size={28} variant="pop" />
             <div>
               <div style={{ fontSize: 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>MedSchoolPrep</div>
-              <div style={{ fontSize: 10, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase' }}>For parents</div>
+              <div style={{ fontSize: 10, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>For parents</div>
             </div>
           </a>
           <ThemeToggle mode={themeMode} onChange={onThemeChange} align="right" />
-          <a href={AUTH_VIEWS.parentLogin} onClick={nav(onLogin)} style={{ ...btnG({ fontSize: 12.5, padding: '8px 14px' }), textDecoration: 'none' }}>
+          <a href={AUTH_VIEWS.parentLogin} onClick={nav(onLogin)} style={{ ...btnG({ fontSize: 12.5, padding: '8px 12px' }), textDecoration: 'none' }}>
             <LogIn size={13} /> Parent sign-in
           </a>
         </div>
@@ -269,14 +269,14 @@ export default function ParentsLanding({ onSignUp, onLogin, onHome, onOpenLegal,
         <div className="msp-parents-hero">
           <div style={CC({ gap: 20 })}>
             <span style={{
-              ...R({ gap: 7 }), width: 'fit-content', padding: '6px 13px', borderRadius: 999,
+              ...R({ gap: 8 }), width: 'fit-content', padding: '4px 12px', borderRadius: 999,
               background: tint(C.violet, 0.11), border: `1px solid ${tint(C.violet, 0.3)}`,
               fontSize: 12, fontWeight: 700, color: C.violetL,
             }}>
               <Users size={13} /> Parent dashboard
             </span>
             <h1 style={{
-              fontSize: 'clamp(32px,4.6vw,58px)', lineHeight: 1.05, letterSpacing: '-.035em',
+              fontSize: 'clamp(32px,4.6vw,58px)', lineHeight: 1.05, letterSpacing: 'calc(-0.035em + var(--msp-letter-spacing))',
               fontFamily: C.FD, fontWeight: 800, color: C.t1, margin: 0,
             }}>
               See how they're doing.<br />
@@ -291,15 +291,15 @@ export default function ParentsLanding({ onSignUp, onLogin, onHome, onOpenLegal,
               read on the week. You can send them a note or ask for a quiz. Their own notes, essays
               and coach conversations stay theirs.
             </p>
-            <div style={R({ gap: 10, flexWrap: 'wrap', marginTop: 2 })}>
-              <a href={AUTH_VIEWS.parentSignup} onClick={nav(onSignUp)} style={{ ...btn(C.blueGrad, { fontSize: 14.5, padding: '13px 24px' }), textDecoration: 'none' }}>
+            <div style={R({ gap: 8, flexWrap: 'wrap', marginTop: 4 })}>
+              <a href={AUTH_VIEWS.parentSignup} onClick={nav(onSignUp)} style={{ ...btn(C.blueGrad, { fontSize: 14.5, padding: '12px 24px' }), textDecoration: 'none' }}>
                 Create a parent account <ArrowRight size={15} />
               </a>
-              <a href={AUTH_VIEWS.parentLogin} onClick={nav(onLogin)} style={{ ...btnG({ fontSize: 14.5, padding: '13px 24px' }), textDecoration: 'none' }}>
+              <a href={AUTH_VIEWS.parentLogin} onClick={nav(onLogin)} style={{ ...btnG({ fontSize: 14.5, padding: '12px 24px' }), textDecoration: 'none' }}>
                 I already have one
               </a>
             </div>
-            <div style={{ ...R({ gap: 7 }), fontSize: 12.5, color: C.t3 }}>
+            <div style={{ ...R({ gap: 8 }), fontSize: 12.5, color: C.t3 }}>
               <Lock size={13} /> Free. You never sign in as your student, and you never see their password.
             </div>
           </div>
@@ -317,8 +317,8 @@ export default function ParentsLanding({ onSignUp, onLogin, onHome, onOpenLegal,
             background: `linear-gradient(150deg,${tint(C.blue, 0.09)},transparent 70%), ${C.surf}`,
             borderColor: tint(C.blue, 0.3),
           })}>
-            <div style={CC({ gap: 7 })}>
-              <div style={R({ gap: 9 })}>
+            <div style={CC({ gap: 8 })}>
+              <div style={R({ gap: 8 })}>
                 <Link2 size={17} color={C.blueL} />
                 <div style={{ fontSize: 18, fontFamily: C.FD, fontWeight: 800, color: C.t1 }}>
                   Already been invited?
@@ -334,14 +334,14 @@ export default function ParentsLanding({ onSignUp, onLogin, onHome, onOpenLegal,
 
             <div style={{ height: 1, background: C.b1 }} />
 
-            <div style={CC({ gap: 9 })}>
+            <div style={CC({ gap: 8 })}>
               {[
                 [Mail, 'Opened the emailed link? One press and you are connected — no password, and no second code to wait for.'],
                 [KeyRound, 'Typed a code they texted you? We email six digits to the address they invited, because a code that gets forwarded is not proof of who you are.'],
                 [ShieldCheck, 'Nothing is shared until you confirm, and either of you can end it in one tap.'],
               ].map(([Icon, text]) => (
-                <div key={text} style={R({ gap: 9, alignItems: 'flex-start' })}>
-                  <Icon size={13} color={C.t3} style={{ flexShrink: 0, marginTop: 3 }} />
+                <div key={text} style={R({ gap: 8, alignItems: 'flex-start' })}>
+                  <Icon size={13} color={C.t3} style={{ flexShrink: 0, marginTop: 4 }} />
                   <span style={{ fontSize: 12, color: C.t3, lineHeight: 1.55 }}>{text}</span>
                 </div>
               ))}
@@ -361,9 +361,9 @@ export default function ParentsLanding({ onSignUp, onLogin, onHome, onOpenLegal,
           {SHOWS.map(({ icon: Icon, hue, title, body }) => {
             const c = hue();
             return (
-              <div key={title} style={glass({ padding: 22, ...CC({ gap: 11 }), height: '100%' })}>
+              <div key={title} style={glass({ padding: 20, ...CC({ gap: 12 }), height: '100%' })}>
                 <div style={{
-                  width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: 36, height: 36, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   background: tint(c, 0.13), border: `1px solid ${tint(c, 0.3)}`,
                 }}>
                   <Icon size={17} color={c} />
@@ -378,16 +378,16 @@ export default function ParentsLanding({ onSignUp, onLogin, onHome, onOpenLegal,
 
       {/* ── What you don't ─────────────────────────────────────────────────── */}
       <Section style={{ paddingBottom: 'clamp(32px,4vw,52px)' }}>
-        <div style={glass({ padding: 'clamp(22px,2.8vw,34px)', ...CC({ gap: 18 }) })}>
+        <div style={glass({ padding: 'clamp(22px,2.8vw,34px)', ...CC({ gap: 16 }) })}>
           <div className="msp-parents-split" style={{ alignItems: 'center' }}>
-            <div style={CC({ gap: 11 })}>
-              <div style={R({ gap: 9 })}>
+            <div style={CC({ gap: 12 })}>
+              <div style={R({ gap: 8 })}>
                 <EyeOff size={17} color={C.t3} />
-                <h2 style={{ fontSize: 'clamp(19px,2vw,24px)', fontFamily: C.FD, fontWeight: 800, color: C.t1, margin: 0, letterSpacing: '-.02em' }}>
+                <h2 style={{ fontSize: 'clamp(19px,2vw,24px)', fontFamily: C.FD, fontWeight: 800, color: C.t1, margin: 0, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>
                   What you will never see
                 </h2>
               </div>
-              <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.65, margin: 0 }}>
+              <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.55, margin: 0 }}>
                 Not a setting, and not something we ask you to promise — the parent view is built
                 from an allowlist of progress fields, so these are not sent to your browser at all.
                 That boundary is why students agree to share the rest of it, and why the app stays
@@ -396,8 +396,8 @@ export default function ParentsLanding({ onSignUp, onLogin, onHome, onOpenLegal,
             </div>
             <div style={autoGrid(230, 10)}>
               {NEVER.map((item) => (
-                <div key={item} style={glass2({ ...R({ gap: 9, alignItems: 'flex-start' }), height: '100%' })}>
-                  <EyeOff size={14} color={C.t3} style={{ flexShrink: 0, marginTop: 2 }} />
+                <div key={item} style={glass2({ ...R({ gap: 8, alignItems: 'flex-start' }), height: '100%' })}>
+                  <EyeOff size={14} color={C.t3} style={{ flexShrink: 0, marginTop: 4 }} />
                   <span style={{ fontSize: 13, color: C.t2, lineHeight: 1.5 }}>{item}</span>
                 </div>
               ))}
@@ -430,9 +430,9 @@ export default function ParentsLanding({ onSignUp, onLogin, onHome, onOpenLegal,
             sub="Longer, on purpose. A request arriving at a student's inbox has to say who is asking, and that means we have to ask you first."
           />
         </div>
-        <div style={glass2({ ...R({ gap: 11, alignItems: 'flex-start' }), marginTop: 16 })}>
-          <ShieldCheck size={16} color={C.greenL} style={{ flexShrink: 0, marginTop: 2 }} />
-          <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6 }}>
+        <div style={glass2({ ...R({ gap: 12, alignItems: 'flex-start' }), marginTop: 16 })}>
+          <ShieldCheck size={16} color={C.greenL} style={{ flexShrink: 0, marginTop: 4 }} />
+          <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>
             Because access depends on the student accepting from their own mailbox, knowing a
             student's name or email is never enough to see anything about them — and the details
             you give us are shown to them, so a request from someone they don't know is obvious at
@@ -450,20 +450,20 @@ export default function ParentsLanding({ onSignUp, onLogin, onHome, onOpenLegal,
         })}>
           <div className="msp-parents-split" style={{ alignItems: 'center', gap: 'clamp(20px,3vw,40px)' }}>
             <div style={CC({ gap: 12 })}>
-              <div style={R({ gap: 9 })}>
+              <div style={R({ gap: 8 })}>
                 <MessageSquare size={17} color={C.violetL} />
-                <h2 style={{ fontSize: 'clamp(19px,2vw,24px)', fontFamily: C.FD, fontWeight: 800, color: C.t1, margin: 0, letterSpacing: '-.02em' }}>
+                <h2 style={{ fontSize: 'clamp(19px,2vw,24px)', fontFamily: C.FD, fontWeight: 800, color: C.t1, margin: 0, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>
                   You can say something, not just watch
                 </h2>
               </div>
-              <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.65, margin: 0 }}>
+              <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.55, margin: 0 }}>
                 A dashboard that only shows numbers turns every conversation into an interrogation
                 at dinner. From the parent view you can send a short note, ask them to sit a quiz on
                 a specific topic, or ask a question about the week — and see whether they picked it
                 up. It arrives in their app rather than their inbox, so it is one line in the place
                 they are already working instead of another email to ignore.
               </p>
-              <div style={{ ...R({ gap: 7 }), fontSize: 12.5, color: C.t3 }}>
+              <div style={{ ...R({ gap: 8 }), fontSize: 12.5, color: C.t3 }}>
                 <ShieldCheck size={13} /> They can mark it done or say no. Nothing you send changes their plan on its own.
               </div>
             </div>
@@ -473,7 +473,7 @@ export default function ParentsLanding({ onSignUp, onLogin, onHome, onOpenLegal,
                 { icon: ClipboardList, hue: C.blue, label: 'A quiz request', body: 'Pick a topic; it shows up on their plan as a suggestion.' },
                 { icon: Eye, hue: C.cyan, label: 'A question', body: '“How did the practice test feel?” — answered in a tap.' },
               ].map(({ icon: Icon, hue, label, body }) => (
-                <div key={label} style={glass2({ ...CC({ gap: 7 }), height: '100%' })}>
+                <div key={label} style={glass2({ ...CC({ gap: 8 }), height: '100%' })}>
                   <Icon size={15} color={hue} />
                   <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{label}</div>
                   <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.55 }}>{body}</div>
@@ -492,25 +492,25 @@ export default function ParentsLanding({ onSignUp, onLogin, onHome, onOpenLegal,
           background: `linear-gradient(135deg,${tint(C.blue, 0.08)},transparent 65%), ${C.surf}`,
           borderColor: tint(C.blue, 0.26),
         })}>
-          <h2 style={{ fontSize: 'clamp(20px,2.4vw,28px)', fontFamily: C.FD, fontWeight: 800, color: C.t1, margin: 0, letterSpacing: '-.02em' }}>
+          <h2 style={{ fontSize: 'clamp(20px,2.4vw,28px)', fontFamily: C.FD, fontWeight: 800, color: C.t1, margin: 0, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>
             Start where you actually are
           </h2>
-          <p style={{ fontSize: 14, color: C.t2, lineHeight: 1.65, margin: 0, maxWidth: 620 }}>
+          <p style={{ fontSize: 14, color: C.t2, lineHeight: 1.55, margin: 0, maxWidth: 620 }}>
             Holding an invitation? Paste it at the top of this page. Nobody has invited you yet?
             Create an account and send your student a request — they decide, from their own inbox.
           </p>
-          <div style={R({ gap: 10, flexWrap: 'wrap', justifyContent: 'center' })}>
-            <a href={AUTH_VIEWS.parentSignup} onClick={nav(onSignUp)} style={{ ...btn(C.blueGrad, { fontSize: 14, padding: '12px 22px' }), textDecoration: 'none' }}>
+          <div style={R({ gap: 8, flexWrap: 'wrap', justifyContent: 'center' })}>
+            <a href={AUTH_VIEWS.parentSignup} onClick={nav(onSignUp)} style={{ ...btn(C.blueGrad, { fontSize: 14, padding: '12px 20px' }), textDecoration: 'none' }}>
               Create a parent account <ArrowRight size={14} />
             </a>
-            <a href={AUTH_VIEWS.parentLogin} onClick={nav(onLogin)} style={{ ...btnG({ fontSize: 14, padding: '12px 22px' }), textDecoration: 'none' }}>
+            <a href={AUTH_VIEWS.parentLogin} onClick={nav(onLogin)} style={{ ...btnG({ fontSize: 14, padding: '12px 20px' }), textDecoration: 'none' }}>
               <Eye size={13} /> Sign in to your dashboard
             </a>
           </div>
         </div>
       </Section>
 
-      <footer style={{ borderTop: `1px solid ${C.b1}`, padding: '22px 0 44px' }}>
+      <footer style={{ borderTop: `1px solid ${C.b1}`, padding: '20px 0px 44px' }}>
         <Section>
           <div style={R({ gap: 16, flexWrap: 'wrap' })}>
             <a href="/" onClick={nav(onHome)} style={{ fontSize: 12.5, color: C.t3, textDecoration: 'none' }}>MedSchoolPrep home</a>

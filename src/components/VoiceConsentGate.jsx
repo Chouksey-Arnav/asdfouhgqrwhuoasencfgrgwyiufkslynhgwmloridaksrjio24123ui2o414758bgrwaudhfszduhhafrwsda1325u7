@@ -32,13 +32,13 @@ export default function VoiceConsentGate({ accent = C.blue, onDecide }) {
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
       style={{ ...glass2({ padding: 16 }), border: `1px solid ${accent}30` }}>
-      <div style={R({ gap: 9, marginBottom: 10, alignItems: 'flex-start' })}>
-        <ShieldCheck size={16} color={accent} style={{ flexShrink: 0, marginTop: 1 }} />
+      <div style={R({ gap: 8, marginBottom: 8, alignItems: 'flex-start' })}>
+        <ShieldCheck size={16} color={accent} style={{ flexShrink: 0, marginTop: 4 }} />
         <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>
           Before you answer out loud
         </div>
       </div>
-      <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.65 }}>
+      <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>
         {offDevice ? (
           <>
             Answering by voice uses your browser’s speech-to-text. On this browser, that means{' '}
@@ -53,24 +53,24 @@ export default function VoiceConsentGate({ accent = C.blue, onDecide }) {
             possible that it does. We never receive the audio and we never store a recording either way.
           </>
         )}
-        <div style={{ marginTop: 9 }}>
+        <div style={{ marginTop: 8 }}>
           The interviewer’s voice is made on your device and involves no microphone at all, so it works either way.{' '}
           <strong style={{ color: C.t1 }}>Everything in this simulator works by typing</strong> — nothing is locked
           behind speaking aloud, and you can change this later from this same screen.
         </div>
         {offDevice && (
-          <div style={{ marginTop: 9, color: C.t3 }}>
+          <div style={{ marginTop: 8, color: C.t3 }}>
             If you’re under 18, this is worth showing a parent or guardian first.
           </div>
         )}
       </div>
-      <div style={R({ gap: 8, marginTop: 14, flexWrap: 'wrap' })}>
+      <div style={R({ gap: 8, marginTop: 12, flexWrap: 'wrap' })}>
         <button onClick={() => decide('granted')}
-          style={{ ...btn(accent, { fontSize: 12.5 }), display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+          style={{ ...btn(accent, { fontSize: 12.5 }), display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           <Mic size={14} />Turn on voice answers
         </button>
         <button onClick={() => decide('declined')}
-          style={{ ...btnG({ fontSize: 12.5 }), display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+          style={{ ...btnG({ fontSize: 12.5 }), display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           <Keyboard size={14} />I’ll type instead
         </button>
       </div>

@@ -56,7 +56,7 @@ export default function MedExPanel({
   const shown = seal?.sealedScore ?? headline.score;
 
   return (
-    <div style={CC({ gap: 22 })}>
+    <div style={CC({ gap: 20 })}>
       <PanelHero tourTag="medex-panel" icon={Activity} color={color} color2={C.violet} m={m}
         eyebrow={MEDEX_COPY.name}
         title={MEDEX_COPY.tagline}
@@ -86,12 +86,12 @@ export default function MedExPanel({
               caption={`of ${MEDEX_MAX}`}
               reducedMotion={reducedMotion} idPrefix="medex-panel"
             />
-            <div style={{ flex: 1, minWidth: 250, display: 'flex', flexDirection: 'column', gap: 11 }}>
+            <div style={{ flex: 1, minWidth: 250, display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <div style={{ fontSize: 13.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 5 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>
                   {headline.band.label}
                 </div>
-                <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.6 }}>{headline.band.blurb}</div>
+                <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }}>{headline.band.blurb}</div>
               </div>
 
               <div style={glass2({ padding: 12 })}>
@@ -104,7 +104,7 @@ export default function MedExPanel({
                 {/* `confidence` is {level,label,note}, not a string — rendering it
                     directly printed "[object Object]" to the student. */}
                 {headline.confidence?.label && (
-                  <div style={R({ gap: 6, marginTop: 7 })}>
+                  <div style={R({ gap: 4, marginTop: 8 })}>
                     <span style={pill(
                       tint(headline.confidence.level === 'high' ? C.green : headline.confidence.level === 'low' ? C.amber : C.blue, 0.15),
                       headline.confidence.level === 'high' ? C.greenL : headline.confidence.level === 'low' ? C.amberL : C.blueL,
@@ -112,7 +112,7 @@ export default function MedExPanel({
                     )}>{headline.confidence.label}</span>
                   </div>
                 )}
-                <div style={{ fontSize: 11, color: C.t3, marginTop: 6, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>
                   {headline.confidence?.note || 'The band is the honest part — it is drawn on the dial too.'} Every reason it is that wide is listed at the bottom of this page.
                 </div>
               </div>
@@ -121,7 +121,7 @@ export default function MedExPanel({
             </div>
           </div>
 
-          <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${C.b1}` }}>
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${C.b1}` }}>
             <SectionTitle icon={History} color={C.t3}>Your sealed weeks</SectionTitle>
             <MedExHistoryChart rows={rows} m={m} />
           </div>
@@ -135,13 +135,13 @@ export default function MedExPanel({
         <SectionTitle icon={Target} color={C.amberL}>Measured against</SectionTitle>
         <div style={R({ gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' })}>
           <div style={{ flex: 1, minWidth: 220 }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.25 }}>
+            <div style={{ fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.25 }}>
               {headline.program.name}
             </div>
             {headline.program.institution !== headline.program.name && (
-              <div style={{ fontSize: 11.5, color: C.t3, marginTop: 2 }}>{headline.program.institution}</div>
+              <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4 }}>{headline.program.institution}</div>
             )}
-            <div style={R({ gap: 6, flexWrap: 'wrap', marginTop: 8 })}>
+            <div style={R({ gap: 4, flexWrap: 'wrap', marginTop: 8 })}>
               <span style={pill(C.s3, C.t2, { fontFamily: C.FM, fontSize: 10.5 })}>
                 {headline.admitRate.published != null
                   ? `${(headline.admitRate.published * 100).toFixed(1)}% admitted`
@@ -156,9 +156,9 @@ export default function MedExPanel({
             </div>
           </div>
         </div>
-        <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6, marginTop: 10 }}>{medex.benchmark.note}</div>
+        <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginTop: 8 }}>{medex.benchmark.note}</div>
         {medex.benchmark.unresolved?.length > 0 && (
-          <div style={{ marginTop: 10 }}>
+          <div style={{ marginTop: 8 }}>
             <HelpNote color={C.amber} icon={Info}>
               We hold no admitted-student data for {medex.benchmark.unresolved.join(', ')}, so {medex.benchmark.unresolved.length === 1 ? 'it is' : 'they are'} not scored. That is usually a name typed by hand — re-adding {medex.benchmark.unresolved.length === 1 ? 'it' : 'them'} from the autocomplete fixes it.
             </HelpNote>
@@ -170,10 +170,10 @@ export default function MedExPanel({
       {scored && (
         <div style={glass({ padding: m ? 16 : 20 })}>
           <SectionTitle icon={Layers} color={C.violetL}>What the score is made of</SectionTitle>
-          <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6, marginBottom: 14 }}>
+          <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginBottom: 12 }}>
             The weights are {headline.program.name}&rsquo;s own, not ours — this programme reads as <strong style={{ color: C.t2 }}>{headline.program.emphasis}</strong>-emphasis. A pillar can be strong and still carry very little here, and that is worth more than a generic checklist.
           </div>
-          <div style={CC({ gap: 9 })}>
+          <div style={CC({ gap: 8 })}>
             {headline.pillars.map(p => <PillarRow key={p.id} pillar={p} m={m} />)}
           </div>
         </div>
@@ -188,10 +188,10 @@ export default function MedExPanel({
               <button key={mv.key} onClick={() => mv.pillar && onGoTo?.(mv.key)} style={{
                 ...glass2({ padding: 12 }), textAlign: 'left', width: '100%',
                 cursor: mv.pillar && onGoTo ? 'pointer' : 'default',
-                display: 'flex', gap: 11, alignItems: 'flex-start',
+                display: 'flex', gap: 12, alignItems: 'flex-start',
               }}>
                 <span style={{
-                  flexShrink: 0, minWidth: 46, textAlign: 'center', padding: '4px 6px', borderRadius: 8,
+                  flexShrink: 0, minWidth: 46, textAlign: 'center', padding: '4px 4px', borderRadius: 8,
                   background: mv.points == null ? tint(C.blue, 0.13) : tint(C.green, 0.14),
                   color: mv.points == null ? C.blueL : C.greenL,
                   fontFamily: C.FM, fontWeight: 800, fontSize: 12,
@@ -215,7 +215,7 @@ export default function MedExPanel({
       <div style={glass({ padding: m ? 16 : 20 })}>
         <SectionTitle icon={GraduationCap} color={C.blueL}>Your list, school by school</SectionTitle>
         {medex.colleges.rows.length === 0 ? (
-          <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.55 }}>
             No schools on your list resolve to admitted-student data yet. Add them from the college autocomplete and each one gets its own MedEx Score here.
           </div>
         ) : (
@@ -234,7 +234,7 @@ export default function MedExPanel({
           title="Against the most selective programmes in the country"
           sub={medex.apex.sentence}
           defaultOpen={false}>
-          <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6, marginBottom: 12 }}>
+          <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginBottom: 12 }}>
             This slate is fixed. It does not change when you edit your college list, which is exactly why it is here — it is the one reference nobody can improve by removing their reach school.
           </div>
           <ApexTable apex={medex.apex} m={m} />
@@ -248,25 +248,25 @@ export default function MedExPanel({
         background: `linear-gradient(140deg, ${tint(C.amber, 0.05)}, transparent 60%)`,
       }}>
         <SectionTitle icon={Scale} color={C.amberL}>What this number is not</SectionTitle>
-        <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.65, marginBottom: 13 }}>
+        <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, marginBottom: 12 }}>
           {MEDEX_COPY.notAProbability}
         </div>
         {onOpenCalculator && (
-          <button onClick={onOpenCalculator} style={btnG({ fontSize: 12, padding: '7px 14px', marginBottom: 14 })}>
+          <button onClick={onOpenCalculator} style={btnG({ fontSize: 12, padding: '8px 12px', marginBottom: 12 })}>
             Open the Admissions Calculator<ArrowUpRight size={12} />
           </button>
         )}
 
         {scored && headline.uncertainty?.reasons?.length > 0 && (
           <>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.t3, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 9 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8 }}>
               Why the range is {headline.range.high - headline.range.low} points wide
             </div>
-            <div style={CC({ gap: 7 })}>
+            <div style={CC({ gap: 8 })}>
               {headline.uncertainty.reasons.map(r => (
                 <div key={r.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                   <span style={{
-                    flexShrink: 0, marginTop: 3, width: 6, height: 6, borderRadius: '50%',
+                    flexShrink: 0, marginTop: 4, width: 6, height: 6, borderRadius: '50%',
                     background: r.fixable === false ? C.t4 : C.amber,
                   }} />
                   <span style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55 }}>{r.label}</span>
@@ -277,14 +277,14 @@ export default function MedExPanel({
         )}
 
         {scored && headline.lottery && (
-          <div style={{ marginTop: 13 }}>
+          <div style={{ marginTop: 12 }}>
             <HelpNote color={C.rose} icon={ShieldAlert}>
               {headline.program.name} resolves part of its cohort by explicit random selection. No amount of preparation removes that, and this score does not pretend otherwise.
             </HelpNote>
           </div>
         )}
 
-        <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${C.b1}` }}>
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}` }}>
           <BandLegend current={scored ? headline.band : null} />
         </div>
       </div>
@@ -305,12 +305,12 @@ function PillarRow({ pillar, m }) {
         all: 'unset', boxSizing: 'border-box', cursor: 'pointer', display: 'block',
         width: '100%', padding: m ? 11 : 13,
       }}>
-        <div style={R({ justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' })}>
-          <span style={R({ gap: 7 })}>
+        <div style={R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' })}>
+          <span style={R({ gap: 8 })}>
             {open ? <ChevronDown size={13} color={C.t3} /> : <ChevronRight size={13} color={C.t3} />}
             <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{pillar.label}</span>
           </span>
-          <span style={R({ gap: 7, flexWrap: 'wrap' })}>
+          <span style={R({ gap: 8, flexWrap: 'wrap' })}>
             <span style={pill(C.s2, C.t3, { fontFamily: C.FM, fontSize: 10 })}>{pct}% of this score</span>
             {known && (
               <span style={pill(tint(col, 0.15), col, { fontFamily: C.FM, fontSize: 10.5 })}>
@@ -323,7 +323,7 @@ function PillarRow({ pillar, m }) {
         {/* Position bar: centre is the admitted median, which is the only
             reference point that makes a z legible to a non-statistician. */}
         {known && (
-          <div style={{ marginTop: 9, position: 'relative', height: 6, borderRadius: 4, background: C.b1 }}>
+          <div style={{ marginTop: 8, position: 'relative', height: 6, borderRadius: 4, background: C.b1 }}>
             <div style={{ position: 'absolute', left: '50%', top: -3, bottom: -3, width: 1.5, background: C.t3, opacity: 0.6 }} />
             <div style={{
               position: 'absolute', top: 0, bottom: 0, borderRadius: 4, background: col,
@@ -332,7 +332,7 @@ function PillarRow({ pillar, m }) {
             }} />
           </div>
         )}
-        <div style={{ fontSize: 10.5, color: C.t3, marginTop: 7, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 10.5, color: C.t3, marginTop: 8, lineHeight: 1.45 }}>
           {!known
             ? 'This programme does not weight anything in this pillar, so it is not part of your score here.'
             // "Worth 0 points against not counting it at all" is technically the
@@ -347,12 +347,12 @@ function PillarRow({ pillar, m }) {
       </button>
 
       {open && (
-        <div style={{ padding: m ? '0 11px 11px' : '0 13px 13px', borderTop: `1px solid ${C.b1}`, paddingTop: 11 }}>
-          <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6, marginBottom: 10 }}>{pillar.blurb}</div>
+        <div style={{ padding: m ? '0 11px 11px' : '0 13px 13px', borderTop: `1px solid ${C.b1}`, paddingTop: 12 }}>
+          <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginBottom: 8 }}>{pillar.blurb}</div>
           {pillar.dimensions.map(d => (
-            <div key={d.key} style={R({ justifyContent: 'space-between', gap: 8, padding: '5px 0', flexWrap: 'wrap' })}>
+            <div key={d.key} style={R({ justifyContent: 'space-between', gap: 8, padding: '4px 0px', flexWrap: 'wrap' })}>
               <span style={{ fontSize: 11.5, color: C.t2, textTransform: 'capitalize' }}>{d.key}</span>
-              <span style={R({ gap: 6 })}>
+              <span style={R({ gap: 4 })}>
                 <span style={{ fontSize: 10.5, color: C.t4, fontFamily: C.FM }}>weight {(d.weight * 100).toFixed(0)}%</span>
                 <span style={{
                   fontSize: 10.5, fontFamily: C.FM,
@@ -375,7 +375,7 @@ function CollegeCard({ profile, result, isBenchmark }) {
 
   return (
     <div style={{
-      ...glass2({ padding: 13 }),
+      ...glass2({ padding: 12 }),
       border: `1px solid ${isBenchmark ? tint(col, 0.35) : C.b1}`,
       background: isBenchmark ? tint(col, 0.06) : C.surf2,
     }}>
@@ -384,19 +384,19 @@ function CollegeCard({ profile, result, isBenchmark }) {
           <span style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: C.t1, fontFamily: C.FD, lineHeight: 1.3 }}>
             {profile.name}
           </span>
-          <span style={{ display: 'block', fontSize: 10, color: C.t4, marginTop: 2, fontFamily: C.FM }}>
+          <span style={{ display: 'block', fontSize: 10, color: C.t4, marginTop: 4, fontFamily: C.FM }}>
             {profile.admitRate?.value != null
               ? `${(profile.admitRate.value * 100).toFixed(1)}% admitted`
               : `~${Math.round((profile.admitRate?.assumed ?? 0.25) * 100)}% assumed`}
           </span>
         </span>
         <span style={{
-          flexShrink: 0, fontSize: 20, fontWeight: 900, fontFamily: C.FD, color: col,
+          flexShrink: 0, fontSize: 20, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))', fontWeight: 900, fontFamily: C.FD, color: col,
           lineHeight: 1, fontVariantNumeric: 'tabular-nums',
         }}>{scored ? result.score : '—'}</span>
       </div>
 
-      <div style={R({ gap: 6, flexWrap: 'wrap', marginTop: 9 })}>
+      <div style={R({ gap: 4, flexWrap: 'wrap', marginTop: 8 })}>
         {isBenchmark && <span style={pill(tint(col, 0.16), col, { fontSize: 9.5 })}>benchmark</span>}
         {scored
           ? <span style={pill(C.s2, C.t3, { fontSize: 9.5 })}>{band.label}</span>
@@ -433,15 +433,15 @@ function ApexTable({ apex, m }) {
     [apex],
   );
   if (!rows.length) {
-    return <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6 }}>{apex.sentence}</div>;
+    return <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.55 }}>{apex.sentence}</div>;
   }
   return (
-    <div style={CC({ gap: 6 })}>
+    <div style={CC({ gap: 4 })}>
       {rows.map(({ profile, result }) => {
         const col = bandColor(result.band);
         const pctOfCohort = Math.min(100, Math.round((result.score / MEDEX_COHORT_MEDIAN) * 100));
         return (
-          <div key={profile.id} style={R({ gap: 10, flexWrap: 'nowrap' })}>
+          <div key={profile.id} style={R({ gap: 8, flexWrap: 'nowrap' })}>
             <span style={{
               flex: 1, minWidth: 0, fontSize: 11.5, color: C.t2,
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -459,7 +459,7 @@ function ApexTable({ apex, m }) {
           </div>
         );
       })}
-      <div style={{ fontSize: 10.5, color: C.t4, marginTop: 5, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 10.5, color: C.t4, marginTop: 4, lineHeight: 1.45 }}>
         Bars are your score as a share of 850 — the admitted median at each programme. A full bar means you look like the middle of that class.
       </div>
     </div>
@@ -469,21 +469,21 @@ function ApexTable({ apex, m }) {
 function BandLegend({ current }) {
   return (
     <>
-      <div style={{ fontSize: 11, fontWeight: 700, color: C.t3, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 9 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8 }}>
         The bands
       </div>
-      <div style={CC({ gap: 5 })}>
+      <div style={CC({ gap: 4 })}>
         {BANDS.map((b, i) => {
           const next = BANDS[i + 1];
           const isCurrent = current?.id === b.id;
           const col = bandColor(b);
           return (
             <div key={b.id} style={{
-              display: 'flex', gap: 9, alignItems: 'center',
+              display: 'flex', gap: 8, alignItems: 'center',
               padding: isCurrent ? '5px 8px' : '5px 0', borderRadius: 8,
               background: isCurrent ? tint(col, 0.09) : 'transparent',
             }}>
-              <span style={{ width: 8, height: 8, borderRadius: 3, background: col, flexShrink: 0 }} />
+              <span style={{ width: 8, height: 8, borderRadius: 4, background: col, flexShrink: 0 }} />
               <span style={{ fontSize: 11.5, fontWeight: isCurrent ? 800 : 600, color: isCurrent ? C.t1 : C.t2, minWidth: 92 }}>{b.label}</span>
               <span style={{ fontSize: 10.5, color: C.t4, fontFamily: C.FM }}>
                 {b.min}–{next ? next.min - 1 : MEDEX_MAX}
@@ -506,22 +506,22 @@ function NoScore({ headline, onGoTo, m }) {
       border: `1px solid ${tint(col, 0.26)}`,
       background: `linear-gradient(140deg, ${tint(col, 0.07)}, transparent 62%)`,
     }}>
-      <div style={R({ gap: 8, marginBottom: 10 })}>
+      <div style={R({ gap: 8, marginBottom: 8 })}>
         {gated ? <ShieldAlert size={15} color={col} /> : <CircleHelp size={15} color={col} />}
         <span style={{ fontSize: 14.5, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{headline.headline}</span>
       </div>
-      <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.65, marginBottom: 14 }}>{headline.explanation}</div>
+      <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, marginBottom: 12 }}>{headline.explanation}</div>
       <div style={CC({ gap: 8 })}>
         {(headline.whatWouldChange || []).map(item => (
           <button key={item.key || item.label} onClick={() => item.key && onGoTo?.(item.key)} style={{
             ...glass2({ padding: 12 }), textAlign: 'left', width: '100%',
             cursor: item.key && onGoTo ? 'pointer' : 'default',
-            display: 'flex', gap: 10, alignItems: 'flex-start',
+            display: 'flex', gap: 8, alignItems: 'flex-start',
           }}>
-            <ChevronRight size={13} color={col} style={{ flexShrink: 0, marginTop: 2 }} />
+            <ChevronRight size={13} color={col} style={{ flexShrink: 0, marginTop: 4 }} />
             <span style={{ minWidth: 0 }}>
               <span style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{item.label}</span>
-              <span style={{ display: 'block', fontSize: 11, color: C.t3, marginTop: 3, lineHeight: 1.5 }}>
+              <span style={{ display: 'block', fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>
                 {item.ask || item.remedy}
               </span>
             </span>

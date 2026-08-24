@@ -486,13 +486,13 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
   // ── Idle / start screen ──────────────────────────────────────────────────
   if (phase === 'idle') {
     return (
-      <div style={{ ...glass({ padding: 26 }), background: `radial-gradient(1200px 400px at 50% -10%, ${accent}18, transparent), ${C.s1}`, textAlign: 'center' }}>
+      <div style={{ ...glass({ padding: 24 }), background: `radial-gradient(1200px 400px at 50% -10%, ${accent}18, transparent), ${C.s1}`, textAlign: 'center' }}>
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
           style={{ width: 72, height: 72, borderRadius: '50%', margin: '0 auto 16px', display: 'grid', placeItems: 'center', background: `linear-gradient(135deg, ${accent}, ${C.violet})`, boxShadow: `0 12px 40px ${accent}55` }}>
           <Mic size={30} color="#fff" />
         </motion.div>
-        <h3 style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em', margin: 0 }}>Live Voice Interview</h3>
-        <p style={{ fontSize: 13.5, color: C.t3, lineHeight: 1.65, maxWidth: 480, margin: '10px auto 0' }}>
+        <h3 style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))', margin: 0 }}>Live Voice Interview</h3>
+        <p style={{ fontSize: 13.5, color: C.t3, lineHeight: 1.55, maxWidth: 480, margin: '10px auto 0' }}>
           A real back-and-forth with an interviewer who talks to you out loud, listens without cutting you off, and adapts to your answers — then rates you the way an actual interviewer would, not the way a friend would. Speak your answers{sttSupported ? '' : ' (or type them — your browser doesn’t support voice input)'} or type them, whichever you prefer.
         </p>
         <div style={R({ gap: 8, justifyContent: 'center', marginTop: 16, flexWrap: 'wrap' })}>
@@ -503,25 +503,25 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
 
         <div style={{ ...glass2({ padding: 16, marginTop: 20, textAlign: 'left' }) }}>
           {ttsSupported && (
-            <div style={{ marginBottom: 18 }}>
-              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 4 }}>Who’s interviewing you</div>
-              <div style={{ fontSize: 11.5, color: C.t4, marginBottom: 10, lineHeight: 1.5 }}>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, marginBottom: 4 }}>Who’s interviewing you</div>
+              <div style={{ fontSize: 11.5, color: C.t4, marginBottom: 8, lineHeight: 1.5 }}>
                 Five people you might actually meet on a panel. Tap ▶ to hear each one.{firstTimer ? ' If this is your first go, start with Priya — she’s the gentlest room in the building.' : ''}
               </div>
               <VoiceSelector accent={accent} value={interviewerVoice} onChange={setInterviewerVoice} firstTimer={firstTimer} />
             </div>
           )}
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 10 }}>How hard they push</div>
-          <div style={R({ gap: 7, flexWrap: 'wrap', marginBottom: 16 })}>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, marginBottom: 8 }}>How hard they push</div>
+          <div style={R({ gap: 8, flexWrap: 'wrap', marginBottom: 16 })}>
             {INTERVIEW_STYLES.map(s => (
               <button key={s.id} title={s.desc} onClick={() => setStyle(s.id)}
-                style={{ ...btnG({ fontSize: 11.5, padding: '7px 13px' }), background: style === s.id ? accent : 'transparent', color: style === s.id ? '#fff' : C.t2, border: `1px solid ${style === s.id ? accent : C.b1}` }}>
+                style={{ ...btnG({ fontSize: 11.5, padding: '8px 12px' }), background: style === s.id ? accent : 'transparent', color: style === s.id ? '#fff' : C.t2, border: `1px solid ${style === s.id ? accent : C.b1}` }}>
                 {s.label}
               </button>
             ))}
           </div>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 10 }}>Focus Areas <span style={{ fontWeight: 500, textTransform: 'none', letterSpacing: 0, color: C.t4 }}>(optional — pick up to 4, or leave blank to let the interviewer choose)</span></div>
-          <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, marginBottom: 8 }}>Focus Areas <span style={{ fontWeight: 500, textTransform: 'none', letterSpacing: 0, color: C.t4 }}>(optional — pick up to 4, or leave blank to let the interviewer choose)</span></div>
+          <div style={R({ gap: 4, flexWrap: 'wrap' })}>
             {FOCUS_AREAS.map(area => {
               const on = chosenFocus.includes(area);
               const label = area.charAt(0).toUpperCase() + area.slice(1);
@@ -535,7 +535,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
           </div>
         </div>
 
-        <button style={{ ...btn(accent, { fontSize: 14, marginTop: 20, padding: '12px 26px' }), display: 'inline-flex', alignItems: 'center', gap: 8 }} onClick={startInterview} disabled={loading}>
+        <button style={{ ...btn(accent, { fontSize: 14, marginTop: 20, padding: '12px 24px' }), display: 'inline-flex', alignItems: 'center', gap: 8 }} onClick={startInterview} disabled={loading}>
           {loading ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Play size={16} />}
           {loading ? 'Starting…' : 'Start the interview'}
         </button>
@@ -557,10 +557,10 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
     : `Question ${questionCount} · your turn`;
 
   return (
-    <div style={CC({ gap: 14 })}>
+    <div style={CC({ gap: 12 })}>
       {/* Status bar */}
-      <div style={{ ...R({ justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }), ...glass2({ padding: 12 }) }}>
-        <div style={R({ gap: 10 })}>
+      <div style={{ ...R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }), ...glass2({ padding: 12 }) }}>
+        <div style={R({ gap: 8 })}>
           {/* The avatar breathes while they speak and glows green while they listen — the two
               states a person in a room is actually in. Two rings rather than one, offset in time,
               because a single expanding circle reads as a loading spinner. */}
@@ -582,7 +582,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
             <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>
               {interviewerVoice?.name || 'Interviewer'}{interviewerVoice?.role ? ` · ${interviewerVoice.role}` : ''}
             </div>
-            <div style={R({ gap: 6 })}>
+            <div style={R({ gap: 4 })}>
               <span style={{ fontSize: 11, color: speaking ? accent : listening ? C.green : C.t3, fontWeight: 600 }}>{statusLine}</span>
               {speaking && <Waveform color={accent} height={10} />}
               {listening && <Waveform color={C.green} height={10} />}
@@ -590,18 +590,18 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
             </div>
           </div>
         </div>
-        <div style={R({ gap: 6 })}>
+        <div style={R({ gap: 4 })}>
           {ttsSupported && (
             <button title={muted ? 'Unmute interviewer voice' : 'Mute interviewer voice'} onClick={() => { const m = !muted; setMuted(m); if (m) haltSpeech(); }}
               style={{ ...iconBtn(), color: muted ? C.rose : C.t2 }}>{muted ? <VolumeX size={15} /> : <Volume2 size={15} />}</button>
           )}
           {phase !== 'done' && (
-            <button onClick={endAndDebrief} disabled={loading} style={{ ...btnG({ fontSize: 12 }), display: 'inline-flex', alignItems: 'center', gap: 6, opacity: loading ? 0.6 : 1 }}>
+            <button onClick={endAndDebrief} disabled={loading} style={{ ...btnG({ fontSize: 12 }), display: 'inline-flex', alignItems: 'center', gap: 4, opacity: loading ? 0.6 : 1 }}>
               <Square size={12} />End & get feedback
             </button>
           )}
           {phase === 'done' && (
-            <button onClick={reset} style={{ ...btn(accent, { fontSize: 12 }), display: 'inline-flex', alignItems: 'center', gap: 6 }}><RefreshCw size={13} />New interview</button>
+            <button onClick={reset} style={{ ...btn(accent, { fontSize: 12 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}><RefreshCw size={13} />New interview</button>
           )}
         </div>
       </div>
@@ -620,7 +620,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
             <motion.div key={i} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
               transition={{ type: 'spring', stiffness: 420, damping: 34 }}
               style={{ display: 'flex', justifyContent: isStudent ? 'flex-end' : 'flex-start' }}>
-              <div style={{ maxWidth: '82%', padding: '10px 14px', borderRadius: 14,
+              <div style={{ maxWidth: '82%', padding: '8px 12px', borderRadius: 12,
                 background: isStudent ? accent : C.s3,
                 color: isStudent ? '#fff' : C.t1,
                 borderBottomRightRadius: isStudent ? 4 : 14, borderBottomLeftRadius: isStudent ? 14 : 4,
@@ -628,9 +628,9 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
                 // person who currently has the floor rather than to the bottom of the list.
                 boxShadow: live ? `0 0 0 1px ${accent}55, 0 6px 22px ${accent}22` : 'none',
                 transition: 'box-shadow .25s ease',
-                fontSize: 13.5, lineHeight: 1.6 }}>
-                <div style={R({ gap: 6, marginBottom: 3 })}>
-                  <span style={{ fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.08em', opacity: 0.65 }}>
+                fontSize: 13.5, lineHeight: 1.55 }}>
+                <div style={R({ gap: 4, marginBottom: 4 })}>
+                  <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', opacity: 0.65 }}>
                     {isStudent ? 'You' : (interviewerVoice?.name || 'Interviewer')}
                   </span>
                   {live && <Waveform color={accent} height={9} />}
@@ -638,7 +638,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
                 {shown}
                 {live && (
                   <motion.span aria-hidden animate={{ opacity: [1, 0.15, 1] }} transition={{ repeat: Infinity, duration: 1.1 }}
-                    style={{ display: 'inline-block', width: 2, height: 13, background: accent, marginLeft: 3, verticalAlign: -2, borderRadius: 1 }} />
+                    style={{ display: 'inline-block', width: 2, height: 13, background: accent, marginLeft: 4, verticalAlign: -2, borderRadius: 4 }} />
                 )}
               </div>
             </motion.div>
@@ -646,7 +646,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
         })}
         {(loading || writingNotes) && phase !== 'done' && (
           <motion.div layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', justifyContent: 'flex-start' }}>
-            <div style={{ padding: '10px 14px', borderRadius: 14, borderBottomLeftRadius: 4, background: C.s3, color: C.t3, fontSize: 13, display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ padding: '8px 12px', borderRadius: 12, borderBottomLeftRadius: 4, background: C.s3, color: C.t3, fontSize: 13, display: 'inline-flex', gap: 8, alignItems: 'center' }}>
               {writingNotes
                 ? <><PenLine size={13} />{who} is writing notes</>
                 : <><ThinkingDots color={C.t3} />{phase === 'debrief' ? `${who} is writing up your debrief` : `${who} is thinking`}</>}
@@ -675,11 +675,11 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
             onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitAnswer(); }}
             disabled={loading}
           />
-          <div style={R({ gap: 8, marginTop: 10, justifyContent: 'space-between', flexWrap: 'wrap' })}>
+          <div style={R({ gap: 8, marginTop: 8, justifyContent: 'space-between', flexWrap: 'wrap' })}>
             {sttSupported ? (
               <div style={R({ gap: 8, flexWrap: 'wrap' })}>
                 <button onClick={toggleListening} disabled={loading}
-                  style={{ ...btn(listening ? C.rose : C.s4, { fontSize: 12.5 }), color: listening ? '#fff' : C.t1, border: listening ? 'none' : `1px solid ${C.b1}`, display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+                  style={{ ...btn(listening ? C.rose : C.s4, { fontSize: 12.5 }), color: listening ? '#fff' : C.t1, border: listening ? 'none' : `1px solid ${C.b1}`, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                   {listening ? <><MicOff size={14} />Stop & send</> : <><Mic size={14} />Answer by voice</>}
                 </button>
                 {consent === 'granted' && !listening && (
@@ -691,7 +691,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
               </div>
             ) : <span style={{ fontSize: 11, color: C.t4 }}>Voice input isn’t supported here — just type.</span>}
             <button onClick={() => submitAnswer()} disabled={!canSubmit}
-              style={{ ...btn(accent, { fontSize: 13 }), display: 'inline-flex', alignItems: 'center', gap: 7, opacity: canSubmit ? 1 : 0.5 }}>
+              style={{ ...btn(accent, { fontSize: 13 }), display: 'inline-flex', alignItems: 'center', gap: 8, opacity: canSubmit ? 1 : 0.5 }}>
               <Send size={14} />Send answer
             </button>
           </div>
@@ -719,12 +719,12 @@ const BAR_TIMING = [
 
 function Waveform({ color, height = 12, bars = 5 }) {
   return (
-    <span aria-hidden style={{ display: 'inline-flex', alignItems: 'center', gap: 2, height }}>
+    <span aria-hidden style={{ display: 'inline-flex', alignItems: 'center', gap: 4, height }}>
       {BAR_TIMING.slice(0, bars).map((b, i) => (
         <motion.span key={i}
           animate={{ scaleY: [0.35, 1, 0.5, 0.85, 0.35] }}
           transition={{ repeat: Infinity, duration: b.d + 0.6, delay: b.delay, ease: 'easeInOut' }}
-          style={{ width: 2.5, height, borderRadius: 2, background: color, transformOrigin: 'center' }} />
+          style={{ width: 2.5, height, borderRadius: 4, background: color, transformOrigin: 'center' }} />
       ))}
     </span>
   );
@@ -733,7 +733,7 @@ function Waveform({ color, height = 12, bars = 5 }) {
 // The three dots, which say "they're composing a reply" rather than "a request is in flight".
 function ThinkingDots({ color }) {
   return (
-    <span aria-hidden style={{ display: 'inline-flex', gap: 3, alignItems: 'center' }}>
+    <span aria-hidden style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
       {[0, 1, 2].map(i => (
         <motion.span key={i} animate={{ y: [0, -3, 0], opacity: [0.45, 1, 0.45] }}
           transition={{ repeat: Infinity, duration: 1.1, delay: i * 0.16, ease: 'easeInOut' }}
@@ -750,29 +750,29 @@ function DebriefCard({ debrief }) {
   const t = debriefTone(debrief.band.tone);
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-      style={{ ...glass2({ padding: 18 }), background: `linear-gradient(135deg, ${t.dim}, transparent)`, border: `1px solid ${t.main}30`, marginTop: 4 }}>
+      style={{ ...glass2({ padding: 16 }), background: `linear-gradient(135deg, ${t.dim}, transparent)`, border: `1px solid ${t.main}30`, marginTop: 4 }}>
       <div style={R({ gap: 8, marginBottom: 12, justifyContent: 'space-between', flexWrap: 'wrap' })}>
-        <div style={R({ gap: 8 })}><Sparkles size={15} color={t.main} /><span style={{ fontSize: 12, fontWeight: 700, color: t.main, textTransform: 'uppercase', letterSpacing: '.06em' }}>Your Debrief</span></div>
+        <div style={R({ gap: 8 })}><Sparkles size={15} color={t.main} /><span style={{ fontSize: 12, fontWeight: 700, color: t.main, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>Your Debrief</span></div>
         <div style={R({ gap: 8 })}>
-          <span style={{ fontSize: 20, fontWeight: 800, color: t.main, fontFamily: C.FD }}>{debrief.score}<span style={{ fontSize: 13, color: C.t3 }}>/{debrief.scale}</span></span>
+          <span style={{ fontSize: 20, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))', fontWeight: 800, color: t.main, fontFamily: C.FD }}>{debrief.score}<span style={{ fontSize: 13, color: C.t3 }}>/{debrief.scale}</span></span>
           <span style={pill(`${t.main}18`, t.main, { fontSize: 10.5 })}>{debrief.anchor.label}</span>
         </div>
       </div>
       <div style={{ fontSize: 11.5, color: C.t3, marginBottom: 12, lineHeight: 1.55 }}>{debrief.anchor.blurb}</div>
       {/* Printed on every debrief, not only the high ones. A student who scores a 4 should know the
           top is reserved too — otherwise the cap reads as a personal verdict rather than a rule. */}
-      <div style={{ fontSize: 11, color: C.t4, marginBottom: 12, lineHeight: 1.55, paddingLeft: 9, borderLeft: `2px solid ${C.b1}` }}>{debrief.ceilingNote}</div>
-      <div style={{ fontSize: 14, color: C.t1, lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{debrief.text}</div>
+      <div style={{ fontSize: 11, color: C.t4, marginBottom: 12, lineHeight: 1.55, paddingLeft: 8, borderLeft: `2px solid ${C.b1}` }}>{debrief.ceilingNote}</div>
+      <div style={{ fontSize: 14, color: C.t1, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{debrief.text}</div>
       <CompetencyGrid competencies={debrief.competencies} max={debrief.scale} />
       {debrief.reasons.length > 0 && (
-        <div style={{ ...glass2({ padding: 14, marginTop: 14 }), background: C.s2 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 8 }}>What to work on next</div>
-          <ul style={{ margin: 0, paddingLeft: 17, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {debrief.reasons.map((r, i) => <li key={i} style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6 }}>{r}</li>)}
+        <div style={{ ...glass2({ padding: 12, marginTop: 12 }), background: C.s2 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, marginBottom: 8 }}>What to work on next</div>
+          <ul style={{ margin: 0, paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {debrief.reasons.map((r, i) => <li key={i} style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>{r}</li>)}
           </ul>
         </div>
       )}
-      <div style={{ fontSize: 11.5, color: C.t3, marginTop: 14, lineHeight: 1.6, fontStyle: 'italic' }}>{debrief.caveat}</div>
+      <div style={{ fontSize: 11.5, color: C.t3, marginTop: 12, lineHeight: 1.55, fontStyle: 'italic' }}>{debrief.caveat}</div>
     </motion.div>
   );
 }
@@ -782,8 +782,8 @@ function DebriefCard({ debrief }) {
 export function CompetencyGrid({ competencies, max = 7 }) {
   if (!competencies?.length) return null;
   return (
-    <div style={{ ...glass2({ padding: 14, marginTop: 14 }), background: C.s2 }}>
-      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 10 }}>
+    <div style={{ ...glass2({ padding: 12, marginTop: 12 }), background: C.s2 }}>
+      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, marginBottom: 8 }}>
         AAMC competencies this station can assess
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -793,7 +793,7 @@ export function CompetencyGrid({ competencies, max = 7 }) {
               <span style={{ fontSize: 12, color: C.t2 }}>{c.label}</span>
               <span style={{ fontSize: 11.5, fontFamily: C.FM, color: c.score >= 6 ? C.greenL : c.score >= 5 ? C.amberL : C.roseL }}>{c.score}/{max}</span>
             </div>
-            <div style={{ height: 4, borderRadius: 3, background: C.s4, marginTop: 4, overflow: 'hidden' }}>
+            <div style={{ height: 4, borderRadius: 4, background: C.s4, marginTop: 4, overflow: 'hidden' }}>
               <div style={{ width: `${(c.score / max) * 100}%`, height: '100%', background: c.score >= 6 ? C.green : c.score >= 5 ? C.amber : C.rose }} />
             </div>
           </div>
@@ -811,5 +811,5 @@ const debriefTone = (tone) => (
   : tone === 'bad' ? { main: C.roseL, dim: C.roseDim }
   : { main: C.t3, dim: 'transparent' }
 );
-const iconBtn = () => ({ width: 32, height: 32, borderRadius: 9, display: 'grid', placeItems: 'center', background: C.s3, border: `1px solid ${C.b1}`, cursor: 'pointer' });
-const composerInput = () => ({ width: '100%', minHeight: 84, resize: 'vertical', background: C.s2, border: `1px solid ${C.b1}`, borderRadius: 12, padding: '11px 14px', color: C.t1, fontSize: 14, lineHeight: 1.6, fontFamily: C.FB, outline: 'none' });
+const iconBtn = () => ({ width: 32, height: 32, borderRadius: 8, display: 'grid', placeItems: 'center', background: C.s3, border: `1px solid ${C.b1}`, cursor: 'pointer' });
+const composerInput = () => ({ width: '100%', minHeight: 84, resize: 'vertical', background: C.s2, border: `1px solid ${C.b1}`, borderRadius: 12, padding: '12px 12px', color: C.t1, fontSize: 14, lineHeight: 1.55, fontFamily: C.FB, outline: 'none' });

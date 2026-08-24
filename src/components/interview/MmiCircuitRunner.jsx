@@ -132,21 +132,21 @@ export default function MmiCircuitRunner({ accent = C.violet, onSessionComplete 
     return (
       <div style={CC({ gap: 16 })}>
         <div style={{ ...glass({ padding: 20 }), background: `linear-gradient(135deg, ${tint(accent, 0.09)}, transparent 65%)`, border: `1px solid ${tint(accent, 0.25)}` }}>
-          <div style={R({ gap: 9, marginBottom: 10 })}>
+          <div style={R({ gap: 8, marginBottom: 8 })}>
             <Layers size={16} color={accent} />
-            <span style={{ fontSize: 12, fontWeight: 800, color: accent, textTransform: 'uppercase', letterSpacing: '.07em' }}>Full circuit</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: accent, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>Full circuit</span>
           </div>
-          <div style={{ fontSize: 14, color: C.t1, lineHeight: 1.75 }}>
+          <div style={{ fontSize: 14, color: C.t1, lineHeight: 1.55 }}>
             Eight to ten stations back to back, each with two minutes of reading time outside the door and five to eight minutes inside. The clock does not pause, you cannot go back, and no feedback appears until the whole circuit is done — the same three constraints the real format uses, and the reason it measures anything.
           </div>
-          <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.7, marginTop: 12 }}>
+          <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, marginTop: 12 }}>
             <strong style={{ color: C.t1 }}>This is the only mode that produces an aggregate score.</strong> A single station is a weak measurement by design — the reliability comes from averaging eight or more raters who never speak to each other. Practising one station at a time is useful, and it is practice.
           </div>
         </div>
 
-        <div style={glass({ padding: 18 })}>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 9 }}>How many stations</div>
-          <div style={R({ gap: 7, flexWrap: 'wrap', marginBottom: 14 })}>
+        <div style={glass({ padding: 16 })}>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, marginBottom: 8 }}>How many stations</div>
+          <div style={R({ gap: 8, flexWrap: 'wrap', marginBottom: 12 })}>
             {[8, 9, 10].map(n => (
               <button key={n} onClick={() => setSize(n)}
                 style={btnSm(size === n ? accent : C.s3, { fontSize: 12.5, color: size === n ? '#fff' : C.t2, border: size === n ? 'none' : `1px solid ${C.b1}` })}>
@@ -154,26 +154,26 @@ export default function MmiCircuitRunner({ accent = C.violet, onSessionComplete 
               </button>
             ))}
           </div>
-          <div style={{ ...glass2({ padding: 13 }), marginBottom: 14 }}>
-            <div style={R({ gap: 8, marginBottom: 6 })}>
+          <div style={{ ...glass2({ padding: 12 }), marginBottom: 12 }}>
+            <div style={R({ gap: 8, marginBottom: 4 })}>
               <Timer size={12} color={C.t3} />
               <span style={{ fontSize: 11.5, color: C.t2 }}>{describeCircuit(preview)}</span>
             </div>
-            <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.6 }}>
+            <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.55 }}>
               Every circuit mixes formats deliberately: an interviewer station, a role-play with an actor, a collaborative task, a policy question, and one or two traditional questions. No archetype appears more than twice, so it cannot turn into eight ethics questions by accident.
             </div>
           </div>
-          <div style={R({ gap: 10, flexWrap: 'wrap' })}>
-            <button onClick={() => start()} style={{ ...btn(accent), display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+          <div style={R({ gap: 8, flexWrap: 'wrap' })}>
+            <button onClick={() => start()} style={{ ...btn(accent), display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               <Play size={15} />Start the circuit
             </button>
             {replaySeed != null && (
-              <button onClick={() => start(replaySeed)} style={{ ...btnG({ fontSize: 12.5 }), display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <button onClick={() => start(replaySeed)} style={{ ...btnG({ fontSize: 12.5 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 <Repeat size={13} />Run the last circuit again
               </button>
             )}
           </div>
-          <div style={{ fontSize: 11, color: C.t3, marginTop: 11, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 11, color: C.t3, marginTop: 12, lineHeight: 1.55 }}>
             Set aside the full {Math.round(preview.totalSeconds / 60)} minutes. Stopping halfway gives you a number the aggregate will refuse to report, which is the honest outcome rather than a punishment.
           </div>
         </div>
@@ -184,10 +184,10 @@ export default function MmiCircuitRunner({ accent = C.violet, onSessionComplete 
   // ── Scoring ───────────────────────────────────────────────────────────────
   if (phase === PHASE.SCORING) {
     return (
-      <div style={{ ...glass({ padding: 30, textAlign: 'center' }) }}>
+      <div style={{ ...glass({ padding: 28, textAlign: 'center' }) }}>
         <RefreshCw size={24} color={accent} style={{ animation: 'spin 1s linear infinite', marginBottom: 12 }} />
         <div style={{ fontSize: 14, color: C.t1, fontWeight: 600 }}>Rating station {Math.min(scoringProgress + 1, circuit.size)} of {circuit.size}</div>
-        <div style={{ fontSize: 11.5, color: C.t3, marginTop: 8, lineHeight: 1.6, maxWidth: 460, margin: '8px auto 0' }}>
+        <div style={{ fontSize: 11.5, color: C.t3, marginTop: 8, lineHeight: 1.55, maxWidth: 460, margin: '8px auto 0' }}>
           Each station is rated on its own, by a rater that has not seen the others — which is how a real circuit works and why the average is worth more than any one of the numbers in it.
         </div>
       </div>
@@ -207,11 +207,11 @@ export default function MmiCircuitRunner({ accent = C.violet, onSessionComplete 
   // ── Running: reading, then inside ─────────────────────────────────────────
   const reading = phase === PHASE.READING;
   return (
-    <div style={CC({ gap: 14 })}>
-      <div style={{ ...glass2({ padding: 14 }), display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+    <div style={CC({ gap: 12 })}>
+      <div style={{ ...glass2({ padding: 12 }), display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3 }}>Station</div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{idx + 1}<span style={{ fontSize: 12, color: C.t3 }}> / {circuit.size}</span></div>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3 }}>Station</div>
+          <div style={{ fontSize: 18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{idx + 1}<span style={{ fontSize: 12, color: C.t3 }}> / {circuit.size}</span></div>
         </div>
         <StationClock
           seconds={reading ? station.readingSeconds : station.stationSeconds}
@@ -222,21 +222,21 @@ export default function MmiCircuitRunner({ accent = C.violet, onSessionComplete 
         />
         <div style={{ flex: 1, minWidth: 160, textAlign: 'right' }}>
           <div style={{ fontSize: 10.5, color: C.t3 }}>{summary}</div>
-          <div style={{ fontSize: 10.5, color: C.t3, marginTop: 2 }}>No feedback until the circuit ends.</div>
+          <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4 }}>No feedback until the circuit ends.</div>
         </div>
       </div>
 
       <AnimatePresence mode="wait">
         <motion.div key={`${idx}-${phase}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
           {reading ? (
-            <div style={CC({ gap: 14 })}>
+            <div style={CC({ gap: 12 })}>
               <DoorCard station={station} accent={accent} />
-              <button onClick={enterRoom} style={{ ...btn(accent), alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+              <button onClick={enterRoom} style={{ ...btn(accent), alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 <ChevronRight size={15} />I'm ready — go in early
               </button>
             </div>
           ) : (
-            <div style={CC({ gap: 14 })}>
+            <div style={CC({ gap: 12 })}>
               <RoomCard station={station} accent={accent} />
               <textarea
                 autoFocus
@@ -248,7 +248,7 @@ export default function MmiCircuitRunner({ accent = C.violet, onSessionComplete 
                 onChange={e => { answerRef.current = e.target.value; setAnswer(e.target.value); }}
               />
               <div style={R({ gap: 12, flexWrap: 'wrap', alignItems: 'center' })}>
-                <button onClick={advance} style={{ ...btn(accent), display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+                <button onClick={advance} style={{ ...btn(accent), display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                   {idx + 1 < circuit.size ? <><ChevronRight size={15} />Next station</> : <><Flag size={15} />Finish the circuit</>}
                 </button>
                 <span style={{ fontSize: 11, color: C.t3 }}>
@@ -273,14 +273,14 @@ function CircuitResults({ circuit, attempts, aggregate, accent, onRestart }) {
 
   return (
     <div style={CC({ gap: 16 })}>
-      <div style={{ ...glass({ padding: 22 }), background: `linear-gradient(135deg, ${tint(color, 0.09)}, transparent 65%)`, border: `1px solid ${tint(color, 0.28)}` }}>
-        <div style={R({ gap: 9, marginBottom: 12, justifyContent: 'space-between', flexWrap: 'wrap' })}>
+      <div style={{ ...glass({ padding: 20 }), background: `linear-gradient(135deg, ${tint(color, 0.09)}, transparent 65%)`, border: `1px solid ${tint(color, 0.28)}` }}>
+        <div style={R({ gap: 8, marginBottom: 12, justifyContent: 'space-between', flexWrap: 'wrap' })}>
           <div style={R({ gap: 8 })}>
             <Trophy size={16} color={color} />
-            <span style={{ fontSize: 12, fontWeight: 800, color, textTransform: 'uppercase', letterSpacing: '.07em' }}>Circuit result</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>Circuit result</span>
           </div>
           {aggregate.mean != null && (
-            <div style={R({ gap: 9 })}>
+            <div style={R({ gap: 8 })}>
               <span style={{ fontSize: 26, fontWeight: 800, color, fontFamily: C.FD, fontVariantNumeric: 'tabular-nums' }}>
                 {aggregate.mean.toFixed(1)}<span style={{ fontSize: 14, color: C.t3 }}>/{aggregate.scale}</span>
               </span>
@@ -292,7 +292,7 @@ function CircuitResults({ circuit, attempts, aggregate, accent, onRestart }) {
         <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.7, marginTop: 12, fontStyle: 'italic' }}>{aggregate.caveat}</div>
         {unscored > 0 && (
           <div style={{ ...R({ gap: 8, alignItems: 'flex-start' }), marginTop: 12 }}>
-            <AlertTriangle size={13} color={C.amberL} style={{ flexShrink: 0, marginTop: 1 }} />
+            <AlertTriangle size={13} color={C.amberL} style={{ flexShrink: 0, marginTop: 4 }} />
             <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>
               {unscored} station{unscored === 1 ? '' : 's'} could not be scored — either nothing was written or the rater could not be reached. {unscored === 1 ? 'It is' : 'They are'} excluded from the average rather than counted as a low score.
             </span>
@@ -302,8 +302,8 @@ function CircuitResults({ circuit, attempts, aggregate, accent, onRestart }) {
 
       {/* The spread, which is the finding most students miss. */}
       {aggregate.mean != null && aggregate.spread >= 2 && (
-        <div style={{ ...glass2({ padding: 15 }), borderLeft: `3px solid ${C.amber}` }}>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 7 }}>Your spread</div>
+        <div style={{ ...glass2({ padding: 16 }), borderLeft: `3px solid ${C.amber}` }}>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, marginBottom: 8 }}>Your spread</div>
           <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7 }}>
             Your stations ranged by {aggregate.spread} points. A committee argues about a candidate with a wide spread far more than about a flat average — the question they ask is whether the low station was a bad day or a real gap. Yours was <strong style={{ color: C.t1 }}>{aggregate.lowestStation?.score}/7</strong>, and it is the one worth re-reading first.
           </div>
@@ -312,17 +312,17 @@ function CircuitResults({ circuit, attempts, aggregate, accent, onRestart }) {
 
       {/* Competencies rolled up, and only those at least two stations actually assessed. */}
       {aggregate.competencies?.length > 0 && (
-        <div style={glass({ padding: 18 })}>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 4 }}>Across the circuit</div>
+        <div style={glass({ padding: 16 })}>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, marginBottom: 4 }}>Across the circuit</div>
           <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.6, marginBottom: 12 }}>
             Only competencies that at least two stations actually assessed. One station's read on teamwork is not a teamwork score, and inventing one is how a rubric becomes decoration.
           </div>
-          <div style={CC({ gap: 9 })}>
+          <div style={CC({ gap: 8 })}>
             {aggregate.competencies.map(c => {
               const pctW = (c.mean / aggregate.scale) * 100;
               const cc = c.mean >= 5.5 ? C.green : c.mean >= 4.5 ? C.amberL : C.rose;
               return (
-                <div key={c.key} style={R({ gap: 11, alignItems: 'center' })}>
+                <div key={c.key} style={R({ gap: 12, alignItems: 'center' })}>
                   <div style={{ width: 150, flexShrink: 0, fontSize: 11.5, color: C.t2 }}>{COMPETENCIES[c.key]?.short || c.short}</div>
                   <div style={{ flex: 1, height: 7, borderRadius: 4, background: C.s3, overflow: 'hidden' }}>
                     <div style={{ width: `${pctW}%`, height: '100%', background: cc }} />
@@ -339,7 +339,7 @@ function CircuitResults({ circuit, attempts, aggregate, accent, onRestart }) {
 
       {/* Per-station debrief, which is where the actor briefs and rater checklists finally appear. */}
       <div style={CC({ gap: 8 })}>
-        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3 }}>Station by station</div>
+        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3 }}>Station by station</div>
         {attempts.map((a, i) => {
           const score = a.result?.score;
           const sc = score == null ? C.t3 : score >= 6 ? C.green : score >= 4 ? C.amberL : C.rose;
@@ -347,20 +347,20 @@ function CircuitResults({ circuit, attempts, aggregate, accent, onRestart }) {
           return (
             <div key={a.station.id} style={{ ...glass2({ padding: 0 }), borderLeft: `3px solid ${sc}`, overflow: 'hidden' }}>
               <button onClick={() => setOpen(isOpen ? null : i)}
-                style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', padding: '13px 16px', cursor: 'pointer', display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
+                style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', padding: '12px 16px', cursor: 'pointer', display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{i + 1}. {a.station.title}</div>
-                  <div style={{ marginTop: 5 }}><StationTags station={a.station} /></div>
+                  <div style={{ marginTop: 4 }}><StationTags station={a.station} /></div>
                 </div>
                 <div style={R({ gap: 8, flexShrink: 0 })}>
-                  <span style={{ fontSize: 16, fontWeight: 800, color: sc, fontFamily: C.FM }}>
+                  <span style={{ fontSize: 16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))', fontWeight: 800, color: sc, fontFamily: C.FM }}>
                     {score == null ? '—' : `${score}/7`}
                   </span>
                   <Eye size={13} color={C.t3} />
                 </div>
               </button>
               {isOpen && (
-                <div style={{ padding: '0 16px 16px' }}>
+                <div style={{ padding: '0px 16px 16px' }}>
                   <DebriefCard station={a.station} answer={a.answer} result={a.result} accent={accent} />
                 </div>
               )}
@@ -369,8 +369,8 @@ function CircuitResults({ circuit, attempts, aggregate, accent, onRestart }) {
         })}
       </div>
 
-      <div style={R({ gap: 10, flexWrap: 'wrap' })}>
-        <button onClick={onRestart} style={{ ...btn(accent), display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+      <div style={R({ gap: 8, flexWrap: 'wrap' })}>
+        <button onClick={onRestart} style={{ ...btn(accent), display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           <Repeat size={14} />Run another circuit
         </button>
         <span style={{ fontSize: 11, color: C.t3, alignSelf: 'center' }}>

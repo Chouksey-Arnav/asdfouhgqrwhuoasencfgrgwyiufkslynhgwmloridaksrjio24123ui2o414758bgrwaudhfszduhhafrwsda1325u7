@@ -96,17 +96,17 @@ export default function MedabrainRead({
       border: `1px solid ${state.read ? tone.border : tint(C.violet, 0.24)}`,
       background: `linear-gradient(120deg,${tint(C.violet, 0.07)},rgba(255,255,255,0.02) 60%)`,
     }}>
-      <div style={R({ gap: 10, justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: 10 })}>
+      <div style={R({ gap: 8, justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: 8 })}>
         <div style={R({ gap: 8 })}>
           <div style={{
-            width: 22, height: 22, borderRadius: 7, background: tint(C.violet, 0.18),
+            width: 22, height: 22, borderRadius: 8, background: tint(C.violet, 0.18),
             border: `1px solid ${tint(C.violet, 0.32)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             <Brain size={12} color={C.violetL} />
           </div>
-          <span style={{ fontSize: 11, fontWeight: 800, color: C.violetL, textTransform: 'uppercase', letterSpacing: '.07em' }}>{title}</span>
+          <span style={{ fontSize: 11, fontWeight: 800, color: C.violetL, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>{title}</span>
         </div>
-        <div style={R({ gap: 7 })}>
+        <div style={R({ gap: 8 })}>
           {state.read?.score != null && (
             <span style={pill(tone.bg, tone.fg, { border: `1px solid ${tone.border}`, fontSize: 11, fontWeight: 800 })}>
               {state.read.score}/10 · {band.label}
@@ -114,7 +114,7 @@ export default function MedabrainRead({
           )}
           {state.read && (
             <button
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.t3, padding: 3, display: 'flex' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.t3, padding: 4, display: 'flex' }}
               onClick={() => setCollapsed(c => !c)}
               aria-label={collapsed ? 'Expand read' : 'Collapse read'}
             >
@@ -128,36 +128,36 @@ export default function MedabrainRead({
       {fallback && !state.read && <div style={{ marginBottom: 12 }}>{fallback}</div>}
 
       {state.loading && (
-        <div style={R({ gap: 9, color: C.t2, fontSize: 12.5 })}>
+        <div style={R({ gap: 8, color: C.t2, fontSize: 12.5 })}>
           <Loader2 size={14} className="spin" color={C.violetL} />
           Medabrain is reading your actual entries — this takes a few seconds.
         </div>
       )}
 
       {state.error && !state.loading && (
-        <div style={CC({ gap: 10 })}>
+        <div style={CC({ gap: 8 })}>
           <div style={R({ gap: 8, color: C.t3, fontSize: 12, alignItems: 'flex-start' })}>
-            <AlertTriangle size={13} color={C.amberL} style={{ flexShrink: 0, marginTop: 1 }} />
+            <AlertTriangle size={13} color={C.amberL} style={{ flexShrink: 0, marginTop: 4 }} />
             <span>Couldn't reach Medabrain right now — everything above is computed from your own entries and is still accurate.</span>
           </div>
-          <div><button style={btnG({ fontSize: 12, padding: '7px 14px' })} onClick={run}><RefreshCw size={12} />Try again</button></div>
+          <div><button style={btnG({ fontSize: 12, padding: '8px 12px' })} onClick={run}><RefreshCw size={12} />Try again</button></div>
         </div>
       )}
 
       {state.read && !collapsed && (
         <>
           {state.read.headline && (
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, lineHeight: 1.55, marginBottom: 12, paddingLeft: 11, borderLeft: `3px solid ${tone.fg}` }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, lineHeight: 1.55, marginBottom: 12, paddingLeft: 12, borderLeft: `3px solid ${tone.fg}` }}>
               {state.read.headline}
             </div>
           )}
           <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.68 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(state.read.body) }} />
-          {fallback && <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${C.b1}` }}>{fallback}</div>}
+          {fallback && <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}` }}>{fallback}</div>}
         </>
       )}
 
       {!state.loading && (
-        <div style={R({ gap: 10, justifyContent: 'space-between', flexWrap: 'wrap', marginTop: state.read || state.error || fallback ? 13 : 0, paddingTop: state.read || state.error || fallback ? 11 : 0, borderTop: state.read ? `1px solid ${C.b1}` : 'none' })}>
+        <div style={R({ gap: 8, justifyContent: 'space-between', flexWrap: 'wrap', marginTop: state.read || state.error || fallback ? 13 : 0, paddingTop: state.read || state.error || fallback ? 11 : 0, borderTop: state.read ? `1px solid ${C.b1}` : 'none' })}>
           {!state.read && !state.error && (
             <span style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, flex: 1, minWidth: 200 }}>
               {disabled ? (disabledHint || 'Nothing to read yet.') : (idleHint || 'Medabrain will read every entry word by word and tell you what an admissions reader would think and not say.')}
@@ -166,7 +166,7 @@ export default function MedabrainRead({
           {!disabled && (
             <button
               style={btnSm(tint(C.violet, 0.16), {
-                color: C.violetL, border: `1px solid ${tint(C.violet, 0.3)}`, fontSize: 12, padding: '7px 14px',
+                color: C.violetL, border: `1px solid ${tint(C.violet, 0.3)}`, fontSize: 12, padding: '8px 12px',
               })}
               onClick={run}
             >
@@ -185,12 +185,12 @@ export function InsightList({ insights = [], max = 6 }) {
   if (!insights.length) return null;
   const col = (t) => t === 'good' ? C.green : t === 'warn' ? C.amber : t === 'critical' ? C.rose : C.blue;
   return (
-    <div style={CC({ gap: 7 })}>
+    <div style={CC({ gap: 8 })}>
       {insights.slice(0, max).map((ins, i) => {
         const c = col(ins.tone);
         return (
-          <div key={i} style={{ ...R({ gap: 9, alignItems: 'flex-start', padding: '8px 11px' }), borderRadius: 9, background: tint(c, 0.06), border: `1px solid ${tint(c, 0.16)}` }}>
-            <span style={{ width: 6, height: 6, borderRadius: 3, background: c, flexShrink: 0, marginTop: 6 }} />
+          <div key={i} style={{ ...R({ gap: 8, alignItems: 'flex-start', padding: '8px 12px' }), borderRadius: 8, background: tint(c, 0.06), border: `1px solid ${tint(c, 0.16)}` }}>
+            <span style={{ width: 6, height: 6, borderRadius: 4, background: c, flexShrink: 0, marginTop: 4 }} />
             <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>{ins.text}</span>
           </div>
         );

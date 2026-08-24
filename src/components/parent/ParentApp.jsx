@@ -117,8 +117,8 @@ function agoLabel(at) {
 function SectionTitle({ children, sub }) {
   return (
     <div>
-      <div style={{ fontSize: 18, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{children}</div>
-      {sub && <div style={{ fontSize: 12.5, color: C.t3, marginTop: 3, lineHeight: 1.55 }}>{sub}</div>}
+      <div style={{ fontSize: 18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{children}</div>
+      {sub && <div style={{ fontSize: 12.5, color: C.t3, marginTop: 4, lineHeight: 1.55 }}>{sub}</div>}
     </div>
   );
 }
@@ -136,20 +136,20 @@ function SectionTitle({ children, sub }) {
  */
 function SkeletonCard() {
   const bar = (w, h = 12, extra = {}) => (
-    <div className="msp-shimmer" style={{ width: w, height: h, borderRadius: 6, background: C.b1, ...extra }} />
+    <div className="msp-shimmer" style={{ width: w, height: h, borderRadius: 4, background: C.b1, ...extra }} />
   );
   return (
-    <div style={glass({ padding: 20, ...CC({ gap: 14 }) })} aria-hidden="true">
+    <div style={glass({ padding: 20, ...CC({ gap: 12 }) })} aria-hidden="true">
       <div style={R({ gap: 12 })}>
         {bar(40, 40, { borderRadius: 12, flexShrink: 0 })}
-        <div style={{ flex: 1, ...CC({ gap: 7 }) }}>
+        <div style={{ flex: 1, ...CC({ gap: 8 }) }}>
           {bar('45%', 15)}
           {bar('28%', 10)}
         </div>
       </div>
       {bar('85%', 11)}
       <div style={autoGrid(150, 10)}>
-        {[0, 1, 2, 3].map((i) => <div key={i} style={glass2({ padding: 11, ...CC({ gap: 6 }) })}>{bar('60%', 15)}{bar('80%', 9)}</div>)}
+        {[0, 1, 2, 3].map((i) => <div key={i} style={glass2({ padding: 12, ...CC({ gap: 4 }) })}>{bar('60%', 15)}{bar('80%', 9)}</div>)}
       </div>
     </div>
   );
@@ -168,11 +168,11 @@ function SkeletonCard() {
 function Freshness({ at, refreshing, onRefresh }) {
   const label = agoLabel(at);
   return (
-    <div style={R({ gap: 10, flexWrap: 'wrap' })}>
+    <div style={R({ gap: 8, flexWrap: 'wrap' })}>
       {label && <span style={{ fontSize: 12, color: C.t3 }}>Updated {label}</span>}
       <button
         type="button" onClick={onRefresh} disabled={refreshing}
-        style={btnG({ fontSize: 12, padding: '6px 12px', opacity: refreshing ? 0.6 : 1 })}
+        style={btnG({ fontSize: 12, padding: '4px 12px', opacity: refreshing ? 0.6 : 1 })}
       >
         {refreshing ? <Loader2 className="spin" size={12} /> : <RefreshCw size={12} />} Refresh
       </button>
@@ -189,7 +189,7 @@ function StaleBanner({ at, onRetry, refreshing }) {
   const label = agoLabel(at);
   return (
     <div role="status" style={glass2({
-      ...R({ gap: 10, flexWrap: 'wrap' }),
+      ...R({ gap: 8, flexWrap: 'wrap' }),
       borderColor: tint(C.amber, 0.32), background: tint(C.amber, 0.06), marginBottom: 16,
     })}>
       <WifiOff size={15} color={C.amberL} style={{ flexShrink: 0 }} />
@@ -197,7 +197,7 @@ function StaleBanner({ at, onRetry, refreshing }) {
         These numbers stopped updating{label ? ` — they are from ${label}` : ''}. Usually the
         connection; nothing has happened to the account.
       </span>
-      <button type="button" onClick={onRetry} disabled={refreshing} style={btnG({ fontSize: 12, padding: '6px 12px', opacity: refreshing ? 0.6 : 1 })}>
+      <button type="button" onClick={onRetry} disabled={refreshing} style={btnG({ fontSize: 12, padding: '4px 12px', opacity: refreshing ? 0.6 : 1 })}>
         {refreshing ? <Loader2 className="spin" size={12} /> : <RefreshCw size={12} />} Try again
       </button>
     </div>
@@ -231,8 +231,8 @@ function FamilyRollup({ students }) {
   return (
     <div style={autoGrid(150, 10)}>
       {cells.map((c) => (
-        <div key={c.label} style={glass2({ padding: 13, borderColor: tint(c.hue, 0.22), background: tint(c.hue, 0.05) })}>
-          <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.05 }}>{c.value}</div>
+        <div key={c.label} style={glass2({ padding: 12, borderColor: tint(c.hue, 0.22), background: tint(c.hue, 0.05) })}>
+          <div style={{ fontSize: 20, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.05 }}>{c.value}</div>
           <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4, lineHeight: 1.4 }}>{c.label}</div>
         </div>
       ))}
@@ -242,15 +242,15 @@ function FamilyRollup({ students }) {
 
 function Empty({ icon: Icon, title, body, children }) {
   return (
-    <div style={glass({ ...CC({ gap: 14 }) })}>
+    <div style={glass({ ...CC({ gap: 12 }) })}>
       <div style={{
-        width: 40, height: 40, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
         background: tint(C.blue, 0.13), border: `1px solid ${tint(C.blue, 0.28)}`,
       }}>
         <Icon size={19} color={C.blue} />
       </div>
-      <div style={{ fontSize: 19, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{title}</div>
-      <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.6 }}>{body}</div>
+      <div style={{ fontSize: 19, letterSpacing: 'calc(-0.23px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{title}</div>
+      <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.55 }}>{body}</div>
       {children}
     </div>
   );
@@ -288,13 +288,13 @@ function StudentCard({ entry, onOpen, href }) {
       <div style={R({ gap: 12, flexWrap: 'wrap' })}>
         <div style={{
           width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: 'flex',
-          alignItems: 'center', justifyContent: 'center', fontFamily: C.FD, fontWeight: 800, fontSize: 16,
+          alignItems: 'center', justifyContent: 'center', fontFamily: C.FD, fontWeight: 800, fontSize: 16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))',
           background: tint(hue, 0.16), border: `1px solid ${tint(hue, 0.36)}`, color: onTint(hue),
         }}>
           {name[0]?.toUpperCase() || '?'}
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: 17, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{name}</div>
+          <div style={{ fontSize: 17, letterSpacing: 'calc(-0.11px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{name}</div>
           <div style={{ fontSize: 12, color: C.t3 }}>
             {summary?.student?.gradeLevel ? `${summary.student.gradeLevel} · ` : ''}
             {effort.lastActiveAt ? `Last studied ${fmtDate(effort.lastActiveAt)}` : 'Not started yet'}
@@ -302,19 +302,19 @@ function StudentCard({ entry, onOpen, href }) {
         </div>
         {effort.streakDays > 0 && (
           <span style={pill(tint(C.orange, 0.14), C.orangeL)}>
-            <Flame size={12} style={{ marginRight: 5 }} /> {effort.streakDays} days
+            <Flame size={12} style={{ marginRight: 4 }} /> {effort.streakDays} days
           </span>
         )}
         <ChevronRight size={16} color={C.t3} />
       </div>
 
-      <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.6, marginTop: 14 }}>{digest.headline}</div>
+      <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.55, marginTop: 12 }}>{digest.headline}</div>
 
-      <div style={autoGrid(140, 10, { marginTop: 14 })}>
+      <div style={autoGrid(140, 10, { marginTop: 12 })}>
         {facts.map((f) => (
-          <div key={f.label} style={glass2({ padding: 11 })}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.1 }}>{f.value}</div>
-            <div style={{ fontSize: 10.5, color: C.t3, marginTop: 3 }}>{f.label}</div>
+          <div key={f.label} style={glass2({ padding: 12 })}>
+            <div style={{ fontSize: 16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.1 }}>{f.value}</div>
+            <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4 }}>{f.label}</div>
           </div>
         ))}
       </div>
@@ -329,12 +329,12 @@ function ActivityStrip({ days, hue }) {
   for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));
   return (
     <div>
-      <div style={{ display: 'flex', gap: 3 }}>
+      <div style={{ display: 'flex', gap: 4 }}>
         {weeks.map((week, wi) => (
-          <div key={wi} style={{ display: 'flex', flexDirection: 'column', gap: 3, flex: 1 }}>
+          <div key={wi} style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
             {week.map((day) => (
               <div key={day.date} title={`${day.date}${day.active ? ' — studied' : ''}`} style={{
-                height: 9, borderRadius: 2,
+                height: 9, borderRadius: 4,
                 background: day.active ? hue : C.b1,
                 border: day.active ? 'none' : `1px solid ${C.b0}`,
               }} />
@@ -342,7 +342,7 @@ function ActivityStrip({ days, hue }) {
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: C.t3, marginTop: 6 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: C.t3, marginTop: 4 }}>
         <span>8 weeks ago</span><span>Today</span>
       </div>
     </div>
@@ -366,23 +366,23 @@ function ActivityStrip({ days, hue }) {
  */
 function Guide({ user, onGo }) {
   const Block = ({ icon: Icon, hue, title, children }) => (
-    <div style={glass({ ...CC({ gap: 10 }) })}>
-      <div style={R({ gap: 10 })}>
+    <div style={glass({ ...CC({ gap: 8 }) })}>
+      <div style={R({ gap: 8 })}>
         <div style={{
-          width: 32, height: 32, borderRadius: 9, flexShrink: 0, display: 'flex',
+          width: 32, height: 32, borderRadius: 8, flexShrink: 0, display: 'flex',
           alignItems: 'center', justifyContent: 'center',
           background: tint(hue, 0.13), border: `1px solid ${tint(hue, 0.28)}`,
         }}>
           <Icon size={15} color={hue} />
         </div>
-        <div style={{ fontSize: 15.5, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{title}</div>
+        <div style={{ fontSize: 15.5, letterSpacing: 'calc(-0.04px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{title}</div>
       </div>
-      <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.7 }}>{children}</div>
+      <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.55 }}>{children}</div>
     </div>
   );
 
   const Line = ({ term, children }) => (
-    <div style={{ marginTop: 10 }}>
+    <div style={{ marginTop: 8 }}>
       <span style={{ color: C.t1, fontWeight: 700 }}>{term}</span>
       <span style={{ color: C.t2 }}> — {children}</span>
     </div>
@@ -426,7 +426,7 @@ function Guide({ user, onGo }) {
         you to trust: the parent view is assembled from a fixed list of progress fields, so a field
         added to the app next month is invisible here by default rather than shared until somebody
         notices.
-        <div style={{ marginTop: 10 }}>
+        <div style={{ marginTop: 8 }}>
           That boundary is why students agree to share the rest of it. A study app somebody is being
           read over the shoulder in is one they stop being honest inside, and an app they are not
           honest inside stops being able to help them — which would cost you the very thing this
@@ -439,7 +439,7 @@ function Guide({ user, onGo }) {
         that not much happened. It will never tell you your child is lazy, falling behind, or losing
         interest — an absence of rows is not evidence of a motive, and this page has no way of
         knowing about the exam week, the flu, or the fight with a friend that explains it.
-        <div style={{ marginTop: 10 }}>
+        <div style={{ marginTop: 8 }}>
           It ends with something to <em>say</em> rather than something to enforce, and that is
           deliberate. The most useful thing this dashboard can produce is a better question at
           dinner.
@@ -733,7 +733,7 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
           <AnimatedLogo size={28} variant="pop" />
           <div style={{ marginRight: 'auto', minWidth: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>MedSchoolPrep</div>
-            <div style={{ fontSize: 10, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 10, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
               {greetingName ? `${greetingName}'s family view` : 'Parent view'}
             </div>
           </div>
@@ -741,7 +741,7 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
               survives sign-out and follows them back in — one preference, one app. */}
           <ThemeToggle mode={themeMode} onChange={(m) => { storeMode(m); setThemeMode(m); }} align="right" />
           <button type="button" onClick={handleSignOut} aria-label="Sign out"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.t3, display: 'flex', padding: 6 }}>
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.t3, display: 'flex', padding: 4 }}>
             <LogOut size={16} />
           </button>
         </div>
@@ -761,7 +761,7 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
               ref={navRef}
               aria-label="Parent sections"
               className="msp-noscrollbar"
-              style={{ padding: '0 20px', display: 'flex', gap: 2, overflowX: 'auto', scrollbarWidth: 'none' }}
+              style={{ padding: '0px 20px', display: 'flex', gap: 4, overflowX: 'auto', scrollbarWidth: 'none' }}
             >
               {NAV.map(({ id, label, icon: Icon }) => {
                 const on = view === id || (id === 'students' && view === 'student');
@@ -770,7 +770,7 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
                     key={id} href={PARENT_VIEWS[id]} onClick={(e) => onNavClick(e, id)}
                     aria-current={on ? 'page' : undefined}
                     style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 12px',
+                      display: 'inline-flex', alignItems: 'center', gap: 4, padding: '8px 12px',
                       borderBottom: `2px solid ${on ? C.blue : 'transparent'}`, whiteSpace: 'nowrap',
                       color: on ? C.t1 : C.t3, fontSize: 13, fontWeight: on ? 700 : 500,
                       fontFamily: C.FB, textDecoration: 'none', borderRadius: '8px 8px 0 0',
@@ -783,7 +783,7 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
                       <span
                         aria-label={`${unread} unread`}
                         style={{
-                          minWidth: 17, height: 17, padding: '0 5px', borderRadius: 9,
+                          minWidth: 17, height: 17, padding: '0px 4px', borderRadius: 8,
                           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                           background: C.amber, color: onTint(C.amber), fontSize: 10.5, fontWeight: 800,
                         }}
@@ -822,8 +822,8 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
 
   if (loading) {
     return shell(
-      <div style={CC({ gap: 18 })} role="status" aria-label="Loading your family dashboard">
-        <div className="msp-shimmer" style={{ width: 220, height: 20, borderRadius: 7, background: C.b1 }} />
+      <div style={CC({ gap: 16 })} role="status" aria-label="Loading your family dashboard">
+        <div className="msp-shimmer" style={{ width: 220, height: 20, borderRadius: 8, background: C.b1 }} />
         <SkeletonCard />
         <SkeletonCard />
       </div>,
@@ -833,7 +833,7 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
 
   if (view === 'setup') {
     return shell(
-      <div style={CC({ gap: 18 })}>
+      <div style={CC({ gap: 16 })}>
         <div style={glass({ ...CC({ gap: 8 }) })}>
           <SectionTitle sub="Required before you can send an invitation of your own — your student sees what you write here when your request reaches them. Not required to read a dashboard somebody already invited you to.">
             Your details
@@ -860,23 +860,23 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
    */
   const inviteCta = (
     <div style={CC({ gap: 16 })}>
-      <div style={glass({ ...CC({ gap: 14 }) })}>
+      <div style={glass({ ...CC({ gap: 12 }) })}>
         <div style={{
-          width: 40, height: 40, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: tint(C.blue, 0.13), border: `1px solid ${tint(C.blue, 0.28)}`,
         }}>
           <Users size={19} color={C.blue} />
         </div>
-        <div style={{ fontSize: 19, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
+        <div style={{ fontSize: 19, letterSpacing: 'calc(-0.23px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
           Nothing to show yet
         </div>
-        <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.55 }}>
           This account isn't connected to a student. Nothing about anybody is visible here until one
           of you invites the other and the other accepts.
         </div>
 
-        <div style={glass2({ ...CC({ gap: 10 }) })}>
-          <div style={R({ gap: 9 })}>
+        <div style={glass2({ ...CC({ gap: 8 }) })}>
+          <div style={R({ gap: 8 })}>
             <Mail size={14} color={C.blueL} />
             <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>Your student already invited you?</span>
           </div>
@@ -895,8 +895,8 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
           Or invite your student
         </SectionTitle>
         {incompleteProfile ? (
-          <div style={CC({ gap: 10 })}>
-            <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.6 }}>
+          <div style={CC({ gap: 8 })}>
+            <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.55 }}>
               Before you can send a request we need your name, your relationship to them, and a
               number we can reach you on. That is not paperwork for its own sake: it is what the
               request says when it lands in your student's inbox, and it is the only way they can
@@ -915,8 +915,8 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
 
   /** A note, not a wall — see the comment on `incompleteProfile`. Only shown where it is true. */
   const profileNudge = incompleteProfile && students.length > 0 && !dismissedNudge ? (
-    <div style={glass2({ ...R({ gap: 10, alignItems: 'flex-start' }), borderColor: tint(C.amber, 0.3), background: tint(C.amber, 0.05) })}>
-      <UserCog size={15} color={C.amberL} style={{ flexShrink: 0, marginTop: 2 }} />
+    <div style={glass2({ ...R({ gap: 8, alignItems: 'flex-start' }), borderColor: tint(C.amber, 0.3), background: tint(C.amber, 0.05) })}>
+      <UserCog size={15} color={C.amberL} style={{ flexShrink: 0, marginTop: 4 }} />
       <div style={{ minWidth: 0, flex: 1, fontSize: 12.5, color: C.t2, lineHeight: 1.6 }}>
         We don't have your name or a contact number yet. Adding them takes a minute and is what
         lets you invite another student later — your dashboard works either way.{' '}
@@ -941,7 +941,7 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
       {/* ── Overview ─────────────────────────────────────────────────────── */}
       {view === 'dashboard' && (
         noStudents ? inviteCta : (
-          <div style={CC({ gap: 18 })}>
+          <div style={CC({ gap: 16 })}>
             {profileNudge}
             <div style={R({ justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' })}>
               <SectionTitle sub={students.length === 1
@@ -966,7 +966,7 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
       {/* ── Students ─────────────────────────────────────────────────────── */}
       {view === 'students' && (
         noStudents ? inviteCta : (
-          <div style={CC({ gap: 18 })}>
+          <div style={CC({ gap: 16 })}>
             <SectionTitle sub="One page each. Open a student for their full dashboard — study days, coursework and what changed recently.">
               Students
             </SectionTitle>
@@ -992,7 +992,7 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
         <div style={CC({ gap: 16 })}>
           <a
             href={PARENT_VIEWS.students} onClick={(e) => onNavClick(e, 'students')}
-            style={{ ...R({ gap: 6 }), fontSize: 12.5, color: C.t3, textDecoration: 'none', width: 'fit-content' }}
+            style={{ ...R({ gap: 4 }), fontSize: 12.5, color: C.t3, textDecoration: 'none', width: 'fit-content' }}
           >
             <ArrowLeft size={14} /> All students
           </a>
@@ -1015,7 +1015,7 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
       {/* ── This week ────────────────────────────────────────────────────── */}
       {view === 'digest' && (
         noStudents ? inviteCta : (
-          <div style={CC({ gap: 18 })}>
+          <div style={CC({ gap: 16 })}>
             <SectionTitle sub="What the last week actually means, in words — including when the honest answer is 'not much happened', which is a fact and not a verdict.">
               This week
             </SectionTitle>
@@ -1024,15 +1024,15 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
               const hue = hueFor(s.studentId);
               return (
                 <div key={s.studentId} style={glass({ borderColor: tint(hue, 0.28), background: tint(hue, 0.04) })}>
-                  <div style={R({ gap: 9, marginBottom: 10 })}>
+                  <div style={R({ gap: 8, marginBottom: 8 })}>
                     <Brain size={15} color={hue} />
-                    <span style={{ fontSize: 15, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
+                    <span style={{ fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
                       {s.summary?.student?.name || 'Your student'}
                     </span>
                   </div>
                   <div style={{ fontSize: 14.5, fontWeight: 700, color: C.t1, fontFamily: C.FD, marginBottom: 8 }}>{digest.headline}</div>
-                  <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.65 }}>{digest.body}</div>
-                  <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.65, marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.b1}` }}>
+                  <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.55 }}>{digest.body}</div>
+                  <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.55, marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.b1}` }}>
                     {digest.suggestion}
                   </div>
                 </div>
@@ -1045,7 +1045,7 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
       {/* ── Messages ─────────────────────────────────────────────────────── */}
       {view === 'messages' && (
         noStudents ? inviteCta : (
-          <div style={CC({ gap: 18 })}>
+          <div style={CC({ gap: 16 })}>
             <SectionTitle sub="A note, a question, or a request to sit a quiz. It shows up in their app rather than their inbox — and they can mark it done, answer in a line, or say not this week. Nothing you send here changes their plan on its own.">
               Messages
             </SectionTitle>
@@ -1053,10 +1053,10 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
               const hue = hueFor(s.studentId);
               const name = s.summary?.student?.name || 'Your student';
               return (
-                <div key={s.studentId} style={glass({ ...CC({ gap: 14 }), borderColor: tint(hue, 0.26) })}>
-                  <div style={R({ gap: 9 })}>
+                <div key={s.studentId} style={glass({ ...CC({ gap: 12 }), borderColor: tint(hue, 0.26) })}>
+                  <div style={R({ gap: 8 })}>
                     <MessageSquare size={15} color={hue} />
-                    <span style={{ fontSize: 15, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{name}</span>
+                    <span style={{ fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{name}</span>
                   </div>
                   <FamilyThread
                     linkId={s.link?.linkId}
@@ -1091,7 +1091,7 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
       {/* ── Activity ─────────────────────────────────────────────────────── */}
       {view === 'activity' && (
         noStudents ? inviteCta : (
-          <div style={CC({ gap: 18 })}>
+          <div style={CC({ gap: 16 })}>
             <SectionTitle sub="Eight weeks of study days, side by side. The shape of the gaps says more than any streak number does.">
               Activity
             </SectionTitle>
@@ -1100,8 +1100,8 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
               const effort = s.summary?.effort || {};
               return (
                 <div key={s.studentId} style={glass({ ...CC({ gap: 12 }) })}>
-                  <div style={R({ justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' })}>
-                    <span style={{ fontSize: 15, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
+                  <div style={R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' })}>
+                    <span style={{ fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
                       {s.summary?.student?.name || 'Your student'}
                     </span>
                     <span style={{ fontSize: 12, color: C.t3 }}>
@@ -1112,8 +1112,8 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
                   {s.summary?.milestones?.length > 0 && (
                     <div style={CC({ gap: 8, marginTop: 4 })}>
                       {s.summary.milestones.slice(0, 5).map((m, i) => (
-                        <div key={`${m.kind}-${m.at}-${i}`} style={R({ gap: 9 })}>
-                          <span style={{ width: 5, height: 5, borderRadius: 5, background: hue, flexShrink: 0 }} />
+                        <div key={`${m.kind}-${m.at}-${i}`} style={R({ gap: 8 })}>
+                          <span style={{ width: 5, height: 5, borderRadius: 4, background: hue, flexShrink: 0 }} />
                           <span style={{ fontSize: 12.5, color: C.t2, textTransform: 'capitalize' }}>{m.label}</span>
                           <span style={{ fontSize: 11.5, color: C.t3, marginLeft: 'auto' }}>{fmtDate(m.at)}</span>
                         </div>
@@ -1129,14 +1129,14 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
 
       {/* ── Connections ──────────────────────────────────────────────────── */}
       {view === 'connections' && (
-        <div style={CC({ gap: 18 })}>
+        <div style={CC({ gap: 16 })}>
           <SectionTitle sub="Every student you are connected to or have asked to connect with. Ending a connection takes effect on their very next screen refresh, not at the end of some session.">
             Connections
           </SectionTitle>
           <div style={glass()}>
             <ConnectionsPanel role="parent" onChanged={() => load()} />
           </div>
-          <div style={glass2({ fontSize: 12.5, color: C.t2, lineHeight: 1.65 })}>
+          <div style={glass2({ fontSize: 12.5, color: C.t2, lineHeight: 1.55 })}>
             Your student can see this connection from their own Settings, under Family Access, and
             can end it there at any time without asking you. That is deliberate: it is what makes
             this a shared arrangement rather than a monitoring tool.
@@ -1153,12 +1153,12 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
           <SectionTitle>Settings</SectionTitle>
 
           <div style={glass({ ...CC({ gap: 12 }) })}>
-            <div style={R({ justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' })}>
-              <div style={R({ gap: 9 })}>
+            <div style={R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' })}>
+              <div style={R({ gap: 8 })}>
                 <UserCog size={15} color={C.violet} />
-                <span style={{ fontSize: 15, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Your details</span>
+                <span style={{ fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Your details</span>
               </div>
-              <button type="button" onClick={() => go('setup')} style={btnG({ fontSize: 12, padding: '6px 12px' })}>
+              <button type="button" onClick={() => go('setup')} style={btnG({ fontSize: 12, padding: '4px 12px' })}>
                 <Pencil size={12} /> Edit
               </button>
             </div>
@@ -1171,11 +1171,11 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
                   ['Student named', profile.studentFullName],
                 ].map(([k, v]) => (
                   <div key={k} style={R({ gap: 12, alignItems: 'baseline' })}>
-                    <span style={{ fontSize: 11, color: C.t3, letterSpacing: '.08em', textTransform: 'uppercase', width: 120, flexShrink: 0 }}>{k}</span>
+                    <span style={{ fontSize: 11, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', width: 120, flexShrink: 0 }}>{k}</span>
                     <span style={{ fontSize: 13.5, color: C.t1, minWidth: 0, overflowWrap: 'anywhere' }}>{v || '—'}</span>
                   </div>
                 ))}
-                <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6, marginTop: 4 }}>
+                <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginTop: 4 }}>
                   These are the details your student sees on any request you send. Editing them asks
                   you to confirm the declaration again — a claim nobody re-read is not one anybody
                   made.
@@ -1186,8 +1186,8 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
             )}
           </div>
 
-          <div style={glass({ ...CC({ gap: 10 }) })}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Account</div>
+          <div style={glass({ ...CC({ gap: 8 }) })}>
+            <div style={{ fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Account</div>
             <div style={{ fontSize: 13, color: C.t2 }}>{user?.email}</div>
             <button type="button" onClick={handleSignOut} style={btnG({ alignSelf: 'flex-start' })}>
               <LogOut size={13} /> Sign out

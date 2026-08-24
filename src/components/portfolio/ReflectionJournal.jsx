@@ -121,7 +121,7 @@ export default function ReflectionJournal({
   const totalWords = entries.reduce((n, e) => n + countWords(e.content), 0);
 
   return (
-    <div style={CC({ gap: 14 })}>
+    <div style={CC({ gap: 12 })}>
       {/* ── The question ────────────────────────────────────────────────────
           The engine returns null when they wrote recently. That is not an empty
           state to be filled with encouragement — it is the correct answer, and
@@ -132,9 +132,9 @@ export default function ReflectionJournal({
           background: `linear-gradient(120deg,${tint(accent, 0.09)},rgba(255,255,255,0.02) 58%)`,
           border: `1px solid ${tint(accent, 0.3)}`,
         }}>
-          <div style={R({ gap: 8, marginBottom: 10, flexWrap: 'wrap' })}>
+          <div style={R({ gap: 8, marginBottom: 8, flexWrap: 'wrap' })}>
             <Sparkles size={13} color={accent} />
-            <span style={{ fontSize: 10.5, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '.07em' }}>
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: accent, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>
               {picked ? 'Your question' : due?.urgency === 'season' ? 'Ask yourself this now' : 'Your question this month'}
             </span>
             {!picked && active.season && (
@@ -146,15 +146,15 @@ export default function ReflectionJournal({
             {active.question}
           </div>
           {active.nudge && (
-            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.65, marginTop: 8 }}>{active.nudge}</div>
+            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, marginTop: 8 }}>{active.nudge}</div>
           )}
 
           <textarea
-            style={{ ...inp(), minHeight: 150, resize: 'vertical', lineHeight: 1.65, marginTop: 13 }}
+            style={{ ...inp(), minHeight: 150, resize: 'vertical', lineHeight: 1.55, marginTop: 12 }}
             value={draft} onChange={e => setDraft(e.target.value)}
             placeholder="However it comes out. Nobody reads this but you." />
 
-          <div style={R({ gap: 10, marginTop: 11, flexWrap: 'wrap' })}>
+          <div style={R({ gap: 8, marginTop: 12, flexWrap: 'wrap' })}>
             <button style={btn(accent, { opacity: draft.trim() && !saving ? 1 : 0.5 })}
               disabled={!draft.trim() || saving} onClick={saveEntry}>
               {saving ? <Loader2 size={14} className="spin" /> : <Check size={14} />}Keep this
@@ -168,15 +168,15 @@ export default function ReflectionJournal({
           </div>
 
           {!picked && due?.reason && (
-            <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.6, marginTop: 11, fontStyle: 'italic' }}>
+            <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.55, marginTop: 12, fontStyle: 'italic' }}>
               {due.reason}
             </div>
           )}
         </div>
       ) : (
-        <div style={{ ...glass2({ padding: 15 }), display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <CalendarClock size={14} color={C.t3} style={{ marginTop: 2, flexShrink: 0 }} />
-          <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6 }}>
+        <div style={{ ...glass2({ padding: 16 }), display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+          <CalendarClock size={14} color={C.t3} style={{ marginTop: 4, flexShrink: 0 }} />
+          <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>
             {loading
               ? 'Loading your journal…'
               : entries.length
@@ -190,10 +190,10 @@ export default function ReflectionJournal({
       {!active && (
         <div style={glass({ padding: isMobile ? 14 : 17 })}>
           <SectionTitle icon={Plus} color={accent}>Write something anyway</SectionTitle>
-          <textarea style={{ ...inp(), minHeight: 110, resize: 'vertical', lineHeight: 1.65 }}
+          <textarea style={{ ...inp(), minHeight: 110, resize: 'vertical', lineHeight: 1.55 }}
             value={draft} onChange={e => setDraft(e.target.value)}
             placeholder="Anything you saw, heard or thought that you want to still have in three years." />
-          <div style={{ marginTop: 10 }}>
+          <div style={{ marginTop: 8 }}>
             <button style={btn(accent, { opacity: draft.trim() && !saving ? 1 : 0.5 })}
               disabled={!draft.trim() || saving} onClick={saveEntry}>
               {saving ? <Loader2 size={14} className="spin" /> : <Check size={14} />}Keep this
@@ -210,17 +210,17 @@ export default function ReflectionJournal({
           defaultOpen={primary}
           title={`What you've written (${sorted.length})`}
           sub={`${totalWords.toLocaleString()} words of raw material, newest first. This is what your essays get built out of.`}>
-          <div style={CC({ gap: 9 })}>
+          <div style={CC({ gap: 8 })}>
             {sorted.map(entry => (
-              <div key={entry.id} style={{ ...glass2({ padding: 13 }), borderLeft: `3px solid ${tint(accent, 0.5)}` }}>
+              <div key={entry.id} style={{ ...glass2({ padding: 12 }), borderLeft: `3px solid ${tint(accent, 0.5)}` }}>
                 <div style={R({ gap: 8, justifyContent: 'space-between', flexWrap: 'wrap' })}>
                   <span style={{ fontSize: 12, fontWeight: 700, color: C.t2, lineHeight: 1.45, flex: 1, minWidth: 0 }}>
                     {entry.prompt_text || 'Unprompted'}
                   </span>
                   <span style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM, flexShrink: 0 }}>{fmt(entry.entry_date)}</span>
                 </div>
-                <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7, marginTop: 8, whiteSpace: 'pre-wrap' }}>{entry.content}</div>
-                <div style={R({ gap: 8, marginTop: 10, flexWrap: 'wrap' })}>
+                <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, marginTop: 8, whiteSpace: 'pre-wrap' }}>{entry.content}</div>
+                <div style={R({ gap: 8, marginTop: 8, flexWrap: 'wrap' })}>
                   <span style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM }}>{countWords(entry.content)} words</span>
                   <span style={{ flex: 1 }} />
                   {onAppendToDoc && (
@@ -230,13 +230,13 @@ export default function ReflectionJournal({
                       Add to working document
                     </button>
                   )}
-                  <button style={btnSm(C.roseDim, { color: C.rose, fontSize: 11, padding: '4px 9px' })}
+                  <button style={btnSm(C.roseDim, { color: C.rose, fontSize: 11, padding: '4px 8px' })}
                     onClick={() => removeEntry(entry.id)} aria-label="Delete entry"><Trash2 size={11} /></button>
                 </div>
               </div>
             ))}
           </div>
-          <div style={{ marginTop: 11 }}>
+          <div style={{ marginTop: 12 }}>
             <HelpNote>Nothing here is submitted anywhere or shown to anyone. It exists so that in three years you still have the actual memory rather than a summary of it.</HelpNote>
           </div>
         </Disclosure>

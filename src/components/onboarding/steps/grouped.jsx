@@ -56,9 +56,9 @@ function QuestionBlock({ q, index, g, revealed, isLast }) {
       transition={GLIDE}
       style={{ paddingBottom: isLast ? 0 : 24 }}>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 11 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
         <span style={{
-          width: 22, height: 22, borderRadius: 7, flexShrink: 0,
+          width: 22, height: 22, borderRadius: 8, flexShrink: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: answered ? g.grad : 'transparent',
           border: answered ? 'none' : `1px solid ${g.edge}`,
@@ -70,7 +70,7 @@ function QuestionBlock({ q, index, g, revealed, isLast }) {
             ? <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={POP} style={{ display: 'flex' }}><Check size={12} strokeWidth={3.5} /></motion.span>
             : index + 1}
         </span>
-        <span style={{ fontSize: 16, fontWeight: 700, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em', lineHeight: 1.3 }}>{q.prompt}</span>
+        <span style={{ fontSize: 16, fontWeight: 700, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))', lineHeight: 1.3 }}>{q.prompt}</span>
         <span style={{ flex: 1, height: 1, minWidth: 10, background: `linear-gradient(90deg, ${answered ? g.edge : C.b1}, transparent)` }} />
       </div>
 
@@ -124,13 +124,13 @@ export function GroupedStep({ eyebrow, title, subtitle, icon, h, questions, onNe
       {/* The in-screen twin of the chapter bar up top. A grouped screen must
           never feel open-ended. */}
       {showCounter && questions.length > 1 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
           <div style={{ display: 'flex', gap: 4 }}>
             {questions.map((q, i) => (
               <motion.span key={q.key}
                 animate={{ width: isAnswered(q) ? 22 : 11, opacity: i < revealCount ? 1 : 0.3 }}
                 transition={GLIDE_FAST}
-                style={{ height: 4, borderRadius: 2, background: isAnswered(q) ? g.bar : C.b3, display: 'block' }} />
+                style={{ height: 4, borderRadius: 4, background: isAnswered(q) ? g.bar : C.b3, display: 'block' }} />
             ))}
           </div>
           <span style={meta(9.5, { color: C.t3 })}>{answeredCount} of {questions.length} answered</span>
@@ -143,7 +143,7 @@ export function GroupedStep({ eyebrow, title, subtitle, icon, h, questions, onNe
             <QuestionBlock key={q.key} q={q} index={i} g={g} revealed={i < revealCount} isLast={i === revealCount - 1} />
           ))}
         </AnimatePresence>
-        {footerNote && <p style={{ fontSize: 12, color: C.t4, lineHeight: 1.6, marginTop: 18 }}>{footerNote}</p>}
+        {footerNote && <p style={{ fontSize: 12, color: C.t4, lineHeight: 1.55, marginTop: 16 }}>{footerNote}</p>}
       </div>
 
       <ContinueButton disabled={!allAnswered} onClick={onNext} h={g}>

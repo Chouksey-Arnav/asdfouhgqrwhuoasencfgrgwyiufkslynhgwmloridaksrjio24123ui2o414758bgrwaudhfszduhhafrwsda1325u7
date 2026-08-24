@@ -33,8 +33,8 @@ export default function PlanTaskStrip({ user, pillar, accent = C.violet, onOpenT
   return (
     <AnimatePresence>
       <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6, height: 0 }}
-        style={{ ...glass2({ padding: isMobile ? '10px 12px' : '12px 14px' }), display: 'flex', flexDirection: 'column', gap: 10, borderLeft: `2px solid ${accent}`, marginBottom: 4 }}>
-        <div style={R({ justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' })}>
+        style={{ ...glass2({ padding: isMobile ? '10px 12px' : '12px 14px' }), display: 'flex', flexDirection: 'column', gap: 8, borderLeft: `2px solid ${accent}`, marginBottom: 4 }}>
+        <div style={R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' })}>
           <div style={R({ gap: 8 })}>
             <CalendarClock size={13} color={accent} />
             <span style={{ fontSize: 11.5, fontWeight: 700, color: C.t1 }}>{PILLAR_LABEL[pillar] || "Today's plan"}</span>
@@ -56,7 +56,7 @@ export default function PlanTaskStrip({ user, pillar, accent = C.violet, onOpenT
               <motion.button key={t.id} whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.97 }}
                 onClick={() => onOpenTask?.(t)} aria-label={`Open plan task: ${label}`}
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999,
+                  display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 999,
                   border: `1px solid ${accent}45`, background: alreadyHere ? `${accent}26` : `${accent}12`, color: C.t1,
                   fontSize: 11, fontWeight: 600, fontFamily: C.FB, cursor: 'pointer', maxWidth: '100%',
                 }}>

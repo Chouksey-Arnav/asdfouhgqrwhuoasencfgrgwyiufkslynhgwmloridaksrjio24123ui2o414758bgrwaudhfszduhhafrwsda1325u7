@@ -187,8 +187,8 @@ export default function SatAnnotatableText({
             } : undefined}
             style={s.color ? {
               background: colorOf(s.color).bg,
-              borderRadius: 3,
-              padding: '1px 0',
+              borderRadius: 4,
+              padding: '4px 0px',
               cursor: disabled ? 'default' : 'pointer',
             } : undefined}
           >
@@ -211,8 +211,8 @@ export default function SatAnnotatableText({
               display: 'flex',
               alignItems: 'center',
               gap: 4,
-              padding: 5,
-              borderRadius: 10,
+              padding: 4,
+              borderRadius: 8,
               background: C.surf2,
               border: `1px solid ${C.b2}`,
               boxShadow: '0 8px 28px rgba(0,0,0,0.45)',
@@ -230,7 +230,7 @@ export default function SatAnnotatableText({
               </button>
             ) : (
               <>
-                <Highlighter size={12} color={C.t3} style={{ marginLeft: 3, marginRight: 2 }} />
+                <Highlighter size={12} color={C.t3} style={{ marginLeft: 4, marginRight: 4 }} />
                 {HIGHLIGHT_COLORS.map(c => (
                   <button
                     key={c.id}
@@ -238,7 +238,7 @@ export default function SatAnnotatableText({
                     title={`${c.label} highlight`}
                     aria-label={`${c.label} highlight`}
                     style={{
-                      width: 22, height: 22, borderRadius: 6, cursor: 'pointer',
+                      width: 22, height: 22, borderRadius: 4, cursor: 'pointer',
                       background: c.bg, border: `1px solid ${tint(c.dot, 0.5)}`,
                     }}
                   />
@@ -253,7 +253,7 @@ export default function SatAnnotatableText({
 }
 
 const menuBtn = () => ({
-  display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 9px',
-  borderRadius: 7, border: 'none', background: 'transparent', cursor: 'pointer',
+  display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 8px',
+  borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer',
   fontFamily: C.FB,
 });

@@ -59,7 +59,7 @@ export default function EssayVersionHistory({
           const selected = compare && (compare.fromId === id || compare.toId === id);
           return (
             <div key={id} style={{
-              ...glass2({ padding: '11px 13px' }),
+              ...glass2({ padding: '12px 12px' }),
               borderLeft: `3px solid ${col}`,
               border: selected ? `1px solid ${tint(accent, 0.42)}` : undefined,
             }}>
@@ -76,16 +76,16 @@ export default function EssayVersionHistory({
               </div>
 
               {!step.unsaved && v.label && (
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.t1, marginTop: 6 }}>{v.label}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.t1, marginTop: 4 }}>{v.label}</div>
               )}
               {!step.unsaved && v.note && (
-                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6, marginTop: 3 }}>{v.note}</div>
+                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginTop: 4 }}>{v.note}</div>
               )}
 
-              <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6, marginTop: 6 }}>{step.change.detail}</div>
+              <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginTop: 4 }}>{step.change.detail}</div>
 
-              <div style={R({ gap: 7, marginTop: 9, flexWrap: 'wrap' })}>
-                <button style={btnSm(C.s3, { color: C.t3, fontSize: 10.5, padding: '4px 10px' })}
+              <div style={R({ gap: 8, marginTop: 8, flexWrap: 'wrap' })}>
+                <button style={btnSm(C.s3, { color: C.t3, fontSize: 10.5, padding: '4px 8px' })}
                   onClick={() => setCompare(c => {
                     if (!c || c.toId === id) return { fromId: id, toId: 'current' };
                     return { fromId: id, toId: c.toId };
@@ -93,7 +93,7 @@ export default function EssayVersionHistory({
                   <GitCompare size={10} />Compare with current
                 </button>
                 {!step.unsaved && onRestore && (
-                  <button style={btnSm(C.s3, { color: C.t3, fontSize: 10.5, padding: '4px 10px' })}
+                  <button style={btnSm(C.s3, { color: C.t3, fontSize: 10.5, padding: '4px 8px' })}
                     onClick={() => onRestore(v)}>
                     <RotateCcw size={10} />Bring this back
                   </button>
@@ -104,8 +104,8 @@ export default function EssayVersionHistory({
         })}
 
         {parts && (
-          <div style={{ ...glass2({ padding: 14 }), border: `1px solid ${tint(accent, 0.28)}` }}>
-            <div style={R({ gap: 8, marginBottom: 10, flexWrap: 'wrap' })}>
+          <div style={{ ...glass2({ padding: 12 }), border: `1px solid ${tint(accent, 0.28)}` }}>
+            <div style={R({ gap: 8, marginBottom: 8, flexWrap: 'wrap' })}>
               <GitCompare size={12} color={accent} />
               <span style={{ fontSize: 11.5, fontWeight: 700, color: C.t1 }}>
                 {from.created_at ? new Date(from.created_at).toLocaleDateString() : 'Current draft'}
@@ -113,19 +113,19 @@ export default function EssayVersionHistory({
                 {to.created_at ? new Date(to.created_at).toLocaleDateString() : 'your current draft'}
               </span>
               <span style={{ flex: 1 }} />
-              <button style={btnSm(C.s3, { color: C.t3, fontSize: 10.5, padding: '4px 10px' })}
+              <button style={btnSm(C.s3, { color: C.t3, fontSize: 10.5, padding: '4px 8px' })}
                 onClick={() => setCompare(null)}>Close</button>
             </div>
-            <div style={{ ...inp({ minHeight: 0, maxHeight: 420, overflowY: 'auto', cursor: 'text' }), lineHeight: 1.75, fontSize: 13, whiteSpace: 'pre-wrap' }}>
+            <div style={{ ...inp({ minHeight: 0, maxHeight: 420, overflowY: 'auto', cursor: 'text' }), lineHeight: 1.55, fontSize: 13, whiteSpace: 'pre-wrap' }}>
               {parts.map((p, i) => (
                 <span key={i} style={
-                  p.type === 'added' ? { background: tint(C.green, 0.16), color: C.t1, borderRadius: 3 }
+                  p.type === 'added' ? { background: tint(C.green, 0.16), color: C.t1, borderRadius: 4 }
                   : p.type === 'removed' ? { background: tint(C.t3, 0.14), color: C.t3, textDecoration: 'line-through' }
                   : { color: C.t2 }
                 }>{p.text}</span>
               ))}
             </div>
-            <div style={{ marginTop: 10 }}>
+            <div style={{ marginTop: 8 }}>
               <HelpNote>Highlighted text is new in the later version; struck-through text was taken out. Cutting is usually the move that makes an essay better, which is why nothing here is marked in red.</HelpNote>
             </div>
           </div>
@@ -142,7 +142,7 @@ export default function EssayVersionHistory({
 /** The little "what should this version be called" form, shown next to Save. */
 export function VersionLabelFields({ label, note, onLabel, onNote }) {
   return (
-    <div style={R({ gap: 8, flexWrap: 'wrap', marginTop: 9 })}>
+    <div style={R({ gap: 8, flexWrap: 'wrap', marginTop: 8 })}>
       <input style={inp({ flex: 1, minWidth: 150, fontSize: 12 })} value={label} onChange={e => onLabel(e.target.value)}
         placeholder="Name this version (optional) — e.g. “after Ms. Herrera read it”" />
       <input style={inp({ flex: 1, minWidth: 150, fontSize: 12 })} value={note} onChange={e => onNote(e.target.value)}

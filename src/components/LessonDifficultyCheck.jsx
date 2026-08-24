@@ -152,20 +152,20 @@ export default function LessonDifficultyCheck({
   return (
     <div style={{
       ...glass2({ padding: isMobile ? 16 : 20, background: `linear-gradient(135deg,${tint(accent, 0.08)},rgba(255,255,255,0.02))`, border: `1px solid ${tint(accent, 0.24)}` }),
-      display: 'flex', flexDirection: 'column', gap: 14,
+      display: 'flex', flexDirection: 'column', gap: 12,
     }}>
-      <div style={R({ gap: 10 })}>
-        <div style={{ width: 32, height: 32, borderRadius: 10, background: tint(accent, 0.18), border: `1px solid ${tint(accent, 0.3)}`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+      <div style={R({ gap: 8 })}>
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: tint(accent, 0.18), border: `1px solid ${tint(accent, 0.3)}`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
           <Brain size={16} color={accent} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 13.5, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>How did that land?</div>
-          <div style={{ fontSize: 11.5, color: C.t3, marginTop: 1 }}>
+          <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4 }}>
             Medabrain adjusts from your answer — and remembers it for everything after this.
           </div>
         </div>
         {rating && !reopened && (
-          <button style={{ ...btnSm(C.s4, { color: C.t2, fontSize: 11 }), display: 'inline-flex', alignItems: 'center', gap: 5 }}
+          <button style={{ ...btnSm(C.s4, { color: C.t2, fontSize: 11 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}
             onClick={() => setReopened(true)} disabled={loading}>
             <RotateCcw size={11} />Change
           </button>
@@ -175,7 +175,7 @@ export default function LessonDifficultyCheck({
       <AnimatePresence initial={false}>
         {showPicker && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 8 }}>
               {OPTIONS.map(({ rating: r, Icon, color, title, sub }) => (
                 <motion.button key={r} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}
                   onClick={() => choose(r)} disabled={loading}
@@ -183,10 +183,10 @@ export default function LessonDifficultyCheck({
                     textAlign: 'left', cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.6 : 1,
                     background: rating === r ? tint(color, 0.2) : 'rgba(255,255,255,0.04)',
                     border: `1px solid ${rating === r ? tint(color, 0.45) : C.b1}`,
-                    borderRadius: 12, padding: '12px 14px', fontFamily: C.FB,
-                    display: 'flex', flexDirection: 'column', gap: 5,
+                    borderRadius: 12, padding: '12px 12px', fontFamily: C.FB,
+                    display: 'flex', flexDirection: 'column', gap: 4,
                   }}>
-                  <div style={R({ gap: 7 })}>
+                  <div style={R({ gap: 8 })}>
                     <Icon size={15} color={color} />
                     <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{title}</span>
                   </div>
@@ -200,7 +200,7 @@ export default function LessonDifficultyCheck({
 
       {rating && !showPicker && (
         <div style={R({ gap: 8, flexWrap: 'wrap' })}>
-          <span style={{ ...pill(tint(opt?.color || accent, 0.16), opt?.color || accent, { fontSize: 10.5, fontWeight: 700 }), display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ ...pill(tint(opt?.color || accent, 0.16), opt?.color || accent, { fontSize: 10.5, fontWeight: 700 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             <Check size={10} />You said: {FEEDBACK_LABELS[rating]?.label}
           </span>
           {rating === 'too_easy' && <span style={{ fontSize: 11, color: C.t3 }}>Medabrain added a deeper version of this passage below.</span>}
@@ -216,7 +216,7 @@ export default function LessonDifficultyCheck({
       )}
 
       {error && !loading && (
-        <div style={{ ...glass2({ padding: '10px 13px', background: C.roseDim, border: `1px solid ${tint(C.rose, 0.3)}` }), display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
+        <div style={{ ...glass2({ padding: '8px 12px', background: C.roseDim, border: `1px solid ${tint(C.rose, 0.3)}` }), display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <AlertTriangle size={14} color={C.roseL || C.rose} />
           <span style={{ flex: 1, minWidth: 160, fontSize: 11.5, color: C.roseL || C.rose }}>{error}</span>
           <button style={btnSm(C.s4, { color: C.t2, fontSize: 11 })} onClick={() => choose(rating)}>Try again</button>
@@ -229,9 +229,9 @@ export default function LessonDifficultyCheck({
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
           style={{ ...glass2({ padding: isMobile ? 14 : 18, background: 'rgba(255,255,255,0.03)' }), borderLeft: `3px solid ${tint(opt?.color || accent, 0.5)}` }}>
           {rating !== 'just_right' && (
-            <div style={{ ...R({ gap: 7, marginBottom: 10 }) }}>
+            <div style={{ ...R({ gap: 8, marginBottom: 8 }) }}>
               {rating === 'too_easy' ? <Sparkles size={13} color={opt?.color} /> : <BookOpen size={13} color={opt?.color} />}
-              <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.09em', textTransform: 'uppercase', color: opt?.color }}>
+              <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: opt?.color }}>
                 {rating === 'too_easy' ? 'Going deeper — added to this lesson' : 'Rebuilt from the start'}
               </span>
             </div>
@@ -245,8 +245,8 @@ export default function LessonDifficultyCheck({
           E-Library or is an escaped search URL on a site that always resolves — see
           lib/lessonResources.js for why none of them come from the model. */}
       {rating === 'too_hard' && resources.length > 0 && (
-        <div style={CC({ gap: 9 })}>
-          <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.09em', textTransform: 'uppercase', color: C.t3 }}>
+        <div style={CC({ gap: 8 })}>
+          <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3 }}>
             Watch or read this next
           </div>
           {resources.map((r, i) => {
@@ -254,16 +254,16 @@ export default function LessonDifficultyCheck({
             return (
               <a key={`${r.url}-${i}`} href={r.url} target="_blank" rel="noopener noreferrer"
                 style={{
-                  ...glass2({ padding: '11px 13px' }), textDecoration: 'none',
-                  display: 'flex', alignItems: 'center', gap: 11,
+                  ...glass2({ padding: '12px 12px' }), textDecoration: 'none',
+                  display: 'flex', alignItems: 'center', gap: 12,
                   border: `1px solid ${C.b1}`,
                 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, display: 'grid', placeItems: 'center', background: isVideo ? tint(C.rose, 0.14) : tint(accent, 0.14) }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, flexShrink: 0, display: 'grid', placeItems: 'center', background: isVideo ? tint(C.rose, 0.14) : tint(accent, 0.14) }}>
                   {isVideo ? <MonitorPlay size={14} color={C.rose} /> : <BookOpen size={14} color={accent} />}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.title}</div>
-                  {r.desc && <div style={{ fontSize: 10.5, color: C.t3, marginTop: 2, lineHeight: 1.45 }}>{r.desc}</div>}
+                  {r.desc && <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4, lineHeight: 1.45 }}>{r.desc}</div>}
                 </div>
                 {r.source === 'library' && <span style={pill(C.greenDim, C.greenL, { fontSize: 9, flexShrink: 0 })}>Vetted</span>}
                 <ExternalLink size={12} color={C.t3} style={{ flexShrink: 0 }} />
@@ -279,7 +279,7 @@ export default function LessonDifficultyCheck({
       {/* Reopening after a "too easy" is a real request, not a mistake — offering it explicitly
           means a student who wants to keep going deeper never has to hunt for the way. */}
       {rating === 'too_easy' && aiText && !loading && !reopened && (
-        <button style={{ ...btnSm(tint(accent, 0.16), { color: accent, border: `1px solid ${tint(accent, 0.35)}`, fontSize: 11.5, alignSelf: 'flex-start' }), display: 'inline-flex', alignItems: 'center', gap: 6 }}
+        <button style={{ ...btnSm(tint(accent, 0.16), { color: accent, border: `1px solid ${tint(accent, 0.35)}`, fontSize: 11.5, alignSelf: 'flex-start' }), display: 'inline-flex', alignItems: 'center', gap: 4 }}
           onClick={() => choose('too_easy')}>
           <Sparkles size={12} />Still too easy — go deeper again
         </button>

@@ -359,7 +359,7 @@ const W = {
   pathwayBroad: 7,      // 'exploring' students get credit for any tagged pathway
   gradeListed: 9,
   gradeUnrestricted: 5,
-  gap: 14,
+  gap: 12,
   effortMatch: 8,
   effortAdjacent: 4,
   freeBonus: 5,

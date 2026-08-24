@@ -49,15 +49,15 @@ export default function SatScoreReport({ scored, responses = [], accent = C.viol
           {Object.entries(scored.sections).map(([sec, s]) => {
             const path = MODULE_PATHS[s.path];
             return (
-              <div key={sec} style={{ ...glass2({ padding: 14 }), borderColor: tint(path.color, 0.28) }}>
-                <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), justifyContent: 'space-between', marginBottom: 8 }}>
+              <div key={sec} style={{ ...glass2({ padding: 12 }), borderColor: tint(path.color, 0.28) }}>
+                <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), justifyContent: 'space-between', marginBottom: 8 }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{SAT_SECTIONS[sec].label}</span>
                   <span style={pill(tint(path.color, 0.16), path.color, { fontSize: 10.5, border: `1px solid ${tint(path.color, 0.3)}` })}>
                     {path.label}
                   </span>
                 </div>
-                <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.7 }}>{routingNarrative(s)}</div>
-                <div style={{ marginTop: 10 }}>
+                <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }}>{routingNarrative(s)}</div>
+                <div style={{ marginTop: 8 }}>
                   <div style={{ ...R({ gap: 8 }), justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontSize: 10.5, color: C.t3 }}>Module 1 weighted score</span>
                     <span style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM }}>
@@ -80,7 +80,7 @@ export default function SatScoreReport({ scored, responses = [], accent = C.viol
         <div style={CC({ gap: 12 })}>
           {domains.map(d => (
             <div key={d.domain}>
-              <div style={{ ...R({ gap: 8 }), justifyContent: 'space-between', marginBottom: 5 }}>
+              <div style={{ ...R({ gap: 8 }), justifyContent: 'space-between', marginBottom: 4 }}>
                 <span style={{ fontSize: 12.5, color: C.t1, fontWeight: 600 }}>{d.label}</span>
                 <span style={{ fontSize: 11, color: C.t3, fontFamily: C.FM }}>
                   {d.correct}/{d.total}
@@ -115,8 +115,8 @@ export default function SatScoreReport({ scored, responses = [], accent = C.viol
           </div>
           {/* Only draw a conclusion when the comparison is actually informative. */}
           {pacing.overTimeAccuracy != null && pacing.onPaceAccuracy != null && pacing.overTimeCount >= 3 && (
-            <div style={{ ...glass2({ padding: 14 }), marginTop: 14 }}>
-              <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.7 }}>
+            <div style={{ ...glass2({ padding: 12 }), marginTop: 12 }}>
+              <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }}>
                 {pacing.overTimeAccuracy < pacing.onPaceAccuracy - 0.15
                   ? `When you spent well over the target time you got ${Math.round(pacing.overTimeAccuracy * 100)}% right, versus ${Math.round(pacing.onPaceAccuracy * 100)}% when on pace. Extra time is not rescuing those questions — recognizing and skipping them early would bank more points.`
                   : `Your accuracy holds up on the questions you spend longer on (${Math.round(pacing.overTimeAccuracy * 100)}% versus ${Math.round(pacing.onPaceAccuracy * 100)}% on pace), so the extra time is being spent well. The risk is running out of it.`}
@@ -129,16 +129,16 @@ export default function SatScoreReport({ scored, responses = [], accent = C.viol
       {/* ── Weakest skills ── */}
       {worstSkills.length > 0 && (
         <SatCard title="Skills to attack first" icon={AlertTriangle} iconColor={C.rose} m={isMobile}>
-          <div style={CC({ gap: 10 })}>
+          <div style={CC({ gap: 8 })}>
             {worstSkills.map(s => {
               const meta = skillMeta(s.skill);
               const pct = Math.round((s.correct / s.total) * 100);
               return (
                 <button
                   key={s.skill} onClick={() => onNavigate?.('practice', { skill: s.skill })}
-                  style={{ ...glass2({ padding: 13 }), textAlign: 'left', cursor: 'pointer', fontFamily: C.FB, border: `1px solid ${C.b1}` }}
+                  style={{ ...glass2({ padding: 12 }), textAlign: 'left', cursor: 'pointer', fontFamily: C.FB, border: `1px solid ${C.b1}` }}
                 >
-                  <div style={{ ...R({ gap: 10 }), justifyContent: 'space-between', marginBottom: 6 }}>
+                  <div style={{ ...R({ gap: 8 }), justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{meta.label}</span>
                     <span style={{ fontSize: 11, color: C.t3, fontFamily: C.FM }}>{s.correct}/{s.total}</span>
                   </div>
@@ -162,7 +162,7 @@ export default function SatScoreReport({ scored, responses = [], accent = C.viol
         onNavigate={onNavigate}
       />
 
-      <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }) }}>
+      <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }) }}>
         {missed.length > 0 && (
           <button onClick={() => onNavigate?.('review')} style={satBtn(C.rose)}>
             Review your {missed.length} misses <ChevronRight size={14} />

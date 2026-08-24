@@ -13,6 +13,12 @@
 // not to reach around it.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Geometry is not colour and does not vary per theme, so it does not go
+// through the semantic layer — but it is still a token set, not a literal.
+// A raw `borderRadius: 10` here would be exactly the one-off this layer exists
+// to abolish, so the fixed sets are imported and referenced by name.
+import { RADIUS, SP } from './space.js';
+
 /**
  * Build the component-token map for one resolved semantic theme.
  *
@@ -37,11 +43,14 @@ export function componentTokens(sem) {
     cardBg:           translucent.surface,
     cardBorder:       border.default,
     cardShadow:       elevation.raised,
-    cardRadius:       16,
-    cardPadding:      24,
+    // Radius and padding come from the fixed sets in ./space.js. `cardQuiet`
+    // was 10 radius / 14 padding — both off the grid, and 14 in particular is
+    // the number you type when a component is two pixels wrong somewhere else.
+    cardRadius:       RADIUS.lg,   // 16
+    cardPadding:      SP.lg,       // 24
     cardQuietBg:      translucent.surfaceQuiet,
-    cardQuietRadius:  10,
-    cardQuietPadding: 14,
+    cardQuietRadius:  RADIUS.md,   // 12
+    cardQuietPadding: SP.sm,       // 12
     cardRaisedBg:     surface.raised,
 
     // ── Wells / inset regions ───────────────────────────────────────────────

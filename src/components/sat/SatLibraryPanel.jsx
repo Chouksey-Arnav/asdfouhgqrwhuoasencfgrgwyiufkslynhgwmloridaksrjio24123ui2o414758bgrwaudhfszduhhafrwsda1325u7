@@ -213,7 +213,7 @@ export default function SatLibraryPanel({
 
           {/* ── Filters ── */}
           <SatCard title="Narrow it down" icon={Filter} iconColor={accent} m={isMobile}>
-            <div style={CC({ gap: 14 })}>
+            <div style={CC({ gap: 12 })}>
               <Segmented
                 options={SECTION_FILTERS}
                 value={section}
@@ -244,14 +244,14 @@ export default function SatLibraryPanel({
               />
 
               <div>
-                <div style={{ fontSize: 10.5, fontWeight: 700, color: C.t3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 9 }}>
+                <div style={{ fontSize: 10.5, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8 }}>
                   Skill
                 </div>
-                <div style={CC({ gap: 11 })}>
+                <div style={CC({ gap: 12 })}>
                   {skillGroups.map(g => (
                     <div key={g.domain}>
-                      <div style={{ fontSize: 11, color: g.color, fontWeight: 700, marginBottom: 6 }}>{g.label}</div>
-                      <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+                      <div style={{ fontSize: 11, color: g.color, fontWeight: 700, marginBottom: 4 }}>{g.label}</div>
+                      <div style={R({ gap: 4, flexWrap: 'wrap' })}>
                         {g.skills.map(s => {
                           const active = skill === s;
                           const n = pool({ skill: s }).length;
@@ -261,7 +261,7 @@ export default function SatLibraryPanel({
                               onClick={() => { setSkill(active ? null : s); setLimit(PAGE_SIZE); }}
                               style={btnSm(active ? tint(g.color, 0.2) : 'rgba(255,255,255,0.03)', {
                                 border: `1px solid ${active ? tint(g.color, 0.45) : C.b1}`,
-                                color: active ? onTint(g.color) : C.t2, fontSize: 11.5, gap: 6,
+                                color: active ? onTint(g.color) : C.t2, fontSize: 11.5, gap: 4,
                               })}
                             >
                               {SAT_SKILLS[s].label}
@@ -275,7 +275,7 @@ export default function SatLibraryPanel({
                 </div>
               </div>
 
-              <div style={R({ gap: 9, flexWrap: 'wrap' })}>
+              <div style={R({ gap: 8, flexWrap: 'wrap' })}>
                 <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
                   <Search size={13} color={C.t4} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)' }} />
                   <input
@@ -287,7 +287,7 @@ export default function SatLibraryPanel({
                   />
                 </div>
                 {filtered && (
-                  <button onClick={clearFilters} style={btnG({ padding: '9px 14px', fontSize: 12 })}>
+                  <button onClick={clearFilters} style={btnG({ padding: '8px 12px', fontSize: 12 })}>
                     <X size={12} /> Clear
                   </button>
                 )}
@@ -296,7 +296,7 @@ export default function SatLibraryPanel({
           </SatCard>
 
           {/* ── Results ── */}
-          <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), justifyContent: 'space-between' }}>
+          <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), justifyContent: 'space-between' }}>
             <span style={{ fontSize: 12.5, color: C.t2 }}>
               <b style={{ color: C.t1, fontFamily: C.FM }}>{results.length}</b>
               {results.length === 1 ? ' question' : ' questions'}
@@ -314,7 +314,7 @@ export default function SatLibraryPanel({
             {filterCount > 0 && (
               <button
                 onClick={() => onNavigate?.('practice', { filter, filterLabel })}
-                style={satBtn(accent, { padding: '8px 15px', fontSize: 12 })}
+                style={satBtn(accent, { padding: '8px 16px', fontSize: 12 })}
                 title={filterLabel}
               >
                 <Play size={12} />
@@ -326,11 +326,11 @@ export default function SatLibraryPanel({
           {skill && <SatSkillVideos skill={skill} limit={2} isMobile={isMobile} />}
 
           {results.length === 0 ? (
-            <div style={{ ...glass2({ padding: 22, textAlign: 'center' }), fontSize: 12.5, color: C.t3 }}>
+            <div style={{ ...glass2({ padding: 20, textAlign: 'center' }), fontSize: 12.5, color: C.t3 }}>
               Nothing matches those filters. Try widening the difficulty or clearing the search.
             </div>
           ) : (
-            <div style={CC({ gap: 10 })}>
+            <div style={CC({ gap: 8 })}>
               {visible.map(q => (
                 <BankRow
                   key={q.id}
@@ -343,10 +343,10 @@ export default function SatLibraryPanel({
               {results.length > visible.length && (
                 <button
                   onClick={() => setLimit(l => l + PAGE_SIZE)}
-                  style={btnG({ alignSelf: 'center', padding: '9px 18px', fontSize: 12 })}
+                  style={btnG({ alignSelf: 'center', padding: '8px 16px', fontSize: 12 })}
                 >
                   Show {Math.min(PAGE_SIZE, results.length - visible.length)} more
-                  <span style={{ color: C.t4, marginLeft: 6, fontFamily: C.FM }}>
+                  <span style={{ color: C.t4, marginLeft: 4, fontFamily: C.FM }}>
                     ({visible.length}/{results.length})
                   </span>
                 </button>
@@ -380,7 +380,7 @@ function BankRow({ question: q, open, onToggle, isMobile }) {
           <ChevronDown size={14} color={C.t3} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }} />
         </div>
         <div style={{
-          fontSize: 12.5, color: C.t1, lineHeight: 1.6,
+          fontSize: 12.5, color: C.t1, lineHeight: 1.55,
           overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: open ? 99 : 2, WebkitBoxOrient: 'vertical',
         }}>
           <MathText text={q.q} />
@@ -392,32 +392,32 @@ function BankRow({ question: q, open, onToggle, isMobile }) {
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
             <div style={{ padding: isMobile ? '0 14px 14px' : '0 16px 16px' }}>
               {q.stimulus && (
-                <div style={{ ...glass2({ padding: 13 }), fontSize: 12, color: C.t2, lineHeight: 1.75, whiteSpace: 'pre-wrap', marginBottom: 12 }}>
+                <div style={{ ...glass2({ padding: 12 }), fontSize: 12, color: C.t2, lineHeight: 1.55, whiteSpace: 'pre-wrap', marginBottom: 12 }}>
                   <MathText text={q.stimulus} />
                 </div>
               )}
               {q.notes && (
-                <ul style={{ ...glass2({ padding: '13px 13px 13px 30px' }), margin: '0 0 12px', color: C.t2, fontSize: 12, lineHeight: 1.75 }}>
+                <ul style={{ ...glass2({ padding: '12px 12px 12px 28px' }), margin: '0px 0px 12px', color: C.t2, fontSize: 12, lineHeight: 1.55 }}>
                   {q.notes.map((n, i) => <li key={i}>{n}</li>)}
                 </ul>
               )}
 
               {q.format === 'mcq' ? (
-                <div style={CC({ gap: 7, marginBottom: 12 })}>
+                <div style={CC({ gap: 8, marginBottom: 12 })}>
                   {q.ch.map((choice, i) => {
                     const correct = i === q.ans;
                     return (
                       <div
                         key={i}
                         style={{
-                          ...glass2({ padding: '10px 12px' }),
+                          ...glass2({ padding: '8px 12px' }),
                           borderColor: correct ? tint(C.green, 0.4) : C.b1,
                           background: correct ? tint(C.green, 0.07) : undefined,
                         }}
                       >
-                        <div style={R({ gap: 9, alignItems: 'flex-start' })}>
+                        <div style={R({ gap: 8, alignItems: 'flex-start' })}>
                           <span style={{
-                            width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 1,
+                            width: 18, height: 18, borderRadius: 4, flexShrink: 0, marginTop: 4,
                             background: correct ? tint(C.green, 0.2) : 'rgba(255,255,255,0.05)',
                             color: correct ? C.greenL : C.t3,
                             fontSize: 10, fontWeight: 800, fontFamily: C.FM,
@@ -428,7 +428,7 @@ function BankRow({ question: q, open, onToggle, isMobile }) {
                               <MathText text={choice} />
                             </div>
                             {q.distractorExp?.[i] && (
-                              <div style={{ fontSize: 11.5, color: correct ? C.greenL : C.t3, marginTop: 5, lineHeight: 1.6 }}>
+                              <div style={{ fontSize: 11.5, color: correct ? C.greenL : C.t3, marginTop: 4, lineHeight: 1.55 }}>
                                 {q.distractorExp[i]}
                               </div>
                             )}
@@ -440,7 +440,7 @@ function BankRow({ question: q, open, onToggle, isMobile }) {
                 </div>
               ) : (
                 <div style={{ ...glass2({ padding: 12 }), marginBottom: 12, borderColor: tint(C.green, 0.35) }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: C.green, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: C.green, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 4 }}>
                     Accepted answers
                   </div>
                   <div style={{ fontSize: 13, color: C.t1, fontFamily: C.FM }}>
@@ -450,16 +450,16 @@ function BankRow({ question: q, open, onToggle, isMobile }) {
               )}
 
               <div style={{ ...glass2({ padding: 12 }), marginBottom: q.trap ? 10 : 0 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: C.t3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 4 }}>
                   Why
                 </div>
-                <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.75 }}>
+                <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }}>
                   <MathText text={q.exp} />
                 </div>
               </div>
 
               {q.trap && (
-                <div style={{ fontSize: 11, color: C.amberL, lineHeight: 1.6 }}>
+                <div style={{ fontSize: 11, color: C.amberL, lineHeight: 1.55 }}>
                   Trap: {TRAP_TAGS[q.trap] || q.trap.replace(/_/g, ' ')}
                 </div>
               )}
@@ -481,11 +481,11 @@ function OfficialResources({ isMobile }) {
         border: `1px solid ${tint(C.amber, 0.24)}`,
         background: satWash(C.amber, 0.07),
       }}>
-        <div style={{ ...R({ gap: 9 }), marginBottom: 8 }}>
+        <div style={{ ...R({ gap: 8 }), marginBottom: 8 }}>
           <Star size={14} color={C.amberL} />
           <span style={{ fontSize: 13, fontWeight: 800, color: C.t1 }}>Read this before you use any of it</span>
         </div>
-        <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.75 }}>
+        <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }}>
           Our bank is original, blueprint-matched and built for volume, diagnosis and drilling.
           It is not written by College Board, and no practice bank anywhere is. The four adaptive
           tests in Bluebook are the only ones written by the people who write the real exam — take
@@ -494,7 +494,7 @@ function OfficialResources({ isMobile }) {
         </div>
       </div>
 
-      <div style={CC({ gap: 11 })}>
+      <div style={CC({ gap: 12 })}>
         {rows.map(r => (
           <div key={r.id} style={glass({ padding: isMobile ? 14 : 17 })}>
             <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginBottom: 8 }}>
@@ -508,22 +508,22 @@ function OfficialResources({ isMobile }) {
               href={r.url}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ ...R({ gap: 7 }), fontSize: 14, fontWeight: 700, color: C.t1, textDecoration: 'none' }}
+              style={{ ...R({ gap: 8 }), fontSize: 14, fontWeight: 700, color: C.t1, textDecoration: 'none' }}
             >
               {r.title}
               <ExternalLink size={12} color={C.t3} />
             </a>
 
-            <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.7, marginTop: 7 }}>{r.blurb}</div>
+            <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, marginTop: 8 }}>{r.blurb}</div>
 
-            <div style={{ ...glass2({ padding: '9px 12px' }), marginTop: 11, borderColor: tint(C.sky, 0.2) }}>
-              <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>
+            <div style={{ ...glass2({ padding: '8px 12px' }), marginTop: 12, borderColor: tint(C.sky, 0.2) }}>
+              <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>
                 <b style={{ color: C.skyL }}>Use it for: </b>{r.why}
               </span>
             </div>
 
             {!!r.children?.length && (
-              <div style={{ ...R({ gap: 7, flexWrap: 'wrap' }), marginTop: 12 }}>
+              <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 12 }}>
                 {r.children.map(c => (
                   <span key={c.label} style={R({ gap: 4 })}>
                     <a href={c.url} target="_blank" rel="noopener noreferrer" style={btnSm('rgba(255,255,255,0.03)', { border: `1px solid ${C.b1}`, color: C.t2, fontSize: 11.5, textDecoration: 'none' })}>

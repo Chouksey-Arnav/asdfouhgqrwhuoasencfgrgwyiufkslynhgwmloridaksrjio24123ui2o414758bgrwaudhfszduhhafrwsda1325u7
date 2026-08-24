@@ -18,7 +18,7 @@ export function AnswerGrid({ children, columns, count = 0 }) {
   const { width } = useViewport();
   const cols = columns ?? (width >= 760 && count >= 5 ? 2 : 1);
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: 10, alignContent: 'start' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: 8, alignContent: 'start' }}>
       {children}
     </div>
   );
@@ -62,7 +62,7 @@ export function PlanPreferencesStep({ prefs, onChange, onNext, h }) {
       <StepHeader eyebrow="Almost done" icon="sliders" h={g}
         title="Two small choices about how your plan behaves."
         subtitle="Both are on by default because both are forgiving. You can change either one in Settings whenever you like." />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 11 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
         <TogglePreferenceRow
           icon="trend-up" h={g}
           title="Count extra study time toward tomorrow"
@@ -84,7 +84,7 @@ export function TogglePreferenceRow({ icon, title, desc, value, onChange, h }) {
   const g = h || flowHue();
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 14, padding: '15px 16px', borderRadius: R.md,
+      display: 'flex', alignItems: 'center', gap: 12, padding: '16px 16px', borderRadius: R.md,
       background: value ? `linear-gradient(135deg, ${g.softer}, transparent 70%), ${C.surf}` : C.surf,
       border: `1px solid ${value ? g.edgeSoft : C.b1}`,
       boxShadow: C.shadowSm,
@@ -100,7 +100,7 @@ export function TogglePreferenceRow({ icon, title, desc, value, onChange, h }) {
       </span>
       <span style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14.5, fontWeight: 700, color: C.t1, lineHeight: 1.3 }}>{title}</div>
-        <div style={{ fontSize: 12.5, color: C.t3, marginTop: 3, lineHeight: 1.5 }}>{desc}</div>
+        <div style={{ fontSize: 12.5, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>{desc}</div>
       </span>
       <ToggleSwitch checked={value} onChange={onChange} h={g} />
     </div>
@@ -122,12 +122,12 @@ export function ProofGraphStep({ eyebrow, title, subtitle, icon, h, lines, xLabe
     <>
       <StepHeader eyebrow={eyebrow} title={title} subtitle={subtitle} icon={icon} h={g} />
       <div style={{ flex: 1 }}>
-        <div style={panel({ padding: '18px 16px 12px' })}>
+        <div style={panel({ padding: '16px 16px 12px' })}>
           {legend && (
-            <div style={{ display: 'flex', gap: 16, marginBottom: 10 }}>
+            <div style={{ display: 'flex', gap: 16, marginBottom: 8 }}>
               {legend.map(l => (
-                <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ width: 10, height: 3, borderRadius: 2, background: l.color }} />
+                <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ width: 10, height: 3, borderRadius: 4, background: l.color }} />
                   <span style={{ fontSize: 11, color: C.t3 }}>{l.label}</span>
                 </div>
               ))}
@@ -138,12 +138,12 @@ export function ProofGraphStep({ eyebrow, title, subtitle, icon, h, lines, xLabe
         {statLine && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...GLIDE, delay: 0.6 }}
             style={{
-              marginTop: 14, padding: '14px 16px', borderRadius: R.md,
+              marginTop: 12, padding: '12px 16px', borderRadius: R.md,
               background: `linear-gradient(135deg, ${g.soft}, ${g.softer})`,
               border: `1px solid ${g.edgeSoft}`,
-              display: 'flex', gap: 11, alignItems: 'flex-start',
+              display: 'flex', gap: 12, alignItems: 'flex-start',
             }}>
-            <span style={{ color: g.ink, display: 'flex', flexShrink: 0, marginTop: 1 }}><Icon name="sparkle" size={16} /></span>
+            <span style={{ color: g.ink, display: 'flex', flexShrink: 0, marginTop: 4 }}><Icon name="sparkle" size={16} /></span>
             <p style={{ fontSize: 13, color: C.t1, fontWeight: 600, lineHeight: 1.55, margin: 0 }}>{statLine}</p>
           </motion.div>
         )}

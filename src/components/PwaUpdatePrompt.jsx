@@ -27,7 +27,7 @@ export default function PwaUpdatePrompt() {
       position: 'fixed', left: 16, right: 16, bottom: 16, zIndex: 100000,
       maxWidth: 420, margin: '0 auto',
       display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
-      padding: '14px 16px', borderRadius: 12,
+      padding: '12px 16px', borderRadius: 12,
       background: '#12172a', border: '1px solid #2a3352', color: '#e6e9f0',
       boxShadow: '0 12px 40px rgba(0,0,0,0.5)', fontFamily: 'system-ui, sans-serif',
     }}>
@@ -49,7 +49,7 @@ export default function PwaUpdatePrompt() {
           type="button"
           onClick={() => updateServiceWorker(true)}
           style={{
-            padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+            padding: '8px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
             background: '#3b82f6', color: '#fff', fontWeight: 700, fontSize: 12.5,
           }}
         >

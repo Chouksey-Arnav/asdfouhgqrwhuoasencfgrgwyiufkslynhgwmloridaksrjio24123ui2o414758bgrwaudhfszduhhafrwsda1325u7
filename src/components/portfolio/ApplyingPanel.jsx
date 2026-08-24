@@ -100,7 +100,7 @@ export default function ApplyingPanel({
   }).filter(s => renders[s.id]);
 
   return (
-    <div style={CC({ gap: 22 })}>
+    <div style={CC({ gap: 20 })}>
       <PanelHero tourTag="portfolio-deep-applying" icon={GraduationCap} color={accent} color2={C.violet} m={isMobile}
         eyebrow="Applications" title="Applying"
         sub="Your school list and everything each school still needs from you — combined-degree programs, essays, aid, recommenders, interviews, and your real odds. One page, in the order you work through it." />

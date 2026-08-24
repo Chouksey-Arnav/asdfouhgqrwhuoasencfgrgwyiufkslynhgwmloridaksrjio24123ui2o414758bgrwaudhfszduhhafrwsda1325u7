@@ -162,7 +162,7 @@ export default function RecommendersPanel({ accent = C.blue, onChange, user = nu
   };
 
   return (
-    <div style={CC({ gap: 22 })}>
+    <div style={CC({ gap: 20 })}>
       <PanelHero tourTag="portfolio-deep-recommenders" icon={UserCheck} color={accent} color2={C.violet}
         eyebrow="Portfolio" title="Letters of Recommendation"
         sub="Who's writing for you, how to ask them, and how much notice they're getting. Most applications need 2–3."
@@ -173,7 +173,7 @@ export default function RecommendersPanel({ accent = C.blue, onChange, user = nu
           reads. This is the one thing on the page that changes an outcome. */}
       {attention.length > 0 && (
         <div style={{
-          ...glass({ padding: 18 }),
+          ...glass({ padding: 16 }),
           background: `linear-gradient(120deg,${tint(C.rose, 0.07)},rgba(255,255,255,0.02) 55%)`,
           border: `1px solid ${tint(C.rose, 0.24)}`,
         }}>
@@ -189,7 +189,7 @@ export default function RecommendersPanel({ accent = C.blue, onChange, user = nu
                 <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>
                   {entry.name} <span style={{ fontWeight: 400, color: C.t3 }}>· {entry.relationship}</span>
                 </div>
-                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6, marginTop: 4 }}>{status.message}</div>
+                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginTop: 4 }}>{status.message}</div>
                 <button type="button" onClick={() => setOpenId(entry.id)}
                   style={{ ...btnSm(C.s3, { color: C.t2, marginTop: 8 }) }}>
                   <Mail size={12} /> Open the email
@@ -211,12 +211,12 @@ export default function RecommendersPanel({ accent = C.blue, onChange, user = nu
       {/* ── Whether the programs they're tracking even read letters ───────── */}
       {letterPolicy.rows.length > 0 && (
         <div style={{
-          ...glass({ padding: 18 }),
+          ...glass({ padding: 16 }),
           background: `linear-gradient(120deg,${tint(C.violet, 0.06)},rgba(255,255,255,0.02) 55%)`,
           border: `1px solid ${tint(C.violet, 0.2)}`,
         }}>
           <SectionTitle icon={School} color={C.violetL}>Do your programs use letters?</SectionTitle>
-          <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.62, marginBottom: 12 }}>
+          <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, marginBottom: 12 }}>
             Not all of them do, and finding out in October that you cultivated a recommender a
             program will never read is a real and avoidable loss. Where we have read the program's
             own page, this says what it says; where we have not, it says that instead of guessing.
@@ -231,7 +231,7 @@ export default function RecommendersPanel({ accent = C.blue, onChange, user = nu
                     <span style={pill(tint(color, 0.14), color, { fontSize: 9 })}>{policy.verdict}</span>
                     <span style={{ fontSize: 9.5, color: C.t4 }}>{policy.basis}</span>
                   </div>
-                  <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6, marginTop: 6 }}>{policy.note}</div>
+                  <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6, marginTop: 4 }}>{policy.note}</div>
                 </div>
               );
             })}
@@ -246,7 +246,7 @@ export default function RecommendersPanel({ accent = C.blue, onChange, user = nu
           {RECOMMENDER_ROLES.filter(r => r.id !== 'other').map(r => (
             <div key={r.id} style={{ ...glass2({ padding: 12 }), borderLeft: `3px solid ${tint(accent, 0.5)}` }}>
               <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{r.label}</div>
-              <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.62, marginTop: 5 }}>
+              <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.62, marginTop: 4 }}>
                 <b style={{ color: C.t1 }}>What they can say:</b> {r.whatTheyCanSay}
               </div>
               <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.62, marginTop: 4 }}>
@@ -264,16 +264,16 @@ export default function RecommendersPanel({ accent = C.blue, onChange, user = nu
       </Disclosure>
 
       {/* ── Add ──────────────────────────────────────────────────────────── */}
-      <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(accent, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(accent, 0.2)}` }}>
+      <div style={{ ...glass({ padding: 16 }), background: `linear-gradient(120deg,${tint(accent, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(accent, 0.2)}` }}>
         <SectionTitle icon={Plus} color={accent}>Add a Recommender</SectionTitle>
-        <form onSubmit={addEntry} style={CC({ gap: 10 })}>
-          <div style={R({ gap: 10, flexWrap: 'wrap' })}>
+        <form onSubmit={addEntry} style={CC({ gap: 8 })}>
+          <div style={R({ gap: 8, flexWrap: 'wrap' })}>
             <input style={inp({ flex: 1, minWidth: 160 })} placeholder="Name — exactly as it appears in your hours log" value={name} onChange={e => setName(e.target.value)} />
             <select style={inp({ width: 'auto' })} value={relationship} onChange={e => setRelationship(e.target.value)}>
               {ROLE_LABELS.map(r => <option key={r}>{r}</option>)}
             </select>
           </div>
-          <div style={R({ gap: 10, flexWrap: 'wrap' })}>
+          <div style={R({ gap: 8, flexWrap: 'wrap' })}>
             <select style={inp({ width: 'auto' })} value={type} onChange={e => setType(e.target.value)}>
               <option value="individual">Individual Letter</option>
               <option value="committee">Pre-Health Committee Letter</option>
@@ -285,7 +285,7 @@ export default function RecommendersPanel({ accent = C.blue, onChange, user = nu
           </div>
           <input style={inp()} placeholder="Notes — what you'd want them to highlight (optional)" value={notes} onChange={e => setNotes(e.target.value)} />
           <div style={{ ...R({ gap: 8, alignItems: 'flex-start' }), fontSize: 11, color: C.t4, lineHeight: 1.5 }}>
-            <Info size={12} style={{ flexShrink: 0, marginTop: 2 }} />
+            <Info size={12} style={{ flexShrink: 0, marginTop: 4 }} />
             <span>
               Spell the name the same way you spelled it as the supervisor on your shadowing and
               hours entries — that is how we attach your logged hours to the ask.
@@ -336,13 +336,13 @@ function Row({ entry, accent, logs, openId, setOpenId, onCycle, onRemove, onPatc
       borderLeft: `3px solid ${sc}`,
       background: `linear-gradient(120deg,${tint(sc, 0.05)},rgba(255,255,255,0.02) 55%)`,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', flexWrap: 'wrap' }}>
-        <div style={{ width: 34, height: 34, borderRadius: 10, background: tint(accent, 0.13), border: `1px solid ${tint(accent, 0.25)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', flexWrap: 'wrap' }}>
+        <div style={{ width: 34, height: 34, borderRadius: 8, background: tint(accent, 0.13), border: `1px solid ${tint(accent, 0.25)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <UserCheck size={15} color={accent} />
         </div>
         <div style={{ flex: 1, minWidth: 150 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{entry.name}</div>
-          <div style={{ fontSize: 11, color: C.t3, marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>
             {entry.relationship}
             {entry.due_date ? ` · due ${new Date(entry.due_date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : ''}
             {link.totalHours > 0 && (
@@ -352,15 +352,15 @@ function Row({ entry, accent, logs, openId, setOpenId, onCycle, onRemove, onPatc
           {entry.notes && <div style={{ fontSize: 11, color: C.t2, marginTop: 4 }}>{entry.notes}</div>}
           <div style={{ display: 'flex', gap: 4, marginTop: 8, maxWidth: 180 }}>
             {STATUSES.map((s, i) => (
-              <span key={s} title={s} style={{ flex: 1, height: 4, borderRadius: 3, background: i <= stepIdx ? (statusColor(s) === C.t3 ? C.t4 : statusColor(s)) : C.b1 }} />
+              <span key={s} title={s} style={{ flex: 1, height: 4, borderRadius: 4, background: i <= stepIdx ? (statusColor(s) === C.t3 ? C.t4 : statusColor(s)) : C.b1 }} />
             ))}
           </div>
-          <div style={{ ...R({ gap: 6, alignItems: 'flex-start' }), marginTop: 8, fontSize: 11, color: levelColor === C.t3 ? C.t3 : levelColor, lineHeight: 1.5 }}>
-            <Clock size={11} style={{ flexShrink: 0, marginTop: 2 }} />
+          <div style={{ ...R({ gap: 4, alignItems: 'flex-start' }), marginTop: 8, fontSize: 11, color: levelColor === C.t3 ? C.t3 : levelColor, lineHeight: 1.5 }}>
+            <Clock size={11} style={{ flexShrink: 0, marginTop: 4 }} />
             <span>{status.message}</span>
           </div>
         </div>
-        <div style={{ ...R({ gap: 6 }), flexShrink: 0 }}>
+        <div style={{ ...R({ gap: 4 }), flexShrink: 0 }}>
           <button onClick={() => onCycle(entry)} style={pill(tint(sc, 0.15), sc, { cursor: 'pointer', border: `1px solid ${tint(sc, 0.3)}`, fontSize: 10 })}>{entry.status}</button>
           <button style={btnSm(C.s3, { color: C.t2 })} onClick={() => setOpenId(isOpen ? null : entry.id)}>
             <Mail size={12} />{isOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -370,7 +370,7 @@ function Row({ entry, accent, logs, openId, setOpenId, onCycle, onRemove, onPatc
       </div>
 
       {isOpen && (
-        <div style={{ padding: '0 18px 16px', borderTop: `1px solid ${C.b1}`, paddingTop: 14, ...CC({ gap: 12 }) }}>
+        <div style={{ padding: '0px 16px 16px', borderTop: `1px solid ${C.b1}`, paddingTop: 12, ...CC({ gap: 12 }) }}>
           {/* Dates the nudge counts from. Editable here rather than only at
               creation, because the deadline is usually learned later than the
               recommender is chosen. */}
@@ -389,9 +389,9 @@ function Row({ entry, accent, logs, openId, setOpenId, onCycle, onRemove, onPatc
 
           {/* What the ask is backed by. */}
           <div style={{ ...glass2({ padding: 12 }), background: C.s2 }}>
-            <div style={{ ...R({ gap: 7, marginBottom: 8 }) }}>
+            <div style={{ ...R({ gap: 8, marginBottom: 8 }) }}>
               <Link2 size={12} color={link.totalHours ? C.greenL : C.t3} />
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: link.totalHours ? C.greenL : C.t3, textTransform: 'uppercase', letterSpacing: '.07em' }}>
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: link.totalHours ? C.greenL : C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>
                 {link.totalHours ? 'Backed by your hours log' : 'No logged hours found under this name'}
               </span>
             </div>
@@ -459,8 +459,8 @@ function EmailTabs({ entry, logs, studentName, gradeLabel, accent }) {
   }
 
   return (
-    <div style={CC({ gap: 10 })}>
-      <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+    <div style={CC({ gap: 8 })}>
+      <div style={R({ gap: 4, flexWrap: 'wrap' })}>
         {templates.map(t => (
           <button key={t.id} type="button" onClick={() => setTab(t.id)}
             style={pill(tab === t.id ? tint(accent, 0.18) : C.b0, tab === t.id ? accent : C.t3, {
@@ -476,7 +476,7 @@ function EmailTabs({ entry, logs, studentName, gradeLabel, accent }) {
 
       <div style={{ ...glass2({ padding: 12 }), background: C.s2 }}>
         <div style={R({ gap: 8, marginBottom: 8, flexWrap: 'wrap' })}>
-          <span style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: '.08em', textTransform: 'uppercase' }}>Subject</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>Subject</span>
           <span style={{ flex: 1, minWidth: 120, fontSize: 12, color: C.t1 }}>{active.subject}</span>
           <button type="button" onClick={() => copy(active.subject, 'subject')}
             style={btnSm(copied === 'subject' ? tint(C.green, 0.18) : C.s3, { color: copied === 'subject' ? C.greenL : C.t2, fontSize: 10.5 })}>
@@ -488,7 +488,7 @@ function EmailTabs({ entry, logs, studentName, gradeLabel, accent }) {
           whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 340, overflowY: 'auto',
         }}>{active.body}</pre>
         <button type="button" onClick={() => copy(active.body, 'body')}
-          style={{ ...btnSm(copied === 'body' ? tint(C.green, 0.18) : C.s3, { color: copied === 'body' ? C.greenL : C.t2, marginTop: 10 }) }}>
+          style={{ ...btnSm(copied === 'body' ? tint(C.green, 0.18) : C.s3, { color: copied === 'body' ? C.greenL : C.t2, marginTop: 8 }) }}>
           {copied === 'body' ? <Check size={12} /> : <ClipboardCopy size={12} />}
           {copied === 'body' ? 'Copied' : 'Copy the email'}
         </button>

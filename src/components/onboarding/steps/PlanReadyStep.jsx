@@ -15,7 +15,7 @@ export function PlanReadyStep({ onNext }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
         <motion.div initial={{ scale: 0, rotate: -14 }} animate={{ scale: 1, rotate: 0 }} transition={POP}
           style={{
-            width: 84, height: 84, borderRadius: 28, marginBottom: 26,
+            width: 84, height: 84, borderRadius: 24, marginBottom: 24,
             background: g.grad, color: g.onFill,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: `${g.glow}, ${lit(0.24)}`,
@@ -25,11 +25,11 @@ export function PlanReadyStep({ onNext }) {
         <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
           style={{ ...meta(10, { color: g.ink }), marginBottom: 12 }}>Plan generated</motion.span>
         <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...GLIDE, delay: 0.2 }}
-          style={display(27, { color: C.t1, margin: '0 0 12px' })}>
+          style={display(27, { color: C.t1, margin: '0px 0px 12px' })}>
           Congratulations.<br />Your plan is ready.
         </motion.h1>
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
-          style={body(14, { maxWidth: 330, lineHeight: 1.7 })}>
+          style={body(14, { maxWidth: 330, lineHeight: 1.55 })}>
           We've built a personalized path from everything you told us — your goals, your timeline, and where you're starting from.
         </motion.p>
       </div>

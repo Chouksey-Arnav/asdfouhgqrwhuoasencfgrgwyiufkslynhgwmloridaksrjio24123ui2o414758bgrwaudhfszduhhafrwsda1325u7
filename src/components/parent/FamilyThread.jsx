@@ -21,7 +21,7 @@ import toast from 'react-hot-toast';
 import {
   Loader2, Send, MessageSquare, ClipboardList, HelpCircle, Check, X, CornerDownRight, Clock,
 } from 'lucide-react';
-import { C, glass2, btn, btnG, inp, CC, R, pill, tint, onTint } from '../../lib/theme';
+import { C, glass2, btn, btnG, inp, CC, R, pill, tint, onTint, CONTROL_TRANSITION } from '../../lib/theme';
 import * as ParentAPI from '../../lib/parentApi';
 
 const KINDS = {
@@ -80,7 +80,7 @@ function Message({ message, onAnswer, busy }) {
 
   return (
     <div style={glass2({
-      ...CC({ gap: 10 }),
+      ...CC({ gap: 8 }),
       // The viewer's own messages sit in a plainer box. Not a chat bubble alignment — a thread
       // this short reads better as a list — but enough that "what I said" and "what they said"
       // are distinguishable at a glance.
@@ -89,7 +89,7 @@ function Message({ message, onAnswer, busy }) {
     })}>
       <div style={R({ gap: 8, flexWrap: 'wrap' })}>
         <Icon size={13} color={hue} />
-        <span style={{ fontSize: 11, fontWeight: 700, color: hue, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: hue, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
           {meta.label}
         </span>
         {message.topic && (
@@ -102,14 +102,14 @@ function Message({ message, onAnswer, busy }) {
         </span>
       </div>
 
-      <div style={{ fontSize: 13.5, color: C.t1, lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+      <div style={{ fontSize: 13.5, color: C.t1, lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
         {message.body}
       </div>
 
       {message.reply && (
-        <div style={R({ gap: 8, alignItems: 'flex-start', paddingTop: 2 })}>
-          <CornerDownRight size={13} color={C.t3} style={{ flexShrink: 0, marginTop: 3 }} />
-          <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+        <div style={R({ gap: 8, alignItems: 'flex-start', paddingTop: 4 })}>
+          <CornerDownRight size={13} color={C.t3} style={{ flexShrink: 0, marginTop: 4 }} />
+          <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
             {message.reply}
           </div>
         </div>
@@ -222,12 +222,12 @@ export default function FamilyThread({ linkId, role, counterparty, onUnreadChang
   );
 
   if (messages === null) {
-    return <div style={{ padding: 18 }}><BrandLoader size={112} progress={false} /></div>;
+    return <div style={{ padding: 16 }}><BrandLoader size={112} progress={false} /></div>;
   }
 
   if (!available) {
     return (
-      <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.6 }}>
+      <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.55 }}>
         Messages are not switched on for this deployment yet.
       </div>
     );
@@ -258,8 +258,8 @@ export default function FamilyThread({ linkId, role, counterparty, onUnreadChang
           Above the thread rather than under it, because the thread is short, capped, and read
           newest-first — putting the box at the bottom of a reverse-chronological list is the
           arrangement that makes people scroll to find it. */}
-      <form onSubmit={send} style={glass2({ ...CC({ gap: 10 }) })}>
-        <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+      <form onSubmit={send} style={glass2({ ...CC({ gap: 8 }) })}>
+        <div style={R({ gap: 4, flexWrap: 'wrap' })}>
           {Object.entries(KINDS)
             // A quiz request is a parent's move. The server refuses it from a student, so the
             // control does not exist for one — an offered button that 400s is worse than none.
@@ -273,12 +273,12 @@ export default function FamilyThread({ linkId, role, counterparty, onUnreadChang
                   key={id} type="button" onClick={() => setKind(id)}
                   aria-pressed={on}
                   style={{
-                    ...R({ gap: 6 }), padding: '6px 12px', borderRadius: 8, cursor: 'pointer',
+                    ...R({ gap: 4 }), padding: '4px 12px', borderRadius: 8, cursor: 'pointer',
                     fontSize: 12, fontWeight: on ? 700 : 500, fontFamily: C.FB,
                     color: on ? onTint(hue) : C.t3,
                     background: on ? tint(hue, 0.13) : 'transparent',
                     border: `1px solid ${on ? tint(hue, 0.32) : C.b1}`,
-                    transition: 'all .15s',
+                    transition: CONTROL_TRANSITION,
                   }}
                 >
                   <Icon size={12} /> {meta.label}
@@ -308,10 +308,10 @@ export default function FamilyThread({ linkId, role, counterparty, onUnreadChang
               : kind === 'question' ? `Something you want to ask ${them}…`
                 : `Something you want to say to ${them}…`
           }
-          style={inp({ resize: 'vertical', lineHeight: 1.6, fontFamily: C.FB })}
+          style={inp({ resize: 'vertical', lineHeight: 1.55, fontFamily: C.FB })}
         />
 
-        <div style={R({ gap: 10, flexWrap: 'wrap' })}>
+        <div style={R({ gap: 8, flexWrap: 'wrap' })}>
           <button type="submit" disabled={busy || !text.trim()} style={btn(C.blueGrad, { fontSize: 12.5, opacity: busy || !text.trim() ? 0.6 : 1 })}>
             {busy ? <Loader2 className="spin" size={12} /> : <Send size={12} />} {KINDS[kind].verb}
           </button>
@@ -320,13 +320,13 @@ export default function FamilyThread({ linkId, role, counterparty, onUnreadChang
       </form>
 
       {messages.length === 0 ? (
-        <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.55 }}>
           {role === 'parent'
             ? `Nothing sent yet. A single line lands better than a conversation about it at dinner.`
             : `${them} hasn't sent you anything.`}
         </div>
       ) : (
-        <div style={CC({ gap: 10 })}>
+        <div style={CC({ gap: 8 })}>
           {messages.map((m) => (
             <Message key={m.id} message={m} onAnswer={answer} busy={busy} />
           ))}

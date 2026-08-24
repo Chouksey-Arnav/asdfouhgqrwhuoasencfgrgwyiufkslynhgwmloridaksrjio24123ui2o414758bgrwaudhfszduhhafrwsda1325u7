@@ -46,7 +46,7 @@ function GradeTiles({ value, onChange, g }) {
               aria-pressed={sel}
               onClick={() => { play('select'); onChange(i); }}
               style={{
-                textAlign: 'center', padding: '10px 8px 12px', borderRadius: R.md, cursor: 'pointer',
+                textAlign: 'center', padding: '8px 8px 12px', borderRadius: R.md, cursor: 'pointer',
                 fontFamily: C.FB,
                 background: sel ? `linear-gradient(160deg, ${g.soft}, ${g.softer})` : C.surf,
                 border: `1px solid ${sel ? g.edge : C.b1}`,
@@ -63,7 +63,7 @@ function GradeTiles({ value, onChange, g }) {
                 transition: 'background .18s, color .18s',
               }}>{YEAR_STAMP[i] || '—'}</span>
               <span style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: C.t1, lineHeight: 1.25 }}>{stage.label}</span>
-              <span style={{ display: 'block', fontSize: 11, color: C.t3, marginTop: 2, lineHeight: 1.3 }}>{stage.sub}</span>
+              <span style={{ display: 'block', fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.3 }}>{stage.sub}</span>
             </motion.button>
           );
         })}

@@ -102,7 +102,7 @@ export default function QuestPicker({
           <div style={{ padding: m ? '16px 16px 12px' : '20px 22px 14px', borderBottom: `1px solid ${C.b1}` }}>
             <div style={R({ justifyContent: 'space-between', gap: 12 })}>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 18, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em' }}>
+                <div style={{ fontSize: 18, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))' }}>
                   {audience === 'parent' ? `Set a quest${studentName ? ` for ${studentName}` : ''}` : 'Take on a quest'}
                 </div>
                 <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>
@@ -111,11 +111,11 @@ export default function QuestPicker({
                     : 'Weeks of work for a reward nothing else in the app pays. Pick one you will actually finish.'}
                 </div>
               </div>
-              <button onClick={onClose} aria-label="Close" style={btnG({ padding: 7, borderRadius: 9 })}><X size={15} /></button>
+              <button onClick={onClose} aria-label="Close" style={btnG({ padding: 8, borderRadius: 8 })}><X size={15} /></button>
             </div>
 
             {/* Filters */}
-            <div style={{ ...R({ gap: 7, flexWrap: 'wrap' }), marginTop: 13 }}>
+            <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 12 }}>
               {[{ id: ALL, label: 'All', color: C.t2 }, ...CATEGORIES].map((c) => (
                 <button
                   key={c.id} onClick={() => setCat(c.id)}
@@ -125,7 +125,7 @@ export default function QuestPicker({
                 >{c.label}</button>
               ))}
             </div>
-            <div style={{ ...R({ gap: 8 }), marginTop: 10, ...glass2({ padding: '7px 11px' }) }}>
+            <div style={{ ...R({ gap: 8 }), marginTop: 8, ...glass2({ padding: '8px 12px' }) }}>
               <Search size={13} color={C.t3} />
               <input
                 value={q} onChange={(e) => setQ(e.target.value)}
@@ -134,14 +134,14 @@ export default function QuestPicker({
               />
             </div>
             {error && (
-              <div style={{ ...R({ gap: 7 }), marginTop: 10, padding: '8px 11px', borderRadius: 9, background: tint(C.rose, 0.1), border: `1px solid ${tint(C.rose, 0.26)}`, fontSize: 11.5, color: C.roseL }}>
+              <div style={{ ...R({ gap: 8 }), marginTop: 8, padding: '8px 12px', borderRadius: 8, background: tint(C.rose, 0.1), border: `1px solid ${tint(C.rose, 0.26)}`, fontSize: 11.5, color: C.roseL }}>
                 <Info size={12} style={{ flexShrink: 0 }} />{error}
               </div>
             )}
           </div>
 
           {/* List */}
-          <div style={{ overflowY: 'auto', padding: m ? 14 : 18, ...CC({ gap: 10 }) }}>
+          <div style={{ overflowY: 'auto', padding: m ? 14 : 18, ...CC({ gap: 8 }) }}>
             {rows.length === 0 && (
               <div style={{ fontSize: 12.5, color: C.t3, textAlign: 'center', padding: 24 }}>Nothing matches that.</div>
             )}
@@ -160,7 +160,7 @@ export default function QuestPicker({
                 <div
                   key={quest.id}
                   style={{
-                    ...glass2({ padding: 14 }),
+                    ...glass2({ padding: 12 }),
                     border: `1px solid ${reason ? tint(color, 0.34) : C.b1}`,
                     background: reason ? `linear-gradient(135deg, ${tint(color, 0.08)}, transparent 70%)` : C.surf2,
                     opacity: running || done ? 0.55 : 1,
@@ -168,19 +168,19 @@ export default function QuestPicker({
                 >
                   <div style={R({ gap: 12, alignItems: 'flex-start' })}>
                     <div style={{
-                      width: 36, height: 36, borderRadius: 11, flexShrink: 0,
+                      width: 36, height: 36, borderRadius: 12, flexShrink: 0,
                       background: tint(color, 0.15), border: `1px solid ${tint(color, 0.3)}`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}><Icon size={17} color={color} /></div>
 
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+                      <div style={R({ gap: 8, flexWrap: 'wrap' })}>
                         <span style={{ fontSize: 13.5, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{quest.title}</span>
-                        <span style={pill(tint(tier.color, 0.15), tier.color, { fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.06em' })}>{tier.label}</span>
+                        <span style={pill(tint(tier.color, 0.15), tier.color, { fontSize: 9, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' })}>{tier.label}</span>
                         <span style={pill(tint(C.amber, 0.14), C.amberL, { fontSize: 9.5, fontFamily: C.FM, fontWeight: 800 })}>+{questXP(quest)} XP</span>
-                        {reason && <span style={pill(tint(C.violet, 0.15), C.violetL, { fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.06em' })}>Suggested</span>}
+                        {reason && <span style={pill(tint(C.violet, 0.15), C.violetL, { fontSize: 9, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' })}>Suggested</span>}
                         {chain && (
-                          <span style={{ ...pill(tint(chain.color, 0.13), chain.color, { fontSize: 9, fontWeight: 700 }), display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                          <span style={{ ...pill(tint(chain.color, 0.13), chain.color, { fontSize: 9, fontWeight: 700 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                             <Route size={9} />{chain.label} {chain.step}/{chain.of}
                           </span>
                         )}
@@ -189,10 +189,10 @@ export default function QuestPicker({
 
                       {/* The honest cost, before anything else persuasive. */}
                       <div style={{ ...R({ gap: 12, flexWrap: 'wrap' }), marginTop: 8 }}>
-                        <span style={{ ...R({ gap: 5 }), fontSize: 10.5, color: C.t3 }}>
+                        <span style={{ ...R({ gap: 4 }), fontSize: 10.5, color: C.t3 }}>
                           <CalendarDays size={11} color={C.t3} />at least {minDays} days of work
                         </span>
-                        <span style={{ ...R({ gap: 5 }), fontSize: 10.5, color: C.t3 }}>
+                        <span style={{ ...R({ gap: 4 }), fontSize: 10.5, color: C.t3 }}>
                           <Clock size={11} color={C.t3} />{quest.windowDays}-day window
                         </span>
                         <span style={{ fontSize: 10.5, color: C.t3 }}>≈ {weeklyCost(quest)}</span>
@@ -201,12 +201,12 @@ export default function QuestPicker({
                         Day to day, that is <b style={{ color: C.t2 }}>{dailyCost(quest)}</b>.
                       </div>
 
-                      <div style={{ fontSize: 10.5, color: C.t3, marginTop: 7, lineHeight: 1.55 }}>
+                      <div style={{ fontSize: 10.5, color: C.t3, marginTop: 8, lineHeight: 1.55 }}>
                         {audience === 'parent' ? quest.why : quest.proof}
                       </div>
 
                       {reason && (
-                        <div style={{ ...R({ gap: 7, alignItems: 'flex-start' }), marginTop: 8, padding: '7px 10px', borderRadius: 8, background: tint(C.violet, 0.09), border: `1px solid ${tint(C.violet, 0.2)}` }}>
+                        <div style={{ ...R({ gap: 8, alignItems: 'flex-start' }), marginTop: 8, padding: '8px 8px', borderRadius: 8, background: tint(C.violet, 0.09), border: `1px solid ${tint(C.violet, 0.2)}` }}>
                           <span style={{ fontSize: 10.5, color: C.t2, lineHeight: 1.5 }}>{reason}</span>
                         </div>
                       )}
@@ -218,7 +218,7 @@ export default function QuestPicker({
                           placeholder="Say why, in a line. They will see this on the quest."
                           rows={2}
                           style={{
-                            width: '100%', marginTop: 9, padding: '8px 10px', borderRadius: 8, resize: 'vertical',
+                            width: '100%', marginTop: 8, padding: '8px 8px', borderRadius: 8, resize: 'vertical',
                             background: C.s3, border: `1px solid ${C.b1}`, color: C.t1, fontSize: 12, fontFamily: C.FB, outline: 'none',
                           }}
                         />
@@ -231,11 +231,11 @@ export default function QuestPicker({
                       ) : done ? (
                         <span style={{ ...pill(tint(C.gold, 0.13), C.goldL, { fontSize: 10, fontWeight: 700 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}><Sparkles size={10} />Finished</span>
                       ) : audience === 'parent' && noteFor !== quest.id ? (
-                        <button onClick={() => { setNoteFor(quest.id); setNote(''); }} style={btnG({ fontSize: 11.5, padding: '7px 14px' })}>Choose</button>
+                        <button onClick={() => { setNoteFor(quest.id); setNote(''); }} style={btnG({ fontSize: 11.5, padding: '8px 12px' })}>Choose</button>
                       ) : (
                         <button
                           onClick={() => submit(quest)} disabled={busy}
-                          style={{ ...btn(`linear-gradient(135deg, ${color}, ${tint(color, 0.7)})`, { fontSize: 11.5, padding: '7px 14px', color: onTint(color) }), opacity: busy ? 0.6 : 1 }}
+                          style={{ ...btn(`linear-gradient(135deg, ${color}, ${tint(color, 0.7)})`, { fontSize: 11.5, padding: '8px 12px', color: onTint(color) }), opacity: busy ? 0.6 : 1 }}
                         >{busy ? <Loader2 size={12} className="spin" /> : null}{audience === 'parent' ? 'Assign' : 'Take it on'}</button>
                       )}
                     </div>

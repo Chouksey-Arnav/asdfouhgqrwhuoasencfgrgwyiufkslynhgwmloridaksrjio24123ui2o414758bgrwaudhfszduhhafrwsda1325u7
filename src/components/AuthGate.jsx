@@ -414,10 +414,10 @@ export default function AuthGate({ children }) {
   // person reading is signed out.
   const overSessionNotice = parentDoorOverSession ? (
     <div style={{
-      marginBottom: 18, padding: '12px 14px', borderRadius: 10,
+      marginBottom: 16, padding: '12px 12px', borderRadius: 8,
       background: tint(C.amber, 0.08), border: `1px solid ${tint(C.amber, 0.3)}`,
     }}>
-      <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6 }}>
+      <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>
         This browser is signed in as <strong style={{ color: C.t1 }}>{user?.email}</strong>, a student
         account. Continuing here signs that account out of this browser — nowhere else — and signs
         the parent in instead.

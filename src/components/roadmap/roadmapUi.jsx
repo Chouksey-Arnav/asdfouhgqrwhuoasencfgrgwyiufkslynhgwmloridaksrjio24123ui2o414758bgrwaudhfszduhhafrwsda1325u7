@@ -126,7 +126,7 @@ export function ItemDate({ item, size = 12, showIcon = true, onFindDate = null, 
   const body = (
     <span
       title={compact && !exact ? full : undefined}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: size, color, fontFamily: C.FM, whiteSpace: compact ? 'nowrap' : undefined }}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: size, color, fontFamily: C.FM, whiteSpace: compact ? 'nowrap' : undefined }}
     >
       {showIcon && <Icon size={size} color={color} />}
       {caption}
@@ -154,7 +154,7 @@ export function Chip({ children, color = C.t3, icon: Icon, title, size = 10.5 })
   return (
     <span title={title} style={{
       ...pill(tint(color, 0.12), color, {
-        fontSize: size, fontWeight: 700, padding: '3px 9px', gap: 4,
+        fontSize: size, fontWeight: 700, padding: '4px 8px', gap: 4,
         border: `1px solid ${tint(color, 0.24)}`,
       }),
     }}>
@@ -191,9 +191,9 @@ export function ConfirmNotice({ item, compact = false }) {
     <div style={{
       display: 'flex', gap: 8, alignItems: 'flex-start',
       background: tint(C.violet, 0.07), border: `1px solid ${tint(C.violet, 0.18)}`,
-      borderRadius: 9, padding: compact ? '7px 10px' : '10px 12px', marginTop: 8,
+      borderRadius: 8, padding: compact ? '7px 10px' : '10px 12px', marginTop: 8,
     }}>
-      <CalendarSearch size={13} color={C.violet} style={{ flexShrink: 0, marginTop: 1 }} />
+      <CalendarSearch size={13} color={C.violet} style={{ flexShrink: 0, marginTop: 4 }} />
       <div style={{ fontSize: compact ? 10.5 : 11.5, color: C.t2, lineHeight: 1.55 }}>
         {isLocal
           ? 'This one runs on a local schedule we cannot know — your chapter, your school, your hospital. Look up the real date and pin it here, and the roadmap will re-plan everything around it.'
@@ -253,17 +253,17 @@ export function DegradedNotice({ generation, onRetry, busy = false, fullRebuild 
   return (
     <div style={{
       background: tint(C.amber, 0.1), border: `1px solid ${tint(C.amber, 0.28)}`,
-      borderRadius: 12, padding: '13px 16px',
+      borderRadius: 12, padding: '12px 16px',
     }}>
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        <AlertTriangle size={16} color={C.amber} style={{ flexShrink: 0, marginTop: 2 }} />
-        <div style={{ flex: 1, minWidth: 220, fontSize: 12, color: C.t2, lineHeight: 1.65 }}>
+        <AlertTriangle size={16} color={C.amber} style={{ flexShrink: 0, marginTop: 4 }} />
+        <div style={{ flex: 1, minWidth: 220, fontSize: 12, color: C.t2, lineHeight: 1.55 }}>
           <b style={{ color: C.t1 }}>{title}</b>{' '}{detail}
         </div>
         {onRetry && canRetry && (
           <button onClick={onRetry} disabled={busy} style={{
             background: tint(C.amber, 0.18), border: `1px solid ${tint(C.amber, 0.4)}`,
-            color: C.amberL || C.amber, borderRadius: 8, padding: '8px 14px',
+            color: C.amberL || C.amber, borderRadius: 8, padding: '8px 12px',
             fontSize: 12, fontWeight: 700, fontFamily: C.FB, cursor: busy ? 'wait' : 'pointer',
             flexShrink: 0, whiteSpace: 'nowrap',
           }}>
@@ -281,8 +281,8 @@ export function DegradedNotice({ generation, onRetry, busy = false, fullRebuild 
       {/* What the last press of that button actually did. */}
       {lastAttempt && !busy && (
         <div style={{
-          marginTop: 10, paddingTop: 10, borderTop: `1px solid ${tint(C.amber, 0.22)}`,
-          fontSize: 11, color: C.t3, lineHeight: 1.6,
+          marginTop: 8, paddingTop: 8, borderTop: `1px solid ${tint(C.amber, 0.22)}`,
+          fontSize: 11, color: C.t3, lineHeight: 1.55,
         }}>
           {lastAttempt.outcome === 'partial'
             ? 'We just tried again and recovered part of it — the rest still would not come back. Everything you had ticked off has been kept.'

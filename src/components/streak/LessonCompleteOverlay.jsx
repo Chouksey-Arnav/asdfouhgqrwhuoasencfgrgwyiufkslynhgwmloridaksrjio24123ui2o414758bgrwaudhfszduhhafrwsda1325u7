@@ -28,7 +28,7 @@ import {
   X, Zap, Flame, Trophy, ArrowRight, Snowflake, Check, ShieldCheck,
   Sparkles, Target, CalendarCheck, ChevronRight,
 } from 'lucide-react';
-import { C, glass2, btn, btnG, pill, R, tint, onTint } from '../../lib/theme';
+import { C, glass2, btn, btnG, pill, R, tint, onTint, CONTROL_TRANSITION } from '../../lib/theme';
 import { play } from '../../lib/sounds';
 import { celebrateXP, celebrateStreak, celebrateBonusXP, celebrateJackpot } from '../../lib/celebrate';
 import { getLevelInfo } from '../../lib/gamification';
@@ -127,19 +127,19 @@ export default function LessonCompleteOverlay({
       >
         {/* Header rail — page dots + skip. Deliberately quiet: the student
             should feel free to leave, and should always know how far in they are. */}
-        <div style={{ ...R({ justifyContent: 'space-between', padding: '16px 18px' }), flexShrink: 0 }}>
-          <div style={R({ gap: 6 })}>
+        <div style={{ ...R({ justifyContent: 'space-between', padding: '16px 16px' }), flexShrink: 0 }}>
+          <div style={R({ gap: 4 })}>
             {[0, 1].map(i => (
               <div key={i} style={{
                 width: i === page ? 22 : 7, height: 7, borderRadius: 4,
                 background: i === page ? (page === 0 ? accent : streakAccent) : C.b2,
-                transition: 'all .25s',
+                transition: CONTROL_TRANSITION,
               }} />
             ))}
           </div>
           <button
             onClick={onClose} aria-label="Close"
-            style={{ ...btnG({ padding: '6px 12px', fontSize: 11.5, gap: 5 }), border: `1px solid ${C.b1}` }}
+            style={{ ...btnG({ padding: '4px 12px', fontSize: 11.5, gap: 4 }), border: `1px solid ${C.b1}` }}
           >
             {page === 0 ? 'Skip' : 'Done'}<X size={13} />
           </button>
@@ -147,7 +147,7 @@ export default function LessonCompleteOverlay({
 
         <div style={{
           flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '0 18px 32px', minHeight: 0,
+          padding: '0px 16px 32px', minHeight: 0,
         }}>
           <AnimatePresence mode="wait">
             {page === 0 ? (
@@ -233,13 +233,13 @@ function XpPage({ lessonTitle, unitTitle, pathwayLabel, quizScore, xpAwarded, xp
         <ShieldCheck size={34} color={accent} />
       </motion.div>
 
-      <div style={{ fontSize: 11, fontWeight: 700, color: accent, letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 10 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: accent, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8 }}>
         Lesson complete
       </div>
-      <h2 style={{ fontSize: 26, fontWeight: 800, color: C.t1, margin: '0 0 8px', fontFamily: C.FD, letterSpacing: '-.02em', lineHeight: 1.2 }}>
+      <h2 style={{ fontSize: 26, fontWeight: 800, color: C.t1, margin: '0px 0px 8px', fontFamily: C.FD, letterSpacing: 'calc(-0.53px + var(--msp-letter-spacing))', lineHeight: 1.2 }}>
         {lessonTitle}
       </h2>
-      <div style={R({ gap: 6, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 26 })}>
+      <div style={R({ gap: 4, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 24 })}>
         {pathwayLabel && <span style={pill(tint(accent, 0.14), accent, { fontSize: 11 })}>{pathwayLabel}</span>}
         {unitTitle && <span style={pill(C.s3, C.t2, { fontSize: 11 })}>{unitTitle}</span>}
         {quizScore != null && (
@@ -250,27 +250,27 @@ function XpPage({ lessonTitle, unitTitle, pathwayLabel, quizScore, xpAwarded, xp
       </div>
 
       {/* The number */}
-      <div style={R({ justifyContent: 'center', gap: 10, marginBottom: 6 })}>
+      <div style={R({ justifyContent: 'center', gap: 8, marginBottom: 4 })}>
         <Zap size={30} color={C.amberL} fill={C.amber} />
-        <span style={{ fontSize: 56, fontWeight: 900, color: C.t1, fontFamily: C.FD, letterSpacing: '-.04em', lineHeight: 1 }}>
+        <span style={{ fontSize: 56, fontWeight: 900, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-1.8px + var(--msp-letter-spacing))', lineHeight: 1 }}>
           +{shownXp}
         </span>
-        <span style={{ fontSize: 20, fontWeight: 800, color: C.t3, fontFamily: C.FD, alignSelf: 'flex-end', paddingBottom: 4 }}>XP</span>
+        <span style={{ fontSize: 20, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t3, fontFamily: C.FD, alignSelf: 'flex-end', paddingBottom: 4 }}>XP</span>
       </div>
       {tierCopy && (
         <motion.div
           initial={reducedMotion ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-          style={{ ...R({ gap: 5, justifyContent: 'center' }), marginBottom: 4 }}
+          style={{ ...R({ gap: 4, justifyContent: 'center' }), marginBottom: 4 }}
         >
           <tierCopy.icon size={13} color={tierCopy.color} />
-          <span style={{ fontSize: 12, fontWeight: 800, color: tierCopy.color, letterSpacing: '.08em' }}>{tierCopy.label}</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: tierCopy.color, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>{tierCopy.label}</span>
         </motion.div>
       )}
 
       {/* The bar — the actual payoff */}
-      <div style={{ marginTop: 26, marginBottom: 8 }}>
+      <div style={{ marginTop: 24, marginBottom: 8 }}>
         <div style={R({ justifyContent: 'space-between', marginBottom: 8 })}>
-          <span style={R({ gap: 7 })}>
+          <span style={R({ gap: 8 })}>
             <span style={{
               width: 24, height: 24, borderRadius: 8, background: tint(after.tierColor, 0.18),
               border: `1px solid ${tint(after.tierColor, 0.4)}`, display: 'flex', alignItems: 'center',
@@ -285,7 +285,7 @@ function XpPage({ lessonTitle, unitTitle, pathwayLabel, quizScore, xpAwarded, xp
           </span>
         </div>
         <div style={{
-          height: 16, borderRadius: 10, background: C.s2, overflow: 'hidden',
+          height: 16, borderRadius: 8, background: C.s2, overflow: 'hidden',
           border: `1px solid ${C.b1}`, position: 'relative',
         }}>
           <motion.div
@@ -296,7 +296,7 @@ function XpPage({ lessonTitle, unitTitle, pathwayLabel, quizScore, xpAwarded, xp
             animate={{ width: `${barPct}%` }}
             transition={{ duration: reducedMotion ? 0 : FILL_MS / 1000, ease: [0.22, 1, 0.36, 1] }}
             style={{
-              height: '100%', borderRadius: 10,
+              height: '100%', borderRadius: 8,
               background: `linear-gradient(90deg, ${accent}, ${C.amber})`,
               boxShadow: `0 0 18px ${accent}70`,
             }}
@@ -321,7 +321,7 @@ function XpPage({ lessonTitle, unitTitle, pathwayLabel, quizScore, xpAwarded, xp
         </div>
       </div>
 
-      <button onClick={onNext} style={{ ...btn(`linear-gradient(135deg,${accent},${C.violet})`, { marginTop: 28, padding: '13px 30px', fontSize: 14 }), gap: 8 }}>
+      <button onClick={onNext} style={{ ...btn(`linear-gradient(135deg,${accent},${C.violet})`, { marginTop: 28, padding: '12px 28px', fontSize: 14 }), gap: 8 }}>
         See your streak<ArrowRight size={16} />
       </button>
     </motion.div>
@@ -351,7 +351,7 @@ function StreakPage({
       style={{ width: '100%', maxWidth: 560 }}
     >
       {/* Flame */}
-      <div style={{ textAlign: 'center', marginBottom: 22 }}>
+      <div style={{ textAlign: 'center', marginBottom: 20 }}>
         <motion.div
           initial={reducedMotion ? false : { scale: 0.6, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -366,10 +366,10 @@ function StreakPage({
         >
           <Flame size={44} color={accent} fill={extended ? accent : 'none'} />
         </motion.div>
-        <div style={{ fontSize: 52, fontWeight: 900, color: C.t1, fontFamily: C.FD, lineHeight: 1, letterSpacing: '-.04em' }}>
+        <div style={{ fontSize: 52, fontWeight: 900, color: C.t1, fontFamily: C.FD, lineHeight: 1, letterSpacing: 'calc(-1.6px + var(--msp-letter-spacing))' }}>
           {shownStreak}
         </div>
-        <div style={{ fontSize: 12.5, fontWeight: 700, color: accent, letterSpacing: '.14em', textTransform: 'uppercase', marginTop: 8 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: accent, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginTop: 8 }}>
           {extended ? 'Day streak — extended today' : 'Day streak'}
         </div>
       </div>
@@ -377,7 +377,7 @@ function StreakPage({
       {/* The one encouraging sentence. Deterministic, so the screen never
           contradicts itself between renders. */}
       <div style={{
-        ...glass2({ padding: 14, textAlign: 'center', marginBottom: 14 }),
+        ...glass2({ padding: 12, textAlign: 'center', marginBottom: 12 }),
         background: tint(accent, 0.09), border: `1px solid ${tint(accent, 0.28)}`,
       }}>
         <div style={{ fontSize: 13.5, color: C.t1, fontWeight: 600, lineHeight: 1.5 }}>{line}</div>
@@ -387,9 +387,9 @@ function StreakPage({
           lesson did not (on a Serious/Intense goal) clear the day. Telling them
           it did would be a lie the calendar would immediately contradict. */}
       {dailyGoal && !dailyGoal.met && (
-        <div style={glass2({ padding: 13, marginBottom: 14 })}>
+        <div style={glass2({ padding: 12, marginBottom: 12 })}>
           <div style={R({ justifyContent: 'space-between', marginBottom: 8 })}>
-            <span style={R({ gap: 6 })}><Target size={13} color={C.t2} /><span style={{ fontSize: 12, fontWeight: 700, color: C.t2 }}>Today's goal</span></span>
+            <span style={R({ gap: 4 })}><Target size={13} color={C.t2} /><span style={{ fontSize: 12, fontWeight: 700, color: C.t2 }}>Today's goal</span></span>
             <span style={{ fontSize: 11.5, color: C.t3, fontFamily: C.FM }}>{dailyGoal.credits}/{dailyGoal.goalCredits}</span>
           </div>
           <MiniBar pct={dailyGoal.pct} color={accent} />
@@ -398,9 +398,9 @@ function StreakPage({
 
       {/* Week strip — Monday to Sunday, with the Perfect Week reward attached */}
       {week && (
-        <div style={glass2({ padding: 14, marginBottom: 14 })}>
-          <div style={R({ justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 6 })}>
-            <span style={R({ gap: 6 })}>
+        <div style={glass2({ padding: 12, marginBottom: 12 })}>
+          <div style={R({ justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 4 })}>
+            <span style={R({ gap: 4 })}>
               <CalendarCheck size={13} color={week.complete ? C.greenL : C.t2} />
               <span style={{ fontSize: 12, fontWeight: 700, color: C.t2 }}>Perfect Week</span>
             </span>
@@ -414,7 +414,7 @@ function StreakPage({
                   : 'Next week'}
             </span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 6 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4 }}>
             {week.days.map((d, i) => (
               <motion.div
                 key={d.key}
@@ -424,7 +424,7 @@ function StreakPage({
                 style={{ textAlign: 'center' }}
               >
                 <div style={{
-                  height: 34, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  height: 34, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   background: d.met ? accent : d.frozen ? tint(C.blue, 0.2) : d.future ? 'transparent' : C.s2,
                   border: d.isToday ? `1.5px solid ${C.t1}` : `1px solid ${d.future ? C.b1 : 'transparent'}`,
                   opacity: d.future ? 0.35 : 1,
@@ -439,7 +439,7 @@ function StreakPage({
             ))}
           </div>
           {perfectWeekJustEarned && (
-            <div style={{ ...R({ gap: 6, justifyContent: 'center' }), marginTop: 12 }}>
+            <div style={{ ...R({ gap: 4, justifyContent: 'center' }), marginTop: 12 }}>
               <Trophy size={13} color={C.greenL} />
               <span style={{ fontSize: 12, fontWeight: 700, color: C.greenL }}>
                 Perfect Week claimed — +{PERFECT_WEEK_REWARD.xp} XP and a streak freeze.
@@ -451,9 +451,9 @@ function StreakPage({
 
       {/* The student's own streak goal */}
       {targetInfo && (
-        <div style={glass2({ padding: 14, marginBottom: 14 })}>
-          <div style={R({ justifyContent: 'space-between', marginBottom: 9, flexWrap: 'wrap', gap: 6 })}>
-            <span style={R({ gap: 6 })}>
+        <div style={glass2({ padding: 12, marginBottom: 12 })}>
+          <div style={R({ justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 4 })}>
+            <span style={R({ gap: 4 })}>
               <Target size={13} color={C.t2} />
               <span style={{ fontSize: 12, fontWeight: 700, color: C.t2 }}>
                 Your goal · {targetInfo.target} days
@@ -477,13 +477,13 @@ function StreakPage({
         <button
           onClick={onOpenStreak}
           style={{
-            ...glass2({ padding: 13, marginBottom: 18 }), width: '100%', textAlign: 'left',
+            ...glass2({ padding: 12, marginBottom: 16 }), width: '100%', textAlign: 'left',
             display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
             border: `1px dashed ${tint(accent, 0.35)}`, background: 'transparent',
           }}
         >
           <div style={{
-            width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+            width: 34, height: 34, borderRadius: 8, flexShrink: 0,
             background: tint(accent, 0.14), border: `1px solid ${tint(accent, 0.3)}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}><Trophy size={16} color={accent} /></div>
@@ -491,7 +491,7 @@ function StreakPage({
             <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>
               {nextReward.days - streak} more day{nextReward.days - streak === 1 ? '' : 's'} → {nextReward.title}
             </div>
-            <div style={{ fontSize: 11, color: C.t3, marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>
               +{nextReward.xp} XP{nextReward.freezes ? ` · ${nextReward.freezes} streak freeze${nextReward.freezes > 1 ? 's' : ''}` : ''}
             </div>
           </div>
@@ -500,7 +500,7 @@ function StreakPage({
       )}
 
       {freezesHeld > 0 && (
-        <div style={{ ...R({ gap: 6, justifyContent: 'center' }), marginBottom: 16 }}>
+        <div style={{ ...R({ gap: 4, justifyContent: 'center' }), marginBottom: 16 }}>
           <Snowflake size={12} color={C.blueL} />
           <span style={{ fontSize: 11.5, color: C.t3 }}>
             {freezesHeld} streak freeze{freezesHeld > 1 ? 's' : ''} held — one missed day won't end this.
@@ -511,18 +511,18 @@ function StreakPage({
       {/* Forward, not away. The primary button is the next lesson whenever there
           is one: the best moment to start the next thing is the moment you
           finished the last one. */}
-      <div style={R({ gap: 10, justifyContent: 'center', flexWrap: 'wrap' })}>
+      <div style={R({ gap: 8, justifyContent: 'center', flexWrap: 'wrap' })}>
         {nextLessonTitle && onNextLesson && (
-          <button onClick={onNextLesson} style={{ ...btn(`linear-gradient(135deg,${accent},${C.orange})`, { padding: '13px 26px', fontSize: 13.5 }), gap: 8 }}>
+          <button onClick={onNextLesson} style={{ ...btn(`linear-gradient(135deg,${accent},${C.orange})`, { padding: '12px 24px', fontSize: 13.5 }), gap: 8 }}>
             Next lesson<ArrowRight size={15} />
           </button>
         )}
-        <button onClick={onClose} style={btnG({ padding: '13px 24px', fontSize: 13.5 })}>
+        <button onClick={onClose} style={btnG({ padding: '12px 24px', fontSize: 13.5 })}>
           {nextLessonTitle ? 'Not now' : 'Done'}
         </button>
       </div>
       {nextLessonTitle && (
-        <div style={{ textAlign: 'center', fontSize: 11, color: C.t4, marginTop: 10 }}>
+        <div style={{ textAlign: 'center', fontSize: 11, color: C.t4, marginTop: 8 }}>
           Up next: {nextLessonTitle}
         </div>
       )}
@@ -532,12 +532,12 @@ function StreakPage({
 
 function MiniBar({ pct, color, animate = true }) {
   return (
-    <div style={{ height: 8, borderRadius: 6, background: C.s2, overflow: 'hidden', border: `1px solid ${C.b0}` }}>
+    <div style={{ height: 8, borderRadius: 4, background: C.s2, overflow: 'hidden', border: `1px solid ${C.b0}` }}>
       <motion.div
         initial={animate ? { width: 0 } : false}
         animate={{ width: `${Math.max(0, Math.min(100, pct))}%` }}
         transition={{ duration: animate ? 0.8 : 0, ease: [0.22, 1, 0.36, 1], delay: animate ? 0.15 : 0 }}
-        style={{ height: '100%', borderRadius: 6, background: color, boxShadow: `0 0 10px ${color}60` }}
+        style={{ height: '100%', borderRadius: 4, background: color, boxShadow: `0 0 10px ${color}60` }}
       />
     </div>
   );

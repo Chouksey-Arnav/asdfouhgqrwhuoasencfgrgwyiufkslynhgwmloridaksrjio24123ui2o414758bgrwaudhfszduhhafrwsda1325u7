@@ -62,24 +62,24 @@ export default function FreezeCard({
       border: `1px solid ${protectedNow ? tint(C.blue, 0.3) : C.b1}`,
       background: protectedNow ? `linear-gradient(150deg, ${tint(C.blue, 0.08)}, transparent 70%)` : C.surf,
     }}>
-      <div style={R({ justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' })}>
-        <div style={R({ gap: 10 })}>
+      <div style={R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' })}>
+        <div style={R({ gap: 8 })}>
           <div style={{
-            width: 34, height: 34, borderRadius: 11, flexShrink: 0,
+            width: 34, height: 34, borderRadius: 12, flexShrink: 0,
             background: tint(C.blue, 0.14), border: `1px solid ${tint(C.blue, 0.3)}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}><Snowflake size={17} color={C.blueL} /></div>
           <div>
-            <div style={{ ...lbl({ marginBottom: 2 }) }}>Streak freezes</div>
+            <div style={{ ...lbl({ marginBottom: 4 }) }}>Streak freezes</div>
             <div style={{ fontSize: 11.5, color: C.t3 }}>
               Holding {held} of {league.freezeCap} · {league.label} league
             </div>
           </div>
         </div>
-        <div style={{ ...R({ gap: 5 }), flexShrink: 0 }}>
+        <div style={{ ...R({ gap: 4 }), flexShrink: 0 }}>
           {Array.from({ length: league.freezeCap }).map((_, i) => (
             <div key={i} style={{
-              width: 26, height: 30, borderRadius: 7,
+              width: 26, height: 30, borderRadius: 8,
               background: i < held ? tint(C.blue, 0.2) : C.s2,
               border: `1px solid ${i < held ? tint(C.blue, 0.4) : C.b1}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -93,7 +93,7 @@ export default function FreezeCard({
       {/* The answer to "am I covered". Stated as a sentence, because that is the
           question, and a count of tokens is not an answer to it. */}
       <div style={{
-        ...R({ gap: 9 }), marginTop: 14, padding: '10px 12px', borderRadius: 10,
+        ...R({ gap: 8 }), marginTop: 12, padding: '8px 12px', borderRadius: 8,
         background: tint(protectedNow ? C.blue : C.amber, 0.08),
         border: `1px solid ${tint(protectedNow ? C.blue : C.amber, 0.22)}`,
       }}>
@@ -108,7 +108,7 @@ export default function FreezeCard({
       </div>
 
       {/* The shop. One button, and it always explains itself. */}
-      <div style={{ ...R({ gap: 10, flexWrap: 'wrap', justifyContent: 'space-between' }), marginTop: 13 }}>
+      <div style={{ ...R({ gap: 8, flexWrap: 'wrap', justifyContent: 'space-between' }), marginTop: 12 }}>
         <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.5, flex: 1, minWidth: 170 }}>
           {offer.reason}
           {offer.ok && <span style={{ color: C.t4 }}> You have {xp.toLocaleString()} XP.</span>}
@@ -121,8 +121,8 @@ export default function FreezeCard({
           title={offer.reason}
           style={{
             ...(offer.ok
-              ? btn(`linear-gradient(135deg, ${C.blue}, ${C.sky})`, { fontSize: 12, padding: '9px 16px', color: onTint(C.blue) })
-              : btnG({ fontSize: 12, padding: '9px 16px' })),
+              ? btn(`linear-gradient(135deg, ${C.blue}, ${C.sky})`, { fontSize: 12, padding: '8px 16px', color: onTint(C.blue) })
+              : btnG({ fontSize: 12, padding: '8px 16px' })),
             opacity: offer.ok ? (busy ? 0.6 : 1) : 0.5,
             cursor: offer.ok ? 'pointer' : 'not-allowed',
             flexShrink: 0,
@@ -135,11 +135,11 @@ export default function FreezeCard({
 
       {/* The receipt. Only once something has actually happened. */}
       {spent.length > 0 && (
-        <div style={{ marginTop: 15, paddingTop: 13, borderTop: `1px solid ${C.b1}` }}>
+        <div style={{ marginTop: 16, paddingTop: 12, borderTop: `1px solid ${C.b1}` }}>
           <div style={{ ...lbl({ marginBottom: 8 }) }}>Freezes spent</div>
-          <div style={CC({ gap: 6 })}>
+          <div style={CC({ gap: 4 })}>
             {spent.slice(0, 5).map((f, i) => (
-              <div key={f.id ?? i} style={{ ...R({ gap: 9 }), fontSize: 11, color: C.t3 }}>
+              <div key={f.id ?? i} style={{ ...R({ gap: 8 }), fontSize: 11, color: C.t3 }}>
                 <Snowflake size={11} color={C.blueL} style={{ flexShrink: 0, opacity: 0.7 }} />
                 <span style={{ color: C.t2 }}>Covered {f.usedOn}</span>
                 <span style={{ color: C.t4, fontSize: 10 }}>
@@ -151,8 +151,8 @@ export default function FreezeCard({
         </div>
       )}
 
-      <div style={{ ...R({ gap: 7, alignItems: 'flex-start' }), marginTop: 13, fontSize: 10.5, color: C.t4, lineHeight: 1.5 }}>
-        <Info size={11} style={{ flexShrink: 0, marginTop: 2 }} />
+      <div style={{ ...R({ gap: 8, alignItems: 'flex-start' }), marginTop: 12, fontSize: 10.5, color: C.t4, lineHeight: 1.5 }}>
+        <Info size={11} style={{ flexShrink: 0, marginTop: 4 }} />
         <span>
           A freeze keeps the streak alive across one missed day. It never counts as an earned day:
           it cannot complete a Perfect Week or a Perfect Month, and it does not move a study-day

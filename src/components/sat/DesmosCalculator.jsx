@@ -128,8 +128,8 @@ export default function DesmosCalculator({
       borderRadius: '18px 18px 0 0', borderTop: `1px solid ${tint(accent, 0.35)}`,
     }
     : maximised
-      ? { position: 'fixed', left: 16, top: 16, width: 'calc(100vw - 32px)', height: 'calc(var(--msp-vh) - 32px)', zIndex: Z, borderRadius: 14, border: `1px solid ${tint(accent, 0.35)}` }
-      : { position: 'fixed', left: geo.x, top: geo.y, width: geo.w, height: minimised ? HEADER_H : geo.h, zIndex: Z, borderRadius: 14, border: `1px solid ${tint(accent, 0.35)}` };
+      ? { position: 'fixed', left: 16, top: 16, width: 'calc(100vw - 32px)', height: 'calc(var(--msp-vh) - 32px)', zIndex: Z, borderRadius: 12, border: `1px solid ${tint(accent, 0.35)}` }
+      : { position: 'fixed', left: geo.x, top: geo.y, width: geo.w, height: minimised ? HEADER_H : geo.h, zIndex: Z, borderRadius: 12, border: `1px solid ${tint(accent, 0.35)}` };
 
   return (
     <AnimatePresence>
@@ -154,7 +154,7 @@ export default function DesmosCalculator({
           onPointerUp={endPointer}
           onPointerCancel={endPointer}
           style={{
-            height: HEADER_H, flexShrink: 0, padding: '0 8px 0 12px',
+            height: HEADER_H, flexShrink: 0, padding: '0px 8px 0px 12px',
             display: 'flex', alignItems: 'center', gap: 8,
             background: satWash(accent, 0.09),
             borderBottom: `1px solid ${C.b1}`,
@@ -192,7 +192,7 @@ export default function DesmosCalculator({
 
           <div style={{ flex: 1 }} />
 
-          <div style={R({ gap: 2 })} onPointerDown={e => e.stopPropagation()}>
+          <div style={R({ gap: 4 })} onPointerDown={e => e.stopPropagation()}>
             <IconBtn title="Clear the graph" onClick={handleReset}><Trash2 size={13} /></IconBtn>
             {!isMobile && (
               <>
@@ -213,11 +213,11 @@ export default function DesmosCalculator({
           <div style={{ flex: 1, minHeight: 0, position: 'relative', display: 'flex', flexDirection: 'column' }}>
             {note && (
               <div style={{
-                ...R({ gap: 7, alignItems: 'flex-start' }), flexShrink: 0,
-                padding: '7px 12px', background: tint(C.amber, 0.09),
+                ...R({ gap: 8, alignItems: 'flex-start' }), flexShrink: 0,
+                padding: '8px 12px', background: tint(C.amber, 0.09),
                 borderBottom: `1px solid ${tint(C.amber, 0.2)}`,
               }}>
-                <Info size={11} color={C.amberL} style={{ marginTop: 2, flexShrink: 0 }} />
+                <Info size={11} color={C.amberL} style={{ marginTop: 4, flexShrink: 0 }} />
                 <span style={{ fontSize: 10.5, color: C.t2, lineHeight: 1.5 }}>{note}</span>
               </div>
             )}
@@ -256,7 +256,7 @@ function IconBtn({ children, title, onClick }) {
     <button
       onClick={onClick} title={title} aria-label={title}
       style={{
-        width: 26, height: 26, borderRadius: 7, border: 'none', background: 'transparent',
+        width: 26, height: 26, borderRadius: 8, border: 'none', background: 'transparent',
         color: C.t3, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
       }}
       onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = C.t1; }}

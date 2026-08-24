@@ -34,7 +34,7 @@ export function FeatureShowcaseStep({ onNext }) {
         title="The complete path into medicine."
         subtitle="Most students stitch this together from six apps and a guidance counselor. Yours lives in one plan." />
       <div style={{ flex: 1 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`, gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`, gap: 8 }}>
           {FEATURES.map((f, i) => {
             const fg = hue(f.hues);
             return (
@@ -43,13 +43,13 @@ export function FeatureShowcaseStep({ onNext }) {
                 transition={{ ...GLIDE, delay: 0.1 + i * 0.07 }}
                 style={{
                   position: 'relative', overflow: 'hidden',
-                  display: 'flex', gap: 13, alignItems: 'flex-start', padding: '14px 15px',
+                  display: 'flex', gap: 12, alignItems: 'flex-start', padding: '12px 16px',
                   borderRadius: R.md, background: C.surf, border: `1px solid ${C.b1}`, boxShadow: C.shadowSm,
                 }}>
                 {/* A hairline of the pillar's own color down the left edge —
                     enough identity to tell six things apart, not so much that
                     the page becomes a paint chart. */}
-                <span style={{ position: 'absolute', left: 0, top: 10, bottom: 10, width: 2, borderRadius: 2, background: fg.bar }} />
+                <span style={{ position: 'absolute', left: 0, top: 10, bottom: 10, width: 2, borderRadius: 4, background: fg.bar }} />
                 <span style={{
                   width: 36, height: 36, borderRadius: R.sm, flexShrink: 0, marginLeft: 4,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -59,7 +59,7 @@ export function FeatureShowcaseStep({ onNext }) {
                 </span>
                 <span style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1 }}>{f.title}</div>
-                  <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.5, marginTop: 2 }}>{f.desc}</div>
+                  <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.5, marginTop: 4 }}>{f.desc}</div>
                 </span>
               </motion.div>
             );

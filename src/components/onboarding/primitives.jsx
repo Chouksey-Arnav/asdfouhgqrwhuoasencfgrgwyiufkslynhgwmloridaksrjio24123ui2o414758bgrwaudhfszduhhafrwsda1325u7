@@ -143,8 +143,8 @@ function useRing(focused, g) {
 export function Kicker({ children, h = null, style }) {
   const g = h || flowHue();
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, ...style }}>
-      <span style={{ width: 18, height: 2, borderRadius: 2, background: g.bar, flexShrink: 0 }} />
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, ...style }}>
+      <span style={{ width: 18, height: 2, borderRadius: 4, background: g.bar, flexShrink: 0 }} />
       <span style={meta(10, { color: g.ink })}>{children}</span>
     </span>
   );
@@ -162,11 +162,11 @@ export function DataChip({ children, h = null, tone: t = 'soft', style }) {
   const solid = t === 'solid';
   return (
     <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 9px', borderRadius: R.xs,
+      display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: R.xs,
       background: solid ? g.grad : g.soft,
       border: `1px solid ${solid ? 'transparent' : g.edgeSoft}`,
       boxShadow: solid ? lit(0.18) : 'none',
-      ...meta(9.5, { color: solid ? g.onFill : g.ink, letterSpacing: '.12em' }),
+      ...meta(9.5, { color: solid ? g.onFill : g.ink, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }),
       ...style,
     }}>{children}</span>
   );
@@ -214,7 +214,7 @@ export function MeterBars({ level = 0, of = 4, h = null, tone: t = 'hue', height
     <span style={{ display: 'flex', alignItems: 'flex-end', gap: 2.5, height }} aria-hidden="true">
       {Array.from({ length: of }, (_, i) => (
         <span key={i} style={{
-          width: 3, borderRadius: 2,
+          width: 3, borderRadius: 4,
           height: `${38 + (i / (of - 1)) * 62}%`,
           background: i < level ? on : off,
           transition: 'background .18s',
@@ -241,7 +241,7 @@ export function StepHeader({ eyebrow, title, subtitle, icon, h = null, compact =
     <div style={{ marginBottom: compact ? 18 : isMobile ? 22 : 26 }}>
       {(icon || eyebrow) && (
         <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={GLIDE_FAST}
-          style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 13 }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
           {icon && (
             <span style={{
               width: 34, height: 34, borderRadius: R.sm, flexShrink: 0,
@@ -255,7 +255,7 @@ export function StepHeader({ eyebrow, title, subtitle, icon, h = null, compact =
         </motion.div>
       )}
       <motion.h1 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...GLIDE, delay: 0.04 }}
-        style={display(isMobile ? 25 : 30, { color: C.t1, margin: '0 0 10px' })}>
+        style={display(isMobile ? 25 : 30, { color: C.t1, margin: '0px 0px 8px' })}>
         {title}
       </motion.h1>
       {subtitle && (
@@ -285,7 +285,7 @@ export function ContinueButton({ children = 'Continue', onClick, disabled, varia
   }[variant];
   return (
     <div style={{
-      position: 'sticky', bottom: 0, marginTop: 'auto', paddingTop: 18,
+      position: 'sticky', bottom: 0, marginTop: 'auto', paddingTop: 16,
       paddingBottom: isMobile ? 16 : 24,
       background: `linear-gradient(to top, ${C.bg} 0%, ${C.bg} 66%, transparent 100%)`,
     }}>
@@ -300,8 +300,8 @@ export function ContinueButton({ children = 'Continue', onClick, disabled, varia
           position: 'relative', overflow: 'hidden',
           width: '100%', padding: '16px 20px', borderRadius: R.md, cursor: disabled ? 'not-allowed' : 'pointer',
           background: disabled ? C.s3 : styles.background, color: disabled ? C.t3 : styles.color, border: styles.border,
-          fontWeight: 700, fontSize: 15, fontFamily: C.FB, letterSpacing: '.005em',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+          fontWeight: 700, fontSize: 15, fontFamily: C.FB, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           boxShadow: disabled ? 'none' : styles.shadow,
           transition: 'box-shadow .2s, background .25s, color .2s',
         }}>
@@ -310,7 +310,7 @@ export function ContinueButton({ children = 'Continue', onClick, disabled, varia
           ? <IconCmp size={16} />
           : (variant === 'primary' && !disabled && <ArrowRight size={16} strokeWidth={2.4} style={{ opacity: 0.9 }} />)}
       </motion.button>
-      {hint && <p style={{ textAlign: 'center', fontSize: 11.5, color: C.t4, margin: '10px 0 0' }}>{hint}</p>}
+      {hint && <p style={{ textAlign: 'center', fontSize: 11.5, color: C.t4, margin: '8px 0px 0px' }}>{hint}</p>}
     </div>
   );
 }
@@ -319,7 +319,7 @@ export function TextLink({ children, onClick }) {
   return (
     <button onClick={onClick} style={{
       background: 'none', border: 'none', color: C.t3, fontSize: 13, cursor: 'pointer',
-      fontFamily: C.FB, textAlign: 'center', width: '100%', padding: '14px 0 0',
+      fontFamily: C.FB, textAlign: 'center', width: '100%', padding: '12px 0px 0px',
       textDecoration: 'underline', textUnderlineOffset: 4, textDecorationColor: C.b3,
     }}>
       {children}
@@ -351,7 +351,7 @@ export function OptionRow({ selected, onClick, icon, meter, label, sublabel, dot
       aria-pressed={!!selected}
       style={{
         position: 'relative', width: '100%', textAlign: 'left',
-        display: 'flex', alignItems: 'center', gap: 13, padding: '12px 14px',
+        display: 'flex', alignItems: 'center', gap: 12, padding: '12px 12px',
         borderRadius: R.md, cursor: 'pointer', fontFamily: C.FB,
         background: selected ? g.grad : C.surf,
         border: `1px solid ${selected ? 'transparent' : C.b1}`,
@@ -362,7 +362,7 @@ export function OptionRow({ selected, onClick, icon, meter, label, sublabel, dot
       {(icon || meter != null) && <IconPlate name={icon} meter={meter} selected={selected} h={g} />}
 
       {dots != null && (
-        <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
           {[0, 1, 2].map(i => (
             <span key={i} style={{
               width: 6, height: 6, borderRadius: '50%',
@@ -375,7 +375,7 @@ export function OptionRow({ selected, onClick, icon, meter, label, sublabel, dot
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: 'block', fontSize: 14.5, fontWeight: 700, color: selected ? g.onFill : C.t1, lineHeight: 1.3 }}>{label}</span>
         {sublabel && (
-          <span style={{ display: 'block', fontSize: 12, color: selected ? 'rgba(255,255,255,0.84)' : C.t3, marginTop: 3, lineHeight: 1.45 }}>{sublabel}</span>
+          <span style={{ display: 'block', fontSize: 12, color: selected ? 'rgba(255,255,255,0.84)' : C.t3, marginTop: 4, lineHeight: 1.45 }}>{sublabel}</span>
         )}
       </span>
 
@@ -411,7 +411,7 @@ export function CheckRow({ checked, onClick, label, sublabel, icon, h = null, ac
       aria-pressed={!!checked}
       style={{
         position: 'relative', width: '100%', textAlign: 'left',
-        display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
+        display: 'flex', alignItems: 'center', gap: 12, padding: '12px 12px',
         borderRadius: R.md, cursor: 'pointer', fontFamily: C.FB,
         background: checked ? `linear-gradient(135deg, ${g.soft}, ${g.softer})` : C.surf,
         border: `1px solid ${checked ? g.edge : C.b1}`,
@@ -434,10 +434,10 @@ export function CheckRow({ checked, onClick, label, sublabel, icon, h = null, ac
       )}
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: C.t1, lineHeight: 1.3 }}>{label}</span>
-        {sublabel && <span style={{ display: 'block', fontSize: 11.5, color: C.t3, marginTop: 2, lineHeight: 1.45 }}>{sublabel}</span>}
+        {sublabel && <span style={{ display: 'block', fontSize: 11.5, color: C.t3, marginTop: 4, lineHeight: 1.45 }}>{sublabel}</span>}
       </span>
       <span style={{
-        width: 20, height: 20, borderRadius: 6, flexShrink: 0,
+        width: 20, height: 20, borderRadius: 4, flexShrink: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         background: checked ? g.grad : 'transparent',
         border: `1.5px solid ${checked ? 'transparent' : C.b3}`,
@@ -462,7 +462,7 @@ export function IconOptionRow({ selected, onClick, iconBg, icon, label, h = null
     <motion.button data-testid="onboarding-option" {...answerMotion(selected)} onClick={() => { play('select'); onClick(); }}
       aria-pressed={!!selected}
       style={{
-        width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 11, padding: '10px 12px',
+        width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px',
         borderRadius: R.sm, cursor: 'pointer', fontFamily: C.FB,
         background: selected ? `linear-gradient(135deg, ${g.soft}, ${g.softer})` : C.surf,
         border: `1px solid ${selected ? g.edge : C.b1}`,
@@ -497,13 +497,13 @@ export function ToggleSwitch({ checked, onChange, h = null }) {
 export function SegmentToggle({ options, value, onChange, h = null }) {
   const g = h || flowHue();
   return (
-    <div style={{ display: 'flex', background: C.s1, borderRadius: R.sm, padding: 3, border: `1px solid ${C.b1}` }}>
+    <div style={{ display: 'flex', background: C.s1, borderRadius: R.sm, padding: 4, border: `1px solid ${C.b1}` }}>
       {options.map(opt => {
         const on = value === opt.value;
         return (
           <button key={opt.value} onClick={() => { play('click'); onChange(opt.value); }}
             style={{
-              flex: 1, padding: '9px 0', borderRadius: R.xs, border: 'none', cursor: 'pointer',
+              flex: 1, padding: '8px 0px', borderRadius: R.xs, border: 'none', cursor: 'pointer',
               background: on ? g.grad : 'transparent', color: on ? g.onFill : C.t3,
               boxShadow: on ? lit(0.18) : 'none',
               fontWeight: 700, fontSize: 13, fontFamily: C.FB, transition: 'background .16s, color .16s',
@@ -567,10 +567,14 @@ export function WheelColumn({ items, index, onChange, width = 108, itemH = 42, v
         {items.map((it, i) => (
           <div key={i} style={{
             height: itemH, display: 'flex', alignItems: 'center', justifyContent: 'center', scrollSnapAlign: 'center',
-            fontSize: i === index ? 17 : 14.5, fontWeight: i === index ? 800 : 500,
+            // Scale, not font-size: the picker's rows are all one size and the
+            // selected one is scaled up. Animating font-size relaid out the
+            // whole column on every tick of the wheel.
+            fontSize: 14.5, fontWeight: i === index ? 800 : 500,
+            transform: i === index ? 'scale(1.17)' : 'scale(1)',
             color: i === index ? C.t1 : C.t4,
             fontFamily: mono ? C.FM : C.FB, fontVariantNumeric: 'tabular-nums',
-            transition: 'color .15s, font-size .15s',
+            transition: 'color 150ms ease, transform 150ms cubic-bezier(.4,0,.2,1)',
           }}>{it}</div>
         ))}
         <div style={{ height: itemH * pad }} />
@@ -704,18 +708,18 @@ export function MiniLineChart({ width = 380, height = 150, lines, xLabels, miles
 export function CompareBars({ bars, h = null }) {
   const g = h || flowHue();
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {bars.map((b, i) => (
         <div key={i}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 7 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
             <span style={{ fontSize: 12.5, fontWeight: 700, color: b.highlight ? C.t1 : C.t3 }}>{b.label}</span>
             <span style={numeral(12.5, { color: b.highlight ? g.ink : C.t3 })}>{Math.round(b.pct * 100)}%</span>
           </div>
-          <div style={{ height: 10, borderRadius: 5, background: C.s2, overflow: 'hidden', position: 'relative', border: `1px solid ${C.b0}` }}>
+          <div style={{ height: 10, borderRadius: 4, background: C.s2, overflow: 'hidden', position: 'relative', border: `1px solid ${C.b0}` }}>
             <motion.div initial={{ width: 0 }} animate={{ width: `${b.pct * 100}%` }}
               transition={{ delay: 0.35 + i * 0.18, duration: 0.9, ease: EASE }}
               style={{
-                height: '100%', borderRadius: 5, position: 'relative', overflow: 'hidden',
+                height: '100%', borderRadius: 4, position: 'relative', overflow: 'hidden',
                 background: b.highlight ? g.bar : C.s4,
                 boxShadow: b.highlight ? g.glowSm : 'none',
               }}>

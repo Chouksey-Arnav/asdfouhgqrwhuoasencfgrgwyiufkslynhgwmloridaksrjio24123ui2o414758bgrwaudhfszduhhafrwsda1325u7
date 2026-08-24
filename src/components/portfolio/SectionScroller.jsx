@@ -63,12 +63,12 @@ function Jumper({ sections, activeId, onJump, accent, isMobile, barRef }) {
   return (
     <div ref={barRef} data-print-hide style={{
       position: 'sticky', top: 0, zIndex: 8, margin: '0 -2px',
-      padding: '9px 2px 10px',
+      padding: '8px 4px 8px',
       background: `linear-gradient(180deg,${C.bg} 74%,transparent)`,
       backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
     }}>
       <div ref={scrollRef} className="sat-scroll-x" role="navigation" aria-label="Jump to a section"
-        style={{ ...R({ gap: 7 }), paddingBottom: 2 }}>
+        style={{ ...R({ gap: 8 }), paddingBottom: 4 }}>
         {sections.map(s => {
           const on = s.id === activeId;
           const col = s.color || accent;
@@ -78,7 +78,7 @@ function Jumper({ sections, activeId, onJump, accent, isMobile, barRef }) {
               title={s.locked ? s.locked.hint : `Jump to ${s.label}`}
               style={{
                 flexShrink: 0, font: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap',
-                display: 'inline-flex', alignItems: 'center', gap: 6,
+                display: 'inline-flex', alignItems: 'center', gap: 4,
                 padding: isMobile ? '7px 11px' : '7px 13px', borderRadius: 999,
                 background: on ? tint(col, 0.18) : C.surf2,
                 border: `1px solid ${on ? tint(col, 0.42) : C.b1}`,
@@ -121,28 +121,28 @@ function SectionBlock({ s, open, onToggle, accent, isMobile, registerRef }) {
           borderBottom: open ? `1px solid ${tint(col, 0.22)}` : undefined,
           transition: 'background .18s, border-color .18s',
         }}>
-        <div style={R({ gap: 11, justifyContent: 'space-between', flexWrap: 'wrap' })}>
-          <span style={R({ gap: 10, minWidth: 0 })}>
+        <div style={R({ gap: 12, justifyContent: 'space-between', flexWrap: 'wrap' })}>
+          <span style={R({ gap: 8, minWidth: 0 })}>
             <span style={{
-              width: 30, height: 30, borderRadius: 9, flexShrink: 0,
+              width: 30, height: 30, borderRadius: 8, flexShrink: 0,
               background: locked ? C.s3 : `linear-gradient(135deg,${col},${tint(col, 0.55)})`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               {locked ? <Lock size={14} color={C.t4} /> : <s.ic size={15} color="#fff" />}
             </span>
             <span style={{ minWidth: 0 }}>
-              <span style={R({ gap: 7, flexWrap: 'wrap' })}>
-                <span style={{ fontSize: isMobile ? 13.5 : 15, fontWeight: 800, color: locked ? C.t3 : C.t1, fontFamily: C.FD, letterSpacing: '-.02em' }}>{s.label}</span>
+              <span style={R({ gap: 8, flexWrap: 'wrap' })}>
+                <span style={{ fontSize: isMobile ? 13.5 : 15, fontWeight: 800, color: locked ? C.t3 : C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>{s.label}</span>
                 {!locked && s.count ? <span style={pill(tint(col, 0.14), col, { fontSize: 9.5, fontFamily: C.FM })}>{s.count}</span> : null}
                 {!locked && statusChip(s.status)}
               </span>
-              <span style={{ display: 'block', fontSize: 10.5, color: C.t4, marginTop: 3, lineHeight: 1.45 }}>
+              <span style={{ display: 'block', fontSize: 10.5, color: C.t4, marginTop: 4, lineHeight: 1.45 }}>
                 {locked ? locked.hint : s.blurb}
               </span>
             </span>
           </span>
           {!locked && (
-            <span style={R({ gap: 7, flexShrink: 0 })}>
+            <span style={R({ gap: 8, flexShrink: 0 })}>
               <span style={{ fontSize: 10.5, color: C.t4, fontWeight: 700 }}>{open ? 'Hide' : 'Open'}</span>
               <ChevronDown size={15} color={C.t3} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .18s' }} />
             </span>
@@ -275,7 +275,7 @@ export default function SectionScroller({
 
       <Jumper sections={sections} activeId={activeId} onJump={openSection} accent={accent} isMobile={isMobile} barRef={barRef} />
 
-      <div style={CC({ gap: 14 })}>
+      <div style={CC({ gap: 12 })}>
         {sections.map(s => (
           <SectionBlock key={s.id} s={s} open={open.has(s.id)} onToggle={toggle}
             accent={accent} isMobile={isMobile} registerRef={registerRef} />
@@ -300,36 +300,36 @@ function SummaryCard({ summary, sections, accent, isMobile, onOpenSection, onTog
       background: `linear-gradient(120deg,${tint(accent, 0.09)},rgba(255,255,255,0.02) 58%)`,
       border: `1px solid ${tint(accent, 0.22)}`,
     }}>
-      <div style={R({ gap: 12, justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: 14 })}>
+      <div style={R({ gap: 12, justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: 12 })}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: accent, letterSpacing: '.12em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: accent, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
             {summary.eyebrow || 'Where you stand'}
           </div>
-          <div style={{ fontSize: isMobile ? 15.5 : 17.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em', marginTop: 3 }}>
+          <div style={{ fontSize: isMobile ? 15.5 : 17.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))', marginTop: 4 }}>
             {summary.title}
           </div>
           {summary.sub && <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4, lineHeight: 1.55, maxWidth: 620 }}>{summary.sub}</div>}
         </div>
-        <div data-print-hide style={R({ gap: 7, flexWrap: 'wrap' })}>
+        <div data-print-hide style={R({ gap: 8, flexWrap: 'wrap' })}>
           <button type="button" style={btnSm(C.s3, { color: C.t1 })} onClick={onToggleAll}>
-            <Rows3 size={12} style={{ marginRight: 5 }} />{allOpen ? 'Collapse all' : 'Expand all'}
+            <Rows3 size={12} style={{ marginRight: 4 }} />{allOpen ? 'Collapse all' : 'Expand all'}
           </button>
           <button type="button" style={btnSm(C.s3, { color: C.t1 })} onClick={onPrint}>
-            <Printer size={12} style={{ marginRight: 5 }} />{printLabel}
+            <Printer size={12} style={{ marginRight: 4 }} />{printLabel}
           </button>
         </div>
       </div>
 
       {/* Completeness, said as a number and drawn as a bar. */}
-      <div style={{ marginBottom: 14 }}>
-        <div style={R({ justifyContent: 'space-between', marginBottom: 5 })}>
+      <div style={{ marginBottom: 12 }}>
+        <div style={R({ justifyContent: 'space-between', marginBottom: 4 })}>
           <span style={{ fontSize: 10.5, color: C.t3, fontWeight: 700 }}>
             {started} of {total} sections started{missing.length ? ` · ${missing.map(m => m.label).join(', ')} still empty` : ' · nothing left empty'}
           </span>
           <span style={{ fontSize: 10.5, fontFamily: C.FM, color: pct >= 80 ? C.greenL : pct >= 40 ? C.amberL : C.t3 }}>{pct}%</span>
         </div>
-        <div style={{ height: 5, borderRadius: 3, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-          <div style={{ width: `${pct}%`, height: '100%', borderRadius: 3, background: `linear-gradient(90deg,${accent},${C.green})`, transition: 'width .35s' }} />
+        <div style={{ height: 5, borderRadius: 4, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+          <div style={{ width: '100%', transform: `scaleX(${(pct) / 100})`, transformOrigin: 'left', height: '100%', borderRadius: 4, background: `linear-gradient(90deg,${accent},${C.green})`, transition: 'transform 200ms cubic-bezier(0.4, 0, 0.2, 1)' }} />
         </div>
       </div>
 
@@ -337,16 +337,16 @@ function SummaryCard({ summary, sections, accent, isMobile, onOpenSection, onTog
 
       {/* What to do next — the sentence, and the button that does it. */}
       {summary.nextSteps?.length > 0 && (
-        <div style={{ ...CC({ gap: 7 }), marginTop: 14 }}>
+        <div style={{ ...CC({ gap: 8 }), marginTop: 12 }}>
           {summary.nextSteps.slice(0, 4).map((n, i) => {
             const col = n.tone === 'urgent' ? C.rose : n.tone === 'warn' ? C.amber : n.tone === 'good' ? C.green : accent;
             return (
               <div key={i} style={{
-                ...R({ gap: 10, justifyContent: 'space-between', flexWrap: 'wrap', padding: '9px 12px' }),
-                borderRadius: 10, background: tint(col, 0.06), border: `1px solid ${tint(col, 0.17)}`,
+                ...R({ gap: 8, justifyContent: 'space-between', flexWrap: 'wrap', padding: '8px 12px' }),
+                borderRadius: 8, background: tint(col, 0.06), border: `1px solid ${tint(col, 0.17)}`,
               }}>
                 <span style={R({ gap: 8, minWidth: 0, alignItems: 'flex-start' })}>
-                  <span style={{ width: 5, height: 5, borderRadius: 3, background: col, flexShrink: 0, marginTop: 6 }} />
+                  <span style={{ width: 5, height: 5, borderRadius: 4, background: col, flexShrink: 0, marginTop: 4 }} />
                   <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.5 }}>{n.text}</span>
                 </span>
                 {n.actionLabel && (
@@ -361,19 +361,19 @@ function SummaryCard({ summary, sections, accent, isMobile, onOpenSection, onTog
 
       {/* Every section's own actions, hoisted. This is the promise the page
           makes: nothing is only reachable by first expanding something. */}
-      <div style={{ ...CC({ gap: 7 }), marginTop: 14 }} data-print-hide>
+      <div style={{ ...CC({ gap: 8 }), marginTop: 12 }} data-print-hide>
         {sections.filter(s => !s.locked && s.actions?.length).map(s => {
           const col = s.color || accent;
           return (
             <div key={s.id} style={R({ gap: 8, justifyContent: 'space-between', flexWrap: 'wrap' })}>
               <button type="button" onClick={() => onOpenSection(s.id)}
-                style={{ ...R({ gap: 6 }), background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit' }}>
+                style={{ ...R({ gap: 4 }), background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit' }}>
                 <s.ic size={12} color={col} />
                 <span style={{ fontSize: 11.5, fontWeight: 700, color: C.t2 }}>{s.label}</span>
                 {s.count ? <span style={{ fontSize: 10, fontFamily: C.FM, color: C.t4 }}>{s.count}</span> : null}
                 <ArrowDown size={11} color={C.t4} />
               </button>
-              <span style={R({ gap: 6, flexWrap: 'wrap' })}>
+              <span style={R({ gap: 4, flexWrap: 'wrap' })}>
                 {s.actions.map((a, i) => (
                   <button key={i} type="button" onClick={a.onClick}
                     style={btnSm(a.primary ? accentFill(col) : C.s3, { color: a.primary ? C.onAccent : C.t1, fontSize: 10.5 })}>

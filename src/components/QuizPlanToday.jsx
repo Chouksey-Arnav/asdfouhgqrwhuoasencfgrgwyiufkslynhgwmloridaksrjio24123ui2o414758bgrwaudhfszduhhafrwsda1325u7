@@ -34,9 +34,9 @@ export default function QuizPlanToday({ user, accent = C.amber, onOpenTask }) {
 
   return (
     <div style={{ ...glass({ padding: 0, overflow: 'hidden' }), border: `1px solid ${accent}35` }}>
-      <button onClick={() => setOpen(o => !o)} style={{ all: 'unset', cursor: 'pointer', display: 'block', width: '100%', boxSizing: 'border-box', padding: '14px 18px' }} aria-expanded={open} aria-label="Toggle today's plan quizzes">
-        <div style={R({ justifyContent: 'space-between', gap: 10 })}>
-          <div style={R({ gap: 10 })}>
+      <button onClick={() => setOpen(o => !o)} style={{ all: 'unset', cursor: 'pointer', display: 'block', width: '100%', boxSizing: 'border-box', padding: '12px 16px' }} aria-expanded={open} aria-label="Toggle today's plan quizzes">
+        <div style={R({ justifyContent: 'space-between', gap: 8 })}>
+          <div style={R({ gap: 8 })}>
             <Target size={15} color={accent} />
             <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>Today's Plan</span>
             <span style={pill(`${accent}18`, accent, { fontSize: 10 })}>{items.length} quiz{items.length === 1 ? '' : 'zes'}</span>
@@ -49,10 +49,10 @@ export default function QuizPlanToday({ user, accent = C.amber, onOpenTask }) {
       <AnimatePresence initial={false}>
         {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: 'hidden' }}>
-            <div style={{ padding: '0 18px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ padding: '0px 16px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {shown.map(t => (
                 <button key={t.id} onClick={() => onOpenTask?.(t)} aria-label={`Open plan quiz: ${t.resourceLabel || t.title}`}
-                  style={{ all: 'unset', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 11, background: `${accent}0c`, border: `1px solid ${accent}30` }}>
+                  style={{ all: 'unset', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 12, background: `${accent}0c`, border: `1px solid ${accent}30` }}>
                   <div style={{ width: 28, height: 28, borderRadius: 8, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <Target size={13} color={accent} />
                   </div>
@@ -64,7 +64,7 @@ export default function QuizPlanToday({ user, accent = C.amber, onOpenTask }) {
                 </button>
               ))}
               {hiddenCount > 0 && (
-                <button onClick={() => setExpanded(true)} style={{ ...pill(`${accent}12`, accent, { fontSize: 10.5, fontWeight: 700 }), all: 'unset', cursor: 'pointer', textAlign: 'center', padding: '7px 12px', borderRadius: 9, border: `1px dashed ${accent}40` }}>
+                <button onClick={() => setExpanded(true)} style={{ ...pill(`${accent}12`, accent, { fontSize: 10.5, fontWeight: 700 }), all: 'unset', cursor: 'pointer', textAlign: 'center', padding: '8px 12px', borderRadius: 8, border: `1px dashed ${accent}40` }}>
                   +{hiddenCount} more this week
                 </button>
               )}

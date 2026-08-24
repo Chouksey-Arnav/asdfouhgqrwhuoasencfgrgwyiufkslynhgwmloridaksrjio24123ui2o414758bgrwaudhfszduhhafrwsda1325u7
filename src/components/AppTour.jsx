@@ -205,33 +205,33 @@ export default function AppTour({ steps, onFinish, onSkip }) {
             key={i}
             ref={cardRef}
             initial={{ opacity: 0, y: 8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.98 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            style={{ background: C.s1, border: `1px solid ${C.b2}`, borderRadius: 14, padding: 18, boxShadow: `0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px ${color}22` }}
+            style={{ background: C.s1, border: `1px solid ${C.b2}`, borderRadius: 12, padding: 16, boxShadow: `0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px ${color}22` }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 10 }}>
-              <motion.div initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.06, duration: 0.2 }} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 20, background: `${color}1e`, border: `1px solid ${color}40`, color, fontSize: 9.5, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+              <motion.div initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.06, duration: 0.2 }} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 16, background: `${color}1e`, border: `1px solid ${color}40`, color, fontSize: 9.5, fontWeight: 700, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
                 <Sparkles size={10} />{step.section || 'Tour'}
               </motion.div>
-              <button onClick={onSkip} aria-label="Skip tour" style={{ background: 'none', border: 'none', color: C.t3, cursor: 'pointer', padding: 6, display: 'flex', minWidth: 28, minHeight: 28, alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
+              <button onClick={onSkip} aria-label="Skip tour" style={{ background: 'none', border: 'none', color: C.t3, cursor: 'pointer', padding: 4, display: 'flex', minWidth: 28, minHeight: 28, alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
             </div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 6 }}>{step.title}</div>
-            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6, marginBottom: 12 }}>{step.body}</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 14, color: C.t4, fontSize: 10.5 }}>
+            <div style={{ fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>{step.title}</div>
+            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, marginBottom: 12 }}>{step.body}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 12, color: C.t4, fontSize: 10.5 }}>
               <MousePointer2 size={11} /><span>You can still scroll around while this is open</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
               <span style={{ fontSize: 10, color: C.t3, fontFamily: C.FM }}>Step {i + 1} of {steps.length}</span>
               <span style={{ fontSize: 10, color: C.t4, fontFamily: C.FM }}>{Math.round(pct)}%</span>
             </div>
-            <div style={{ height: 4, borderRadius: 2, background: C.b2, overflow: 'hidden', marginBottom: 16 }}>
-              <motion.div animate={{ width: `${pct}%` }} transition={{ type: 'spring', stiffness: 220, damping: 26 }} style={{ height: '100%', borderRadius: 2, background: color }} />
+            <div style={{ height: 4, borderRadius: 4, background: C.b2, overflow: 'hidden', marginBottom: 16 }}>
+              <motion.div animate={{ width: `${pct}%` }} transition={{ type: 'spring', stiffness: 220, damping: 26 }} style={{ height: '100%', borderRadius: 4, background: color }} />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
               {i > 0 && (
-                <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }} onClick={back} style={{ ...btnG({ fontSize: 12, padding: '9px 14px' }), display: 'inline-flex', alignItems: 'center', gap: 4, minHeight: 36 }}>
+                <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }} onClick={back} style={{ ...btnG({ fontSize: 12, padding: '8px 12px' }), display: 'inline-flex', alignItems: 'center', gap: 4, minHeight: 36 }}>
                   <ChevronLeft size={13} />Back
                 </motion.button>
               )}
-              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.94 }} onClick={next} style={{ ...btn(color, { fontSize: 12, padding: '9px 16px' }), display: 'inline-flex', alignItems: 'center', gap: 4, minHeight: 36 }}>
+              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.94 }} onClick={next} style={{ ...btn(color, { fontSize: 12, padding: '8px 16px' }), display: 'inline-flex', alignItems: 'center', gap: 4, minHeight: 36 }}>
                 {i === steps.length - 1 ? 'Finish' : 'Next'}<ChevronRight size={13} />
               </motion.button>
             </div>

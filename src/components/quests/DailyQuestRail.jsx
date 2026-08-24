@@ -70,13 +70,13 @@ function DailyCard({ row, onClaim, onGo, busy, m }) {
           ? tint(C.green, 0.06)
           : `linear-gradient(140deg, ${tint(accent, state === 'claimable' ? 0.13 : 0.08)}, transparent 72%)`,
         position: 'relative', overflow: 'hidden',
-        display: 'flex', flexDirection: 'column', gap: 10,
+        display: 'flex', flexDirection: 'column', gap: 8,
         opacity: state === 'claimed' ? 0.82 : 1,
       }}
     >
-      <div style={R({ gap: 10, alignItems: 'flex-start' })}>
+      <div style={R({ gap: 8, alignItems: 'flex-start' })}>
         <div style={{
-          width: 34, height: 34, borderRadius: 11, flexShrink: 0,
+          width: 34, height: 34, borderRadius: 12, flexShrink: 0,
           background: tint(accent, 0.15), border: `1px solid ${tint(accent, 0.32)}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
@@ -85,15 +85,15 @@ function DailyCard({ row, onClaim, onGo, busy, m }) {
             : <Icon size={16} color={accent} />}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={R({ gap: 6, flexWrap: 'wrap' })}>
-            <span style={pill(tint(color, 0.15), color, { fontSize: 8.5, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', padding: '2px 7px' })}>
+          <div style={R({ gap: 4, flexWrap: 'wrap' })}>
+            <span style={pill(tint(color, 0.15), color, { fontSize: 8.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', padding: '4px 8px' })}>
               {row.tier.label}
             </span>
             <span style={{ fontSize: 9.5, color: C.t4, fontFamily: C.FM }}>{row.tier.minutes}</span>
           </div>
           <div style={{
             fontSize: m ? 12.5 : 13.5, fontWeight: 800, color: C.t1, fontFamily: C.FD,
-            marginTop: 3, lineHeight: 1.3,
+            marginTop: 4, lineHeight: 1.3,
             textDecoration: state === 'claimed' ? 'line-through' : 'none',
             textDecorationColor: tint(C.green, 0.6),
           }}>{row.quest.title}</div>
@@ -115,7 +115,7 @@ function DailyCard({ row, onClaim, onGo, busy, m }) {
               style={{ height: '100%', borderRadius: 4, background: `linear-gradient(90deg, ${color}, ${tint(color, 0.65)})` }}
             />
           </div>
-          <div style={{ ...R({ justifyContent: 'space-between', gap: 6 }), marginTop: 5 }}>
+          <div style={{ ...R({ justifyContent: 'space-between', gap: 4 }), marginTop: 4 }}>
             <span style={{ fontSize: 10, color: C.t3, fontFamily: C.FM }}>
               {row.progress}/{row.target} {row.metric.unit || ''}{row.target === 1 ? '' : 's'}
             </span>
@@ -124,7 +124,7 @@ function DailyCard({ row, onClaim, onGo, busy, m }) {
       )}
 
       {row.claimed ? (
-        <div style={{ ...R({ gap: 5 }), fontSize: 10.5, color: C.greenL, fontWeight: 700 }}>
+        <div style={{ ...R({ gap: 4 }), fontSize: 10.5, color: C.greenL, fontWeight: 700 }}>
           <Check size={11} strokeWidth={3} />Claimed
         </div>
       ) : row.claimable ? (
@@ -132,14 +132,14 @@ function DailyCard({ row, onClaim, onGo, busy, m }) {
           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           onClick={() => onClaim?.(row)} disabled={busy}
           style={{
-            ...btn(`linear-gradient(135deg, ${C.green}, ${C.greenL})`, { fontSize: 12, padding: '8px 14px', width: '100%', color: onTint(C.green) }),
+            ...btn(`linear-gradient(135deg, ${C.green}, ${C.greenL})`, { fontSize: 12, padding: '8px 12px', width: '100%', color: onTint(C.green) }),
             opacity: busy ? 0.6 : 1,
           }}
         >{busy ? <Loader2 size={12} className="spin" /> : <Gift size={13} />}Claim +{row.xp} XP</motion.button>
       ) : (
         <button
           onClick={() => onGo?.(row.destination)}
-          style={{ ...btn(tint(color, 0.16), { fontSize: 11.5, padding: '8px 14px', width: '100%', color, border: `1px solid ${tint(color, 0.3)}` }) }}
+          style={{ ...btn(tint(color, 0.16), { fontSize: 11.5, padding: '8px 12px', width: '100%', color, border: `1px solid ${tint(color, 0.3)}` }) }}
         >{row.destination.label}<ChevronRight size={12} /></button>
       )}
     </motion.div>
@@ -154,7 +154,7 @@ function BonusTile({ day, onClaim, busy, m }) {
 
   return (
     <div style={{
-      ...R({ gap: 11, flexWrap: 'wrap' }),
+      ...R({ gap: 12, flexWrap: 'wrap' }),
       padding: m ? '11px 13px' : '13px 16px', borderRadius: 12,
       background: state === 'claimable'
         ? `linear-gradient(120deg, ${tint(C.amber, 0.16)}, ${tint(C.orange, 0.05)})`
@@ -162,7 +162,7 @@ function BonusTile({ day, onClaim, busy, m }) {
       border: `1px solid ${state === 'locked' ? C.b1 : tint(state === 'claimed' ? C.green : C.amber, 0.34)}`,
     }}>
       <div style={{
-        width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+        width: 32, height: 32, borderRadius: 8, flexShrink: 0,
         background: tint(state === 'claimed' ? C.green : accent, 0.15),
         border: `1px solid ${tint(state === 'claimed' ? C.green : accent, 0.3)}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -175,7 +175,7 @@ function BonusTile({ day, onClaim, busy, m }) {
         <div style={{ fontSize: 12.5, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
           {DAILY_SET_BONUS.label} · +{DAILY_SET_BONUS.xp} XP
         </div>
-        <div style={{ fontSize: 10.5, color: C.t3, marginTop: 2, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4, lineHeight: 1.45 }}>
           {state === 'claimed'
             ? 'Taken. All three cleared today — that is the whole set.'
             : state === 'claimable'
@@ -217,14 +217,14 @@ export default function DailyQuestRail({
           disabled={busyKey === day.setBonus.key}
           style={{
             width: '100%', textAlign: 'left', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 11,
+            display: 'flex', alignItems: 'center', gap: 12,
             padding: m ? '10px 12px' : '11px 14px', borderRadius: 12,
             background: tint(C.amber, 0.11), border: `1px solid ${tint(C.amber, 0.32)}`,
             opacity: busyKey === day.setBonus.key ? 0.6 : 1,
           }}
         >
           <div style={{
-            width: 28, height: 28, borderRadius: 9, flexShrink: 0,
+            width: 28, height: 28, borderRadius: 8, flexShrink: 0,
             background: tint(C.amber, 0.16), border: `1px solid ${tint(C.amber, 0.3)}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}><Gift size={14} color={C.amberL} /></div>
@@ -247,14 +247,14 @@ export default function DailyQuestRail({
         disabled={busyKey === featured.key}
         style={{
           width: '100%', textAlign: 'left', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: 11,
+          display: 'flex', alignItems: 'center', gap: 12,
           padding: m ? '10px 12px' : '11px 14px', borderRadius: 12,
           background: tint(color, 0.08), border: `1px solid ${tint(color, 0.24)}`,
           opacity: busyKey === featured.key ? 0.6 : 1,
         }}
       >
         <div style={{
-          width: 28, height: 28, borderRadius: 9, flexShrink: 0,
+          width: 28, height: 28, borderRadius: 8, flexShrink: 0,
           background: tint(color, 0.16), border: `1px solid ${tint(color, 0.3)}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>{featured.claimable ? <Gift size={14} color={C.greenL} /> : <Icon size={14} color={color} />}</div>
@@ -263,7 +263,7 @@ export default function DailyQuestRail({
             {featured.claimable ? `${featured.quest.title} — done` : featured.quest.title}
             <span style={{ color: C.t3, fontWeight: 500 }}> · today</span>
           </div>
-          <div style={{ fontSize: 10.5, color: featured.claimable ? C.greenL : C.t3, marginTop: 2, lineHeight: 1.4 }}>
+          <div style={{ fontSize: 10.5, color: featured.claimable ? C.greenL : C.t3, marginTop: 4, lineHeight: 1.4 }}>
             {featured.claimable
               ? `Claim +${featured.xp} XP`
               : `${featured.progress}/${featured.target} · +${featured.xp} XP · ${day.claimed}/${day.total} done today`}
@@ -285,18 +285,18 @@ export default function DailyQuestRail({
       <div style={{ position: 'absolute', right: -60, top: -60, width: 190, height: 190, borderRadius: '50%', background: `radial-gradient(circle, ${tint(C.cyan || C.blue, 0.14)}, transparent 70%)`, pointerEvents: 'none' }} />
 
       {/* Header */}
-      <div style={{ position: 'relative', ...R({ justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }) }}>
-        <div style={R({ gap: 10 })}>
+      <div style={{ position: 'relative', ...R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }) }}>
+        <div style={R({ gap: 8 })}>
           <div style={{
-            width: 34, height: 34, borderRadius: 11, flexShrink: 0,
+            width: 34, height: 34, borderRadius: 12, flexShrink: 0,
             background: tint(C.cyan || C.blue, 0.15), border: `1px solid ${tint(C.cyan || C.blue, 0.3)}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}><Sunrise size={17} color={C.cyanL || C.blueL} /></div>
           <div>
-            <div style={{ fontSize: m ? 14.5 : 16, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em' }}>
+            <div style={{ fontSize: m ? 14.5 : 16, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>
               Today&rsquo;s three
             </div>
-            <div style={{ fontSize: 11, color: C.t3, marginTop: 2 }}>{day.headline}</div>
+            <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>{day.headline}</div>
           </div>
         </div>
         <ResetNote m={m} />
@@ -305,7 +305,7 @@ export default function DailyQuestRail({
       {/* The track. Fills as cards are CLAIMED rather than as they are finished,
           because claiming is the action the bonus is gated on and a track that
           filled early would make the last tap look optional. */}
-      <div style={{ position: 'relative', marginTop: 14 }}>
+      <div style={{ position: 'relative', marginTop: 12 }}>
         <div style={{ height: 6, borderRadius: 4, background: C.s2, overflow: 'hidden', border: `1px solid ${C.b0}` }}>
           <motion.div
             initial={{ width: 0 }}
@@ -314,7 +314,7 @@ export default function DailyQuestRail({
             style={{ height: '100%', borderRadius: 4, background: `linear-gradient(90deg, ${C.cyan || C.blue}, ${C.amber})` }}
           />
         </div>
-        <div style={{ ...R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }), marginTop: 6 }}>
+        <div style={{ ...R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }), marginTop: 4 }}>
           <span style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM }}>
             {day.claimed} of {day.total} claimed
             {day.xpAvailable > 0 && <span style={{ color: C.greenL, fontWeight: 700 }}> · {day.xpAvailable} XP waiting</span>}
@@ -328,7 +328,7 @@ export default function DailyQuestRail({
       {/* The one honest line tying today's set to the streak, when there is one. */}
       {streakHint && (
         <div style={{
-          ...R({ gap: 7 }), marginTop: 11, padding: '7px 11px', borderRadius: 9,
+          ...R({ gap: 8 }), marginTop: 12, padding: '8px 12px', borderRadius: 8,
           background: tint(C.amber, 0.08), border: `1px solid ${tint(C.amber, 0.2)}`,
         }}>
           <span style={{ fontSize: 11, color: C.t2, lineHeight: 1.45 }}>{streakHint.text}</span>
@@ -337,8 +337,8 @@ export default function DailyQuestRail({
 
       {/* Cards */}
       <div style={{
-        position: 'relative', marginTop: 13,
-        display: 'grid', gap: 10,
+        position: 'relative', marginTop: 12,
+        display: 'grid', gap: 8,
         gridTemplateColumns: m ? '1fr' : 'repeat(auto-fit, minmax(190px, 1fr))',
       }}>
         {day.rows.map((row) => (
@@ -350,7 +350,7 @@ export default function DailyQuestRail({
         ))}
       </div>
 
-      <div style={{ position: 'relative', marginTop: 11 }}>
+      <div style={{ position: 'relative', marginTop: 12 }}>
         <BonusTile day={day} onClaim={onClaimSet} busy={busyKey === day.setBonus.key} m={m} />
       </div>
     </div>
@@ -368,8 +368,8 @@ export function TomorrowPeek({ quests = [], m = false }) {
   if (!quests.length) return null;
   return (
     <div style={{
-      ...R({ gap: 9, flexWrap: 'wrap' }),
-      padding: m ? '9px 12px' : '10px 14px', borderRadius: 11,
+      ...R({ gap: 8, flexWrap: 'wrap' }),
+      padding: m ? '9px 12px' : '10px 14px', borderRadius: 12,
       background: C.s2, border: `1px dashed ${C.b2}`,
     }}>
       <Sunrise size={13} color={C.t3} style={{ flexShrink: 0 }} />

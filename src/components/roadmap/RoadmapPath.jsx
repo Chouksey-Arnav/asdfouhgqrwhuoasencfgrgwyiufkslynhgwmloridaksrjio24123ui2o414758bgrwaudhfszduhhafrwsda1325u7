@@ -254,7 +254,7 @@ export default function RoadmapPath({
 
   if (!stops.length) {
     return (
-      <div style={{ fontSize: 12, color: C.t4, padding: '18px 0' }}>
+      <div style={{ fontSize: 12, color: C.t4, padding: '16px 0px' }}>
         Nothing on your roadmap has a place in the year yet.
       </div>
     );
@@ -279,7 +279,7 @@ export default function RoadmapPath({
         ref={frameRef}
         style={{
           position: 'relative',
-          borderRadius: 14,
+          borderRadius: 12,
           border: `1px solid ${C.b1}`,
           background: `linear-gradient(180deg, ${tint(C.violet, 0.05)}, transparent 40%)`,
           overflow: 'hidden',
@@ -675,7 +675,7 @@ function Stop({ p, today, nodeR, labelW, isMobile, active, proximity, reducedMot
         }}>
           <Flag size={nodeR * 0.85} color={isStart ? C.green : C.violet} />
         </div>
-        <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.08em', color: C.t4, marginTop: 6, textTransform: 'uppercase' }}>
+        <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t4, marginTop: 4}}>
           {isStart ? 'Start' : 'One year'}
         </div>
       </div>
@@ -708,7 +708,7 @@ function Stop({ p, today, nodeR, labelW, isMobile, active, proximity, reducedMot
             <MapPin size={nodeR} color={C.s0} />
           </div>
         </div>
-        <div style={{ fontSize: 10, fontWeight: 800, color: C.amber, marginTop: 7, whiteSpace: 'nowrap' }}>
+        <div style={{ fontSize: 10, fontWeight: 800, color: C.amber, marginTop: 8, whiteSpace: 'nowrap' }}>
           You are here
         </div>
       </div>
@@ -731,10 +731,10 @@ function Stop({ p, today, nodeR, labelW, isMobile, active, proximity, reducedMot
         title={[p.season.theme, p.season.narrative].filter(Boolean).join(' — ') || p.season.label}
       >
         <span style={{
-          display: 'inline-flex', alignItems: 'center', gap: 5, maxWidth: '100%',
+          display: 'inline-flex', alignItems: 'center', gap: 4, maxWidth: '100%',
           background: tint(C.teal, 0.18), border: `1px solid ${tint(C.teal, 0.45)}`,
-          borderRadius: 999, padding: '5px 11px',
-          fontSize: 9.5, fontWeight: 800, letterSpacing: '.05em', textTransform: 'uppercase', color: C.teal,
+          borderRadius: 999, padding: '4px 12px',
+          fontSize: 9.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.teal,
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
         }}>
           {shortSeason(p.season.label)}
@@ -747,9 +747,9 @@ function Stop({ p, today, nodeR, labelW, isMobile, active, proximity, reducedMot
     return (
       <div style={{ ...common, textAlign: 'center', pointerEvents: 'none', width: labelW }}>
         <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 5,
+          display: 'inline-flex', alignItems: 'center', gap: 4,
           background: tint(C.violet, 0.14), border: `1px dashed ${tint(C.violet, 0.45)}`,
-          borderRadius: 999, padding: '4px 10px', fontSize: 9.5, fontWeight: 800, color: C.violet,
+          borderRadius: 999, padding: '4px 8px', fontSize: 9.5, fontWeight: 800, color: C.violet,
         }}>
           <CalendarSearch size={11} /> {p.count} to look up
         </div>
@@ -796,7 +796,7 @@ function Stop({ p, today, nodeR, labelW, isMobile, active, proximity, reducedMot
         width: labelW,
         transformOrigin: `50% ${nodeR}px`,
         background: 'none', border: 0, padding: 0, cursor: 'pointer',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
         zIndex: active ? 5 : 2,
       }}
     >
@@ -868,10 +868,10 @@ function PathHeader({ focused, travelled, isMobile, onJumpToday, stops }) {
       marginBottom: 12,
     }}>
       <div style={{ flex: 1, minWidth: isMobile ? 0 : 180 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', color: C.t4 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t4 }}>
           Looking at
         </div>
-        <div style={{ fontSize: isMobile ? 14 : 15.5, fontWeight: 800, color: C.t1, marginTop: 2 }}>
+        <div style={{ fontSize: isMobile ? 14 : 15.5, fontWeight: 800, color: C.t1, marginTop: 4 }}>
           {where || '—'}
         </div>
       </div>
@@ -881,7 +881,7 @@ function PathHeader({ focused, travelled, isMobile, onJumpToday, stops }) {
       <div style={{
         textAlign: isMobile ? 'left' : 'right',
         display: isMobile ? 'flex' : 'block',
-        alignItems: 'center', justifyContent: 'space-between', gap: 10,
+        alignItems: 'center', justifyContent: 'space-between', gap: 8,
       }}>
         <div style={{ fontSize: 11, color: C.t4, fontWeight: 700 }}>
           {done}/{total} done · {Math.round(travelled * 100)}% through the year
@@ -890,9 +890,9 @@ function PathHeader({ focused, travelled, isMobile, onJumpToday, stops }) {
           type="button"
           onClick={onJumpToday}
           style={{
-            marginTop: isMobile ? 0 : 6, flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5,
+            marginTop: isMobile ? 0 : 6, flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 4,
             background: tint(C.amber, 0.14), border: `1px solid ${tint(C.amber, 0.34)}`,
-            color: C.amber, borderRadius: 8, padding: '5px 11px',
+            color: C.amber, borderRadius: 8, padding: '4px 12px',
             fontSize: 11, fontWeight: 700, fontFamily: C.FB, cursor: 'pointer',
           }}
         >
@@ -905,12 +905,12 @@ function PathHeader({ focused, travelled, isMobile, onJumpToday, stops }) {
 
 function PathLegend({ isMobile, dragging }) {
   const Item = ({ children }) => (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, color: C.t4 }}>{children}</span>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: C.t4 }}>{children}</span>
   );
   return (
     <div style={{
-      display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap',
-      padding: '8px 14px', borderTop: `1px solid ${C.b1}`, background: C.surf2,
+      display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap',
+      padding: '8px 12px', borderTop: `1px solid ${C.b1}`, background: C.surf2,
     }}>
       <Item>
         <span style={{ width: 10, height: 10, borderRadius: '50%', border: `2px solid ${tint(C.violet, 0.65)}`, display: 'inline-block' }} />

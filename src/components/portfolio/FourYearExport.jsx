@@ -106,13 +106,13 @@ export default function FourYearExport({
 
   return (
     <div style={{
-      ...glass({ padding: 18 }),
+      ...glass({ padding: 16 }),
       background: `linear-gradient(120deg,${tint(accent, 0.08)},rgba(255,255,255,0.02) 55%)`,
       border: `1px solid ${tint(accent, 0.24)}`,
     }}>
       <SectionTitle icon={FileDown} color={accent}>Your Four-Year Record</SectionTitle>
 
-      <p style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.65, margin: '0 0 14px' }}>
+      <p style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, margin: '0px 0px 12px' }}>
         Everything you have logged since ninth grade, as one formatted document: your profile, every
         activity grouped with hour totals and date ranges, the shadowing log with specialties,
         supervisors and dates, certifications, awards, coursework, your recommenders, and a
@@ -122,7 +122,7 @@ export default function FourYearExport({
       </p>
 
       {stats && (
-        <div style={{ ...autoGrid(110, 8), marginBottom: 14 }}>
+        <div style={{ ...autoGrid(110, 8), marginBottom: 12 }}>
           <Fig value={Math.round(stats.totalHours).toLocaleString()} label="hours on record" color={accent} />
           <Fig value={stats.clinicalEntries} label="dated entries" color={C.greenL} />
           <Fig value={stats.sites} label="sites" color={C.blueL} />
@@ -133,11 +133,11 @@ export default function FourYearExport({
 
       {!ready ? (
         <div style={{
-          ...R({ gap: 9, alignItems: 'flex-start' }), ...glass2({ padding: 12 }),
+          ...R({ gap: 8, alignItems: 'flex-start' }), ...glass2({ padding: 12 }),
           border: `1px solid ${tint(C.amber, 0.24)}`, background: tint(C.amber, 0.05),
         }}>
-          <AlertTriangle size={14} color={C.amberL} style={{ flexShrink: 0, marginTop: 2 }} />
-          <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>
+          <AlertTriangle size={14} color={C.amberL} style={{ flexShrink: 0, marginTop: 4 }} />
+          <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>
             There is not enough on record yet for this to be worth generating — a document with
             three lines in it is not a record, it is a disappointment. Log a few activities and some
             hours first and come back; the value of this compounds with every entry.
@@ -170,11 +170,11 @@ export default function FourYearExport({
             />
           ) : (
             <div style={{
-              ...R({ gap: 9, alignItems: 'flex-start' }), ...glass2({ padding: 12 }),
+              ...R({ gap: 8, alignItems: 'flex-start' }), ...glass2({ padding: 12 }),
               border: `1px solid ${C.b1}`,
             }}>
-              <ShieldCheck size={14} color={C.t3} style={{ flexShrink: 0, marginTop: 2 }} />
-              <span style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6 }}>
+              <ShieldCheck size={14} color={C.t3} style={{ flexShrink: 0, marginTop: 4 }} />
+              <span style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55 }}>
                 There is a second version of this document that includes the student's private
                 reflections. It can only be generated from their own account, and this account
                 cannot produce it — that boundary is what makes the journal honest enough to be
@@ -186,7 +186,7 @@ export default function FourYearExport({
           {/* ── The free preview ─────────────────────────────────────────── */}
           {!full && (
             <div style={{
-              ...glass2({ padding: 14 }),
+              ...glass2({ padding: 12 }),
               border: `1px solid ${tint(accent, 0.3)}`,
               background: `linear-gradient(120deg,${tint(accent, 0.09)},rgba(255,255,255,0.02) 60%)`,
             }}>
@@ -194,7 +194,7 @@ export default function FourYearExport({
                 <Sparkles size={14} color={accent} />
                 <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>See page one, free</span>
               </div>
-              <p style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.62, margin: '0 0 10px' }}>
+              <p style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.62, margin: '0px 0px 8px' }}>
                 {stats ? previewNotice(stats) : 'This preview is page one of your real document.'}
                 {' '}It is watermarked, and it is genuinely yours — your name, your hours, your dates,
                 laid out properly.
@@ -215,20 +215,20 @@ export default function FourYearExport({
 
 function ModeCard({ spec, icon: Icon, color, locked, busy, done, onGenerate, privacyLine }) {
   return (
-    <div style={{ ...glass2({ padding: 14 }), borderLeft: `3px solid ${color}` }}>
-      <div style={R({ gap: 9, flexWrap: 'wrap' })}>
+    <div style={{ ...glass2({ padding: 12 }), borderLeft: `3px solid ${color}` }}>
+      <div style={R({ gap: 8, flexWrap: 'wrap' })}>
         <Icon size={15} color={color} style={{ flexShrink: 0 }} />
         <span style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{spec.label}</span>
         {locked && <span style={pill(C.b0, C.t3, { fontSize: 9 })}><Lock size={9} style={{ marginRight: 4 }} />Full access</span>}
       </div>
-      <p style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.62, margin: '8px 0 0' }}>{spec.blurb}</p>
+      <p style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.62, margin: '8px 0px 0px' }}>{spec.blurb}</p>
       {privacyLine && (
-        <p style={{ fontSize: 11, color: C.roseL, lineHeight: 1.6, margin: '8px 0 0' }}>{privacyLine}</p>
+        <p style={{ fontSize: 11, color: C.roseL, lineHeight: 1.6, margin: '8px 0px 0px' }}>{privacyLine}</p>
       )}
       <button type="button" disabled={locked || busy} onClick={onGenerate}
         style={{
           ...(locked ? btnG({ fontSize: 12 }) : btn(color, { fontSize: 12 })),
-          marginTop: 11, opacity: locked ? 0.55 : busy ? 0.6 : 1,
+          marginTop: 12, opacity: locked ? 0.55 : busy ? 0.6 : 1,
           cursor: locked ? 'not-allowed' : 'pointer',
         }}>
         {busy ? <Loader2 size={13} className="spin" /> : done ? <Check size={13} /> : locked ? <Lock size={13} /> : <FileDown size={13} />}
@@ -242,7 +242,7 @@ function Fig({ value, label, color }) {
   return (
     <div>
       <div style={{ fontSize: 17, fontWeight: 800, color, fontFamily: C.FM, lineHeight: 1.1 }}>{value}</div>
-      <div style={{ fontSize: 10, color: C.t3, marginTop: 2 }}>{label}</div>
+      <div style={{ fontSize: 10, color: C.t3, marginTop: 4 }}>{label}</div>
     </div>
   );
 }

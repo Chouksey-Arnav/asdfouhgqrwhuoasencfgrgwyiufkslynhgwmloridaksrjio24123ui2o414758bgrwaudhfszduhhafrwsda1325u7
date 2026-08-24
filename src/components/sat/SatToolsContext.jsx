@@ -198,7 +198,7 @@ function ToolRail({ accent, isMobile, calculatorOpen, referenceOpen, onCalculato
     return (
       <div style={{
         position: 'fixed', left: 16, bottom: 'calc(64px + env(safe-area-inset-bottom) + 16px)',
-        zIndex: 320, display: 'flex', flexDirection: 'column', gap: 10,
+        zIndex: 320, display: 'flex', flexDirection: 'column', gap: 8,
       }}>
         {buttons.map(b => {
           const Icon = b.icon;
@@ -238,8 +238,8 @@ function ToolRail({ accent, isMobile, calculatorOpen, referenceOpen, onCalculato
             whileHover={{ x: 6 }} whileTap={{ scale: 0.97 }}
             transition={{ type: 'spring', stiffness: 380, damping: 26 }}
             style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7,
-              padding: '14px 9px', borderRadius: '0 14px 14px 0', cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+              padding: '12px 8px', borderRadius: '0 14px 14px 0', cursor: 'pointer',
               // Longhand rather than `border` + `borderLeft: none`: React warns
               // when a shorthand and its longhand are both set on a re-render,
               // and this button re-renders every time the panel toggles.
@@ -259,8 +259,7 @@ function ToolRail({ accent, isMobile, calculatorOpen, referenceOpen, onCalculato
             <Icon size={16} color={b.active ? onTint(b.color) : b.color} />
             <span style={{
               writingMode: 'vertical-rl', fontSize: 9.5, fontWeight: 700,
-              color: b.active ? onTint(b.color) : C.t2, letterSpacing: '.14em',
-              textTransform: 'uppercase', fontFamily: C.FB,
+              color: b.active ? onTint(b.color) : C.t2, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', fontFamily: C.FB,
             }}>
               {b.label}
             </span>

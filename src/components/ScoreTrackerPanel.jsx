@@ -19,7 +19,7 @@ const ACT_SECTIONS = [
   { key: 'science', label: 'Science', max: 36, placeholder: 'e.g. 31' }
 ];
 
-function SL({ children, extra = {} }) { return <div style={{fontSize:11,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:14,...extra}}>{children}</div>; }
+function SL({ children, extra = {} }) { return <div style={{fontSize:11,fontWeight:700,color:C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginBottom:12,...extra}}>{children}</div>; }
 
 function useMediaQuery(query) {
   const [matches, setMatches] = useState(false);
@@ -317,12 +317,12 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
   const currentSuperscore = testType === 'SAT' ? satSuperscore : actSuperscore;
 
   return (
-    <div style={CC({gap:22})}>
+    <div style={CC({gap:20})}>
       <PanelHero tourTag="portfolio-deep-scores" icon={TrendingUp} color={accent} color2={C.green} m={isMobile}
         eyebrow="Test Prep" title="SAT / ACT Score Tracker"
         sub="Every attempt and your target. Feeds Home and the Admissions Calculator."
         right={
-          <div style={R({ gap: 6 })}>
+          <div style={R({ gap: 4 })}>
             {['SAT', 'ACT'].map(type => (
               <button key={type} style={btnSm(testType===type ? `linear-gradient(135deg,${accent},${C.green})` : C.s4, { fontSize: 12, boxShadow: testType===type?`0 4px 12px ${tint(accent,0.3)}`:'none' })} onClick={()=>{setTestType(type); setSections({});}}>{type} Dashboard</button>
             ))}
@@ -331,36 +331,36 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
 
       {/* Dynamic Header Metrics Grid */}
       {(latest || target || currentSuperscore) && (
-        <div style={glass({padding:22})}>
+        <div style={glass({padding:20})}>
           <div style={G(isMobile ? 2 : 4, 14, {}, false)}>
             {latest && (
               <div style={glass2({ background: 'rgba(255,255,255,0.015)' })}>
                 <div style={lbl()}>Latest Score</div>
-                <div style={{fontSize:32,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{latest.composite}</div>
-                <div style={{fontSize:11,color:C.t3,marginTop:2}}>{latest.test_type} · {new Date(latest.test_date+'T00:00:00').toLocaleDateString()}</div>
+                <div style={{fontSize:32, letterSpacing: 'calc(-0.73px + var(--msp-letter-spacing))', lineHeight: 'calc(1.17 * var(--msp-line-scale))',fontWeight:800,color:C.t1,fontFamily:C.FD}}>{latest.composite}</div>
+                <div style={{fontSize:11,color:C.t3,marginTop:4}}>{latest.test_type} · {new Date(latest.test_date+'T00:00:00').toLocaleDateString()}</div>
               </div>
             )}
             {currentSuperscore && (
               <div style={glass2({ background: 'rgba(255,255,255,0.015)', border: `1px solid ${C.violet}30` })}>
                 <div style={lbl({ color: C.violetL })}>Superscore 🔥</div>
-                <div style={{fontSize:32,fontWeight:800,color:C.violetL,fontFamily:C.FD}}>{currentSuperscore}</div>
-                <div style={{fontSize:11,color:C.t3,marginTop:2}}>Best subscores combined</div>
+                <div style={{fontSize:32, letterSpacing: 'calc(-0.73px + var(--msp-letter-spacing))', lineHeight: 'calc(1.17 * var(--msp-line-scale))',fontWeight:800,color:C.violetL,fontFamily:C.FD}}>{currentSuperscore}</div>
+                <div style={{fontSize:11,color:C.t3,marginTop:4}}>Best subscores combined</div>
               </div>
             )}
             {target && (
               <div style={glass2({ background: 'rgba(255,255,255,0.015)', border: `1px solid ${accent}30` })}>
                 <div style={lbl({ color: accent })}>Target Goal</div>
-                <div style={{fontSize:32,fontWeight:800,color:accent,fontFamily:C.FD}}>{target.composite}</div>
-                <div style={{fontSize:11,color:C.t3,marginTop:2}}>{target.test_type} Goal</div>
+                <div style={{fontSize:32, letterSpacing: 'calc(-0.73px + var(--msp-letter-spacing))', lineHeight: 'calc(1.17 * var(--msp-line-scale))',fontWeight:800,color:accent,fontFamily:C.FD}}>{target.composite}</div>
+                <div style={{fontSize:11,color:C.t3,marginTop:4}}>{target.test_type} Goal</div>
               </div>
             )}
             {latest && target && (
               <div style={glass2({ background: 'rgba(255,255,255,0.015)' })}>
                 <div style={lbl()}>Remaining Gap</div>
-                <div style={{fontSize:32,fontWeight:800,color:target.composite > latest.composite ? C.amberL : C.greenL,fontFamily:C.FD}}>
+                <div style={{fontSize:32, letterSpacing: 'calc(-0.73px + var(--msp-letter-spacing))', lineHeight: 'calc(1.17 * var(--msp-line-scale))',fontWeight:800,color:target.composite > latest.composite ? C.amberL : C.greenL,fontFamily:C.FD}}>
                   {target.composite > latest.composite ? `-${target.composite - latest.composite}` : 'Goal Met! 🎉'}
                 </div>
-                <div style={{fontSize:11,color:C.t3,marginTop:2}}>{target.composite > latest.composite ? 'points to go' : 'Superb!'}</div>
+                <div style={{fontSize:11,color:C.t3,marginTop:4}}>{target.composite > latest.composite ? 'points to go' : 'Superb!'}</div>
               </div>
             )}
           </div>
@@ -374,10 +374,10 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
                   const maxVal = testType === 'SAT' ? 800 : 36;
                   const pct = Math.round((v / maxVal) * 100);
                   return (
-                    <div key={k} style={glass2({ padding: 10 })}>
-                      <span style={{fontSize:11,color:C.t3,textTransform:'uppercase',fontWeight:700}}>{k}</span>
-                      <div style={{fontSize:18,fontWeight:800,color:C.t1,fontFamily:C.FM,margin:'2px 0 6px'}}>{v}<span style={{fontSize:11,color:C.t4}}> / {maxVal}</span></div>
-                      <div style={{height:3,background:'rgba(255,255,255,0.05)',borderRadius:2,overflow:'hidden'}}>
+                    <div key={k} style={glass2({ padding: 8 })}>
+                      <span style={{fontSize:11,color:C.t3, fontWeight:700}}>{k}</span>
+                      <div style={{fontSize:18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))',fontWeight:800,color:C.t1,fontFamily:C.FM,margin:'4px 0px 4px'}}>{v}<span style={{fontSize:11,color:C.t4}}> / {maxVal}</span></div>
+                      <div style={{height:3,background:'rgba(255,255,255,0.05)',borderRadius: 4,overflow:'hidden'}}>
                         <div style={{height:'100%',width:`${pct}%`,background:accent}}/>
                       </div>
                     </div>
@@ -396,17 +396,17 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
             <Brain size={16} color={C.amberL}/>
             <SL extra={{ margin: 0, color: C.amberL }}>Weak Section Analysis & Action Plan</SL>
           </div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: C.t1, marginBottom: 6 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: C.t1, marginBottom: 4 }}>
             Lowest relative section: <span style={{ color: C.amberL }}>{weakSectionAnalysis.section}</span> (Avg: ~{weakSectionAnalysis.score})
           </div>
-          <p style={{ fontSize: 13, color: C.t2, lineHeight: 1.6, margin: '0 0 14px' }}>
+          <p style={{ fontSize: 13, color: C.t2, lineHeight: 1.55, margin: '0px 0px 12px' }}>
             {weakSectionAnalysis.tip}
           </p>
           <div>
-            <div style={lbl({ color: C.t3, marginBottom: 6 })}>Recommended AI Coach Prompts to copy:</div>
-            <div style={CC({ gap: 6 })}>
+            <div style={lbl({ color: C.t3, marginBottom: 4 })}>Recommended AI Coach Prompts to copy:</div>
+            <div style={CC({ gap: 4 })}>
               {weakSectionAnalysis.prompts.map((p, idx) => (
-                <div key={idx} style={{ ...glass2({ padding: '8px 12px', background: 'rgba(0,0,0,0.2)' }), display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                <div key={idx} style={{ ...glass2({ padding: '8px 12px', background: 'rgba(0,0,0,0.2)' }), display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                   <span style={{ fontSize: 12, color: C.t2, fontFamily: C.FB }}>"{p}"</span>
                   <button style={btnSm(C.s4, { fontSize: 11 })} onClick={() => {
                     navigator.clipboard.writeText(p);
@@ -421,10 +421,10 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
 
       {/* Trend Line Chart with Toggles */}
       {filteredActual.length >= 1 && (
-        <div style={glass({padding:18})}>
+        <div style={glass({padding:16})}>
           <div style={R({ justifyContent: 'space-between', marginBottom: 12 })}>
             <SL extra={{ marginBottom: 0 }}>Score Trend History</SL>
-            <div style={R({ gap: 6 })}>
+            <div style={R({ gap: 4 })}>
               <button style={btnSm(chartView === 'composite' ? C.blueGrad : C.s4, { fontSize: 11 })} onClick={() => setChartView('composite')}>Composite</button>
               <button style={btnSm(chartView === 'subscores' ? C.blueGrad : C.s4, { fontSize: 11 })} onClick={() => setChartView('subscores')}>Section Subscores</button>
             </div>
@@ -446,7 +446,7 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
       )}
 
       {/* Prep Milestones Checklist */}
-      <div style={glass({ padding: 18 })}>
+      <div style={glass({ padding: 16 })}>
         <SL>Prep Milestones & Goal Tracker</SL>
         <div style={G(isMobile ? 1 : 2, 10, {}, false)}>
           {milestones.map((m, idx) => (
@@ -456,7 +456,7 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
               </div>
               <div>
                 <div style={{ fontSize: 12.5, fontWeight: 700, color: m.done ? C.t1 : C.t2, fontFamily: C.FD }}>{m.label}</div>
-                <div style={{ fontSize: 10.5, color: C.t3, marginTop: 2 }}>{m.desc}</div>
+                <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4 }}>{m.desc}</div>
               </div>
             </div>
           ))}
@@ -464,7 +464,7 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
       </div>
 
       {/* Input Score Form */}
-      <div style={glass({padding:18})}>
+      <div style={glass({padding:16})}>
         <SL>Log a test / practice score</SL>
         <form onSubmit={addScore}>
           <div style={G(3,10,{},true)}>
@@ -485,7 +485,7 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
             </div>
           </div>
 
-          <div style={{marginTop:16, borderTop: `1px solid ${C.b1}`, paddingTop: 14}}>
+          <div style={{marginTop:16, borderTop: `1px solid ${C.b1}`, paddingTop: 12}}>
             <label style={lbl()}>Section scores (Highly Recommended for analysis)</label>
             <div style={G(isMobile ? 2 : sectionDefs.length, 10, {}, false)}>
               {sectionDefs.map(s => (
@@ -497,22 +497,22 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
             </div>
           </div>
 
-          <div style={{...R({gap:14,marginTop:16})}}>
+          <div style={{...R({gap:12,marginTop:16})}}>
             <label style={{...R({gap:8}),fontSize:12.5,color:C.t2,cursor:'pointer'}}>
               <input type="checkbox" checked={isTarget} onChange={e=>setIsTarget(e.target.checked)} />
               This is a target score goal, not a real result
             </label>
           </div>
-          <button type="submit" style={{...btn(accent!==C.blue?accent:C.blueGrad),marginTop:14}}><Plus size={14}/>{isTarget?'Save Target Goal':'Log Score'}</button>
+          <button type="submit" style={{...btn(accent!==C.blue?accent:C.blueGrad),marginTop:12}}><Plus size={14}/>{isTarget?'Save Target Goal':'Log Score'}</button>
         </form>
       </div>
 
       {/* History Log list */}
       {!loading && scores.length > 0 && (
-        <div style={CC({gap:10})}>
+        <div style={CC({gap:8})}>
           <SL>Log History ({scores.length} entries)</SL>
           {scores.slice().reverse().map(s => (
-            <div key={s.id} style={{...glass2({padding:14}),display:'flex',alignItems:'center',gap:12, borderLeft: s.is_target ? `3px solid ${accent}` : 'none'}}>
+            <div key={s.id} style={{...glass2({padding:12}),display:'flex',alignItems:'center',gap:12, borderLeft: s.is_target ? `3px solid ${accent}` : 'none'}}>
               {s.is_target ? (
                 <div style={{ width: 28, height: 28, borderRadius: 8, background: `${accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Target size={14} color={accent}/>
@@ -522,10 +522,10 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
               )}
               <div style={{flex:1, minWidth:0}}>
                 <div style={R({gap:8})}>
-                  <span style={{fontSize:16,fontWeight:800,color:C.t1, fontFamily: C.FM}}>{s.composite}</span>
+                  <span style={{fontSize:16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))',fontWeight:800,color:C.t1, fontFamily: C.FM}}>{s.composite}</span>
                   {s.is_target && <span style={pill(`${accent}12`, accent, { fontSize: 9 })}>Goal Target</span>}
                 </div>
-                <div style={{fontSize:11.5,color:C.t3,marginTop:2}}>
+                <div style={{fontSize:11.5,color:C.t3,marginTop:4}}>
                   {s.is_target ? `${s.test_type} target baseline` : `Taken on ${new Date(s.test_date+'T00:00:00').toLocaleDateString()}`}
                   {s.section_scores && Object.keys(s.section_scores).length > 0 && (
                     <span> · ({Object.entries(s.section_scores).map(([k,v]) => `${k.toUpperCase()}: ${v}`).join(', ')})</span>

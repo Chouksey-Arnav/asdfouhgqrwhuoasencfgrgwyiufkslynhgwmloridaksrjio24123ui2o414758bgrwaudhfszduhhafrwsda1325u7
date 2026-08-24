@@ -25,7 +25,7 @@ const SOURCES = [
 export function SourceGrid({ value, onChange, h, accent }) {
   const { isMobile } = useViewport();
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0,1fr))', gap: 9 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0,1fr))', gap: 8 }}>
       {SOURCES.map(s => (
         <IconOptionRow key={s.value} selected={value === s.value} onClick={() => onChange(s.value)} iconBg={s.bg} icon={s.icon} label={s.label} h={h} accent={accent} />
       ))}

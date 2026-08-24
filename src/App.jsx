@@ -229,8 +229,7 @@ import { buildNotesDigest, buildHighlightsDigest } from './lib/lessonMemory';
 import {
   C, catMeta, tint, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill,
   onTint, accentText, accentFill, accentGrad, accentSweep, shade, isLight,
-  applyTheme, getStoredMode, storeMode, resolveMode, watchSystemTheme, THEME_MODES,
-} from './lib/theme';
+  applyTheme, getStoredMode, storeMode, resolveMode, watchSystemTheme, THEME_MODES, CONTROL_TRANSITION } from './lib/theme';
 import { loadA11y, saveA11y, applyA11y, motionReduced, DEFAULTS as A11Y_DEFAULTS, FONT_SCALE_STEPS, announce } from './lib/a11y';
 import AboutMePanel from './components/AboutMePanel';
 import AppearanceSettings from './components/AppearanceSettings';
@@ -572,9 +571,9 @@ class ErrorBoundary extends React.Component {
     if(this.state.err) return(
       <div style={{minHeight:'var(--msp-vh)',display:'flex',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,flexDirection:'column',gap:20,padding:40}}>
         <div style={{width:60,height:60,borderRadius:'50%',background:C.roseDim,border:`1px solid ${C.rose}40`,display:'flex',alignItems:'center',justifyContent:'center'}}><AlertTriangle size={26} color={C.rose}/></div>
-        <h2 style={{fontSize:20,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Oops! Loading issue.</h2>
-        <p style={{color:C.t2,textAlign:'center',maxWidth:400,lineHeight:1.7,fontSize:14}}>Try reloading — if it keeps happening, contact our support team at <a href="mailto:medschoolprepsupport@gmail.com" style={{color:C.blueL}}>medschoolprepsupport@gmail.com</a>.</p>
-        <div style={{display:'flex',gap:10,flexWrap:'wrap',justifyContent:'center'}}>
+        <h2 style={{fontSize:20, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))',fontWeight:700,color:C.t1,fontFamily:C.FD}}>Oops! Loading issue.</h2>
+        <p style={{color:C.t2,textAlign:'center',maxWidth:400,lineHeight: 1.55,fontSize:14}}>Try reloading — if it keeps happening, contact our support team at <a href="mailto:medschoolprepsupport@gmail.com" style={{color:C.blueL}}>medschoolprepsupport@gmail.com</a>.</p>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'center'}}>
           <a href="/prep" style={{...btnG(),textDecoration:'none'}} onClick={e=>{e.preventDefault();this.setState({err:false});this.props.onEscapeToPrep?.();}}>Go to Prep</a>
           <button style={btn()} onClick={()=>this.setState({err:false})}>Try Again</button>
         </div>
@@ -622,10 +621,10 @@ function PageHeader({icon,color=C.blue,eyebrow,title,sub,right,m=false}){
   const Ic=icon;
   return(
     <div style={{...glass({padding:m?16:20,background:`linear-gradient(120deg,${color}14,transparent 70%)`,border:`1px solid ${color}25`}),display:'flex',alignItems:'center',gap:m?12:16,flexWrap:'wrap'}}>
-      {Ic&&<div style={{width:m?38:46,height:m?38:46,borderRadius:14,background:`linear-gradient(135deg,${color}40,${color}18)`,border:`1.5px solid ${color}45`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 6px 18px ${color}25`}}><Ic size={m?18:22} color={color}/></div>}
+      {Ic&&<div style={{width:m?38:46,height:m?38:46,borderRadius:12,background:`linear-gradient(135deg,${color}40,${color}18)`,border:`1.5px solid ${color}45`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 6px 18px ${color}25`}}><Ic size={m?18:22} color={color}/></div>}
       <div style={{flex:1,minWidth:160}}>
-        {eyebrow&&<div style={{fontSize:10,fontWeight:700,color:color,letterSpacing:'.12em',textTransform:'uppercase',marginBottom:3}}>{eyebrow}</div>}
-        <h2 style={{fontSize:m?19:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{title}</h2>
+        {eyebrow&&<div style={{fontSize:10,fontWeight:700,color:color,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom:4}}>{eyebrow}</div>}
+        <h2 style={{fontSize:m?19:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing: 'calc(-0.03em + var(--msp-letter-spacing))',margin:0}}>{title}</h2>
         {sub&&<div style={{fontSize:m?11.5:12.5,color:C.t2,marginTop:4,lineHeight:1.5,maxWidth:520}}>{sub}</div>}
       </div>
       {right&&<div style={{flexShrink:0}}>{right}</div>}
@@ -707,8 +706,8 @@ function VideoModal({ytId,title,url,onClose,m=false}){
   return(
     <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.93)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:m?12:24,backdropFilter:'blur(8px)'}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
       <motion.div initial={{scale:.95,y:10}} animate={{scale:1,y:0}} exit={{scale:.95,y:10}} style={{width:'100%',maxWidth:920,...glass({padding:0,overflow:'hidden',borderRadius:m?12:20,border:`1px solid ${C.b2}`,boxShadow:'0 40px 100px rgba(0,0,0,0.9)'})}}>
-        <div style={{...R({justifyContent:'space-between'}),padding:'14px 20px',borderBottom:`1px solid ${C.b1}`,background:C.s1}}>
-          <div style={R({gap:10})}>
+        <div style={{...R({justifyContent:'space-between'}),padding:'12px 20px',borderBottom:`1px solid ${C.b1}`,background:C.s1}}>
+          <div style={R({gap:8})}>
             <span style={{...pill('rgba(239,68,68,0.2)','#f87171',{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4}}><Play size={9} fill="currentColor"/>YouTube</span>
             <span style={{fontSize:14,fontWeight:600,color:C.t1,fontFamily:C.FB}}>{title}</span>
           </div>
@@ -719,10 +718,10 @@ function VideoModal({ytId,title,url,onClose,m=false}){
           {status==='loading'&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:C.s1,pointerEvents:'none'}}>
             <div style={{width:32,height:32,borderRadius:'50%',border:`3px solid ${C.b2}`,borderTopColor:C.blue,animation:'spin .8s linear infinite'}}/>
           </div>}
-          {broken&&<div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:14,background:C.s1,padding:24,textAlign:'center'}}>
+          {broken&&<div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,background:C.s1,padding:24,textAlign:'center'}}>
             <AlertTriangle size={28} color="#f87171"/>
-            <div style={{fontSize:13,color:C.t2,maxWidth:380,lineHeight:1.6}}>{status==='timeout'?"This video is taking too long to respond — it may be region-locked or temporarily unavailable.":errMsg}</div>
-            <a href={watchUrl} target="_blank" rel="noreferrer" style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}30`,textDecoration:'none',fontSize:12}),display:'inline-flex',alignItems:'center',gap:6}}>Watch on YouTube<ExternalLink size={12}/></a>
+            <div style={{fontSize:13,color:C.t2,maxWidth:380,lineHeight: 1.55}}>{status==='timeout'?"This video is taking too long to respond — it may be region-locked or temporarily unavailable.":errMsg}</div>
+            <a href={watchUrl} target="_blank" rel="noreferrer" style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}30`,textDecoration:'none',fontSize:12}),display:'inline-flex',alignItems:'center',gap:4}}>Watch on YouTube<ExternalLink size={12}/></a>
           </div>}
         </div>
       </motion.div>
@@ -776,16 +775,16 @@ function LessonVideoInline({ytId,title,onWatched,watched=false}){
   const broken=status==='error'||status==='timeout';
   return(
     <div>
-      <div style={{position:'relative',paddingBottom:'56.25%',height:0,borderRadius:14,overflow:'hidden',border:`1px solid ${C.b1}`,background:C.s1}}>
+      <div style={{position:'relative',paddingBottom:'56.25%',height:0,borderRadius:12,overflow:'hidden',border:`1px solid ${C.b1}`,background:C.s1}}>
         <iframe id={frameId} style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',border:'none',visibility:broken?'hidden':'visible'}} src={`https://www.youtube-nocookie.com/embed/${ytId}?rel=0&modestbranding=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`} title={title} allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen/>
         {status==='loading'&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}}>
           <div style={{width:32,height:32,borderRadius:'50%',border:`3px solid ${C.b2}`,borderTopColor:C.blue,animation:'spin .8s linear infinite'}}/>
         </div>}
         {broken&&<div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,padding:20,textAlign:'center'}}>
           <AlertTriangle size={24} color="#f87171"/>
-          <div style={{fontSize:12.5,color:C.t2,maxWidth:320,lineHeight:1.6}}>{status==='timeout'?"This video is taking too long to respond — it may be temporarily unavailable.":(playerRef.current?._errMsg||'This video failed to load.')}</div>
+          <div style={{fontSize:12.5,color:C.t2,maxWidth:320,lineHeight: 1.55}}>{status==='timeout'?"This video is taking too long to respond — it may be temporarily unavailable.":(playerRef.current?._errMsg||'This video failed to load.')}</div>
           <div style={R({gap:8})}>
-            <a href={`https://www.youtube.com/watch?v=${ytId}`} target="_blank" rel="noreferrer" style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}30`,textDecoration:'none',fontSize:11.5}),display:'inline-flex',alignItems:'center',gap:5}}>Watch on YouTube<ExternalLink size={11}/></a>
+            <a href={`https://www.youtube.com/watch?v=${ytId}`} target="_blank" rel="noreferrer" style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}30`,textDecoration:'none',fontSize:11.5}),display:'inline-flex',alignItems:'center',gap:4}}>Watch on YouTube<ExternalLink size={11}/></a>
             {!watched&&<button style={btnSm(C.s3,{color:C.t2,fontSize:11.5})} onClick={()=>{watchedRef.current=true;onWatched();}}>Continue anyway</button>}
           </div>
         </div>}
@@ -887,14 +886,14 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
       {/* Header — progress dots + close */}
       <div style={{position:'sticky',top:0,zIndex:20,background:`${C.bg}f2`,backdropFilter:'blur(12px)',borderBottom:`1px solid ${C.b1}`,padding:m?'12px 14px':'16px 24px'}}>
         <div style={{display:'flex',alignItems:'center',gap:12,maxWidth:860,margin:'0 auto',width:'100%'}}>
-          <button onClick={onClose} aria-label="Close lesson" style={{background:'none',border:'none',color:C.t3,cursor:'pointer',width:40,height:40,minWidth:40,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:10,flexShrink:0}}><X size={18}/></button>
+          <button onClick={onClose} aria-label="Close lesson" style={{background:'none',border:'none',color:C.t3,cursor:'pointer',width:40,height:40,minWidth:40,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:8,flexShrink:0}}><X size={18}/></button>
           <div style={{flex:1,minWidth:0}}>
             <div style={{fontSize:m?12:13,fontWeight:700,color:C.t1,fontFamily:C.FD,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{lesson.title}</div>
-            <div style={{fontSize:10,color:C.t3,marginTop:1}}>{unit.title}{pathwayLabel?` · ${pathwayLabel}`:''}</div>
+            <div style={{fontSize:10,color:C.t3,marginTop:4}}>{unit.title}{pathwayLabel?` · ${pathwayLabel}`:''}</div>
           </div>
-          <div style={{display:'flex',gap:5,flexShrink:0}}>
+          <div style={{display:'flex',gap:4,flexShrink:0}}>
             {stepOrder.map((s,i)=>(
-              <span key={s} style={{width:i===curIdx?18:7,height:7,borderRadius:4,background:i<curIdx||isVerified?C.green:i===curIdx?accent:C.s4,transition:'all .25s'}}/>
+              <span key={s} style={{width:i===curIdx?18:7,height:7,borderRadius:4,background:i<curIdx||isVerified?C.green:i===curIdx?accent:C.s4,transition: CONTROL_TRANSITION}}/>
             ))}
           </div>
         </div>
@@ -905,55 +904,55 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
         <div style={{maxWidth:860,margin:'0 auto',padding:m?'20px 16px 100px':'32px 24px 110px',width:'100%',boxSizing:'border-box'}}>
 
           {step==='overview'&&(
-            <div style={CC({gap:18})}>
+            <div style={CC({gap:16})}>
               <div style={{width:56,height:56,borderRadius:16,background:`${accent}18`,border:`1px solid ${accent}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><BookOpen size={24} color={accent}/></div>
-              <h2 style={{fontSize:m?21:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{lesson.title}</h2>
-              <div style={R({gap:14,flexWrap:'wrap'})}>
-                {hasArticle&&<span style={{...pill(C.s3,C.t2,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:5}}><ScrollText size={11}/>{content.readMins||5} min read</span>}
-                {hasArticle&&<span style={{...pill(`${accent}18`,accent,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:5}}><Headphones size={11}/>Or listen to it</span>}
-                {hasVideo&&<span style={{...pill(C.s3,C.t2,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:5}}><Play size={10}/>Watch to reinforce</span>}
-                <span style={{...pill(C.greenDim,C.greenL,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:5}}><ShieldCheck size={11}/>Quiz to verify</span>
+              <h2 style={{fontSize:m?21:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing: 'calc(-0.03em + var(--msp-letter-spacing))',margin:0}}>{lesson.title}</h2>
+              <div style={R({gap:12,flexWrap:'wrap'})}>
+                {hasArticle&&<span style={{...pill(C.s3,C.t2,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:4}}><ScrollText size={11}/>{content.readMins||5} min read</span>}
+                {hasArticle&&<span style={{...pill(`${accent}18`,accent,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:4}}><Headphones size={11}/>Or listen to it</span>}
+                {hasVideo&&<span style={{...pill(C.s3,C.t2,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:4}}><Play size={10}/>Watch to reinforce</span>}
+                <span style={{...pill(C.greenDim,C.greenL,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:4}}><ShieldCheck size={11}/>Quiz to verify</span>
               </div>
               {hasArticle&&(
-                <div style={{fontSize:11.5,color:C.t3,lineHeight:1.6,marginTop:-6}}>
+                <div style={{fontSize:11.5,color:C.t3,lineHeight: 1.55,marginTop:-6}}>
                   Reading isn't the only way through this — every article can be played as audio, so you can finish it on the bus or while you're doing something else.
                 </div>
               )}
               {lesson.objectives?.length>0&&(
                 <div style={glass2({padding:16})}>
-                  <div style={{fontSize:9.5,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:10}}>What you'll learn</div>
+                  <div style={{fontSize:9.5,fontWeight:700,color:C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginBottom:8}}>What you'll learn</div>
                   <div style={CC({gap:8})}>
                     {lesson.objectives.map((o,i)=>(
-                      <div key={i} style={{fontSize:13,color:C.t2,display:'flex',gap:8,alignItems:'flex-start',lineHeight:1.5}}><span style={{color:accent,flexShrink:0,marginTop:1}}>–</span>{o}</div>
+                      <div key={i} style={{fontSize:13,color:C.t2,display:'flex',gap:8,alignItems:'flex-start',lineHeight:1.5}}><span style={{color:accent,flexShrink:0,marginTop:4}}>–</span>{o}</div>
                     ))}
                   </div>
                 </div>
               )}
               {!hasArticle&&lesson.url&&(
-                <div style={{...glass2({padding:14,background:C.amberDim,border:`1px solid ${C.amber}25`})}}>
+                <div style={{...glass2({padding:12,background:C.amberDim,border:`1px solid ${C.amber}25`})}}>
                   <div style={{fontSize:12,color:C.t2,lineHeight:1.6}}>This lesson's full in-house article hasn't been migrated off its original source yet — you'll see the reference material and a dedicated verification quiz below.</div>
                 </div>
               )}
-              {isVerified&&<div style={{...pill(C.greenDim,C.greenL,{fontSize:11}),display:'inline-flex',alignItems:'center',gap:6,alignSelf:'flex-start'}}><ShieldCheck size={12}/>Already verified{pathwayEntry?.quizScore!=null?` · ${pathwayEntry.quizScore}%`:''}</div>}
+              {isVerified&&<div style={{...pill(C.greenDim,C.greenL,{fontSize:11}),display:'inline-flex',alignItems:'center',gap:4,alignSelf:'flex-start'}}><ShieldCheck size={12}/>Already verified{pathwayEntry?.quizScore!=null?` · ${pathwayEntry.quizScore}%`:''}</div>}
             </div>
           )}
 
           {step==='article'&&hasArticle&&(
-            <div style={CC({gap:14})}>
+            <div style={CC({gap:12})}>
             {/* Audio sits above the scroll region, not inside it — a listener must be able to
                 pause without first scrolling back to the top of the article. */}
             <LessonAudioPlayer segments={audioSegments} accent={accent} m={m}
               onSpeakingSection={setSpeakingSection} onFinished={handleAudioFinished}/>
             <div ref={articleScrollRef} onScroll={handleArticleScroll} style={{maxHeight:m?'calc(var(--msp-vh) - 296px)':'calc(var(--msp-vh) - 312px)',overflowY:'auto',paddingRight:4}}>
-              <div style={CC({gap:22})}>
-                {!m&&<div style={{fontSize:10.5,color:C.t4,display:'flex',alignItems:'center',gap:6}}><Highlighter size={12}/>Select any passage to highlight it</div>}
+              <div style={CC({gap:20})}>
+                {!m&&<div style={{fontSize:10.5,color:C.t4,display:'flex',alignItems:'center',gap:4}}><Highlighter size={12}/>Select any passage to highlight it</div>}
                 <HighlightableArticle sections={content.article.sections} highlights={highlights} onAdd={onAddHighlight} onRemove={onRemoveHighlight} accent={accent} m={m} activeSectionIdx={speakingSection}/>
                 {content.article.keyTakeaways?.length>0&&(
                   <div style={{...glass2({padding:16,background:`${accent}0a`,border:`1px solid ${accent}25`})}}>
-                    <div style={{fontSize:9.5,fontWeight:700,color:accent,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:10}}>Key takeaways</div>
+                    <div style={{fontSize:9.5,fontWeight:700,color:accent, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginBottom:8}}>Key takeaways</div>
                     <div style={CC({gap:8})}>
                       {content.article.keyTakeaways.map((t,i)=>(
-                        <div key={i} style={{fontSize:12.5,color:C.t2,display:'flex',gap:8,alignItems:'flex-start',lineHeight:1.55}}><Check size={13} color={accent} style={{flexShrink:0,marginTop:2}}/>{t}</div>
+                        <div key={i} style={{fontSize:12.5,color:C.t2,display:'flex',gap:8,alignItems:'flex-start',lineHeight:1.55}}><Check size={13} color={accent} style={{flexShrink:0,marginTop:4}}/>{t}</div>
                       ))}
                     </div>
                   </div>
@@ -965,23 +964,23 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
                     text, which is what makes the expansion read as part of the lesson. */}
                 {feedbackSlot}
                 <div style={{height:1}}/>
-                {!articleRead&&<div style={{fontSize:11,color:C.t3,textAlign:'center',padding:'8px 0'}}>Read to the end — or listen to the whole thing — to continue</div>}
+                {!articleRead&&<div style={{fontSize:11,color:C.t3,textAlign:'center',padding:'8px 0px'}}>Read to the end — or listen to the whole thing — to continue</div>}
               </div>
             </div>
             </div>
           )}
 
           {step==='video'&&hasVideo&&(
-            <div style={CC({gap:14})}>
+            <div style={CC({gap:12})}>
               {/* The old label for this step was "verification video", which reviewers read as
                   "record yourself to prove you did the lesson" — the exact opposite of what it is.
                   The heading and the line under it now say plainly who is watching whom, and why
                   the step exists at all. */}
-              <div style={CC({gap:5})}>
+              <div style={CC({gap:4})}>
                 <div style={{fontSize:m?16:18,fontWeight:800,color:C.t1,fontFamily:C.FD,display:'flex',alignItems:'center',gap:8}}>
                   <Play size={15} color={accent}/>Watch to reinforce
                 </div>
-                <div style={{fontSize:12.5,color:C.t2,lineHeight:1.6}}>
+                <div style={{fontSize:12.5,color:C.t2,lineHeight: 1.55}}>
                   Watch to reinforce what you just read — seeing it explained visually helps it stick. Nothing is recorded, and nothing is asked of you here; just press play.
                 </div>
               </div>
@@ -992,25 +991,25 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
 
           {step==='quiz'&&(
             <div style={CC({gap:16,alignItems:'center',textAlign:'center',paddingTop:20})}>
-              <div style={{width:64,height:64,borderRadius:18,background:`${C.green}18`,border:`1px solid ${C.green}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><ShieldCheck size={28} color={C.green}/></div>
+              <div style={{width:64,height:64,borderRadius:16,background:`${C.green}18`,border:`1px solid ${C.green}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><ShieldCheck size={28} color={C.green}/></div>
               <h3 style={{fontSize:m?18:21,fontWeight:800,color:C.t1,fontFamily:C.FD,margin:0}}>Ready to verify this lesson?</h3>
-              <p style={{fontSize:13,color:C.t2,lineHeight:1.7,maxWidth:420,margin:0}}>Pass the quiz at {VERIFY_PASS_PCT}% or higher to mark "{lesson.title}" verified — this is the only thing that actually counts toward unit and pathway mastery. The bar is the same {VERIFY_PASS_PCT}% for every student; the questions are not.</p>
+              <p style={{fontSize:13,color:C.t2,lineHeight: 1.55,maxWidth:420,margin:0}}>Pass the quiz at {VERIFY_PASS_PCT}% or higher to mark "{lesson.title}" verified — this is the only thing that actually counts toward unit and pathway mastery. The bar is the same {VERIFY_PASS_PCT}% for every student; the questions are not.</p>
               {/* Says out loud that the draw is per-student — the personalization is real
                   (lib/quizPersonalization.js) but invisible unless we name it. */}
-              {quizBlurb&&<div style={{fontSize:11.5,color:C.t3,lineHeight:1.6,maxWidth:420}}>{quizBlurb}</div>}
+              {quizBlurb&&<div style={{fontSize:11.5,color:C.t3,lineHeight: 1.55,maxWidth:420}}>{quizBlurb}</div>}
               {pathwayEntry?.quizScore!=null&&!isVerified&&<div style={{...pill(C.roseDim,C.rose,{fontSize:11})}}>Last attempt: {pathwayEntry.quizScore}% — try again below</div>}
-              <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(`linear-gradient(135deg,${C.green},#059669)`,{padding:'13px 28px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={onStartQuiz}>{pathwayEntry?.quizScore!=null?'Try Again':'Start Verification Quiz'}<ArrowRight size={15}/></motion.button>
+              <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(`linear-gradient(135deg,${C.green},#059669)`,{padding:'12px 28px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={onStartQuiz}>{pathwayEntry?.quizScore!=null?'Try Again':'Start Verification Quiz'}<ArrowRight size={15}/></motion.button>
             </div>
           )}
 
           {step==='complete'&&(
             <div style={CC({gap:16,alignItems:'center',textAlign:'center',paddingTop:24})}>
-              <div style={{width:72,height:72,borderRadius:20,background:`${C.green}18`,border:`1px solid ${C.green}35`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 0 30px ${C.green}30`}}><ShieldCheck size={32} color={C.green}/></div>
+              <div style={{width:72,height:72,borderRadius:16,background:`${C.green}18`,border:`1px solid ${C.green}35`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 0 30px ${C.green}30`}}><ShieldCheck size={32} color={C.green}/></div>
               <h3 style={{fontSize:m?20:24,fontWeight:800,color:C.t1,fontFamily:C.FD,margin:0}}>Lesson verified{pathwayEntry?.quizScore!=null?` — ${pathwayEntry.quizScore}%`:''}</h3>
-              <p style={{fontSize:13,color:C.t2,lineHeight:1.7,maxWidth:420,margin:0}}>"{lesson.title}" is locked in for good. {hasNextLesson?'Keep the momentum going with the next one.':'That was the last lesson in this unit — nice work.'}</p>
-              <div style={R({gap:10,justifyContent:'center',flexWrap:'wrap'})}>
+              <p style={{fontSize:13,color:C.t2,lineHeight: 1.55,maxWidth:420,margin:0}}>"{lesson.title}" is locked in for good. {hasNextLesson?'Keep the momentum going with the next one.':'That was the last lesson in this unit — nice work.'}</p>
+              <div style={R({gap:8,justifyContent:'center',flexWrap:'wrap'})}>
                 {hasNextLesson&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(accent===C.blue?C.blueGrad:accentGrad(accent),{padding:'12px 24px',fontSize:13}),display:'inline-flex',alignItems:'center',gap:8}} onClick={onNextLesson}>Next Lesson<ArrowRight size={14}/></motion.button>}
-                <button style={{...btnG({padding:'12px 20px',fontSize:13}),display:'inline-flex',alignItems:'center',gap:6}} onClick={onClose}>Back to Pathway</button>
+                <button style={{...btnG({padding:'12px 20px',fontSize:13}),display:'inline-flex',alignItems:'center',gap:4}} onClick={onClose}>Back to Pathway</button>
               </div>
               {/* Also offered here, not only under the article: a lesson with no in-app article
                   would otherwise never get asked, and a student who only decides how a lesson
@@ -1025,11 +1024,11 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
       {/* Footer nav — big, thumb-reachable tap targets */}
       {step!=='quiz'&&step!=='complete'&&(
         <div style={{position:'sticky',bottom:0,background:`${C.bg}f5`,backdropFilter:'blur(12px)',borderTop:`1px solid ${C.b1}`,padding:m?'12px 14px':'16px 24px',paddingBottom:m?'calc(12px + env(safe-area-inset-bottom))':16}}>
-          <div style={{display:'flex',gap:10,maxWidth:860,margin:'0 auto'}}>
-            <button onClick={goBack} disabled={curIdx===0} style={{...btnG({flex:'0 0 auto',padding:'14px 18px',fontSize:13,opacity:curIdx===0?.4:1,minHeight:48}),display:'inline-flex',alignItems:'center',gap:6}}><ChevronLeft size={16}/>Back</button>
+          <div style={{display:'flex',gap:8,maxWidth:860,margin:'0 auto'}}>
+            <button onClick={goBack} disabled={curIdx===0} style={{...btnG({flex:'0 0 auto',padding:'12px 16px',fontSize:13,opacity:curIdx===0?.4:1,minHeight:48}),display:'inline-flex',alignItems:'center',gap:4}}><ChevronLeft size={16}/>Back</button>
             <motion.button whileHover={{scale:1.01}} whileTap={{scale:.98}} onClick={goNext}
               disabled={(step==='article'&&!canContinueArticle)||(step==='video'&&!canContinueVideo)}
-              style={{...btn(accent===C.blue?C.blueGrad:accentGrad(accent),{flex:1,padding:'14px 18px',fontSize:14,minHeight:48,opacity:((step==='article'&&!canContinueArticle)||(step==='video'&&!canContinueVideo))?.45:1,cursor:((step==='article'&&!canContinueArticle)||(step==='video'&&!canContinueVideo))?'not-allowed':'pointer'}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:8}}>
+              style={{...btn(accent===C.blue?C.blueGrad:accentGrad(accent),{flex:1,padding:'12px 16px',fontSize:14,minHeight:48,opacity:((step==='article'&&!canContinueArticle)||(step==='video'&&!canContinueVideo))?.45:1,cursor:((step==='article'&&!canContinueArticle)||(step==='video'&&!canContinueVideo))?'not-allowed':'pointer'}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:8}}>
               {step==='overview'?'Begin':'Continue'}<ChevronRight size={16}/>
             </motion.button>
           </div>
@@ -1052,32 +1051,32 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
               initial={{opacity:0,scale:.94,y:12}} animate={{opacity:1,scale:1,y:0}} exit={{opacity:0,scale:.96,y:8}}
               transition={{type:'spring',damping:26,stiffness:340}}
               style={{position:'fixed',zIndex:401,left:'50%',top:'50%',transform:'translate(-50%,-50%)',
-                width:'min(460px,92vw)',background:C.s0,border:`1px solid ${C.b2}`,borderRadius:18,
+                width:'min(460px,92vw)',background:C.s0,border:`1px solid ${C.b2}`,borderRadius:16,
                 padding:m?20:26,boxShadow:'0 20px 60px rgba(0,0,0,0.55)'}}>
-              <div style={{width:44,height:44,borderRadius:13,background:`${accent}18`,border:`1px solid ${accent}35`,display:'grid',placeItems:'center',marginBottom:14}}>
+              <div style={{width:44,height:44,borderRadius:12,background:`${accent}18`,border:`1px solid ${accent}35`,display:'grid',placeItems:'center',marginBottom:12}}>
                 {pendingConfirm==='article'?<ScrollText size={20} color={accent}/>:<Play size={19} color={accent}/>}
               </div>
-              <h3 style={{fontSize:m?16.5:18.5,fontWeight:800,color:C.t1,fontFamily:C.FD,margin:'0 0 8px',letterSpacing:'-.02em'}}>
+              <h3 style={{fontSize:m?16.5:18.5,fontWeight:800,color:C.t1,fontFamily:C.FD,margin:'0px 0px 8px',letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))'}}>
                 {pendingConfirm==='article'?'Did you finish reading it?':'Did you finish the video?'}
               </h3>
-              <p style={{fontSize:12.5,color:C.t2,lineHeight:1.65,margin:'0 0 18px'}}>
+              <p style={{fontSize:12.5,color:C.t2,lineHeight: 1.55,margin:'0px 0px 16px'}}>
                 {pendingConfirm==='article'
                   ? `We can see you reached the bottom of "${lesson.title}", but scrolling isn't the same as reading it. Only tick this off if you actually got through it — nothing bad happens if you didn't.`
                   : `We can see the video played through, but that isn't the same as you watching it. Only tick this off if you actually did — you can go back and finish it instead.`}
               </p>
-              <div style={{display:'flex',flexDirection:'column',gap:9}}>
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
                 <motion.button whileTap={{scale:.98}} autoFocus
                   onClick={()=>{ onConfirmStep?.(pendingConfirm); setPendingConfirm(null); advance(); }}
-                  style={{...btn(accent===C.blue?C.blueGrad:accentGrad(accent),{padding:'13px 18px',fontSize:13.5,minHeight:48}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                  style={{...btn(accent===C.blue?C.blueGrad:accentGrad(accent),{padding:'12px 16px',fontSize:13.5,minHeight:48}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:8}}>
                   <Check size={15}/>Yes — I'm done with this, mark it off
                 </motion.button>
                 <button onClick={()=>setPendingConfirm(null)}
-                  style={{...btnG({padding:'12px 18px',fontSize:13,minHeight:46}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:7}}>
+                  style={{...btnG({padding:'12px 16px',fontSize:13,minHeight:46}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:8}}>
                   <ChevronLeft size={14}/>Not yet — take me back
                 </button>
                 {onContinueLater&&(
                   <button onClick={()=>{ onConfirmStep?.(pendingConfirm); setPendingConfirm(null); onContinueLater(); }}
-                    style={{...btnG({padding:'12px 18px',fontSize:12.5,minHeight:46,border:'none',color:C.t3}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:7}}>
+                    style={{...btnG({padding:'12px 16px',fontSize:12.5,minHeight:46,border:'none',color:C.t3}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:8}}>
                     <Coffee size={14}/>Done, but I have to go — save my spot
                   </button>
                 )}
@@ -1127,21 +1126,21 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
           <Arc pct={pct} size={96} stroke={7} color={sc} label={`${pct}%`} sub="SCORE"/>
           <div style={{fontSize:22,fontWeight:800,fontFamily:C.FM,marginBottom:4,color:sc,marginTop:12}}>{scoreRef.current}/{tot} correct</div>
           <div style={{fontSize:13,color:C.t2}}>{quiz.title}</div>
-          {!readonly&&<div style={{fontSize:11,color:C.t3,marginTop:4,fontFamily:C.FM,display:'inline-flex',alignItems:'center',gap:5}}><Timer size={11}/>{fmtT(elapsed)} elapsed</div>}
-          <div style={R({justifyContent:'center',gap:10,marginTop:20})}>
+          {!readonly&&<div style={{fontSize:11,color:C.t3,marginTop:4,fontFamily:C.FM,display:'inline-flex',alignItems:'center',gap:4}}><Timer size={11}/>{fmtT(elapsed)} elapsed</div>}
+          <div style={R({justifyContent:'center',gap:8,marginTop:20})}>
             <button style={{...btn(accentGrad(sc)),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>onFinish(scoreRef.current,tot)}>Save & Exit<ArrowRight size={15}/></button>
-            <button style={{...btnG(),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>exportQuizResult(quiz,answers,scoreRef.current,tot)}><FileDown size={14}/>Export PDF</button>
+            <button style={{...btnG(),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>exportQuizResult(quiz,answers,scoreRef.current,tot)}><FileDown size={14}/>Export PDF</button>
           </div>
         </div>
         <div style={R({justifyContent:'space-between',marginBottom:16})}>
-          <span style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase'}}>Review · Q {ri+1} / {tot}</span>
+          <span style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>Review · Q {ri+1} / {tot}</span>
           <div style={R({gap:8})}>
             <button style={{...btnSm(C.s3,{color:C.t2}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>setRi(i=>Math.max(0,i-1))} disabled={ri===0}><ChevronLeft size={13}/>Prev</button>
             <button style={{...btnSm(C.s3,{color:C.t2}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>setRi(i=>Math.min(tot-1,i+1))} disabled={ri===tot-1}>Next<ChevronRight size={13}/></button>
           </div>
         </div>
         {a&&<div style={glass()}>
-          <MathText text={a.q} style={{fontSize:15,fontWeight:600,lineHeight:1.7,color:C.t1,fontFamily:C.FB,display:'block',marginBottom:18}}/>
+          <MathText text={a.q} style={{fontSize:15,fontWeight:600,lineHeight:1.7,color:C.t1,fontFamily:C.FB,display:'block',marginBottom:16}}/>
           <div style={CC({gap:8})}>
             {a.choices.map((ch,ci)=>{const ok=ci===a.correct,bad=ci===a.sel&&!a.ok;return(
               <div key={ci} style={{...glass2({background:ok?C.greenDim:bad?C.roseDim:'rgba(255,255,255,0.02)',border:`1px solid ${ok?`${C.green}40`:bad?`${C.rose}40`:C.b1}`,padding:'12px 16px'}),display:'flex',gap:12,alignItems:'center'}}>
@@ -1150,13 +1149,13 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
               </div>
             );})}
           </div>
-          <div style={{marginTop:16,background:C.blueDim,border:`1px solid rgba(45,127,255,0.2)`,borderRadius:10,padding:16}}>
-            <div style={{fontSize:10,fontWeight:700,color:C.blueL,letterSpacing:'.1em',marginBottom:8}}>EXPLANATION</div>
+          <div style={{marginTop:16,background:C.blueDim,border:`1px solid rgba(45,127,255,0.2)`,borderRadius:8,padding:16}}>
+            <div style={{fontSize:10,fontWeight:700,color:C.blueL,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginBottom:8}}>EXPLANATION</div>
             <MathText text={a.exp} style={{fontSize:13,color:C.t1,lineHeight:1.75,display:'block'}}/>
           </div>
         </div>}
-        <div style={R({flexWrap:'wrap',gap:5,marginTop:16})}>
-          {answers.map((ans,i)=><button key={i} onClick={()=>setRi(i)} style={{width:28,height:28,borderRadius:6,background:ans.ok?C.green:C.rose,border:'none',cursor:'pointer',fontSize:10,color:'#fff',fontWeight:700,fontFamily:C.FM,outline:ri===i?'2px solid white':undefined,outlineOffset:2,opacity:ri===i?1:.55,transition:'opacity .15s'}}>{i+1}</button>)}
+        <div style={R({flexWrap:'wrap',gap:4,marginTop:16})}>
+          {answers.map((ans,i)=><button key={i} onClick={()=>setRi(i)} style={{width:28,height:28,borderRadius:4,background:ans.ok?C.green:C.rose,border:'none',cursor:'pointer',fontSize:10,color:'#fff',fontWeight:700,fontFamily:C.FM,outline:ri===i?'2px solid white':undefined,outlineOffset:2,opacity:ri===i?1:.55,transition:'opacity .15s'}}>{i+1}</button>)}
         </div>
       </div>
     );
@@ -1166,7 +1165,7 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
     <div style={{padding:m?16:28}}>
       <div style={R({marginBottom:m?18:26})}>
         <div style={{flex:1}}>
-          <div style={R({gap:8,marginBottom:10})}>
+          <div style={R({gap:8,marginBottom:8})}>
             <span style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{readonly?'Reviewing':'Question'} {qi+1} / {tot}</span>
             {!readonly&&<span style={{fontSize:11,color:C.t3,fontFamily:C.FM,display:'inline-flex',alignItems:'center',gap:4,marginLeft:'auto',marginRight:12}}><Timer size={11}/>{fmtT(elapsed)}</span>}
           </div>
@@ -1191,11 +1190,11 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
           );
         })}
       </div>
-      {conf&&<motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{marginTop:18,background:C.blueDim,border:`1px solid rgba(45,127,255,0.2)`,borderRadius:10,padding:16}}>
-        <div style={{fontSize:10,fontWeight:700,color:C.blueL,letterSpacing:'.1em',marginBottom:8}}>EXPLANATION</div>
+      {conf&&<motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{marginTop:16,background:C.blueDim,border:`1px solid rgba(45,127,255,0.2)`,borderRadius:8,padding:16}}>
+        <div style={{fontSize:10,fontWeight:700,color:C.blueL,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginBottom:8}}>EXPLANATION</div>
         <MathText text={q.exp} style={{fontSize:13,color:C.t1,lineHeight:1.75,display:'block'}}/>
       </motion.div>}
-      <div style={{marginTop:22,...R({justifyContent:'flex-end',gap:10})}}>
+      <div style={{marginTop:20,...R({justifyContent:'flex-end',gap:8})}}>
         {!conf&&sel!==null&&<button style={{...btn(),display:'inline-flex',alignItems:'center',gap:8}} onClick={confirm}>Confirm Answer<ArrowRight size={15}/></button>}
         {conf&&<button style={{...btn(),display:'inline-flex',alignItems:'center',gap:8}} onClick={next}>{qi<tot-1?'Next Question':'View Results'}<ArrowRight size={15}/></button>}
       </div>
@@ -1219,33 +1218,33 @@ function FlipCard({card,flipped,onClick,m=false,streak=0}){
       <motion.div key={card.front} initial={{opacity:0,scale:.97}} animate={{opacity:1,scale:1,rotateY:flipped?180:0}} transition={{rotateY:{duration:.55,ease:[.16,1,.3,1]},opacity:{duration:.25},scale:{duration:.25}}} style={{position:'relative',width:'100%',minHeight:m?320:260,transformStyle:'preserve-3d'}}>
         {/* Front */}
         <div onClick={()=>{onClick();play('flip');setShowHint(false);}} style={{position:'absolute',inset:0,cursor:'pointer',backfaceVisibility:'hidden',WebkitBackfaceVisibility:'hidden',...glass({display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center',flexDirection:'column',gap:16,padding:m?24:36,boxShadow:glowShadow,transition:'box-shadow .4s ease',overflowY:'auto'})}}>
-          <div style={{position:'absolute',top:16,left:16,...R({gap:6,flexWrap:'wrap',maxWidth:'60%'})}}>
+          <div style={{position:'absolute',top:16,left:16,...R({gap:4,flexWrap:'wrap',maxWidth:'60%'})}}>
             {card.category&&<span style={pill(C.s4,C.t2,{fontSize:9.5})}>{card.category}</span>}
             {card.difficulty&&<span style={pill(`${dCol}18`,dCol,{fontSize:9.5})}>{card.difficulty}</span>}
             {card.type==='cloze'&&<span style={pill(C.violetDim,C.violetL,{fontSize:9.5})}>Fill in the blank</span>}
           </div>
           {nxt&&<div style={{...pill(C.blueDim,C.blueL,{fontSize:10,position:'absolute',top:16,right:16})}}>{`Next: ${nxt}`}</div>}
-          <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.14em',textTransform:'uppercase',marginTop:card.category||card.difficulty||card.type==='cloze'?14:0}}>QUESTION · Tap to reveal</div>
-          <MathText text={card.front} style={{fontSize:m?16:18,fontWeight:600,lineHeight:1.65,color:C.t1,fontFamily:C.FD,display:'block'}}/>
+          <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginTop:card.category||card.difficulty||card.type==='cloze'?14:0}}>QUESTION · Tap to reveal</div>
+          <MathText text={card.front} style={{fontSize:m?16:18,fontWeight:600,lineHeight: 1.55,color:C.t1,fontFamily:C.FD,display:'block'}}/>
           {card.hint&&(
             <div onClick={e=>e.stopPropagation()}>
               {showHint?(
-                <div style={{...pill(C.amberDim,C.amberL,{fontSize:11,gap:6,maxWidth:360,whiteSpace:'normal',textAlign:'left'})}}><Lightbulb size={12} style={{flexShrink:0}}/>{card.hint}</div>
+                <div style={{...pill(C.amberDim,C.amberL,{fontSize:11,gap:4,maxWidth:360,whiteSpace:'normal',textAlign:'left'})}}><Lightbulb size={12} style={{flexShrink:0}}/>{card.hint}</div>
               ):(
-                <button onClick={()=>setShowHint(true)} style={{...btnSm(C.s4,{color:C.t2,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}><Lightbulb size={12}/>Show hint</button>
+                <button onClick={()=>setShowHint(true)} style={{...btnSm(C.s4,{color:C.t2,fontSize:11}),display:'inline-flex',alignItems:'center',gap:4}}><Lightbulb size={12}/>Show hint</button>
               )}
             </div>
           )}
-          <div style={R({gap:5,justifyContent:'center',marginTop:4})}>{[0,1,2].map(i=><div key={i} style={{width:5,height:5,borderRadius:'50%',background:C.s5}}/>)}</div>
+          <div style={R({gap:4,justifyContent:'center',marginTop:4})}>{[0,1,2].map(i=><div key={i} style={{width:5,height:5,borderRadius:'50%',background:C.s5}}/>)}</div>
         </div>
         {/* Back */}
         <div onClick={()=>{onClick();play('flip');}} style={{position:'absolute',inset:0,cursor:'pointer',backfaceVisibility:'hidden',WebkitBackfaceVisibility:'hidden',transform:'rotateY(180deg)',background:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.08))`,border:`1px solid rgba(45,127,255,0.2)`,borderRadius:16,display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center',flexDirection:'column',gap:16,padding:m?24:36,boxShadow:glowShadow,transition:'box-shadow .4s ease',overflowY:'auto'}}>
-          <div style={{position:'absolute',top:16,left:16,...R({gap:6})}}>
+          <div style={{position:'absolute',top:16,left:16,...R({gap:4})}}>
             {card.category&&<span style={pill(C.s4,C.t2,{fontSize:9.5})}>{card.category}</span>}
           </div>
-          <div style={{fontSize:10,fontWeight:700,color:C.blueL,letterSpacing:'.14em',textTransform:'uppercase'}}>ANSWER</div>
-          <MathText text={card.back} style={{fontSize:m?14:16,lineHeight:1.8,color:C.t1,fontFamily:C.FB,display:'block'}}/>
-          <div style={R({gap:6,justifyContent:'center'})}>
+          <div style={{fontSize:10,fontWeight:700,color:C.blueL,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>ANSWER</div>
+          <MathText text={card.back} style={{fontSize:m?14:16,lineHeight: 1.55,color:C.t1,fontFamily:C.FB,display:'block'}}/>
+          <div style={R({gap:4,justifyContent:'center'})}>
             {ret!==null&&<div style={{...pill(C.greenDim,C.greenL,{fontSize:10})}}>Retention: {ret}%</div>}
             {streak>=3&&<div style={{...pill(C.amberDim,C.amberL,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4}}><Flame size={11}/>{streak} streak</div>}
           </div>
@@ -1274,47 +1273,47 @@ function CardManagerModal({deckName,cards,onAdd,onUpdate,onDelete,onClose,m=fals
       <motion.div initial={{scale:.96,y:10}} animate={{scale:1,y:0}} exit={{scale:.96,y:10}} style={{width:'100%',maxWidth:640,maxHeight:'85vh',display:'flex',flexDirection:'column',...glass({padding:0,overflow:'hidden',borderRadius:m?12:18,border:`1px solid ${C.b2}`,boxShadow:'0 40px 100px rgba(0,0,0,0.9)'})}}>
         <div style={{...R({justifyContent:'space-between'}),padding:'16px 20px',borderBottom:`1px solid ${C.b1}`,background:C.s1,flexShrink:0}}>
           <div>
-            <div style={{fontSize:15,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Manage Cards</div>
-            <div style={{fontSize:11,color:C.t3,marginTop:2}}>{deckName} · {cards.length} card{cards.length===1?'':'s'}</div>
+            <div style={{fontSize:15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',fontWeight:700,color:C.t1,fontFamily:C.FD}}>Manage Cards</div>
+            <div style={{fontSize:11,color:C.t3,marginTop:4}}>{deckName} · {cards.length} card{cards.length===1?'':'s'}</div>
           </div>
           <button onClick={onClose} style={{background:'none',border:'none',color:C.t3,cursor:'pointer',width:32,height:32,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:8}} onMouseEnter={e=>e.currentTarget.style.color=C.t1} onMouseLeave={e=>e.currentTarget.style.color=C.t3}><X size={16}/></button>
         </div>
         <div style={{flex:1,overflowY:'auto',padding:20}}>
-          <div style={CC({gap:10,marginBottom:18})}>
+          <div style={CC({gap:8,marginBottom:16})}>
             {cards.map((c,i)=>(
-              <div key={i} style={glass2({padding:14})}>
+              <div key={i} style={glass2({padding:12})}>
                 {editIdx===i?(
                   <div style={CC({gap:8})}>
                     <textarea style={inp({minHeight:50,resize:'vertical',fontSize:12.5})} value={editFront} onChange={e=>setEditFront(e.target.value)} placeholder="Front (question)"/>
                     <textarea style={inp({minHeight:50,resize:'vertical',fontSize:12.5})} value={editBack} onChange={e=>setEditBack(e.target.value)} placeholder="Back (answer)"/>
                     <div style={R({gap:8})}>
                       <button style={btnSm(C.blueGrad,{color:C.onAccent,fontSize:11})} onClick={saveEdit}>Save</button>
-                      <button style={btnG({fontSize:11,padding:'6px 14px'})} onClick={()=>setEditIdx(null)}>Cancel</button>
+                      <button style={btnG({fontSize:11,padding:'4px 12px'})} onClick={()=>setEditIdx(null)}>Cancel</button>
                     </div>
                   </div>
                 ):(
-                  <div style={R({alignItems:'flex-start',gap:10})}>
+                  <div style={R({alignItems:'flex-start',gap:8})}>
                     <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:12.5,color:C.t1,fontWeight:600,lineHeight:1.5,marginBottom:5}}>{c.front}</div>
+                      <div style={{fontSize:12.5,color:C.t1,fontWeight:600,lineHeight:1.5,marginBottom:4}}>{c.front}</div>
                       <div style={{fontSize:12,color:C.t3,lineHeight:1.5}}>{c.back}</div>
                     </div>
                     <div style={R({gap:4,flexShrink:0})}>
-                      <button style={{background:'none',border:'none',color:C.t3,cursor:'pointer',padding:6,borderRadius:6}} onClick={()=>startEdit(i)} title="Edit"><ScrollText size={13}/></button>
-                      <button style={{background:'none',border:'none',color:C.rose,cursor:'pointer',padding:6,borderRadius:6}} onClick={()=>onDelete(i)} title="Delete"><Trash2 size={13}/></button>
+                      <button style={{background:'none',border:'none',color:C.t3,cursor:'pointer',padding:4,borderRadius:4}} onClick={()=>startEdit(i)} title="Edit"><ScrollText size={13}/></button>
+                      <button style={{background:'none',border:'none',color:C.rose,cursor:'pointer',padding:4,borderRadius:4}} onClick={()=>onDelete(i)} title="Delete"><Trash2 size={13}/></button>
                     </div>
                   </div>
                 )}
               </div>
             ))}
-            {cards.length===0&&<div style={{textAlign:'center',color:C.t3,padding:'20px 0',fontSize:12.5}}>No cards yet — add your first one below.</div>}
+            {cards.length===0&&<div style={{textAlign:'center',color:C.t3,padding:'20px 0px',fontSize:12.5}}>No cards yet — add your first one below.</div>}
           </div>
         </div>
-        <div style={{padding:18,borderTop:`1px solid ${C.b1}`,background:C.s1,flexShrink:0}}>
+        <div style={{padding:16,borderTop:`1px solid ${C.b1}`,background:C.s1,flexShrink:0}}>
           <div style={lbl()}>Add a card</div>
           <div style={CC({gap:8})}>
             <textarea style={inp({minHeight:44,resize:'vertical',fontSize:12.5})} value={newFront} onChange={e=>setNewFront(e.target.value)} placeholder="Front (question)"/>
             <textarea style={inp({minHeight:44,resize:'vertical',fontSize:12.5})} value={newBack} onChange={e=>setNewBack(e.target.value)} placeholder="Back (answer)"/>
-            <button style={{...btn(C.blueGrad,{fontSize:12,alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={addCard} disabled={!newFront.trim()||!newBack.trim()}><Plus size={14}/>Add Card</button>
+            <button style={{...btn(C.blueGrad,{fontSize:12,alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={addCard} disabled={!newFront.trim()||!newBack.trim()}><Plus size={14}/>Add Card</button>
           </div>
         </div>
       </motion.div>
@@ -1329,8 +1328,8 @@ function NewDeckModal({onCreate,onClose,m=false}){
   return(
     <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:m?12:24,backdropFilter:'blur(6px)'}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
       <motion.div initial={{scale:.96,y:10}} animate={{scale:1,y:0}} exit={{scale:.96,y:10}} style={{width:'100%',maxWidth:420,...glass({borderRadius:m?12:18,border:`1px solid ${C.b2}`,boxShadow:'0 40px 100px rgba(0,0,0,0.9)'})}}>
-        <div style={{fontSize:15,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:14}}>New Deck</div>
-        <input autoFocus style={{...inp(),marginBottom:14}} placeholder="Deck name (e.g. Cell Biology Vocab)" value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&name.trim())onCreate(name.trim());}}/>
+        <div style={{fontSize:15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:12}}>New Deck</div>
+        <input autoFocus style={{...inp(),marginBottom:12}} placeholder="Deck name (e.g. Cell Biology Vocab)" value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&name.trim())onCreate(name.trim());}}/>
         <div style={R({gap:8})}>
           <button style={btn(C.blueGrad,{fontSize:12.5})} onClick={()=>name.trim()&&onCreate(name.trim())} disabled={!name.trim()}>Create Deck</button>
           <button style={btnG({fontSize:12.5})} onClick={onClose}>Cancel</button>
@@ -1369,40 +1368,40 @@ function PathwayCard({ pathKey, p, current, enrolled=false, full=false, onSelect
   return(
     <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} whileHover={{y:-2,borderColor:`${p.accent}45`,boxShadow:`0 10px 32px rgba(0,0,0,0.5),0 0 0 1px ${p.accent}25`}}
       style={{...glass({padding:m?18:24,transition:'box-shadow .2s,border-color .2s'}),border:current?`1px solid ${p.accent}55`:`1px solid ${C.b1}`}}>
-      <div style={R({alignItems:'flex-start',marginBottom:14})}>
+      <div style={R({alignItems:'flex-start',marginBottom:12})}>
         <div style={{width:44,height:44,borderRadius:12,background:`${p.accent}18`,border:`1px solid ${p.accent}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Ic size={20} color={accentText(p.accent)}/></div>
         <div style={{flex:1,minWidth:0}}>
           <div style={R({gap:8})}>
-            <div style={{fontSize:16,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.01em'}}>{p.label}</div>
+            <div style={{fontSize:16,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))'}}>{p.label}</div>
             {current
               ?<span style={{...pill(`${p.accent}20`,p.accent,{fontSize:9}),display:'inline-flex',alignItems:'center',gap:4,flexShrink:0}}><Check size={9}/>In focus</span>
               :enrolled&&<span style={{...pill(`${p.accent}18`,accentText(p.accent),{fontSize:9}),display:'inline-flex',alignItems:'center',gap:4,flexShrink:0}}><Check size={9}/>Studying</span>}
           </div>
-          {p.tagline&&<div style={{fontSize:12,color:accentText(p.accent),marginTop:2,fontWeight:600,lineHeight:1.4}}>{p.tagline}</div>}
+          {p.tagline&&<div style={{fontSize:12,color:accentText(p.accent),marginTop:4,fontWeight:600,lineHeight:1.4}}>{p.tagline}</div>}
         </div>
       </div>
-      {p.overview&&<p style={{fontSize:12.5,color:C.t2,lineHeight:1.75,margin:'0 0 16px'}}>{p.overview}</p>}
+      {p.overview&&<p style={{fontSize:12.5,color:C.t2,lineHeight: 1.55,margin:'0px 0px 16px'}}>{p.overview}</p>}
       {p.highlights&&<div style={{marginBottom:16}}>
-        <div style={{fontSize:9,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8}}>What this pathway builds</div>
-        <div style={CC({gap:7})}>
+        <div style={{fontSize:9,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom:8}}>What this pathway builds</div>
+        <div style={CC({gap:8})}>
           {p.highlights.map((h,i)=>(
             <div key={i} style={{display:'flex',gap:8,alignItems:'flex-start'}}>
-              <Check size={12} color={accentText(p.accent)} style={{flexShrink:0,marginTop:2}}/>
-              <span style={{fontSize:12,color:C.t2,lineHeight:1.6}}>{h}</span>
+              <Check size={12} color={accentText(p.accent)} style={{flexShrink:0,marginTop:4}}/>
+              <span style={{fontSize:12,color:C.t2,lineHeight: 1.55}}>{h}</span>
             </div>
           ))}
         </div>
       </div>}
       {p.outcomes&&<div style={{marginBottom:16}}>
-        <div style={{fontSize:9,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8}}>Leads toward majors like</div>
-        <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+        <div style={{fontSize:9,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom:8}}>Leads toward majors like</div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
           {p.outcomes.map(o=><span key={o} style={pill(C.s3,C.t2,{fontSize:10,border:`1px solid ${C.b1}`})}>{o}</span>)}
         </div>
       </div>}
-      {p.bestFor&&<div style={{marginBottom:18,background:'rgba(255,255,255,0.02)',border:`1px solid ${C.b1}`,borderRadius:10,padding:'12px 14px'}}>
-        <div style={{fontSize:9,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8}}>This might be for you if</div>
-        <div style={CC({gap:5})}>
-          {p.bestFor.map((b,i)=><div key={i} style={{fontSize:11.5,color:C.t2,lineHeight:1.6}}>· {b}</div>)}
+      {p.bestFor&&<div style={{marginBottom:16,background:'rgba(255,255,255,0.02)',border:`1px solid ${C.b1}`,borderRadius:8,padding:'12px 12px'}}>
+        <div style={{fontSize:9,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom:8}}>This might be for you if</div>
+        <div style={CC({gap:4})}>
+          {p.bestFor.map((b,i)=><div key={i} style={{fontSize:11.5,color:C.t2,lineHeight: 1.55}}>· {b}</div>)}
         </div>
       </div>}
       <div style={R({justifyContent:'space-between'})}>
@@ -1412,7 +1411,7 @@ function PathwayCard({ pathKey, p, current, enrolled=false, full=false, onSelect
           return(
             <motion.button whileHover={blocked?undefined:{scale:1.03}} whileTap={blocked?undefined:{scale:.97}} disabled={blocked}
               title={full&&!enrolled&&!current?`You're already studying ${MAX_ACTIVE_PATHWAYS} pathways — swap one out on the Pathways page to add this.`:undefined}
-              style={{...btn(blocked?C.s3:accentGrad(p.accent),{fontSize:11.5,padding:'8px 16px',opacity:blocked?.6:1,cursor:blocked?'default':'pointer',boxShadow:blocked?'none':`0 4px 14px ${p.accent}35`}),display:'inline-flex',alignItems:'center',gap:6}}
+              style={{...btn(blocked?C.s3:accentGrad(p.accent),{fontSize:11.5,padding:'8px 16px',opacity:blocked?.6:1,cursor:blocked?'default':'pointer',boxShadow:blocked?'none':`0 4px 14px ${p.accent}35`}),display:'inline-flex',alignItems:'center',gap:4}}
               onClick={()=>!blocked&&onSelect(pathKey)}>
               {current?<>Studying now<Check size={13}/></>
                 :enrolled?<>Switch to this<ChevronRight size={13}/></>
@@ -1432,13 +1431,13 @@ function showAchievementToast(achievement) {
   celebrateAchievement();
   const AIc=ACH_ICONS[achievement.icon]||Award;
   toast.custom((t) => (
-    <motion.div initial={{scale:.8,opacity:0,y:-20}} animate={{scale:1,opacity:1,y:0}} exit={{scale:.8,opacity:0}} style={{background:C.s1,border:`1px solid ${C.amber}40`,borderRadius:14,padding:'14px 18px',display:'flex',alignItems:'center',gap:14,boxShadow:`0 8px 32px rgba(0,0,0,0.6),0 0 0 1px ${C.amber}20`,maxWidth:320,fontFamily:C.FB,cursor:'pointer'}} onClick={()=>toast.dismiss(t.id)}>
-      <div style={{width:40,height:40,borderRadius:10,background:`${C.amber}18`,border:`1px solid ${C.amber}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><AIc size={19} color={C.amberL}/></div>
+    <motion.div initial={{scale:.8,opacity:0,y:-20}} animate={{scale:1,opacity:1,y:0}} exit={{scale:.8,opacity:0}} style={{background:C.s1,border:`1px solid ${C.amber}40`,borderRadius:12,padding:'12px 16px',display:'flex',alignItems:'center',gap:12,boxShadow:`0 8px 32px rgba(0,0,0,0.6),0 0 0 1px ${C.amber}20`,maxWidth:320,fontFamily:C.FB,cursor:'pointer'}} onClick={()=>toast.dismiss(t.id)}>
+      <div style={{width:40,height:40,borderRadius:8,background:`${C.amber}18`,border:`1px solid ${C.amber}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><AIc size={19} color={C.amberL}/></div>
       <div>
-        <div style={{fontSize:12,fontWeight:700,color:C.amberL,letterSpacing:'.06em',textTransform:'uppercase',marginBottom:2}}>Achievement Unlocked!</div>
+        <div style={{fontSize:12,fontWeight:700,color:C.amberL,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom:4}}>Achievement Unlocked!</div>
         <div style={{fontSize:14,fontWeight:700,color:C.t1}}>{achievement.name}</div>
-        <div style={{fontSize:12,color:C.t2,marginTop:2}}>{achievement.desc}</div>
-        <div style={{...pill(C.amberDim,C.amberL,{fontSize:10,marginTop:6})}}>+{achievement.xp} XP</div>
+        <div style={{fontSize:12,color:C.t2,marginTop:4}}>{achievement.desc}</div>
+        <div style={{...pill(C.amberDim,C.amberL,{fontSize:10,marginTop:4})}}>+{achievement.xp} XP</div>
       </div>
     </motion.div>
   ), { duration:5000 });
@@ -5582,7 +5581,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   },[activeDeck,currentCard,sessionStats]);
   // ═══ TAB RENDERS ══════════════════════════════════════════════════════════════
 
-  const SL = ({children,extra={}}) => <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.12em',textTransform:'uppercase',marginBottom:16,...extra}}>{children}</div>;
+  const SL = ({children,extra={}}) => <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom:16,...extra}}>{children}</div>;
 
   // ── HOME ─────────────────────────────────────────────────────────────────────
   function tHome(){
@@ -5590,26 +5589,26 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const recentQuiz=qHistory.slice(-1)[0];
     const HomeIcon=PATH_ICONS[eSpec]||Compass;
     return(
-      <div style={CC({gap:22})}>
+      <div style={CC({gap:20})}>
         {/* Hero — tinted with the active pathway's own gradient/glow so identity shifts per pathway */}
         <div style={{...glass({padding:28}),background:curPath?.gradient?`linear-gradient(135deg,${curPath.accent}14,${(curPath.accent2||curPath.accent)}08)`:'linear-gradient(135deg,rgba(45,127,255,0.08),rgba(6,182,212,0.04))',border:`1px solid ${accent}26`,position:'relative',overflow:'hidden'}}>
           <div style={{position:'absolute',right:-60,top:-60,width:200,height:200,borderRadius:'50%',background:`radial-gradient(circle,${curPath?.glow||`${accent}18`},transparent 70%)`,pointerEvents:'none'}}/>
-          <div style={{position:'relative',...R({gap:18,alignItems:'flex-start'})}}>
-            <div style={{width:52,height:52,borderRadius:15,background:`${accent}1c`,border:`1.5px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 0 24px ${curPath?.glow||`${accent}25`}`}}><HomeIcon size={24} color={accent}/></div>
+          <div style={{position:'relative',...R({gap:16,alignItems:'flex-start'})}}>
+            <div style={{width:52,height:52,borderRadius:16,background:`${accent}1c`,border:`1.5px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 0 24px ${curPath?.glow||`${accent}25`}`}}><HomeIcon size={24} color={accent}/></div>
             <div>
-              <div style={{fontSize:11,fontWeight:700,color:accent,letterSpacing:'.12em',textTransform:'uppercase',marginBottom:10}}>{justOnboarded?'Welcome':'Welcome back'}</div>
-              <h1 style={{fontSize:30,fontWeight:800,color:C.t1,margin:'0 0 12px',letterSpacing:'-.03em',fontFamily:C.FD,lineHeight:1.15}}>{user.name}</h1>
+              <div style={{fontSize:11,fontWeight:700,color:accent,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom:8}}>{justOnboarded?'Welcome':'Welcome back'}</div>
+              <h1 style={{fontSize:30,fontWeight:800,color:C.t1,margin:'0px 0px 12px',letterSpacing: 'calc(-0.67px + var(--msp-letter-spacing))',fontFamily:C.FD,lineHeight:1.15}}>{user.name}</h1>
               <div style={R({gap:8,flexWrap:'wrap'})}>
                 <span style={pill(`${accent}22`,accent)}>{curPath?.label}</span>
                 <span style={pill(C.s3,C.t2,{fontFamily:C.FM})}>Level {lvl}</span>
                 {/* Renders nothing until there is a real score — see MedExChip. */}
                 <MedExChip state={medexState} onClick={()=>goPortfolio('medex')}/>
-                {streak>0&&<span style={{...pill(tint(streakLeague.color,0.14),streakLeague.color),display:'inline-flex',alignItems:'center',gap:5}}><Flame size={11}/>{streak} day streak</span>}
+                {streak>0&&<span style={{...pill(tint(streakLeague.color,0.14),streakLeague.color),display:'inline-flex',alignItems:'center',gap:4}}><Flame size={11}/>{streak} day streak</span>}
                 <BoostChip boosts={boosts} onClick={()=>goProgress('streak')} />
-                {streakFreezes>0&&<span style={{...pill(C.blueDim,C.blueL),display:'inline-flex',alignItems:'center',gap:5}}><Snowflake size={11}/>{streakFreezes} freeze{streakFreezes>1?'s':''}</span>}
+                {streakFreezes>0&&<span style={{...pill(C.blueDim,C.blueL),display:'inline-flex',alignItems:'center',gap:4}}><Snowflake size={11}/>{streakFreezes} freeze{streakFreezes>1?'s':''}</span>}
                 {/* Same rule as the nav badge: don't advertise decks from a tab this student
                     hasn't unlocked yet. Flashcards open after their first quiz. */}
-                {dueDeckCount>0&&unlocks.isOpen('prep','flashcards')&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:5}}><Layers3 size={11}/>{dueDecksBadge(dueDeckCount)}</span>}
+                {dueDeckCount>0&&unlocks.isOpen('prep','flashcards')&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:4}}><Layers3 size={11}/>{dueDecksBadge(dueDeckCount)}</span>}
                 {/* Pace status sits beside the streak because it answers the same question the
                     streak does — "am I actually keeping up?" — but against a target the student
                     chose rather than a generic daily habit. */}
@@ -5617,7 +5616,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   const t=paceTone(paceStatus.state);
                   const dim=t==='good'?C.greenDim:t==='warn'?C.amberDim:C.roseDim;
                   const lt =t==='good'?C.greenL  :t==='warn'?C.amberL  :C.roseL;
-                  return <span title={`${paceStatus.targetWeeks}-week pace goal · target ${formatPaceDate(paceStatus.deadline)}`} style={{...pill(dim,lt),display:'inline-flex',alignItems:'center',gap:5}}><Target size={11}/>{paceStatus.label}</span>;
+                  return <span title={`${paceStatus.targetWeeks}-week pace goal · target ${formatPaceDate(paceStatus.deadline)}`} style={{...pill(dim,lt),display:'inline-flex',alignItems:'center',gap:4}}><Target size={11}/>{paceStatus.label}</span>;
                 })()}
               </div>
             </div>
@@ -5725,9 +5724,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             silent and the classic single "Continue" card below is unchanged. */}
         {isParallel&&unlocks.isOpen('prep','pathways')&&(
           <div>
-            <div style={R({justifyContent:'space-between',marginBottom:10,flexWrap:'wrap',gap:8})}>
+            <div style={R({justifyContent:'space-between',marginBottom:8,flexWrap:'wrap',gap:8})}>
               <SectionTitle icon={Layers3} color={C.violetL} extra={{marginBottom:0}}>Your {activePathways.length} pathways</SectionTitle>
-              <button onClick={()=>goPrep('pathways')} style={{...btnG({fontSize:11,padding:'5px 12px'}),display:'inline-flex',alignItems:'center',gap:5}}>Manage<ChevronRight size={11}/></button>
+              <button onClick={()=>goPrep('pathways')} style={{...btnG({fontSize:11,padding:'4px 12px'}),display:'inline-flex',alignItems:'center',gap:4}}>Manage<ChevronRight size={11}/></button>
             </div>
             <ParallelPathwayBoard
               rows={pathwayRows} focused={focusedPathway}
@@ -5743,32 +5742,32 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             argue with itself about what "continue" means. */}
         {((nextLesson&&!isParallel)||topPick)&&<div style={{...glass({padding:20}),display:'flex',gap:16,flexWrap:'wrap'}}>
           {!isParallel&&<div style={{flex:1,minWidth:220}}>
-            <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8}}>Continue</div>
+            <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom:8}}>Continue</div>
             {nextLesson?(
               <div style={{display:'flex',alignItems:'center',gap:12}}>
-                <div style={{width:36,height:36,borderRadius:10,background:`${accent}15`,border:`1px solid ${accent}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Route size={16} color={accent}/></div>
+                <div style={{width:36,height:36,borderRadius:8,background:`${accent}15`,border:`1px solid ${accent}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Route size={16} color={accent}/></div>
                 <div style={{minWidth:0}}>
                   <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{nextLesson.title}</div>
-                  <div style={{fontSize:11,color:C.t3,marginTop:1}}>{nextLesson.unitTitle}</div>
+                  <div style={{fontSize:11,color:C.t3,marginTop:4}}>{nextLesson.unitTitle}</div>
                 </div>
               </div>
             ):<div style={{fontSize:13,color:C.t2}}>Your pathway is fully complete — nice work.</div>}
-            {nextLesson&&<button onClick={()=>goPrep('pathways')} style={btn(C.blueGrad,{marginTop:14,fontSize:12,padding:'8px 18px'})}>Resume Lesson</button>}
+            {nextLesson&&<button onClick={()=>goPrep('pathways')} style={btn(C.blueGrad,{marginTop:12,fontSize:12,padding:'8px 16px'})}>Resume Lesson</button>}
           </div>}
           {topPick&&<div style={{flex:1,minWidth:220,borderLeft:`1px solid ${C.b1}`,paddingLeft:16}}>
-            <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8,display:'flex',alignItems:'center',gap:6}}><Brain size={11} color={C.violetL}/>Medabrain's #1 Pick</div>
+            <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom:8,display:'flex',alignItems:'center',gap:4}}><Brain size={11} color={C.violetL}/>Medabrain's #1 Pick</div>
             <div style={{display:'flex',alignItems:'center',gap:12}}>
-              <div style={{width:36,height:36,borderRadius:10,background:`${C.amber}15`,border:`1px solid ${C.amber}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Layers size={16} color={C.amberL}/></div>
+              <div style={{width:36,height:36,borderRadius:8,background:`${C.amber}15`,border:`1px solid ${C.amber}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Layers size={16} color={C.amberL}/></div>
               <div style={{minWidth:0}}>
                 <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{topPick.quiz.title}</div>
-                <div style={{fontSize:11,color:C.t3,marginTop:1}}>{topPick.reason}</div>
+                <div style={{fontSize:11,color:C.t3,marginTop:4}}>{topPick.reason}</div>
               </div>
             </div>
             {/* Home still hands a brand-new student their single best next quiz — that's the
                 one-decision dashboard working as intended. What it doesn't do is offer the
                 whole 200-quiz library before they've finished anything; taking this pick is
                 what opens it. */}
-            {unlocks.isOpen('prep','quizzes')&&<button onClick={()=>goPrep('quizzes')} style={btnG({marginTop:14,fontSize:12,padding:'8px 18px'})}>See All Recommendations</button>}
+            {unlocks.isOpen('prep','quizzes')&&<button onClick={()=>goPrep('quizzes')} style={btnG({marginTop:12,fontSize:12,padding:'8px 16px'})}>See All Recommendations</button>}
           </div>}
         </div>}
 
@@ -5823,9 +5822,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <motion.div
           animate={nearLevelUp?{boxShadow:[`0 0 0px ${accent}00`,`0 0 26px ${accent}55`,`0 0 0px ${accent}00`]}:{boxShadow:'0 0 0px transparent'}}
           transition={nearLevelUp?{duration:1.6,repeat:Infinity,ease:'easeInOut'}:{}}
-          style={glass({padding:18})}
+          style={glass({padding:16})}
         >
-          <div style={R({justifyContent:'space-between',marginBottom:10})}>
+          <div style={R({justifyContent:'space-between',marginBottom:8})}>
             <div><span style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Level {lvl} · {levelInfo.tier}</span><span style={{fontSize:12,color:C.t3,marginLeft:8,display:'inline-flex',alignItems:'center',gap:4}}><ArrowRight size={11}/>Level {lvl+1}</span></div>
             <span style={{fontSize:12,fontFamily:C.FM,color:nearLevelUp?C.amberL:C.blueL,fontWeight:700}}>{nearLevelUp?`Only ${xpForNext-xpIn} XP to go!`:`${xpIn} / ${xpForNext} XP`}</span>
           </div>
@@ -5856,8 +5855,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 onMouseEnter={e=>e.currentTarget.style.borderColor=`${a.col}35`}
                 onMouseLeave={e=>e.currentTarget.style.borderColor=C.b1}>
                 <div style={{position:'absolute',top:-20,right:-20,width:60,height:60,borderRadius:'50%',background:`${a.col}08`,pointerEvents:'none'}}/>
-                <div style={{width:40,height:40,borderRadius:10,background:`${a.col}15`,border:`1px solid ${a.col}20`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12,boxShadow:`0 4px 12px ${a.col}20`}}><a.Ic size={19} color={a.col}/></div>
-                <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:3}}>{a.lbl}</div>
+                <div style={{width:40,height:40,borderRadius:8,background:`${a.col}15`,border:`1px solid ${a.col}20`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12,boxShadow:`0 4px 12px ${a.col}20`}}><a.Ic size={19} color={a.col}/></div>
+                <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:4}}>{a.lbl}</div>
                 <div style={{fontSize:11,color:C.t3}}>{a.sub}</div>
               </motion.div>
             ))}
@@ -5878,7 +5877,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             every achievement with a live progress bar, not just the unlocked ones. Shown even at
             0 unlocked (not gated on achiev.size) so brand-new accounts can discover it and see
             progress toward their first badge, not just once they've already earned one. */}
-        <div onClick={()=>{goProgress('achievements');play('click');}} style={{...glass({padding:18}),cursor:'pointer',transition:'border-color .2s'}}
+        <div onClick={()=>{goProgress('achievements');play('click');}} style={{...glass({padding:16}),cursor:'pointer',transition:'border-color .2s'}}
           onMouseEnter={e=>e.currentTarget.style.borderColor=`${C.amber}35`}
           onMouseLeave={e=>e.currentTarget.style.borderColor=C.b1}>
           <div style={{...R({justifyContent:'space-between'}),marginBottom:12}}>
@@ -5890,10 +5889,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               const has=achiev.has(a.key);
               const AIc=ACH_ICONS[a.icon]||Award;
               const prog=achievementProgress[a.key];const pct=prog?Math.min(100,Math.round((prog[0]/prog[1])*100)):null;
-              return<div key={a.key} title={`${a.name}: ${a.desc}${!has&&prog?` — ${prog[0]}/${prog[1]}`:''}`} style={{width:40,height:40,borderRadius:10,background:has?`${C.amber}18`:'rgba(255,255,255,0.04)',border:`1px solid ${has?`${C.amber}30`:C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',position:'relative',opacity:has?1:.55,transition:'all .2s',overflow:'hidden'}}>
+              return<div key={a.key} title={`${a.name}: ${a.desc}${!has&&prog?` — ${prog[0]}/${prog[1]}`:''}`} style={{width:40,height:40,borderRadius:8,background:has?`${C.amber}18`:'rgba(255,255,255,0.04)',border:`1px solid ${has?`${C.amber}30`:C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',position:'relative',opacity:has?1:.55,transition: CONTROL_TRANSITION,overflow:'hidden'}}>
                 <AIc size={18} color={has?C.amberL:C.t3}/>
                 {!has&&pct!==null&&pct>0&&<div style={{position:'absolute',left:0,right:0,bottom:0,height:3,background:C.s4}}>
-                  <div style={{height:'100%',width:`${pct}%`,background:accent,transition:'width .3s'}}/>
+                  <div style={{height:'100%',width: '100%', transform: `scaleX(${(pct) / 100})`, transformOrigin: 'left',background:accent,transition: 'transform 200ms cubic-bezier(0.4, 0, 0.2, 1)'}}/>
                 </div>}
               </div>;
             })}
@@ -5902,16 +5901,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
         {/* Pathway preview */}
         <div style={glass()}>
-          <div style={R({justifyContent:'space-between',marginBottom:18})}>
-            <div><SL extra={{marginBottom:4}}>Current Pathway</SL><div style={{fontSize:17,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{curPath?.label}</div></div>
+          <div style={R({justifyContent:'space-between',marginBottom:16})}>
+            <div><SL extra={{marginBottom:4}}>Current Pathway</SL><div style={{fontSize:17, letterSpacing: 'calc(-0.11px + var(--msp-letter-spacing))',fontWeight:700,color:C.t1,fontFamily:C.FD}}>{curPath?.label}</div></div>
             <Arc pct={mastery} size={60} stroke={5} color={accent} label={`${mastery}%`}/>
           </div>
-          <div style={CC({gap:10})}>
+          <div style={CC({gap:8})}>
             {units.map((u)=>{const p=unitM(u);return(
               <div key={u.id} style={R({gap:12})}>
                 <div style={{width:8,height:8,borderRadius:'50%',background:p===100?C.green:p>0?accent:C.s4,flexShrink:0,boxShadow:p>0?`0 0 6px ${p===100?C.green:accent}`:undefined}}/>
                 <div style={{flex:1}}>
-                  <div style={R({justifyContent:'space-between',marginBottom:5})}>
+                  <div style={R({justifyContent:'space-between',marginBottom:4})}>
                     <span style={{fontSize:12,color:p===100?C.green:C.t2,fontWeight:p===100?700:400}}>{u.title}</span>
                     <span style={{fontSize:11,fontFamily:C.FM,color:C.t3}}>{p}%</span>
                   </div>
@@ -5920,7 +5919,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               </div>
             );})}
           </div>
-          <button onClick={()=>goPrep('pathways')} style={{...btnG({marginTop:18,width:'100%',justifyContent:'center'}),display:'inline-flex',alignItems:'center',gap:8}}>View Full Pathway<ArrowRight size={14}/></button>
+          <button onClick={()=>goPrep('pathways')} style={{...btnG({marginTop:16,width:'100%',justifyContent:'center'}),display:'inline-flex',alignItems:'center',gap:8}}>View Full Pathway<ArrowRight size={14}/></button>
         </div>
       </div>
     );
@@ -5933,33 +5932,33 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       const alternates=(dCats||[]).map(k=>PATHS[k]).filter(Boolean);
       const totalLessons=(path?.units||[]).reduce((s,u)=>s+u.lessons.length,0);
       return(
-      <div style={CC({gap:22})}>
-        <div><div style={{...lbl(),color:C.cyanL}}>Pathway Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Your Match</h2></div>
+      <div style={CC({gap:20})}>
+        <div><div style={{...lbl(),color:C.cyanL}}>Pathway Diagnostic</div><h2 style={{fontSize:26, lineHeight: 'calc(1.28 * var(--msp-line-scale))',fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing: 'calc(-0.53px + var(--msp-letter-spacing))',margin:0}}>Your Match</h2></div>
         <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} style={{...glass({padding:40,textAlign:'center',background:path?.gradient?`linear-gradient(135deg,${path.accent}14,${path.accent2||path.accent}08)`:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.05))`,border:`1px solid ${path?.accent||C.blue}30`})}}>
           <div style={{width:80,height:80,borderRadius:'50%',background:`${path?.accent||accent}18`,border:`2px solid ${path?.accent||accent}40`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',boxShadow:`0 0 30px ${path?.glow||`${accent}30`}`}}><ResIcon size={34} color={accentText(path?.accent||accent)}/></div>
-          <h2 style={{fontSize:30,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:'0 0 14px'}}>{path?.label}</h2>
-          <p style={{color:C.t2,maxWidth:480,margin:'0 auto 12px',lineHeight:1.75,fontSize:14}}>Based on your answers — how you think, what pulls you in, and what you already know about these careers — <strong style={{color:C.t1}}>{path?.label}</strong> is your closest match.</p>
-          <p style={{color:C.t3,maxWidth:480,margin:'0 auto 28px',lineHeight:1.6,fontSize:12}}>Starting this pathway loads {totalLessons} lessons across {(path?.units||[]).length} units, sequenced around the content most relevant to {path?.label}.</p>
+          <h2 style={{fontSize:30, lineHeight: 'calc(1.21 * var(--msp-line-scale))',fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing: 'calc(-0.67px + var(--msp-letter-spacing))',margin:'0px 0px 12px'}}>{path?.label}</h2>
+          <p style={{color:C.t2,maxWidth:480,margin:'0 auto 12px',lineHeight: 1.55,fontSize:14}}>Based on your answers — how you think, what pulls you in, and what you already know about these careers — <strong style={{color:C.t1}}>{path?.label}</strong> is your closest match.</p>
+          <p style={{color:C.t3,maxWidth:480,margin:'0 auto 28px',lineHeight: 1.55,fontSize:12}}>Starting this pathway loads {totalLessons} lessons across {(path?.units||[]).length} units, sequenced around the content most relevant to {path?.label}.</p>
           <div style={R({justifyContent:'center',gap:12})}>
             <button style={{...btn(path?.gradient||C.blueGrad,{padding:'12px 32px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>{enrollPath(dRes);setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathways');}}>Accept & Start Pathway<ChevronRight size={16}/></button>
-            <button style={{...btnG({padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDD(false);setDS(0);setDA([]);}}><RefreshCw size={13}/>Retake</button>
+            <button style={{...btnG({padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setDD(false);setDS(0);setDA([]);}}><RefreshCw size={13}/>Retake</button>
           </div>
         </motion.div>
 
         {/* Why this path — the actual decision logic (5-axis work-style vector + scenario
             votes, see diagnosticEngine.js), not just a bare label the student has to trust. */}
-        <div style={glass({padding:18,borderLeft:`3px solid ${path?.accent||C.cyan}55`,background:`linear-gradient(120deg,${path?.accent||C.cyan}08,transparent 45%)`})}>
+        <div style={glass({padding:16,borderLeft:`3px solid ${path?.accent||C.cyan}55`,background:`linear-gradient(120deg,${path?.accent||C.cyan}08,transparent 45%)`})}>
           <SectionTitle icon={Lightbulb} color={accentText(path?.accent||C.cyanL)}>Why {path?.label}</SectionTitle>
           {dWhy?.reasons?.length>0?(
-            <div style={CC({gap:10})}>
-              <p style={{fontSize:12.5,color:C.t2,lineHeight:1.6,margin:0}}>Your answers leaned toward:</p>
+            <div style={CC({gap:8})}>
+              <p style={{fontSize:12.5,color:C.t2,lineHeight: 1.55,margin:0}}>Your answers leaned toward:</p>
               <div style={R({gap:8,flexWrap:'wrap'})}>
                 {dWhy.reasons.map(r=>(
-                  <span key={r.axis} style={{...pill(`${path?.accent||accent}18`,path?.accent||accent,{fontSize:12}),display:'inline-flex',alignItems:'center',gap:6}}><Check size={11}/>{r.leaning}</span>
+                  <span key={r.axis} style={{...pill(`${path?.accent||accent}18`,path?.accent||accent,{fontSize:12}),display:'inline-flex',alignItems:'center',gap:4}}><Check size={11}/>{r.leaning}</span>
                 ))}
               </div>
               {dWhy.confidence&&(
-                <p style={{fontSize:11.5,color:C.t3,lineHeight:1.6,margin:'4px 0 0'}}>
+                <p style={{fontSize:11.5,color:C.t3,lineHeight: 1.55,margin:'4px 0px 0px'}}>
                   {dWhy.confidence.isClear
                     ?`A clear match — ${path?.label} scored well ahead of every other pathway on your answers.`
                     :`A closer call — ${PATHS[dWhy.confidence.runnerUp]?.label||'another pathway'} was also a strong fit, so it's worth reading through that one too before committing.`}
@@ -5967,48 +5966,48 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               )}
             </div>
           ):(
-            <p style={{fontSize:12.5,color:C.t3,lineHeight:1.6,margin:0}}>{dRes==='exploring'?`${path?.label} is the broad, exploratory track — a solid pick when your answers didn't strongly lean toward one specialty yet, or if you're still deciding.`:`Your answers didn't lean strongly in one direction, but ${path?.label} still came out as your best overall match.`} Any of the pathways below sequence the same core SAT/ACT prep either way, so it's easy to switch later.</p>
+            <p style={{fontSize:12.5,color:C.t3,lineHeight: 1.55,margin:0}}>{dRes==='exploring'?`${path?.label} is the broad, exploratory track — a solid pick when your answers didn't strongly lean toward one specialty yet, or if you're still deciding.`:`Your answers didn't lean strongly in one direction, but ${path?.label} still came out as your best overall match.`} Any of the pathways below sequence the same core SAT/ACT prep either way, so it's easy to switch later.</p>
           )}
         </div>
 
-        <div style={{...glass({padding:14}),display:'flex',alignItems:'center',gap:10,background:'rgba(255,255,255,0.02)'}}>
+        <div style={{...glass({padding:12}),display:'flex',alignItems:'center',gap:8,background:'rgba(255,255,255,0.02)'}}>
           <Milestone size={14} color={C.t3}/>
           <span style={{fontSize:12,color:C.t3}}>Interests shift as you learn more — it's worth retaking this diagnostic every few months to confirm your pathway still fits.</span>
         </div>
-        {alternates.length>0&&<div style={glass({padding:18})}>
+        {alternates.length>0&&<div style={glass({padding:16})}>
           <SectionTitle icon={Sparkles} color={C.violetL}>You Might Also Fit</SectionTitle>
           <div style={G(2,10,{},isMobile)}>
             {alternates.map(p=>{const key=Object.entries(PATHS).find(([,v])=>v===p)?.[0];const AltIcon=PATH_ICONS[key]||Compass;return(
-              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{enrollPath(key);setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathways');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'}),display:'flex',alignItems:'center',gap:12}}>
-                <div style={{width:36,height:36,borderRadius:10,background:`${p.accent}18`,border:`1px solid ${p.accent}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><AltIcon size={16} color={accentText(p.accent)}/></div>
+              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{enrollPath(key);setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathways');}} style={{...glass2({cursor:'pointer',padding:12,transition:'background .15s'}),display:'flex',alignItems:'center',gap:12}}>
+                <div style={{width:36,height:36,borderRadius:8,background:`${p.accent}18`,border:`1px solid ${p.accent}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><AltIcon size={16} color={accentText(p.accent)}/></div>
                 <div>
                   <div style={{fontSize:13,fontWeight:700,color:accentText(p.accent),fontFamily:C.FD}}>{p.label}</div>
-                  {p.tagline&&<div style={{fontSize:11,color:C.t3,marginTop:2,lineHeight:1.4}}>{p.tagline}</div>}
+                  {p.tagline&&<div style={{fontSize:11,color:C.t3,marginTop:4,lineHeight:1.4}}>{p.tagline}</div>}
                 </div>
               </motion.div>
             );})}
           </div>
         </div>}
-        <div style={glass({padding:18})}>
+        <div style={glass({padding:16})}>
           <SectionTitle icon={Compass} color={C.cyanL}>All Pathways</SectionTitle>
           <div style={G(3,10,{},isMobile)}>
             {Object.entries(PATHS).filter(([k])=>k!==dRes).map(([key,p])=>(
-              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{enrollPath(key);setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathways');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'})}}>
+              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{enrollPath(key);setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathways');}} style={{...glass2({cursor:'pointer',padding:12,transition:'background .15s'})}}>
                 <div style={{fontSize:13,fontWeight:700,color:accentText(p.accent),fontFamily:C.FD}}>{p.label}</div>
                 {p.tagline&&<div style={{fontSize:11,color:C.t3,marginTop:4,lineHeight:1.5}}>{p.tagline}</div>}
-                <div style={{fontSize:10,color:C.t4,marginTop:6,fontFamily:C.FM}}>{p.units.length} units</div>
+                <div style={{fontSize:10,color:C.t4,marginTop:4,fontFamily:C.FM}}>{p.units.length} units</div>
               </motion.div>
             ))}
           </div>
         </div>
-        <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDD(false);setDS(0);setDA([]);setDIntro(true);}}><Compass size={13}/>Back to Pathway Overview</button>
+        <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setDD(false);setDS(0);setDA([]);setDIntro(true);}}><Compass size={13}/>Back to Pathway Overview</button>
       </div>
     );}
 
     // ── Intro / manual-selection landing ────────────────────────────────────
     if(dIntro){
       return(
-        <div style={CC({gap:22})}>
+        <div style={CC({gap:20})}>
           <PanelHero icon={Compass} color={C.cyan} color2={C.blue} m={isMobile}
             eyebrow="Pathway Diagnostic" title="Find Your Pathway"
             sub={`Every pathway below sequences the same core SAT/ACT prep — math, reading/writing, and science — around the units and quizzes most relevant to a specific health career, so studying also builds toward the path you're most likely to pursue. Take the diagnostic for a recommendation, or read through the pathways yourself and pick one directly. You can always switch later.`}
@@ -6021,8 +6020,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <div style={{position:'absolute',inset:0,background:C.oceanGrad,opacity:0.05,pointerEvents:'none'}}/>
             <div style={{position:'relative',width:56,height:56,borderRadius:16,background:C.oceanGrad,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 8px 22px ${C.cyan}40`}}><Compass size={26} color="#fff"/></div>
             <div style={{position:'relative',flex:1,minWidth:220}}>
-              <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Not sure which fits? Take the diagnostic.</div>
-              <div style={{fontSize:12,color:C.t2,marginTop:3}}>{DIAG_QS.length} questions about how you think, what actually interests you, and what these careers look like day to day — takes about 6 minutes.</div>
+              <div style={{fontSize:15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',fontWeight:800,color:C.t1,fontFamily:C.FD}}>Not sure which fits? Take the diagnostic.</div>
+              <div style={{fontSize:12,color:C.t2,marginTop:4}}>{DIAG_QS.length} questions about how you think, what actually interests you, and what these careers look like day to day — takes about 6 minutes.</div>
             </div>
             <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(C.oceanGrad,{fontSize:13,padding:'12px 24px',boxShadow:`0 6px 18px ${C.cyan}35,inset 0 1px 0 rgba(255,255,255,0.15)`}),display:'inline-flex',alignItems:'center',gap:8,flexShrink:0,position:'relative'}} onClick={()=>setDIntro(false)}>Start Diagnostic<ChevronRight size={15}/></motion.button>
           </motion.div>
@@ -6042,15 +6041,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
     const q=DIAG_QS[dStep];if(!q)return null;
     return(
-      <div style={CC({gap:22})}>
+      <div style={CC({gap:20})}>
         <div style={R()}>
           <div>
             <div style={{...lbl(),color:C.cyanL}}>Pathway Diagnostic</div>
-            <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Question {dStep+1} <span style={{color:C.t3,fontWeight:400}}>of {DIAG_QS.length}</span></h2>
+            <h2 style={{fontSize:24, lineHeight: 'calc(1.32 * var(--msp-line-scale))',fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing: 'calc(-0.47px + var(--msp-letter-spacing))',margin:0}}>Question {dStep+1} <span style={{color:C.t3,fontWeight:400}}>of {DIAG_QS.length}</span></h2>
             {/* Step dots — answered steps fill cyan, current step glows, the rest stay dim */}
             <div style={R({gap:4,marginTop:8})}>
               {DIAG_QS.map((_,i)=>(
-                <span key={i} style={{width:i===dStep?16:6,height:6,borderRadius:3,background:i<dStep?C.cyan:i===dStep?C.cyanL:C.s4,boxShadow:i===dStep?`0 0 8px ${C.cyan}80`:'none',transition:'all .25s'}}/>
+                <span key={i} style={{width:i===dStep?16:6,height:6,borderRadius:4,background:i<dStep?C.cyan:i===dStep?C.cyanL:C.s4,boxShadow:i===dStep?`0 0 8px ${C.cyan}80`:'none',transition: CONTROL_TRANSITION}}/>
               ))}
             </div>
           </div>
@@ -6058,12 +6057,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         </div>
         <Bar pct={(dStep/DIAG_QS.length)*100} color={C.cyan} h={3} glow/>
         <motion.div key={dStep} initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} style={{...glass({padding:28,borderLeft:`3px solid ${C.cyan}55`,background:`linear-gradient(160deg,${C.cyan}08,transparent 50%)`})}}>
-          <p style={{fontSize:16,fontWeight:600,lineHeight:1.75,marginBottom:22,color:C.t1,fontFamily:C.FB}}>{q.q}</p>
-          <div style={CC({gap:10})}>
+          <p style={{fontSize:16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))',fontWeight:600,lineHeight: 1.5,marginBottom:20,color:C.t1,fontFamily:C.FB}}>{q.q}</p>
+          <div style={CC({gap:8})}>
             {q.ch.map((ch,ci)=>(
               <motion.div key={ci} whileHover={{background:C.cyanDim,borderColor:`${C.cyan}45`,x:3}} whileTap={{scale:.98}}
                 onClick={()=>{const next=[...dAns,ci];setDA(next);play('select');if(dStep<DIAG_QS.length-1)setDS(s=>s+1);else finalizeDiag(next);}}
-                style={{...glass2({padding:'15px 18px',cursor:'pointer',transition:'all .15s'}),display:'flex',alignItems:'center',gap:14}}>
+                style={{...glass2({padding:'16px 16px',cursor:'pointer',transition: CONTROL_TRANSITION}),display:'flex',alignItems:'center',gap:12}}>
                 <span style={{width:28,height:28,borderRadius:8,background:`${C.cyan}12`,border:`1px solid ${C.cyan}30`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:C.cyanL,flexShrink:0,fontFamily:C.FM}}>{String.fromCharCode(65+ci)}</span>
                 <span style={{fontSize:14,color:C.t1,fontFamily:C.FB}}>{ch.text}</span>
                 <ChevronRight size={14} color={C.t4} style={{marginLeft:'auto',flexShrink:0}}/>
@@ -6071,9 +6070,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             ))}
           </div>
         </motion.div>
-        <div style={R({gap:10})}>
-          {dStep>0&&<button style={{...btnG(),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDS(s=>s-1);setDA(a=>a.slice(0,-1));}}><ChevronLeft size={14}/>Back</button>}
-          <button style={{...btnG(),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDIntro(true);setDS(0);setDA([]);}}><Compass size={13}/>Back to Pathway Overview</button>
+        <div style={R({gap:8})}>
+          {dStep>0&&<button style={{...btnG(),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setDS(s=>s-1);setDA(a=>a.slice(0,-1));}}><ChevronLeft size={14}/>Back</button>}
+          <button style={{...btnG(),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setDIntro(true);setDS(0);setDA([]);}}><Compass size={13}/>Back to Pathway Overview</button>
         </div>
       </div>
     );
@@ -6085,7 +6084,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // starts over), so it gets a real screen rather than silently falling back to Exploring.
     if(activePathways.length===0){
       return(
-        <div style={CC({gap:22})}>
+        <div style={CC({gap:20})}>
           <PanelHero icon={Route} color={C.blue} color2={C.violet} m={isMobile}
             eyebrow="Pathways" title="Pick where to start"
             sub={`Choose up to ${MAX_ACTIVE_PATHWAYS} pathways and study them side by side — nothing is locked in, and switching between them takes one click.`}/>
@@ -6099,7 +6098,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       );
     }
     return(
-      <div style={CC({gap:22})}>
+      <div style={CC({gap:20})}>
         {/* The switcher, first thing on the page and above the pathway's own hero: on the one
             screen that is entirely about pathways, "which of mine am I looking at" outranks
             "what is this one called". */}
@@ -6121,7 +6120,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             in place. The easiest switch is the one you don't have to make. */}
         {isParallel&&(
           <div>
-            <div style={R({justifyContent:'space-between',marginBottom:10,flexWrap:'wrap',gap:8})}>
+            <div style={R({justifyContent:'space-between',marginBottom:8,flexWrap:'wrap',gap:8})}>
               <SectionTitle icon={Layers3} color={C.violetL} extra={{marginBottom:0}}>Running in parallel</SectionTitle>
               <span style={{fontSize:10.5,color:C.t3,fontFamily:C.FM}}>
                 {isMobile?'Tap a card to jump in':`⌥1–⌥${activePathways.length} to switch · ⌘K to search`}
@@ -6145,9 +6144,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           initial={reducedMotion?false:{opacity:0,y:8}}
           animate={{opacity:1,y:0}}
           transition={{duration:reducedMotion?0:.28,ease:[.22,.61,.36,1]}}
-          style={CC({gap:22})}
+          style={CC({gap:20})}
         >
-        <div data-tour="prep-deep-pathway" style={{...glass({padding:22,background:`linear-gradient(120deg,${accent}22,${curPath?.accent2||accent}12 60%,transparent)`,border:`1px solid ${accent}35`,position:'relative',overflow:'hidden'}),display:'flex',alignItems:'center',gap:18,flexWrap:'wrap'}}>
+        <div data-tour="prep-deep-pathway" style={{...glass({padding:20,background:`linear-gradient(120deg,${accent}22,${curPath?.accent2||accent}12 60%,transparent)`,border:`1px solid ${accent}35`,position:'relative',overflow:'hidden'}),display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
           <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,${accent},${curPath?.accent2||accent}00)`}}/>
           <div style={{position:'absolute',inset:0,background:curPath?.gradient||C.blueGrad,opacity:0.08,pointerEvents:'none'}}/>
           <div style={{position:'relative',width:56,height:56,borderRadius:16,background:curPath?.gradient||C.blueGrad,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 6px 20px ${accent}45`}}>
@@ -6155,7 +6154,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           </div>
           <div style={{position:'relative',flex:1,minWidth:200}}>
             <div style={{...lbl(),color:accent}}>Learning Pathway</div>
-            <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{curPath?.label}</h2>
+            <h2 style={{fontSize:24, lineHeight: 'calc(1.32 * var(--msp-line-scale))',fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing: 'calc(-0.47px + var(--msp-letter-spacing))',margin:0}}>{curPath?.label}</h2>
             {curPath?.tagline&&<div style={{fontSize:12,color:accent,fontWeight:600,marginTop:4}}>{curPath.tagline}</div>}
           </div>
           {/* Scoped to THIS pathway, not the cross-pathway totals. A header titled
@@ -6169,8 +6168,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <Arc pct={curPathMastery} size={60} stroke={5} color={accent} label={`${curPathMastery}%`}/>
           </div>
         </div>
-        {curPath?.overview&&<div style={{...glass2({padding:'14px 18px',background:`${accent}12`,border:`1px solid ${accent}28`})}}>
-          <p style={{fontSize:12.5,color:C.t2,lineHeight:1.75,margin:0}}>{curPath.overview}</p>
+        {curPath?.overview&&<div style={{...glass2({padding:'12px 16px',background:`${accent}12`,border:`1px solid ${accent}28`})}}>
+          <p style={{fontSize:12.5,color:C.t2,lineHeight: 1.55,margin:0}}>{curPath.overview}</p>
         </div>}
         <Bar pct={curPathMastery} color={accent} h={5} glow/>
         {(()=>{
@@ -6182,14 +6181,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             const completedTimes=curPathAllL.map(l=>pathway[l.id]?.completedAt).filter(Boolean);
             const lastCompletedAt=completedTimes.length?Math.max(...completedTimes):Date.now();
             return(
-              <div style={{...glass2({padding:'14px 18px',background:C.greenDim,border:`1px solid ${C.green}40`})}}>
-                <div style={R({gap:10})}>
+              <div style={{...glass2({padding:'12px 16px',background:C.greenDim,border:`1px solid ${C.green}40`})}}>
+                <div style={R({gap:8})}>
                   <ShieldCheck size={16} color={C.green}/>
                   <div style={{flex:1}}>
                     <div style={{fontSize:12.5,fontWeight:700,color:C.t1}}>Pathway complete!</div>
-                    <div style={{fontSize:11,color:C.t3,marginTop:2}}>Every lesson in {curPath?.label} is verified.</div>
+                    <div style={{fontSize:11,color:C.t3,marginTop:4}}>Every lesson in {curPath?.label} is verified.</div>
                   </div>
-                  <button style={{...btnSm(`${C.green}22`,{color:C.greenL,border:`1px solid ${C.green}40`}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>exportPathwayCertificate(curPath?.label||'Pathway',{studentName:user?.name||'Student',totalLessons,completedLessons:curPathDoneL,avgScore,completedAt:lastCompletedAt})}><FileDown size={13}/>Download Certificate</button>
+                  <button style={{...btnSm(`${C.green}22`,{color:C.greenL,border:`1px solid ${C.green}40`}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>exportPathwayCertificate(curPath?.label||'Pathway',{studentName:user?.name||'Student',totalLessons,completedLessons:curPathDoneL,avgScore,completedAt:lastCompletedAt})}><FileDown size={13}/>Download Certificate</button>
                 </div>
               </div>
             );
@@ -6230,15 +6229,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               <div style={R({marginBottom:20})}>
                 <Arc pct={p} size={50} stroke={4} color={done?C.green:accent} label={`${p}%`}/>
                 <div style={{flex:1}}>
-                  <div style={R({gap:8,marginBottom:3,flexWrap:'wrap'})}>
-                    <span style={{...pill(done?C.greenDim:`${accent}14`,done?C.greenL:accent,{fontSize:9.5,fontWeight:800,fontFamily:C.FM,letterSpacing:'.08em',padding:'2px 9px'})}}>UNIT {ui+1}</span>
+                  <div style={R({gap:8,marginBottom:4,flexWrap:'wrap'})}>
+                    <span style={{...pill(done?C.greenDim:`${accent}14`,done?C.greenL:accent,{fontSize:9.5,fontWeight:800,fontFamily:C.FM,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',padding:'4px 8px'})}}>UNIT {ui+1}</span>
                     <span style={{...pill(ucm.dim,ucm.light,{fontSize:9.5})}}>{ucm.emoji} {unit.quizCat}</span>
-                    {stageMeta&&<span title={stageMeta.blurb} style={{...pill(C.s3,C.t2,{fontSize:9.5,fontFamily:C.FM,letterSpacing:'.06em'})}}>{stageMeta.label}</span>}
+                    {stageMeta&&<span title={stageMeta.blurb} style={{...pill(C.s3,C.t2,{fontSize:9.5,fontFamily:C.FM,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'})}}>{stageMeta.label}</span>}
                     {timely&&<span title={reachable?undefined:`Work through ${units[ui-1]?.title} to open this up.`} style={{...pill(C.violetDim,C.violetL,{fontSize:9.5,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:4}}><Sparkles size={9}/>{reachable?`Right time for ${gradeLabel||'your grade'}`:`Worth reaching this year${gradeLabel?` — ${gradeLabel} focus`:''}`}</span>}
                     {done&&<span style={{...pill(C.greenDim,C.greenL,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4}}><Check size={10}/>Mastered</span>}
                   </div>
-                  <div style={{fontSize:15,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{unit.title}</div>
-                  {unit.blurb&&<div style={{fontSize:11.5,color:C.t3,marginTop:3,lineHeight:1.5,maxWidth:560}}>{unit.blurb}</div>}
+                  <div style={{fontSize:15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',fontWeight:700,color:C.t1,fontFamily:C.FD}}>{unit.title}</div>
+                  {unit.blurb&&<div style={{fontSize:11.5,color:C.t3,marginTop:4,lineHeight:1.5,maxWidth:560}}>{unit.blurb}</div>}
                   <div style={{fontSize:11,color:C.t3,marginTop:4}}>{unit.lessons.filter(l=>isLessonComplete(l,pathway[l.id])).length}/{unit.lessons.length} lessons complete</div>
                 </div>
               </div>
@@ -6248,7 +6247,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               {!done&&units[ui+1]&&(()=>{
                 const remaining=unit.lessons.filter(l=>!isLessonComplete(l,pathway[l.id])).length;
                 return(
-                  <div style={{...glass2({padding:'10px 14px',marginBottom:16,background:`${accent}0a`,border:`1px solid ${accent}22`}),display:'flex',alignItems:'center',gap:10}}>
+                  <div style={{...glass2({padding:'8px 12px',marginBottom:16,background:`${accent}0a`,border:`1px solid ${accent}22`}),display:'flex',alignItems:'center',gap:8}}>
                     <Sparkles size={13} color={accent} style={{flexShrink:0}}/>
                     <span style={{fontSize:11.5,color:C.t2,lineHeight:1.5}}>
                       {remaining} more lesson{remaining===1?'':'s'} here unlocks <strong style={{color:C.t1}}>{units[ui+1].title}</strong> — you're closer than it looks.
@@ -6277,22 +6276,22 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                         <Dot state={state}/>
                         <div style={{flex:1}}>
                           <div style={{fontSize:13,fontWeight:(isDone||isVerified||planned)?700:400,color:planned?C.amberL:isVerified?C.green:isDone?C.green:C.t1,fontFamily:C.FB}}>{lesson.title}</div>
-                          <div style={R({gap:6,marginTop:1})}>
+                          <div style={R({gap:4,marginTop:4})}>
                             <span style={{fontSize:11,color:C.t3}}>{lesson.src}</span>
-                            {isVerified&&<span style={pill(C.greenDim,C.greenL,{fontSize:9})}><ShieldCheck size={9} style={{marginRight:3}}/>Verified{pathway[lesson.id]?.quizScore!=null?` (${pathway[lesson.id].quizScore}%)`:''}</span>}
+                            {isVerified&&<span style={pill(C.greenDim,C.greenL,{fontSize:9})}><ShieldCheck size={9} style={{marginRight:4}}/>Verified{pathway[lesson.id]?.quizScore!=null?` (${pathway[lesson.id].quizScore}%)`:''}</span>}
                             {isStudying&&<span style={pill(C.amberDim,C.amberL,{fontSize:9})}>In progress — continue when ready</span>}
                           </div>
                         </div>
-                        {(avail||isStudying)&&<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={{...btnSm(planned?`linear-gradient(135deg,${accentFill(C.amber)},${accentFill(C.rose)})`:`linear-gradient(135deg,${accentFill(accent)},${shade(accentFill(accent),0.18)})`,{fontSize:11,color:C.onAccent,boxShadow:`0 2px 8px ${planned?C.amber:accent}30`}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>openLesson(lesson,unit)}>{planned?<Target size={11}/>:isStudying?<RefreshCw size={11}/>:<Play size={11}/>}{planned?"Do it — today's plan":isStudying?'Continue':'Start Lesson'}</motion.button>}
-                        {isVerified&&<button onClick={()=>reviewLesson(lesson,unit)} title="Re-read this lesson's article and video" style={{...btnSm(C.s4,{color:C.t2,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}><ScrollText size={11}/>Review</button>}
+                        {(avail||isStudying)&&<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={{...btnSm(planned?`linear-gradient(135deg,${accentFill(C.amber)},${accentFill(C.rose)})`:`linear-gradient(135deg,${accentFill(accent)},${shade(accentFill(accent),0.18)})`,{fontSize:11,color:C.onAccent,boxShadow:`0 2px 8px ${planned?C.amber:accent}30`}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>openLesson(lesson,unit)}>{planned?<Target size={11}/>:isStudying?<RefreshCw size={11}/>:<Play size={11}/>}{planned?"Do it — today's plan":isStudying?'Continue':'Start Lesson'}</motion.button>}
+                        {isVerified&&<button onClick={()=>reviewLesson(lesson,unit)} title="Re-read this lesson's article and video" style={{...btnSm(C.s4,{color:C.t2,fontSize:11}),display:'inline-flex',alignItems:'center',gap:4}}><ScrollText size={11}/>Review</button>}
                         {(isDone||isVerified)&&<Check size={14} color={C.green} strokeWidth={3}/>}
                         {state==='locked'&&<Lock size={12} color={C.t4}/>}
                       </div>
                       {lesson.objectives?.length>0&&(avail||isStudying)&&(
-                        <div style={{marginLeft:34,display:'flex',flexDirection:'column',gap:3}}>
-                          <div style={{fontSize:9.5,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginBottom:2}}>What to actually do</div>
+                        <div style={{marginLeft:32,display:'flex',flexDirection:'column',gap:4}}>
+                          <div style={{fontSize:9.5,fontWeight:700,color:C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginBottom:4}}>What to actually do</div>
                           {lesson.objectives.map((o,oi)=>(
-                            <div key={oi} style={{fontSize:11.5,color:C.t2,display:'flex',gap:6,alignItems:'flex-start'}}><span style={{color:accent,flexShrink:0}}>–</span>{o}</div>
+                            <div key={oi} style={{fontSize:11.5,color:C.t2,display:'flex',gap:4,alignItems:'flex-start'}}><span style={{color:accent,flexShrink:0}}>–</span>{o}</div>
                           ))}
                         </div>
                       )}
@@ -6309,23 +6308,23 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             what you're running (up to three), state exactly what a click does, and keep every
             finished lesson when something is dropped. Collapsed by default so the page still
             ends on the student's own pathway rather than on a catalogue. */}
-        <div id="msp-pathway-manager" style={glass({padding:18})}>
-          <div style={R({justifyContent:'space-between',marginBottom:pathwayManagerOpen?14:0,flexWrap:'wrap',gap:10})}>
+        <div id="msp-pathway-manager" style={glass({padding:16})}>
+          <div style={R({justifyContent:'space-between',marginBottom:pathwayManagerOpen?14:0,flexWrap:'wrap',gap:8})}>
             <SectionTitle icon={Route} color={accent} extra={{marginBottom:0}}>
               {isParallel?`Your ${activePathways.length} pathways`:'Study another pathway too'}
             </SectionTitle>
             <div style={R({gap:8})}>
-              <button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDIntro(true);goPrep('diagnostic');}}>Full pathway details<ChevronRight size={12}/></button>
+              <button style={{...btnG({fontSize:11,padding:'4px 12px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setDIntro(true);goPrep('diagnostic');}}>Full pathway details<ChevronRight size={12}/></button>
               <button
                 aria-expanded={pathwayManagerOpen} aria-controls="msp-pathway-manager-body"
-                style={{...btnSm(pathwayManagerOpen?`${accent}16`:C.surfHi,{fontSize:11,color:pathwayManagerOpen?accent:C.t2,border:`1px solid ${pathwayManagerOpen?`${accent}35`:C.b1}`}),display:'inline-flex',alignItems:'center',gap:6}}
+                style={{...btnSm(pathwayManagerOpen?`${accent}16`:C.surfHi,{fontSize:11,color:pathwayManagerOpen?accent:C.t2,border:`1px solid ${pathwayManagerOpen?`${accent}35`:C.b1}`}),display:'inline-flex',alignItems:'center',gap:4}}
                 onClick={()=>{const next=!pathwayManagerOpen;setPathwayManagerOpen(next);if(next)openPathwayManager();}}>
                 {pathwayManagerOpen?<><X size={11}/>Done</>:<><Plus size={11}/>Add or change pathways</>}
               </button>
             </div>
           </div>
           {!pathwayManagerOpen&&(
-            <div style={{fontSize:11.5,color:C.t3,marginTop:8,lineHeight:1.6}}>
+            <div style={{fontSize:11.5,color:C.t3,marginTop:8,lineHeight: 1.55}}>
               {activePathways.length<MAX_ACTIVE_PATHWAYS
                 ? `You can run up to ${MAX_ACTIVE_PATHWAYS} pathways at once — ${MAX_ACTIVE_PATHWAYS-activePathways.length} slot${MAX_ACTIVE_PATHWAYS-activePathways.length===1?'':'s'} open. Progress in one never affects another.`
                 : `All ${MAX_ACTIVE_PATHWAYS} slots are in use. Swap one out whenever you want — nothing you've finished is ever lost.`}
@@ -6367,7 +6366,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const planQuizzesShown=fQuiz.filter(onPlan);
     const orderedQuiz=planQuizzesShown.length?[...planQuizzesShown,...fQuiz.filter(q=>!onPlan(q))]:fQuiz;
     return(
-      <div style={CC({gap:22})}>
+      <div style={CC({gap:20})}>
         <PanelHero tourTag="prep-deep-quizzes" icon={Layers} color={C.green} color2={C.cyan} m={isMobile}
           eyebrow="Quiz Library" title="Practice Quizzes"
           sub="Exam-style questions across every subject."/>
@@ -6390,7 +6389,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <div style={glass({padding:16})}>
           <div style={R({justifyContent:'space-between',marginBottom:12})}>
             <SectionTitle icon={ListFilter} color={C.greenL} extra={{marginBottom:0}}>Filter & Sort</SectionTitle>
-            {filtersActive&&<button style={{...btnG({fontSize:10.5,padding:'4px 12px'}),display:'inline-flex',alignItems:'center',gap:5}} onClick={clearFilters}><RefreshCw size={10}/>Reset filters</button>}
+            {filtersActive&&<button style={{...btnG({fontSize:10.5,padding:'4px 12px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={clearFilters}><RefreshCw size={10}/>Reset filters</button>}
           </div>
           {/* Category identity chips — same color language as the E-Library's category row */}
           <div style={R({gap:8,flexWrap:'wrap',marginBottom:12})}>
@@ -6399,29 +6398,29 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               const cm=c==='All'?{color:C.green,light:C.greenL,dim:C.greenDim,emoji:'✨'}:catMeta(c);
               return(
                 <motion.button key={c} whileHover={{scale:1.05,y:-1}} whileTap={{scale:.96}} onClick={()=>setQC(c)}
-                  style={{...pill(active?cm.color:cm.dim,active?'#fff':cm.light,{fontSize:11,padding:'6px 13px',cursor:'pointer',border:`1px solid ${active?cm.color:'transparent'}`,boxShadow:active?`0 4px 14px ${cm.color}45`:'none',fontWeight:700})}}>
+                  style={{...pill(active?cm.color:cm.dim,active?'#fff':cm.light,{fontSize:11,padding:'4px 12px',cursor:'pointer',border:`1px solid ${active?cm.color:'transparent'}`,boxShadow:active?`0 4px 14px ${cm.color}45`:'none',fontWeight:700})}}>
                   {cm.emoji} {c==='Behavioral & Social Sciences'?'Behavioral Sci.':c}
                 </motion.button>
               );
             })}
           </div>
-          <div style={R({gap:8,flexWrap:'wrap',marginBottom:14})}>
+          <div style={R({gap:8,flexWrap:'wrap',marginBottom:12})}>
             {diffLevels.map(d=>{const cnt=ALL_QUIZZES.filter(q=>q.diff===d).length;const dc=dColors[d];return cnt>0&&(
-              <div key={d} onClick={()=>setQD(qDiff===d?'All':d)} style={{background:qDiff===d?`${dc}18`:'rgba(255,255,255,0.02)',border:`1px solid ${qDiff===d?dc+'55':C.b1}`,padding:'7px 14px',display:'flex',gap:7,alignItems:'center',cursor:'pointer',borderRadius:9,transition:'all .15s'}}>
+              <div key={d} onClick={()=>setQD(qDiff===d?'All':d)} style={{background:qDiff===d?`${dc}18`:'rgba(255,255,255,0.02)',border:`1px solid ${qDiff===d?dc+'55':C.b1}`,padding:'8px 12px',display:'flex',gap:8,alignItems:'center',cursor:'pointer',borderRadius:8,transition: CONTROL_TRANSITION}}>
                 <span style={{width:7,height:7,borderRadius:'50%',background:dc,boxShadow:`0 0 6px ${dc}80`,flexShrink:0}}/>
                 <span style={{fontSize:11,color:qDiff===d?dc:C.t2,fontWeight:700}}>{d}</span>
                 <span style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{cnt}</span>
               </div>
             );})}
           </div>
-          <div style={R({flexWrap:'wrap',gap:10})}>
+          <div style={R({flexWrap:'wrap',gap:8})}>
             <div style={{flex:1,minWidth:180,position:'relative'}}>
               <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><Search size={14}/></span>
               <input style={inp({paddingLeft:36})} placeholder="Search quizzes…" value={qSrch} onChange={e=>setQSrch(e.target.value)}/>
             </div>
             <div style={{position:'relative'}}>
               <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><ListFilter size={13}/></span>
-              <select style={inp({width:'auto',paddingLeft:30})} value={qSort} onChange={e=>setQSort(e.target.value)}>
+              <select style={inp({width:'auto',paddingLeft:28})} value={qSort} onChange={e=>setQSort(e.target.value)}>
                 <option value="default">Sort: Default</option>
                 <option value="unattempted">Sort: Unattempted first</option>
                 <option value="difficulty">Sort: Easiest first</option>
@@ -6449,33 +6448,33 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 whileHover={{y:-2,boxShadow:`0 12px 40px rgba(0,0,0,0.6),0 0 0 1px ${glowColor}${planned?'55':'25'}`}}
                 style={{...glass({padding:0,overflow:'hidden',background:planned?`linear-gradient(160deg,${C.amber}16,transparent 60%)`:`linear-gradient(160deg,${cm.color}0d,transparent 55%)`,borderLeft:`3px solid ${glowColor}${planned?'':'55'}`,border:planned?`1px solid ${C.amber}45`:undefined,boxShadow:planned?`0 0 0 1px ${C.amber}25,0 8px 28px ${C.amber}18`:undefined}),transition:'box-shadow .2s'}}>
                 <div style={{height:3,background:`linear-gradient(90deg,${planned?C.amber:(taken?scc:dc)},${(planned?C.amber:(taken?scc:dc))}77)`}}/>
-                <div style={{padding:22}}>
+                <div style={{padding:20}}>
                   {planned&&(
-                    <motion.div initial={{opacity:0,y:-4}} animate={{opacity:1,y:0}} style={{...pill(C.amberDim,C.amberL,{fontSize:10,fontWeight:800,marginBottom:12}),display:'inline-flex',alignItems:'center',gap:5}}>
+                    <motion.div initial={{opacity:0,y:-4}} animate={{opacity:1,y:0}} style={{...pill(C.amberDim,C.amberL,{fontSize:10,fontWeight:800,marginBottom:12}),display:'inline-flex',alignItems:'center',gap:4}}>
                       <Target size={10}/>On your plan today
                     </motion.div>
                   )}
-                  <div style={R({marginBottom:14,flexWrap:'wrap'})}>
-                    <span style={{...pill(`${dc}18`,dc,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:5}}><span style={{width:6,height:6,borderRadius:'50%',background:dc,flexShrink:0}}/>{q.diff}</span>
+                  <div style={R({marginBottom:12,flexWrap:'wrap'})}>
+                    <span style={{...pill(`${dc}18`,dc,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4}}><span style={{width:6,height:6,borderRadius:'50%',background:dc,flexShrink:0}}/>{q.diff}</span>
                     {myCourseCats.has(q.cat)&&<span style={pill(C.greenDim,C.greenL,{fontSize:9})}>Matches your courses</span>}
                     <span style={{marginLeft:'auto',...pill(cm.dim,cm.light,{fontSize:10})}}>{cm.emoji} {q.cat}</span>
                   </div>
-                  <div style={{fontSize:15,fontWeight:700,color:C.t1,marginBottom:4,lineHeight:1.4,fontFamily:C.FD}}>{q.title}</div>
-                  <div style={{fontSize:11,color:C.t3,marginBottom:18,fontFamily:C.FM,display:'flex',alignItems:'center',gap:5}}><ScrollText size={11}/>{q.qs.length} questions{taken?<span style={{...pill(`${scc}16`,scc,{fontSize:9,marginLeft:4}),display:'inline-flex',alignItems:'center',gap:3}}><CheckCircle2 size={9}/>completed</span>:null}</div>
+                  <div style={{fontSize:15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',fontWeight:700,color:C.t1,marginBottom:4,lineHeight:1.4,fontFamily:C.FD}}>{q.title}</div>
+                  <div style={{fontSize:11,color:C.t3,marginBottom:16,fontFamily:C.FM,display:'flex',alignItems:'center',gap:4}}><ScrollText size={11}/>{q.qs.length} questions{taken?<span style={{...pill(`${scc}16`,scc,{fontSize:9,marginLeft:4}),display:'inline-flex',alignItems:'center',gap:4}}><CheckCircle2 size={9}/>completed</span>:null}</div>
                   <div style={R()}>
                     {taken?(
                       <>
-                        <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(C.s3,{flex:1,fontSize:12,border:`1px solid ${C.b2}`,color:C.t2}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}} onClick={()=>{setAQ({...q,readonly:true});play('click');}}>
+                        <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(C.s3,{flex:1,fontSize:12,border:`1px solid ${C.b2}`,color:C.t2}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4}} onClick={()=>{setAQ({...q,readonly:true});play('click');}}>
                           <ScrollText size={13}/>Review
                         </motion.button>
-                        <div style={{fontSize:18,fontWeight:800,color:scc,fontFamily:C.FM,minWidth:52,textAlign:'right'}}>{sc}%</div>
+                        <div style={{fontSize:18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))',fontWeight:800,color:scc,fontFamily:C.FM,minWidth:52,textAlign:'right'}}>{sc}%</div>
                       </>
                     ):planned?(
-                      <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(`linear-gradient(135deg,${C.amber},${C.rose})`,{flex:1,fontSize:12,boxShadow:`0 4px 14px ${C.amber}45,inset 0 1px 0 rgba(255,255,255,0.12)`}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}} onClick={()=>{setAQ(q);play('click');}}>
+                      <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(`linear-gradient(135deg,${C.amber},${C.rose})`,{flex:1,fontSize:12,boxShadow:`0 4px 14px ${C.amber}45,inset 0 1px 0 rgba(255,255,255,0.12)`}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4}} onClick={()=>{setAQ(q);play('click');}}>
                         <Target size={13}/>Do it — today's plan<ChevronRight size={14}/>
                       </motion.button>
                     ):(
-                      <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(cm.grad,{flex:1,fontSize:12,boxShadow:`0 4px 14px ${cm.color}35,inset 0 1px 0 rgba(255,255,255,0.12)`}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}} onClick={()=>{setAQ(q);play('click');}}>
+                      <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(cm.grad,{flex:1,fontSize:12,boxShadow:`0 4px 14px ${cm.color}35,inset 0 1px 0 rgba(255,255,255,0.12)`}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4}} onClick={()=>{setAQ(q);play('click');}}>
                         Start Quiz<ChevronRight size={14}/>
                       </motion.button>
                     )}
@@ -6509,7 +6508,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   },[secAvgs,cats3,user,dueCards]);
   function TypingDots(){
     return(
-      <div style={{display:'flex',alignItems:'center',gap:4,padding:'4px 2px'}}>
+      <div style={{display:'flex',alignItems:'center',gap:4,padding:'4px 4px'}}>
         {[0,1,2].map(i=>(
           <motion.span key={i} animate={{opacity:[.3,1,.3],y:[0,-3,0]}} transition={{duration:1.1,repeat:Infinity,delay:i*0.15,ease:'easeInOut'}} style={{width:6,height:6,borderRadius:'50%',background:C.violetL,display:'inline-block'}}/>
         ))}
@@ -6528,20 +6527,20 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   function ChatThreadList(){
     return(
       <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
-        <div style={{paddingBottom:14,flexShrink:0}}>
+        <div style={{paddingBottom:12,flexShrink:0}}>
           <motion.button whileHover={{scale:1.02,filter:'brightness(1.08)'}} whileTap={{scale:.97}} onClick={startNewChat}
-            style={{...btn(C.violetGrad,{width:'100%',justifyContent:'flex-start',padding:'10px 14px',fontSize:12.5}),boxShadow:`0 4px 14px ${C.violet}35`}}>
+            style={{...btn(C.violetGrad,{width:'100%',justifyContent:'flex-start',padding:'8px 12px',fontSize:12.5}),boxShadow:`0 4px 14px ${C.violet}35`}}>
             <Plus size={14}/>New chat
           </motion.button>
         </div>
-        <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:3,paddingRight:2}}>
-          {threadsLoading&&<div style={{fontSize:11.5,color:C.t4,padding:'8px 6px'}}>Loading chats…</div>}
-          {!threadsLoading&&coachThreads.length===0&&<div style={{fontSize:11.5,color:C.t4,padding:'8px 6px',lineHeight:1.5}}>No chats yet — ask Medabrain something below to start your first one.</div>}
+        <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:4,paddingRight:4}}>
+          {threadsLoading&&<div style={{fontSize:11.5,color:C.t4,padding:'8px 4px'}}>Loading chats…</div>}
+          {!threadsLoading&&coachThreads.length===0&&<div style={{fontSize:11.5,color:C.t4,padding:'8px 4px',lineHeight:1.5}}>No chats yet — ask Medabrain something below to start your first one.</div>}
           {coachThreads.map(t=>{
             const active=t.id===activeThreadId;
             return(
               <div key={t.id} className="mb-thread-row" onClick={()=>renamingThreadId!==t.id&&switchChatThread(t.id)}
-                style={{position:'relative',borderRadius:10,padding:'9px 10px',cursor:'pointer',background:active?`${C.violet}18`:'transparent',border:active?`1px solid ${C.violet}35`:'1px solid transparent',display:'flex',alignItems:'center',gap:8,transition:'background .15s'}}>
+                style={{position:'relative',borderRadius:8,padding:'8px 8px',cursor:'pointer',background:active?`${C.violet}18`:'transparent',border:active?`1px solid ${C.violet}35`:'1px solid transparent',display:'flex',alignItems:'center',gap:8,transition:'background .15s'}}>
                 <MessageCircle size={13} color={active?C.violetL:C.t4} style={{flexShrink:0}}/>
                 {renamingThreadId===t.id?(
                   <input autoFocus value={renameDraft} onChange={e=>setRenameDraft(e.target.value)}
@@ -6551,13 +6550,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 ):(
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:12.5,fontWeight:active?700:500,color:active?C.t1:C.t2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{t.title}</div>
-                    <div style={{fontSize:10,color:C.t4,marginTop:1}}>{relTime(t.updatedAt)}</div>
+                    <div style={{fontSize:10,color:C.t4,marginTop:4}}>{relTime(t.updatedAt)}</div>
                   </div>
                 )}
                 {renamingThreadId!==t.id&&(
-                  <div className="mb-thread-actions" style={{display:'flex',gap:2,flexShrink:0}}>
-                    <button onClick={e=>{e.stopPropagation();beginRenameThread(t);}} title="Rename chat" style={{width:22,height:22,borderRadius:6,border:'none',background:'transparent',color:C.t4,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}><Pencil size={11}/></button>
-                    <button onClick={e=>{e.stopPropagation();deleteChatThread(t.id);}} title="Delete chat" style={{width:22,height:22,borderRadius:6,border:'none',background:'transparent',color:C.t4,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}><Trash2 size={11}/></button>
+                  <div className="mb-thread-actions" style={{display:'flex',gap:4,flexShrink:0}}>
+                    <button onClick={e=>{e.stopPropagation();beginRenameThread(t);}} title="Rename chat" style={{width:22,height:22,borderRadius:4,border:'none',background:'transparent',color:C.t4,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}><Pencil size={11}/></button>
+                    <button onClick={e=>{e.stopPropagation();deleteChatThread(t.id);}} title="Delete chat" style={{width:22,height:22,borderRadius:4,border:'none',background:'transparent',color:C.t4,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}><Trash2 size={11}/></button>
                   </div>
                 )}
               </div>
@@ -6596,8 +6595,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       const on=coachView===id;
       return(
         <button key={id} role="tab" aria-selected={on} onClick={()=>{setCoachView(id);play('click');}}
-          style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 13px',borderRadius:8,border:'none',cursor:'pointer',
-            background:on?`${accent}22`:'transparent',color:on?C.t1:C.t3,fontSize:12,fontWeight:on?700:600,fontFamily:C.FB,transition:'all .15s'}}>
+          style={{display:'inline-flex',alignItems:'center',gap:4,padding:'4px 12px',borderRadius:8,border:'none',cursor:'pointer',
+            background:on?`${accent}22`:'transparent',color:on?C.t1:C.t3,fontSize:12,fontWeight:on?700:600,fontFamily:C.FB,transition: CONTROL_TRANSITION}}>
           <Icon size={13}/>{!isMobile&&label}
           {count>0&&<span style={{fontSize:9.5,fontFamily:C.FM,color:on?accent:C.t4}}>{count}</span>}
         </button>
@@ -6608,7 +6607,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       <div style={{display:'flex',height:`calc(var(--msp-vh) - ${COACH_CHROME_PX}px)`,minHeight:isMobile?420:480,position:'relative'}}>
         {/* ── Chat sidebar (desktop: fixed column · mobile: slide-over) ────── */}
         {!isMobile&&coachView==='chat'&&(
-          <div style={{width:216,flexShrink:0,marginRight:18,borderRight:`1px solid ${C.b1}`,paddingRight:16,overflowY:'auto'}}>
+          <div style={{width:216,flexShrink:0,marginRight:16,borderRight:`1px solid ${C.b1}`,paddingRight:16,overflowY:'auto'}}>
             <ChatThreadList/>
           </div>
         )}
@@ -6628,18 +6627,18 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column'}}>
 
         {/* ── Header bar — one row, always 52px ──────────────────────────── */}
-        <div data-tour="prep-deep-coach" style={{flexShrink:0,display:'flex',alignItems:'center',gap:10,padding:isMobile?'0 2px 12px':'0 2px 14px',borderBottom:`1px solid ${C.b1}`,marginBottom:14}}>
+        <div data-tour="prep-deep-coach" style={{flexShrink:0,display:'flex',alignItems:'center',gap:8,padding:isMobile?'0 2px 12px':'0 2px 14px',borderBottom:`1px solid ${C.b1}`,marginBottom:12}}>
           {isMobile&&coachView==='chat'&&(
-            <button onClick={()=>setCoachSidebarOpen(true)} aria-label="Your chats" style={{width:34,height:34,borderRadius:10,flexShrink:0,background:C.surfHi,border:`1px solid ${C.b1}`,display:'grid',placeItems:'center',color:C.t2,cursor:'pointer'}}>
+            <button onClick={()=>setCoachSidebarOpen(true)} aria-label="Your chats" style={{width:34,height:34,borderRadius:8,flexShrink:0,background:C.surfHi,border:`1px solid ${C.b1}`,display:'grid',placeItems:'center',color:C.t2,cursor:'pointer'}}>
               <Menu size={16}/>
             </button>
           )}
-          <div style={{width:isMobile?32:36,height:isMobile?32:36,borderRadius:11,flexShrink:0,background:C.violetGrad,display:'grid',placeItems:'center',boxShadow:`0 6px 16px ${tint(C.violet,0.35)}`}}>
+          <div style={{width:isMobile?32:36,height:isMobile?32:36,borderRadius:12,flexShrink:0,background:C.violetGrad,display:'grid',placeItems:'center',boxShadow:`0 6px 16px ${tint(C.violet,0.35)}`}}>
             <Brain size={isMobile?15:18} color="#fff"/>
           </div>
           <div style={{minWidth:0,flex:1}}>
-            <div style={R({gap:6,marginBottom:0})}>
-              <h2 style={{fontSize:isMobile?16:19,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0,whiteSpace:'nowrap'}}>Medabrain</h2>
+            <div style={R({gap:4,marginBottom:0})}>
+              <h2 style={{fontSize:isMobile?16:19,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing: 'calc(-0.03em + var(--msp-letter-spacing))',margin:0,whiteSpace:'nowrap'}}>Medabrain</h2>
               <Sparkles size={12} color={C.amberL}/>
             </div>
             {!isMobile&&<div style={{fontSize:11.5,color:C.t3,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
@@ -6648,7 +6647,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           </div>
 
           {/* Chat / About you */}
-          <div role="tablist" aria-label="Medabrain sections" style={{display:'flex',gap:3,padding:3,borderRadius:10,background:C.s2,border:`1px solid ${C.b1}`,flexShrink:0}}>
+          <div role="tablist" aria-label="Medabrain sections" style={{display:'flex',gap:4,padding:4,borderRadius:8,background:C.s2,border:`1px solid ${C.b1}`,flexShrink:0}}>
             {segBtn('chat','Chat',MessageCircle,0)}
             {segBtn('about','About you',UserCog,briefCount)}
           </div>
@@ -6657,7 +6656,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           {coachView==='chat'&&(
             <button onClick={()=>setCoachMetaOpen(o=>!o)} aria-expanded={coachMetaOpen} aria-controls="coach-meta"
               title="Model and daily usage"
-              style={{width:34,height:34,borderRadius:10,flexShrink:0,background:coachMetaOpen?`${accent}1e`:C.surfHi,border:`1px solid ${coachMetaOpen?accent+'40':C.b1}`,display:'grid',placeItems:'center',color:coachMetaOpen?accent:C.t3,cursor:'pointer'}}>
+              style={{width:34,height:34,borderRadius:8,flexShrink:0,background:coachMetaOpen?`${accent}1e`:C.surfHi,border:`1px solid ${coachMetaOpen?accent+'40':C.b1}`,display:'grid',placeItems:'center',color:coachMetaOpen?accent:C.t3,cursor:'pointer'}}>
               <Wand2 size={15}/>
             </button>
           )}
@@ -6669,24 +6668,24 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <motion.div id="coach-meta" key="meta"
               initial={reducedMotion?false:{height:0,opacity:0}} animate={{height:'auto',opacity:1}} exit={reducedMotion?{opacity:0}:{height:0,opacity:0}}
               transition={motionT} style={{overflow:'hidden',flexShrink:0}}>
-              <div style={{...glass2({padding:14}),marginBottom:14}}>
+              <div style={{...glass2({padding:12}),marginBottom:12}}>
                 <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:16}}>
                   <div>
                     <span style={lbl()}>Which model answers</span>
-                    <div style={{display:'flex',gap:3,padding:3,borderRadius:10,background:C.s2,border:`1px solid ${C.b1}`,alignItems:'center',flexWrap:'wrap'}}>
+                    <div style={{display:'flex',gap:4,padding:4,borderRadius:8,background:C.s2,border:`1px solid ${C.b1}`,alignItems:'center',flexWrap:'wrap'}}>
                       <button onClick={()=>{setCoachModelPref('auto');play('click');}} title="Let Medabrain pick the best model for each message"
-                        style={{display:'inline-flex',alignItems:'center',gap:4,padding:'5px 9px',borderRadius:8,border:'none',cursor:'pointer',background:coachModelPref==='auto'?tint(C.green,0.14):'transparent'}}>
+                        style={{display:'inline-flex',alignItems:'center',gap:4,padding:'4px 8px',borderRadius:8,border:'none',cursor:'pointer',background:coachModelPref==='auto'?tint(C.green,0.14):'transparent'}}>
                         {coachModelPref==='auto'&&<motion.span animate={reducedMotion?undefined:{opacity:[1,.4,1]}} transition={reducedMotion?undefined:{duration:1.8,repeat:Infinity,ease:'easeInOut'}} style={{width:5,height:5,borderRadius:'50%',background:C.greenL,boxShadow:`0 0 8px ${C.greenL}`}}/>}
-                        <span style={{fontSize:10,fontWeight:800,letterSpacing:'.06em',textTransform:'uppercase',color:coachModelPref==='auto'?C.greenL:C.t4}}>Auto</span>
+                        <span style={{fontSize:10,fontWeight:800,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color:coachModelPref==='auto'?C.greenL:C.t4}}>Auto</span>
                       </button>
                       {COACH_TIERS.map(t=>{const on=coachModelPref===t.id;return(
                         <button key={t.id} onClick={()=>{setCoachModelPref(t.id);play('click');}} title={t.desc}
-                          style={{padding:'5px 9px',borderRadius:8,border:'none',cursor:'pointer',background:on?tint(t.color,0.16):'transparent'}}>
+                          style={{padding:'4px 8px',borderRadius:8,border:'none',cursor:'pointer',background:on?tint(t.color,0.16):'transparent'}}>
                           <span style={{fontSize:10.5,fontWeight:700,fontFamily:C.FB,color:on?t.color:C.t4}}>{t.label}</span>
                         </button>
                       );})}
                     </div>
-                    <div style={{marginTop:7,fontSize:10.5,color:C.t4,lineHeight:1.5}}>
+                    <div style={{marginTop:8,fontSize:10.5,color:C.t4,lineHeight:1.5}}>
                       {activePinned
                         ?<>Pinned to <span style={{color:COACH_TIERS.find(t=>t.id===coachModelPref)?.color,fontWeight:700}}>{COACH_TIERS.find(t=>t.id===coachModelPref)?.label}</span> for every message.</>
                         :<>Auto — Medabrain matched <span style={{color:accent,fontWeight:700}}>{COACH_TIERS.find(t=>t.id===coachTier)?.label}</span> to your last message. Factual questions always get the deepest model.</>}
@@ -6694,20 +6693,20 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   </div>
                   <div>
                     <span style={lbl()}>Daily coaching usage</span>
-                    <div style={R({justifyContent:'space-between',marginBottom:5})}>
+                    <div style={R({justifyContent:'space-between',marginBottom:4})}>
                       <span style={{fontSize:11,color:C.t3}}>{coachRequestsUsedToday} of {coachDailyLimit} today</span>
                       <span style={{fontSize:10.5,color:C.t4,fontFamily:C.FM}}>{tierTotal} answer{tierTotal!==1?'s':''} total</span>
                     </div>
                     <Bar pct={usagePct} color={usageColor} h={4}/>
                     {tierTotal>0&&(
                       <>
-                        <div style={{display:'flex',height:6,borderRadius:6,overflow:'hidden',background:C.s4,margin:'10px 0 8px'}}>
+                        <div style={{display:'flex',height:6,borderRadius:4,overflow:'hidden',background:C.s4,margin:'8px 0px 8px'}}>
                           {COACH_TIERS.map(t=>{const pct=tierTotal?((coachTierCounts[t.id]||0)/tierTotal*100):0;return pct>0?<div key={t.id} title={`${t.label}: ${coachTierCounts[t.id]||0}`} style={{width:`${pct}%`,background:t.color}}/>:null;})}
                         </div>
                         <div style={R({gap:12,flexWrap:'wrap'})}>
                           {rankedTiers.map(t=>(
-                            <div key={t.id} style={R({gap:5})}>
-                              <span style={{width:7,height:7,borderRadius:2,background:t.color,flexShrink:0}}/>
+                            <div key={t.id} style={R({gap:4})}>
+                              <span style={{width:7,height:7,borderRadius: 4,background:t.color,flexShrink:0}}/>
                               <span style={{fontSize:10.5,color:C.t3}}>{t.label}</span>
                               <span style={{fontSize:10.5,color:C.t4,fontFamily:C.FM}}>{coachTierCounts[t.id]||0}</span>
                             </div>
@@ -6723,7 +6722,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         </AnimatePresence>
 
         {coachRequestsRemaining<=0&&coachView==='chat'&&(
-          <div role="alert" style={{...R({gap:10}),flexShrink:0,marginBottom:12,padding:'11px 15px',borderRadius:12,background:C.roseDim,border:`1px solid ${tint(C.rose,0.3)}`}}>
+          <div role="alert" style={{...R({gap:8}),flexShrink:0,marginBottom:12,padding:'12px 16px',borderRadius:12,background:C.roseDim,border:`1px solid ${tint(C.rose,0.3)}`}}>
             <AlertTriangle size={15} color={C.roseL} style={{flexShrink:0}}/>
             <span style={{fontSize:13,color:C.t1}}>You've reached today's coaching limit. It resets tomorrow.</span>
           </div>
@@ -6731,7 +6730,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
         {/* ══ ABOUT YOU ═══════════════════════════════════════════════════ */}
         {coachView==='about'&&(
-          <div style={{flex:1,minHeight:0,overflowY:'auto',paddingRight:2}}>
+          <div style={{flex:1,minHeight:0,overflowY:'auto',paddingRight:4}}>
             <AboutMePanel user={user} onSaveUser={saveUser} isMobile={isMobile} accent={C.violet}/>
           </div>
         )}
@@ -6741,13 +6740,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <>
         {/* ── Empty state / suggestions ──────────────────────────────────── */}
         {msgs.length===0&&(
-          <div style={{flex:1,minHeight:0,overflowY:'auto',paddingRight:2}}>
-            <div style={{...glass2({padding:isMobile?15:18,background:`linear-gradient(120deg,${C.violetDim},transparent 60%)`,border:`1px solid ${tint(C.violet,0.22)}`}),marginBottom:16,display:'flex',gap:13,alignItems:'flex-start'}}>
-              <div style={{width:34,height:34,borderRadius:10,flexShrink:0,background:C.violetGrad,display:'grid',placeItems:'center',boxShadow:`0 4px 12px ${tint(C.violet,0.35)}`}}>
+          <div style={{flex:1,minHeight:0,overflowY:'auto',paddingRight:4}}>
+            <div style={{...glass2({padding:isMobile?15:18,background:`linear-gradient(120deg,${C.violetDim},transparent 60%)`,border:`1px solid ${tint(C.violet,0.22)}`}),marginBottom:16,display:'flex',gap:12,alignItems:'flex-start'}}>
+              <div style={{width:34,height:34,borderRadius:8,flexShrink:0,background:C.violetGrad,display:'grid',placeItems:'center',boxShadow:`0 4px 12px ${tint(C.violet,0.35)}`}}>
                 <MessageCircle size={15} color="#fff"/>
               </div>
               <div>
-                <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:3}}>Hey — I'm Medabrain.</div>
+                <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:4}}>Hey — I'm Medabrain.</div>
                 <div style={{fontSize:12.5,color:C.t3,lineHeight:1.6}}>
                   Ask me anything. A concept you're stuck on, a deadline you need to know, what a college
                   actually looks for, or how to plan your week — I know where you stand in {curPath?.label||'your pathway'} and
@@ -6758,13 +6757,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             </div>
             {personalizedQuickPrompts().map(group=>{const GIc=COACH_ICONS[group.icon];const personal=group.label==='For You Right Now';return(
               <div key={group.label} style={{marginBottom:16}}>
-                <div style={{...R({gap:6}),marginBottom:9}}>
+                <div style={{...R({gap:4}),marginBottom:8}}>
                   <GIc size={12} color={personal?C.amberL:C.t3}/><span style={{...lbl({marginBottom:0}),color:personal?C.amberL:undefined}}>{group.label}</span>
                 </div>
-                <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(auto-fill,minmax(240px,1fr))',gap:9}}>
+                <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(auto-fill,minmax(240px,1fr))',gap:8}}>
                   {group.prompts.map((p,i)=>(
                     <motion.button key={i} whileHover={reducedMotion?undefined:{y:-2}} whileTap={{scale:.98}} onClick={()=>sendChat(p)}
-                      style={{textAlign:'left',padding:'11px 13px',borderRadius:12,border:`1px solid ${personal?tint(C.amber,0.3):C.b1}`,background:personal?C.amberDim:C.surf2,color:C.t2,fontSize:12.5,lineHeight:1.5,fontFamily:C.FB,cursor:'pointer',transition:'background .15s,border-color .15s'}}>
+                      style={{textAlign:'left',padding:'12px 12px',borderRadius:12,border:`1px solid ${personal?tint(C.amber,0.3):C.b1}`,background:personal?C.amberDim:C.surf2,color:C.t2,fontSize:12.5,lineHeight:1.5,fontFamily:C.FB,cursor:'pointer',transition:'background .15s,border-color .15s'}}>
                       {p}
                     </motion.button>
                   ))}
@@ -6776,7 +6775,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
         {/* ── Message thread ─────────────────────────────────────────────── */}
         {msgs.length>0&&(
-        <div role="log" aria-label="Conversation with Medabrain" aria-live="polite" style={{flex:1,minHeight:0,overflowY:'auto',display:'flex',flexDirection:'column',gap:14,paddingRight:2}}>
+        <div role="log" aria-label="Conversation with Medabrain" aria-live="polite" style={{flex:1,minHeight:0,overflowY:'auto',display:'flex',flexDirection:'column',gap:12,paddingRight:4}}>
           <AnimatePresence initial={false}>
             {msgs.map((m,i)=>(
               <motion.div key={i} layout={!reducedMotion} initial={reducedMotion?false:{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={motionT} style={{display:'flex',justifyContent:m.role==='user'?'flex-end':'flex-start',alignItems:'flex-end',gap:isMobile?6:10}}>
@@ -6787,7 +6786,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   <div className={m.role==='assistant'?'msp-md':undefined} style={{padding:isMobile?'10px 14px':'13px 18px',borderRadius:m.role==='user'?'18px 18px 4px 18px':'18px 18px 18px 4px',background:m.role==='user'?`linear-gradient(135deg,${accent},${C.blueD})`:m.role==='error'?C.roseDim:C.s2,border:m.role==='user'?'none':m.role==='error'?`1px solid ${tint(C.rose,0.3)}`:`1px solid ${C.b1}`,fontSize:isMobile?13:14,lineHeight:1.75,color:m.role==='user'?C.onAccent:C.t1,fontFamily:C.FB,boxShadow:m.role==='user'?`0 4px 16px ${tint(accent,0.3)}`:C.shadowSm}}>
                     {m.role==='assistant'?<div dangerouslySetInnerHTML={{__html:renderMarkdown(m.content)}}/>:m.content}
                     {m.role==='error'&&(
-                      <motion.button whileTap={{scale:.96}} onClick={retryChat} style={{...btnG({fontSize:11,padding:'5px 12px',marginTop:8,borderRadius:8,color:C.roseL}),border:`1px solid ${tint(C.rose,0.3)}`}}>
+                      <motion.button whileTap={{scale:.96}} onClick={retryChat} style={{...btnG({fontSize:11,padding:'4px 12px',marginTop:8,borderRadius:8,color:C.roseL}),border:`1px solid ${tint(C.rose,0.3)}`}}>
                         <RotateCcw size={11}/> Try again
                       </motion.button>
                     )}
@@ -6802,9 +6801,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               </motion.div>
             ))}
           </AnimatePresence>
-          {cLoad&&<motion.div initial={reducedMotion?false:{opacity:0}} animate={{opacity:1}} transition={motionT} style={{display:'flex',alignItems:'flex-end',gap:10}}>
+          {cLoad&&<motion.div initial={reducedMotion?false:{opacity:0}} animate={{opacity:1}} transition={motionT} style={{display:'flex',alignItems:'flex-end',gap:8}}>
             <div style={{width:30,height:30,borderRadius:'50%',background:`linear-gradient(135deg,${tint(C.violet,0.28)},${tint(C.indigo,0.16)})`,border:`1px solid ${tint(C.violet,0.24)}`,display:'grid',placeItems:'center'}}><Brain size={14} color={C.violetL}/></div>
-            <div style={{padding:'11px 18px',background:C.s2,border:`1px solid ${C.b1}`,borderRadius:'18px 18px 18px 4px'}}><TypingDots/></div>
+            <div style={{padding:'12px 16px',background:C.s2,border:`1px solid ${C.b1}`,borderRadius:'18px 18px 18px 4px'}}><TypingDots/></div>
           </motion.div>}
           <div ref={chatEnd}/>
         </div>
@@ -6814,13 +6813,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <div style={{flexShrink:0,paddingTop:12}}>
           <div style={R({gap:isMobile?6:10,alignItems:'flex-end'})}>
             <label htmlFor="msp-coach-input" className="msp-sr-only">Ask Medabrain a question</label>
-            <textarea id="msp-coach-input" style={{...inp({resize:'none',minHeight:isMobile?44:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14,padding:'10px 14px'}),flex:1,opacity:coachRequestsRemaining<=0?.5:1}} placeholder={isMobile?"Ask Medabrain anything…":"Ask Medabrain anything — a concept, a college, a deadline, a plan…"} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={coachRequestsRemaining<=0}/>
-            <motion.button whileHover={reducedMotion?undefined:{scale:1.05}} whileTap={{scale:.95}} aria-label="Send message" style={{...btn(C.violetGrad,{padding:isMobile?'0 16px':'0 22px',height:isMobile?44:52,flexShrink:0,borderRadius:14,boxShadow:`0 4px 16px ${tint(C.violet,0.35)}`,opacity:cLoad||coachRequestsRemaining<=0?.6:1}),display:'inline-flex',alignItems:'center',justifyContent:'center'}} onClick={()=>sendChat(ci)} disabled={cLoad||coachRequestsRemaining<=0}>
+            <textarea id="msp-coach-input" style={{...inp({resize:'none',minHeight:isMobile?44:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:12,padding:'8px 12px'}),flex:1,opacity:coachRequestsRemaining<=0?.5:1}} placeholder={isMobile?"Ask Medabrain anything…":"Ask Medabrain anything — a concept, a college, a deadline, a plan…"} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={coachRequestsRemaining<=0}/>
+            <motion.button whileHover={reducedMotion?undefined:{scale:1.05}} whileTap={{scale:.95}} aria-label="Send message" style={{...btn(C.violetGrad,{padding:isMobile?'0 16px':'0 22px',height:isMobile?44:52,flexShrink:0,borderRadius:12,boxShadow:`0 4px 16px ${tint(C.violet,0.35)}`,opacity:cLoad||coachRequestsRemaining<=0?.6:1}),display:'inline-flex',alignItems:'center',justifyContent:'center'}} onClick={()=>sendChat(ci)} disabled={cLoad||coachRequestsRemaining<=0}>
               {cLoad?<RefreshCw size={isMobile?16:19} className="spin"/>:<ArrowUp size={isMobile?16:19}/>}
             </motion.button>
           </div>
-          <div style={R({justifyContent:'space-between',marginTop:7})}>
-            {activeThreadId?<button style={btnG({fontSize:11,padding:'4px 12px',borderRadius:20,color:C.roseL})} onClick={()=>deleteChatThread(activeThreadId)}><Trash2 size={11}/>Delete this chat</button>:<span/>}
+          <div style={R({justifyContent:'space-between',marginTop:8})}>
+            {activeThreadId?<button style={btnG({fontSize:11,padding:'4px 12px',borderRadius:16,color:C.roseL})} onClick={()=>deleteChatThread(activeThreadId)}><Trash2 size={11}/>Delete this chat</button>:<span/>}
             {!isMobile&&<span style={{fontSize:10.5,color:C.t4}}>Medabrain can make mistakes — double-check anything important.</span>}
           </div>
         </div>
@@ -6838,17 +6837,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       const totalCount=pd.smartMix?allCards.length:cardsForDeck(pd.name,pd.builtin).length;
       return(
         <div style={CC({gap:16})}>
-          <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setPlanDeckPending(null)}><ChevronLeft size={14}/>All Decks</button>
+          <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>setPlanDeckPending(null)}><ChevronLeft size={14}/>All Decks</button>
           <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{...glass({padding:isMobile?28:40,textAlign:'center'}),border:`1px solid ${C.amber}30`}}>
-            <div style={{width:60,height:60,borderRadius:18,margin:'0 auto 18px',display:'grid',placeItems:'center',background:C.sunsetGrad,boxShadow:`0 10px 30px ${C.amber}40`}}>
+            <div style={{width:60,height:60,borderRadius:16,margin:'0 auto 18px',display:'grid',placeItems:'center',background:C.sunsetGrad,boxShadow:`0 10px 30px ${C.amber}40`}}>
               {pd.smartMix?<Sparkles size={26} color="#fff"/>:<Layers3 size={26} color="#fff"/>}
             </div>
-            <div style={{fontSize:10,fontWeight:800,letterSpacing:'.1em',textTransform:'uppercase',color:C.amberL,marginBottom:8}}>Today's Plan Task</div>
-            <div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.02em',marginBottom:10}}>{pd.smartMix?'Smart Mix':pd.name}</div>
-            <div style={{fontSize:13.5,color:C.t2,lineHeight:1.6,maxWidth:420,margin:'0 auto 20px'}}>
+            <div style={{fontSize:10,fontWeight:800,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color:C.amberL,marginBottom:8}}>Today's Plan Task</div>
+            <div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))',marginBottom:8}}>{pd.smartMix?'Smart Mix':pd.name}</div>
+            <div style={{fontSize:13.5,color:C.t2,lineHeight: 1.55,maxWidth:420,margin:'0 auto 20px'}}>
               {pd.smartMix?`Every card in your library — all ${totalCount} of them, from all ${allDecksList.length} decks — shuffled into one fresh random order${dueCount>0?`, including the ${dueCount} due for review`:''}.`:`${dueCount>0?`${dueCount} card${dueCount===1?'':'s'} due for review`:`${totalCount} card${totalCount===1?'':'s'} in this deck`} — spaced-repetition scheduling picks up right where you left off.`}
             </div>
-            <button style={{...btn(C.sunsetGrad,{fontSize:14,padding:'13px 30px'}),display:'inline-flex',alignItems:'center',gap:8,boxShadow:`0 6px 22px ${C.amber}40`}} onClick={startPlanDeck}>
+            <button style={{...btn(C.sunsetGrad,{fontSize:14,padding:'12px 28px'}),display:'inline-flex',alignItems:'center',gap:8,boxShadow:`0 6px 22px ${C.amber}40`}} onClick={startPlanDeck}>
               <Play size={16}/>Start Studying
             </button>
           </motion.div>
@@ -6861,24 +6860,24 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       if(!currentCard){
         return(
         <div style={CC({gap:16})}>
-          <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All Decks</button>
+          <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All Decks</button>
           <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{...glass({padding:40,textAlign:'center'})}}>
             <motion.div initial={{scale:.6,rotate:-10}} animate={{scale:1,rotate:0}} transition={{type:'spring',stiffness:260,damping:14}} style={{marginBottom:16,display:'flex',justifyContent:'center'}}><PartyPopper size={44} color={C.green}/></motion.div>
-            <div style={{fontSize:18,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:8}}>{activeDeck.smartMix?'Smart Mix complete!':studyMode==='due'?'All due cards reviewed!':'Deck complete!'}</div>
+            <div style={{fontSize:18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))',fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:8}}>{activeDeck.smartMix?'Smart Mix complete!':studyMode==='due'?'All due cards reviewed!':'Deck complete!'}</div>
             <div style={{fontSize:14,color:C.t2,marginBottom:sessionTotal>0?20:24}}>{activeDeck.smartMix?`You went through all ${deckCards.length} cards in your library. Start it again and they'll come back in a completely different order.`:studyMode==='due'?'Check back later for more cards to review.':'You have reviewed all cards in this deck.'}</div>
             {sessionTotal>0&&(<>
-              <div style={{...G(4,10,{},isMobile),marginBottom:14,maxWidth:460,marginLeft:'auto',marginRight:'auto'}}>
-                <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{sessionTotal}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Reviewed</div></div>
-                <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.green,fontFamily:C.FD}}>{sessionAcc}%</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Remembered</div></div>
-                <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.rose,fontFamily:C.FD}}>{sessionStats.again}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Again</div></div>
-                <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.blue,fontFamily:C.FD}}>{fmtT(Math.round((Date.now()-sessionStats.startedAt)/1000))}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Time</div></div>
+              <div style={{...G(4,10,{},isMobile),marginBottom:12,maxWidth:460,marginLeft:'auto',marginRight:'auto'}}>
+                <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))',fontWeight:800,color:C.t1,fontFamily:C.FD}}>{sessionTotal}</div><div style={{fontSize:9,color:C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginTop:4}}>Reviewed</div></div>
+                <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))',fontWeight:800,color:C.green,fontFamily:C.FD}}>{sessionAcc}%</div><div style={{fontSize:9,color:C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginTop:4}}>Remembered</div></div>
+                <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))',fontWeight:800,color:C.rose,fontFamily:C.FD}}>{sessionStats.again}</div><div style={{fontSize:9,color:C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginTop:4}}>Again</div></div>
+                <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))',fontWeight:800,color:C.blue,fontFamily:C.FD}}>{fmtT(Math.round((Date.now()-sessionStats.startedAt)/1000))}</div><div style={{fontSize:9,color:C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginTop:4}}>Time</div></div>
               </div>
               <div style={{...G(2,10,{},isMobile),marginBottom:24,maxWidth:240,marginLeft:'auto',marginRight:'auto'}}>
-                <div style={{...glass2({textAlign:'center',padding:12,background:C.amberDim,border:`1px solid ${C.amber}25`})}}><div style={{fontSize:16,fontWeight:800,color:C.amberL,fontFamily:C.FD,display:'flex',alignItems:'center',justifyContent:'center',gap:4}}><Flame size={14}/>{sessionStats.bestStreak}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Best streak</div></div>
-                <div style={{...glass2({textAlign:'center',padding:12,background:C.violetDim,border:`1px solid ${C.violet}25`})}}><div style={{fontSize:16,fontWeight:800,color:C.violetL,fontFamily:C.FD,display:'flex',alignItems:'center',justifyContent:'center',gap:4}}><Zap size={14}/>{sessionStats.xp}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>XP earned</div></div>
+                <div style={{...glass2({textAlign:'center',padding:12,background:C.amberDim,border:`1px solid ${C.amber}25`})}}><div style={{fontSize:16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))',fontWeight:800,color:C.amberL,fontFamily:C.FD,display:'flex',alignItems:'center',justifyContent:'center',gap:4}}><Flame size={14}/>{sessionStats.bestStreak}</div><div style={{fontSize:9,color:C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginTop:4}}>Best streak</div></div>
+                <div style={{...glass2({textAlign:'center',padding:12,background:C.violetDim,border:`1px solid ${C.violet}25`})}}><div style={{fontSize:16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))',fontWeight:800,color:C.violetL,fontFamily:C.FD,display:'flex',alignItems:'center',justifyContent:'center',gap:4}}><Zap size={14}/>{sessionStats.xp}</div><div style={{fontSize:9,color:C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginTop:4}}>XP earned</div></div>
               </div>
             </>)}
-            <div style={R({justifyContent:'center',gap:10})}>
+            <div style={R({justifyContent:'center',gap:8})}>
               {!activeDeck.smartMix&&studyMode==='due'&&<button style={btn()} onClick={()=>setStudyMode('all')}>Browse All Cards</button>}
               {activeDeck.smartMix&&<button style={btn(C.sunsetGrad)} onClick={startSmartMix}>Shuffle Again</button>}
               {activeDeck.smartMix
@@ -6892,7 +6891,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       return(
         <div style={CC({gap:16})}>
           <div style={R()}>
-            <button style={{...btnG({padding:'7px 16px',fontSize:12}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All Decks</button>
+            <button style={{...btnG({padding:'8px 16px',fontSize:12}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All Decks</button>
             <div style={{flex:1,textAlign:'center'}}>
               <div style={R({justifyContent:'center',gap:8})}>
                 {activeDeck.smartMix&&<Sparkles size={13} color={C.amberL}/>}
@@ -6906,14 +6905,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   )}
                 </AnimatePresence>
               </div>
-              <div style={{fontSize:11,color:C.t3,fontFamily:C.FM,marginTop:2}}>
+              <div style={{fontSize:11,color:C.t3,fontFamily:C.FM,marginTop:4}}>
                 {cIdx+1} / {deckCards.length}{activeDeck.smartMix?` · shuffled${currentCard?._srcDeck?` · from ${currentCard._srcDeck}`:''}`:` · ${dueCount} due`}{sessionTotal>0?` · ${sessionTotal} reviewed · +${sessionStats.xp} XP`:''}
               </div>
             </div>
-            <div style={R({gap:6})}>
+            <div style={R({gap:4})}>
               {/* Re-deals the whole library from card 1 without leaving the session — the escape
                   hatch for "I've seen this run, give me a different one". */}
-              {activeDeck.smartMix&&<button title="Deal all cards again in a brand-new order" style={{...btnSm(C.s4,{color:C.t2,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>{rerollSmartMix();play('click');}}><Shuffle size={11}/>Reshuffle</button>}
+              {activeDeck.smartMix&&<button title="Deal all cards again in a brand-new order" style={{...btnSm(C.s4,{color:C.t2,fontSize:11}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{rerollSmartMix();play('click');}}><Shuffle size={11}/>Reshuffle</button>}
               {!activeDeck.smartMix&&<button style={btnSm(studyMode==='due'?C.sunsetGrad:C.s4,{fontSize:11,color:studyMode==='due'?'#fff':C.t2,border:`1px solid ${studyMode==='due'?'transparent':C.b1}`,boxShadow:studyMode==='due'?`0 3px 10px ${C.amber}30`:'none'})} onClick={()=>{setStudyMode('due');setCIdx(0);setFlip(false);}}>Due ({dueCount})</button>}
               {!activeDeck.smartMix&&<button style={btnSm(studyMode==='all'?C.sunsetGrad:C.s4,{fontSize:11,color:studyMode==='all'?'#fff':C.t2,border:`1px solid ${studyMode==='all'?'transparent':C.b1}`,boxShadow:studyMode==='all'?`0 3px 10px ${C.amber}30`:'none'})} onClick={()=>{setStudyMode('all');setCIdx(0);setFlip(false);}}>All</button>}
               {!activeDeck.builtin&&<button style={btnSm(C.s4,{color:C.t2,fontSize:11})} onClick={()=>setManageDeck(activeDeck.name)}>Manage</button>}
@@ -6924,22 +6923,22 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <FlipCard card={currentCard} flipped={flip} onClick={()=>setFlip(f=>!f)} m={isMobile} streak={sessionStats.streak}/>
           <div style={{textAlign:'center',fontSize:10.5,color:C.t4,fontFamily:C.FM}}>{!isMobile&&(flip?'Press 1–4 to rate · ':'Press Space to flip · ')}Click card to flip</div>
           <div style={R({justifyContent:'space-between'})}>
-            <motion.button whileHover={{scale:1.04}} style={{...btnG({padding:'9px 20px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setCIdx(i=>Math.max(0,i-1));setFlip(false);}} disabled={cIdx===0}><ChevronLeft size={14}/>Prev</motion.button>
+            <motion.button whileHover={{scale:1.04}} style={{...btnG({padding:'8px 20px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setCIdx(i=>Math.max(0,i-1));setFlip(false);}} disabled={cIdx===0}><ChevronLeft size={14}/>Prev</motion.button>
             {flip&&(
               <div style={R({gap:8})}>
                 {[['Again',0,C.rose],['Hard',1,C.amber],['Good',2,C.blue],['Easy',3,C.green]].map(([label,q,col])=>(
                   <motion.button key={label} whileHover={{scale:1.06}} whileTap={{scale:.94}}
-                    style={{...btnSm(`${col}20`,{color:col,border:`1px solid ${col}30`,fontSize:11}),display:'inline-flex',alignItems:'center',gap:6}}
+                    style={{...btnSm(`${col}20`,{color:col,border:`1px solid ${col}30`,fontSize:11}),display:'inline-flex',alignItems:'center',gap:4}}
                     onClick={()=>rateCard(label)}>
                     {label}<span style={{fontSize:9,color:`${col}99`,fontFamily:C.FM}}>{q+1}</span>
                   </motion.button>
                 ))}
               </div>
             )}
-            <motion.button whileHover={{scale:1.04}} style={{...btnG({padding:'9px 20px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setCIdx(i=>Math.min(deckCards.length-1,i+1));setFlip(false);}} disabled={cIdx===deckCards.length-1}>Next<ChevronRight size={14}/></motion.button>
+            <motion.button whileHover={{scale:1.04}} style={{...btnG({padding:'8px 20px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setCIdx(i=>Math.min(deckCards.length-1,i+1));setFlip(false);}} disabled={cIdx===deckCards.length-1}>Next<ChevronRight size={14}/></motion.button>
           </div>
           {/* Export deck */}
-          <button style={{...btnG({alignSelf:'flex-start',fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>exportFlashDeck(activeDeck.name,deckCards)}><FileDown size={13}/>Export Deck PDF</button>
+          <button style={{...btnG({alignSelf:'flex-start',fontSize:11,padding:'4px 12px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>exportFlashDeck(activeDeck.name,deckCards)}><FileDown size={13}/>Export Deck PDF</button>
           <AnimatePresence>
             {manageDeck&&<CardManagerModal
               deckName={manageDeck}
@@ -6985,11 +6984,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     }).filter(Boolean);
 
     return(
-      <div style={CC({gap:22})}>
+      <div style={CC({gap:20})}>
         <PanelHero tourTag="prep-deep-flashcards" icon={Layers3} color={C.amber} color2={C.rose} m={isMobile}
           eyebrow="Flashcards" title="Study Decks"
           sub="Scheduled with FSRS. Study what's due, or build a deck from your notes."
-          right={<button style={{...btn(C.sunsetGrad,{fontSize:12,padding:'9px 18px',boxShadow:`0 4px 14px ${C.amber}35`}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setNewDeckOpen(true)}><Plus size={14}/>New Deck</button>}/>
+          right={<button style={{...btn(C.sunsetGrad,{fontSize:12,padding:'8px 16px',boxShadow:`0 4px 14px ${C.amber}35`}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>setNewDeckOpen(true)}><Plus size={14}/>New Deck</button>}/>
 
         {/* Overview stats */}
         <div style={G(4,12,{},isMobile)}>
@@ -7006,33 +7005,33 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             a genuinely fresh order is the thing this surface is actually for; the per-deck Due
             filter is still there for anyone who wants the scheduled subset. */}
         {allCards.length>0&&(
-          <motion.div whileHover={{y:-2}} style={{...glass({padding:18}),display:'flex',alignItems:'center',gap:16,flexWrap:'wrap',background:`linear-gradient(135deg,${C.amber}14,transparent)`,border:`1px solid ${C.amber}30`,cursor:'pointer'}}
+          <motion.div whileHover={{y:-2}} style={{...glass({padding:16}),display:'flex',alignItems:'center',gap:16,flexWrap:'wrap',background:`linear-gradient(135deg,${C.amber}14,transparent)`,border:`1px solid ${C.amber}30`,cursor:'pointer'}}
             onClick={startSmartMix}>
-            <div style={{width:44,height:44,borderRadius:13,flexShrink:0,background:C.amberDim,border:`1px solid ${C.amber}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><Shuffle size={20} color={C.amberL}/></div>
+            <div style={{width:44,height:44,borderRadius:12,flexShrink:0,background:C.amberDim,border:`1px solid ${C.amber}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><Shuffle size={20} color={C.amberL}/></div>
             <div style={{flex:1,minWidth:200}}>
-              <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Smart Mix</div>
-              <div style={{fontSize:12,color:C.t2,marginTop:2}}>All {allCards.length} cards from all {builtinCount+customCount} decks, shuffled into a brand-new order every single time you start it{dueCards>0?` — the ${dueCards} due for review are in there too`:''}.</div>
+              <div style={{fontSize:15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',fontWeight:800,color:C.t1,fontFamily:C.FD}}>Smart Mix</div>
+              <div style={{fontSize:12,color:C.t2,marginTop:4}}>All {allCards.length} cards from all {builtinCount+customCount} decks, shuffled into a brand-new order every single time you start it{dueCards>0?` — the ${dueCards} due for review are in there too`:''}.</div>
             </div>
-            <span style={{...btn(accentGrad(C.amber),{fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}}>Shuffle & Start<ChevronRight size={13}/></span>
+            <span style={{...btn(accentGrad(C.amber),{fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',gap:4}}>Shuffle & Start<ChevronRight size={13}/></span>
           </motion.div>
         )}
 
         {/* Mastery by subject — retention % rolled up per DECK_CATEGORY_ORDER group instead of
             one blended library-wide number, so it's obvious which subject needs more review. */}
         {categoryMastery.length>1&&(
-          <div style={glass({padding:18})}>
-            <SectionTitle icon={Brain} color={C.amberL} extra={{marginBottom:14}}>Mastery by Subject</SectionTitle>
+          <div style={glass({padding:16})}>
+            <SectionTitle icon={Brain} color={C.amberL} extra={{marginBottom:12}}>Mastery by Subject</SectionTitle>
             <div style={G(2,10,{},isMobile)}>
               {categoryMastery.map(({cat,total,due,avgRet})=>{const dm=deckCatMeta(cat);return(
-                <div key={cat} style={{...glass2({padding:'12px 14px',background:`linear-gradient(120deg,${dm.color}0c,transparent 55%)`,border:`1px solid ${dm.color}22`,borderLeft:`3px solid ${dm.color}66`})}}>
-                  <div style={R({justifyContent:'space-between',marginBottom:6})}>
+                <div key={cat} style={{...glass2({padding:'12px 12px',background:`linear-gradient(120deg,${dm.color}0c,transparent 55%)`,border:`1px solid ${dm.color}22`,borderLeft:`3px solid ${dm.color}66`})}}>
+                  <div style={R({justifyContent:'space-between',marginBottom:4})}>
                     <span style={{fontSize:12,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{dm.emoji} {cat}</span>
                     <span style={{fontSize:11,fontWeight:700,color:avgRet!==null?(avgRet>=80?C.greenL:avgRet>=50?C.amberL:C.roseL):C.t3,fontFamily:C.FM}}>{avgRet!==null?`${avgRet}%`:'—'}</span>
                   </div>
                   {avgRet!==null
                     ?<Bar pct={avgRet} color={avgRet>=80?C.green:avgRet>=50?C.amber:C.rose} h={5} glow/>
                     :<div style={{fontSize:10.5,color:C.t4}}>Not studied yet — {total} card{total===1?'':'s'} waiting</div>}
-                  {avgRet!==null&&due>0&&<div style={{fontSize:10,color:dm.light,marginTop:5,fontWeight:600}}>{due} due now</div>}
+                  {avgRet!==null&&due>0&&<div style={{fontSize:10,color:dm.light,marginTop:4,fontWeight:600}}>{due} due now</div>}
                 </div>
               );})}
             </div>
@@ -7042,7 +7041,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* Category / subsection pills — SAT > Math vs. SAT > Reading & Writing, Science >
             Biology/Chemistry/Physics, etc. — instead of one flat list of every deck. */}
         <div style={CC({gap:8})}>
-          <div style={R({gap:6,flexWrap:'wrap'})}>
+          <div style={R({gap:4,flexWrap:'wrap'})}>
             <motion.button whileHover={{y:-1}} whileTap={{scale:.96}} style={btnSm(deckCategory==='all'?C.sunsetGrad:C.s4,{fontSize:11.5,fontWeight:700,color:deckCategory==='all'?'#fff':C.t2,border:`1px solid ${deckCategory==='all'?'transparent':C.b1}`,boxShadow:deckCategory==='all'?`0 4px 12px ${C.amber}30`:'none'})} onClick={()=>{setDeckCategory('all');setDeckSubcat('all');}}>All Subjects</motion.button>
             {DECK_CATEGORY_ORDER.map(cat=>{
               const active=deckCategory===cat;
@@ -7053,7 +7052,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             })}
           </div>
           {deckCategory!=='all'&&subcatsForCategory.length>1&&(()=>{const dm=deckCatMeta(deckCategory);return(
-            <motion.div initial={{opacity:0,height:0}} animate={{opacity:1,height:'auto'}} style={R({gap:6,flexWrap:'wrap',paddingLeft:14,borderLeft:`2px solid ${dm.color}44`})}>
+            <motion.div initial={{opacity:0,height:0}} animate={{opacity:1,height:'auto'}} style={R({gap:4,flexWrap:'wrap',paddingLeft:12,borderLeft:`2px solid ${dm.color}44`})}>
               <button style={btnSm(deckSubcat==='all'?`${dm.color}30`:'transparent',{fontSize:10.5,color:deckSubcat==='all'?dm.light:C.t3,border:`1px solid ${deckSubcat==='all'?`${dm.color}50`:C.b1}`})} onClick={()=>setDeckSubcat('all')}>All {deckCategory}</button>
               {subcatsForCategory.map(sub=>(
                 <button key={sub} style={btnSm(deckSubcat===sub?`${dm.color}30`:'transparent',{fontSize:10.5,color:deckSubcat===sub?dm.light:C.t3,border:`1px solid ${deckSubcat===sub?`${dm.color}50`:C.b1}`})} onClick={()=>setDeckSubcat(sub)}>{sub}</button>
@@ -7062,7 +7061,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           );})()}
         </div>
 
-        <div style={R({flexWrap:'wrap',gap:10})}>
+        <div style={R({flexWrap:'wrap',gap:8})}>
           <div style={{flex:1,minWidth:200,position:'relative'}}>
             <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none',transition:'color .2s'}}><Search size={14}/></span>
             <input
@@ -7075,14 +7074,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               {dSrchLive&&(
                 <motion.button
                   initial={{opacity:0,scale:.6}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:.6}} transition={{duration:.12}}
-                  style={{position:'absolute',right:8,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',color:C.t3,cursor:'pointer',padding:4,borderRadius:6,display:'flex'}}
+                  style={{position:'absolute',right:8,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',color:C.t3,cursor:'pointer',padding:4,borderRadius:4,display:'flex'}}
                   onClick={()=>{setDSrchLive('');setDS2('');}}
                   aria-label="Clear search"
                 ><X size={14}/></motion.button>
               )}
             </AnimatePresence>
           </div>
-          <div style={R({gap:6})}>
+          <div style={R({gap:4})}>
             {[['all','All'],['due','Due'],['builtin','Built-in'],['custom','My Decks']].map(([key,label])=>(
               <button key={key} style={btnSm(deckFilter===key?C.sunsetGrad:C.s4,{fontSize:11,color:deckFilter===key?'#fff':C.t2,border:`1px solid ${deckFilter===key?'transparent':C.b1}`,boxShadow:deckFilter===key?`0 4px 12px ${C.amber}30`:'none'})} onClick={()=>setDeckFilter(key)}>{label}</button>
             ))}
@@ -7093,24 +7092,24 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <motion.div animate={gShake?{x:[0,-7,7,-5,5,-2,2,0]}:{x:0}} transition={{duration:.42}}
           style={{...glass({background:`linear-gradient(135deg,${C.violetDim},${C.fuchsiaDim} 60%,${C.pinkDim})`,border:`1px solid rgba(139,92,246,0.3)`,position:'relative',overflow:'hidden'})}}>
           <div style={{position:'absolute',inset:0,background:C.auroraGrad,opacity:0.05,pointerEvents:'none'}}/>
-          <div style={{...R({marginBottom:14}),position:'relative'}}>
+          <div style={{...R({marginBottom:12}),position:'relative'}}>
             <motion.div animate={gLoad?{rotate:360}:{rotate:0}} transition={gLoad?{duration:1.6,repeat:Infinity,ease:'linear'}:{duration:.3}}
-              style={{width:36,height:36,borderRadius:10,background:C.violetGrad,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 12px ${C.violet}40`}}><Brain size={17} color="#fff"/></motion.div>
+              style={{width:36,height:36,borderRadius:8,background:C.violetGrad,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 12px ${C.violet}40`}}><Brain size={17} color="#fff"/></motion.div>
             <div style={{flex:1}}>
               <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Generate Deck From Notes</div>
-              <div style={{fontSize:11,color:C.t2,marginTop:1}}>Offline extraction, sized to your notes, then a Medabrain (Scout) pass to tighten wording — no account needed</div>
+              <div style={{fontSize:11,color:C.t2,marginTop:4}}>Offline extraction, sized to your notes, then a Medabrain (Scout) pass to tighten wording — no account needed</div>
             </div>
           </div>
           <div style={{...R({gap:8,marginBottom:12,justifyContent:'flex-end',flexWrap:'wrap'}),position:'relative'}}>
             <button disabled={gLoad} onClick={()=>setGenCountMode('auto')}
-              style={{...btnSm(genCountMode==='auto'?C.violetGrad:'rgba(255,255,255,0.05)',{color:genCountMode==='auto'?'#fff':C.t2,border:`1px solid ${genCountMode==='auto'?'transparent':C.b1}`,fontSize:11,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:5}}>
+              style={{...btnSm(genCountMode==='auto'?C.violetGrad:'rgba(255,255,255,0.05)',{color:genCountMode==='auto'?'#fff':C.t2,border:`1px solid ${genCountMode==='auto'?'transparent':C.b1}`,fontSize:11,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:4}}>
               <Wand2 size={11}/>Auto
             </button>
             <span style={{fontSize:10,color:C.t3}}>{genCountMode==='auto'?'sizes to your notes':'Cards'}</span>
             <input
               type="number" min={GEN_COUNT_MIN} max={GEN_COUNT_MAX} step={1}
               disabled={gLoad}
-              style={inp({width:70,padding:'5px 10px',fontSize:11,opacity:gLoad?.6:genCountMode==='auto'?.45:1})}
+              style={inp({width:70,padding:'4px 8px',fontSize:11,opacity:gLoad?.6:genCountMode==='auto'?.45:1})}
               value={genCountInput}
               onFocus={()=>setGenCountMode('manual')}
               onChange={e=>{setGenCountMode('manual');setGenCountInput(e.target.value);}}
@@ -7118,7 +7117,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             />
           </div>
           <div style={{position:'relative',marginBottom:12}}>
-            <textarea disabled={gLoad} style={{...inp({minHeight:80,resize:'vertical',fontFamily:C.FB,lineHeight:1.6,opacity:gLoad?.6:1})}} placeholder="Paste your class notes, study guides, or any text here…" value={notes} onChange={e=>setNotes(e.target.value)}/>
+            <textarea disabled={gLoad} style={{...inp({minHeight:80,resize:'vertical',fontFamily:C.FB,lineHeight: 1.55,opacity:gLoad?.6:1})}} placeholder="Paste your class notes, study guides, or any text here…" value={notes} onChange={e=>setNotes(e.target.value)}/>
             <div style={{position:'absolute',right:10,bottom:8,fontSize:9.5,color:C.t4,fontFamily:C.FM,pointerEvents:'none'}}>{notes.length>0?`${notes.trim().split(/\s+/).filter(Boolean).length} words`:''}</div>
           </div>
           <motion.button whileHover={gLoad?{}:{scale:1.02}} whileTap={gLoad?{}:{scale:.98}} style={{...btn(`linear-gradient(135deg,${C.violet},${C.fuchsia})`,{fontSize:12,boxShadow:`0 4px 16px ${C.violet}40`,minWidth:220,justifyContent:'center',position:'relative'}),display:'inline-flex',alignItems:'center',gap:8,cursor:gLoad?'wait':'pointer'}} onClick={genDeck} disabled={gLoad||!notes.trim()}>
@@ -7134,8 +7133,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             ):(<><Sparkles size={14}/>{genCountMode==='auto'?'Generate Flashcards (Auto)':`Generate ${genCount} Flashcards`}</>)}
           </motion.button>
           {!gLoad&&genPolishNote&&(
-            <motion.div initial={{opacity:0,y:4}} animate={{opacity:1,y:0}} style={{position:'relative',marginTop:12,display:'flex',alignItems:'flex-start',gap:8,padding:'10px 12px',borderRadius:10,background:C.violetDim,border:`1px solid ${C.violet}25`}}>
-              <Brain size={13} color={C.violetL} style={{flexShrink:0,marginTop:1}}/>
+            <motion.div initial={{opacity:0,y:4}} animate={{opacity:1,y:0}} style={{position:'relative',marginTop:12,display:'flex',alignItems:'flex-start',gap:8,padding:'8px 12px',borderRadius:8,background:C.violetDim,border:`1px solid ${C.violet}25`}}>
+              <Brain size={13} color={C.violetL} style={{flexShrink:0,marginTop:4}}/>
               <span style={{fontSize:11,color:C.t2,lineHeight:1.5}}><strong style={{color:C.violetL}}>Medabrain: </strong>{genPolishNote}</span>
             </motion.div>
           )}
@@ -7159,21 +7158,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 whileHover={{y:-2,borderColor:`${dm.color}40`,boxShadow:`0 8px 32px rgba(0,0,0,0.5),0 0 0 1px ${dm.color}25`}} style={{...glass({padding:20,cursor:'pointer',transition:'border-color .2s',position:'relative',borderLeft:`3px solid ${onPlan?C.violet:dm.color}55`}),background:`linear-gradient(120deg,${dm.color}0a,transparent 45%)`}}>
                 <div onClick={()=>{setAD(deck);setCIdx(0);setFlip(false);setStudyMode(dc>0?'due':'all');setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>
                   <div style={R({gap:8,marginBottom:12})}>
-                    <div style={{width:36,height:36,borderRadius:10,background:`${dm.color}16`,border:`1px solid ${dm.color}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Layers3 size={17} color={dm.light}/></div>
+                    <div style={{width:36,height:36,borderRadius:8,background:`${dm.color}16`,border:`1px solid ${dm.color}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Layers3 size={17} color={dm.light}/></div>
                     <span style={{...pill(dm.dim,dm.light,{fontSize:9.5,fontWeight:700})}}>{dm.emoji} {info.subcategory!=='General'&&info.subcategory!==info.category?info.subcategory:info.category}</span>
                   </div>
                   <div style={{fontSize:13,fontWeight:700,color:C.t1,marginBottom:4,lineHeight:1.35,fontFamily:C.FD}}>{deck.name}</div>
                   <div style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{deck.cards.length} cards{deckRet!==null?` · ${deckRet}% retention`:''}</div>
                   {deckRet!==null&&<div style={{marginTop:8}}><Bar pct={deckRet} color={deckRet>=80?C.green:deckRet>=50?C.amber:C.rose} h={3}/></div>}
-                  <div style={R({gap:6,marginTop:8,flexWrap:'wrap'})}>
-                    {onPlan&&<div style={{...pill(C.violetDim,C.violetL,{fontSize:10,fontWeight:700})}}><CalendarClock size={9} style={{marginRight:3,verticalAlign:-1}}/>Today's plan</div>}
+                  <div style={R({gap:4,marginTop:8,flexWrap:'wrap'})}>
+                    {onPlan&&<div style={{...pill(C.violetDim,C.violetL,{fontSize:10,fontWeight:700})}}><CalendarClock size={9} style={{marginRight:4,verticalAlign:-1}}/>Today's plan</div>}
                     {isNewest&&<div style={{...pill(C.greenDim,C.greenL,{fontSize:10,fontWeight:700})}}>New</div>}
                     {dc>0&&<div style={{...pill(C.amberDim,C.amberL,{fontSize:10,fontFamily:C.FM,fontWeight:700})}}>{dc} due now</div>}
                     {!deck.builtin&&<div style={{...pill(C.violetDim,C.violetL,{fontSize:10})}}>My deck</div>}
                   </div>
                 </div>
                 {!deck.builtin&&(
-                  <button style={{position:'absolute',top:14,right:14,background:'none',border:'none',color:C.t3,cursor:'pointer',padding:6,borderRadius:6}} onClick={e=>{e.stopPropagation();setManageDeck(deck.name);}} title="Manage cards"><ScrollText size={13}/></button>
+                  <button style={{position:'absolute',top:14,right:14,background:'none',border:'none',color:C.t3,cursor:'pointer',padding:4,borderRadius:4}} onClick={e=>{e.stopPropagation();setManageDeck(deck.name);}} title="Manage cards"><ScrollText size={13}/></button>
                 )}
               </motion.div>
             );
@@ -7296,42 +7295,42 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const pct = Math.round((completedCount / ELIB.length) * 100) || 0;
 
     return(
-      <div style={CC({gap:22})}>
+      <div style={CC({gap:20})}>
         {/* Progress Tracker Card Header */}
         <div data-tour="prep-deep-library" style={{...glass({padding:20, background: `linear-gradient(120deg, ${C.blueDim}, ${C.violetDim} 45%, ${C.pinkDim})`, border: `1px solid ${C.violet}22`, position:'relative', overflow:'hidden'}), display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap'}}>
           <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:C.auroraGrad}}/>
           <div style={{position:'absolute',inset:0,background:C.auroraGrad,opacity:0.06,pointerEvents:'none'}}/>
           <div style={{position: 'relative', width: 64, height: 64, borderRadius: '50%', background: C.auroraGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow:`0 6px 20px ${C.violet}40`}}>
             <BookOpen size={24} color="#fff" />
-            {pct > 0 && <span style={{position: 'absolute', bottom: -4, right: -4, ...pill(C.green, '#fff', {fontSize: 9, padding: '2px 6px', borderRadius: 4})}}>{pct}%</span>}
+            {pct > 0 && <span style={{position: 'absolute', bottom: -4, right: -4, ...pill(C.green, '#fff', {fontSize: 9, padding: '4px 4px', borderRadius: 4})}}>{pct}%</span>}
           </div>
           <div style={{flex: 1, minWidth: 200}}>
-            <div style={{fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: '.08em', textTransform: 'uppercase'}}>My Study Journey</div>
-            <div style={{fontSize: 18, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 2}}>E-Library Workspace</div>
+            <div style={{fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>My Study Journey</div>
+            <div style={{fontSize: 18, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 4}}>E-Library Workspace</div>
             {/* Progress Bar */}
-            <div style={{marginTop: 10, width: '100%', height: 6, borderRadius: 3, background: C.s4, overflow: 'hidden', position: 'relative'}}>
+            <div style={{marginTop: 8, width: '100%', height: 6, borderRadius: 4, background: C.s4, overflow: 'hidden', position: 'relative'}}>
               <motion.div initial={{width: 0}} animate={{width: `${pct}%`}} transition={{duration: 0.6}} style={{position: 'absolute', left: 0, top: 0, height: '100%', background: C.auroraGrad, boxShadow: `0 0 10px ${C.violet}60`}} />
             </div>
           </div>
           <div style={{display: 'flex', gap: 16, flexWrap: 'wrap'}}>
             <div style={{textAlign: 'center', minWidth: 70}}>
               <div style={{fontSize: 18, fontWeight: 800, fontFamily: C.FM, color: C.t1}}>{ELIB.length}</div>
-              <div style={{fontSize: 9, color: C.t3, textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 2}}>Total</div>
+              <div style={{fontSize: 9, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginTop: 4}}>Total</div>
             </div>
             <div style={{textAlign: 'center', minWidth: 70}}>
               <div style={{fontSize: 18, fontWeight: 800, fontFamily: C.FM, color: C.amberL}}>{savedCount}</div>
-              <div style={{fontSize: 9, color: C.t3, textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 2}}>Saved</div>
+              <div style={{fontSize: 9, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginTop: 4}}>Saved</div>
             </div>
             <div style={{textAlign: 'center', minWidth: 70}}>
               <div style={{fontSize: 18, fontWeight: 800, fontFamily: C.FM, color: C.greenL}}>{completedCount}</div>
-              <div style={{fontSize: 9, color: C.t3, textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 2}}>Studied</div>
+              <div style={{fontSize: 9, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginTop: 4}}>Studied</div>
             </div>
           </div>
         </div>
 
         {/* E-Library Inner Sub-Tabs */}
-        <div style={R({borderBottom: `1px solid ${C.b1}`, paddingBottom: 10, gap: 10, flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center'})}>
-          <div style={R({gap: 10, flexWrap: 'wrap'})}>
+        <div style={R({borderBottom: `1px solid ${C.b1}`, paddingBottom: 8, gap: 8, flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center'})}>
+          <div style={R({gap: 8, flexWrap: 'wrap'})}>
             {[
               { id: 'all', label: 'All Resources', icon: BookOpen, color: C.blue, light: C.blueL, dim: C.blueDim },
               { id: 'saved', label: `My Saved (${savedCount})`, icon: Bookmark, color: C.amber, light: C.amberL, dim: C.amberDim },
@@ -7350,7 +7349,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                       border: active ? `1px solid ${tab.color}35` : '1px solid transparent',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: 6,
+                      gap: 4,
                       padding: '8px 16px',
                       fontSize: 12,
                       fontWeight: 600,
@@ -7375,7 +7374,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   borderColor: `${C.violet}40`,
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 6,
+                  gap: 4,
                   padding: '8px 16px',
                   fontSize: 12,
                   fontWeight: 600,
@@ -7391,7 +7390,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         </div>
 
         {/* Row 1 Filter: Search and Category */}
-        <div style={R({flexWrap:'wrap',gap:10})}>
+        <div style={R({flexWrap:'wrap',gap:8})}>
           <div style={{flex:1,minWidth:200,position:'relative'}}>
             <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><Search size={14}/></span>
             <input style={inp({paddingLeft:36})} placeholder="Search videos, books, courses…" value={lSrch} onChange={e=>setLS(e.target.value)}/>
@@ -7406,7 +7405,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             const cm=c==='All'?{color:C.blue,light:C.blueL,dim:C.blueDim,emoji:'✨'}:catMeta(c);
             return(
               <motion.button key={c} whileHover={{scale:1.05,y:-1}} whileTap={{scale:.96}} onClick={()=>setLC(c)}
-                style={{...pill(active?cm.color:cm.dim, active?'#fff':cm.light, {fontSize:11,padding:'6px 13px',cursor:'pointer',border:`1px solid ${active?cm.color:'transparent'}`,boxShadow:active?`0 4px 14px ${cm.color}45`:'none',fontWeight:700})}}>
+                style={{...pill(active?cm.color:cm.dim, active?'#fff':cm.light, {fontSize:11,padding:'4px 12px',cursor:'pointer',border:`1px solid ${active?cm.color:'transparent'}`,boxShadow:active?`0 4px 14px ${cm.color}45`:'none',fontWeight:700})}}>
                 {cm.emoji} {c==='Behavioral & Social Sciences'?'Behavioral Sci.':c}
               </motion.button>
             );
@@ -7414,10 +7413,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         </div>
 
         {/* Row 2 Filter: Resource Type, Cost, Sort Order */}
-        <div style={R({flexWrap: 'wrap', gap: 10, justifyContent: 'space-between', borderTop: `1px solid ${C.b0}`, paddingTop: 10})}>
+        <div style={R({flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', borderTop: `1px solid ${C.b0}`, paddingTop: 8})}>
           <div style={R({flexWrap: 'wrap', gap: 8})}>
             {/* Type filter */}
-            <select style={inp({width: 'auto', padding: '6px 12px', fontSize: 11})} value={lType} onChange={e => setLType(e.target.value)}>
+            <select style={inp({width: 'auto', padding: '4px 12px', fontSize: 11})} value={lType} onChange={e => setLType(e.target.value)}>
               <option value="All">All Types</option>
               <option value="YouTube">YouTube Videos</option>
               <option value="Article">Articles & Guides</option>
@@ -7429,7 +7428,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             </select>
 
             {/* Prep Level / Difficulty filter */}
-            <select style={inp({width: 'auto', padding: '6px 12px', fontSize: 11})} value={lDiff} onChange={e => setLDiff(e.target.value)}>
+            <select style={inp({width: 'auto', padding: '4px 12px', fontSize: 11})} value={lDiff} onChange={e => setLDiff(e.target.value)}>
               <option value="All">All Prep Levels</option>
               <option value="Introductory">Introductory</option>
               <option value="AP / Intermediate">AP / Intermediate</option>
@@ -7437,13 +7436,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             </select>
 
             {/* Cost filter */}
-            <select style={inp({width: 'auto', padding: '6px 12px', fontSize: 11})} value={lFreeOnly ? 'free' : 'all'} onChange={e => setLFreeOnly(e.target.value === 'free')}>
+            <select style={inp({width: 'auto', padding: '4px 12px', fontSize: 11})} value={lFreeOnly ? 'free' : 'all'} onChange={e => setLFreeOnly(e.target.value === 'free')}>
               <option value="all">All Budgets</option>
               <option value="free">Free Resources Only</option>
             </select>
 
             {/* Sort order */}
-            <select style={inp({width: 'auto', padding: '6px 12px', fontSize: 11})} value={lSort} onChange={e => setLSort(e.target.value)}>
+            <select style={inp({width: 'auto', padding: '4px 12px', fontSize: 11})} value={lSort} onChange={e => setLSort(e.target.value)}>
               <option value="default">Sort: Recommended</option>
               <option value="alpha">Sort: Alphabetical (A-Z)</option>
               <option value="alpha-desc">Sort: Alphabetical (Z-A)</option>
@@ -7475,7 +7474,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           key={lCat}
           style={{
             ...glass({
-              padding: '14px 18px',
+              padding: '12px 16px',
               background: `linear-gradient(135deg, ${(lCat==='All'?{dim:C.blueDim}:catMeta(lCat)).dim}, transparent)`,
               border: `1px dashed ${(lCat==='All'?{color:C.blue}:catMeta(lCat)).color}40`
             }),
@@ -7498,8 +7497,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <Lightbulb size={16} color="#fff" />
           </div>
           <div>
-            <div style={{fontSize: 10, fontWeight: 700, color: (lCat==='All'?{light:C.blueL}:catMeta(lCat)).light, letterSpacing: '.06em', textTransform: 'uppercase'}}>Medabrain Coaching Insight</div>
-            <div style={{fontSize: 12, color: C.t2, lineHeight: 1.5, marginTop: 2}}>
+            <div style={{fontSize: 10, fontWeight: 700, color: (lCat==='All'?{light:C.blueL}:catMeta(lCat)).light, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>Medabrain Coaching Insight</div>
+            <div style={{fontSize: 12, color: C.t2, lineHeight: 1.5, marginTop: 4}}>
               {
                 lCat === 'Life Sciences' ? "In Life Sciences, focus on active recall. Rather than re-reading chapters, use our Flashcards workspace or sketch pathways from memory. Use BioMan Biology or HHMI for interactive visual reinforcement." :
                 lCat === 'Physical Sciences' ? "In Physical Sciences, problem-solving is king. After reading about laws or formulas, work through practice problems from MIT OCW or watch walkthroughs by The Organic Chemistry Tutor." :
@@ -7541,7 +7540,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                     justifyContent: 'center',
                     cursor: 'pointer',
                     color: user?.bookmarks?.includes(r.title) ? C.amberL : '#fff',
-                    transition: 'all 0.15s'
+                    transition: CONTROL_TRANSITION
                   }}
                   title={user?.bookmarks?.includes(r.title) ? "Unsave resource" : "Save resource"}
                 >
@@ -7554,17 +7553,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
                     <motion.div whileHover={{scale:1.12,background:'rgba(255,255,255,0.22)'}} style={{width:52,height:52,borderRadius:'50%',background:'rgba(255,255,255,0.12)',backdropFilter:'blur(8px)',display:'flex',alignItems:'center',justifyContent:'center',border:'1.5px solid rgba(255,255,255,0.25)'}}><Play size={20} color="white" fill="white"/></motion.div>
                   </div>
-                  <span style={pill('rgba(239,68,68,0.85)','white',{position:'absolute',top:10,right:10,fontSize:10,borderRadius:5})}>YouTube</span>
+                  <span style={pill('rgba(239,68,68,0.85)','white',{position:'absolute',top:10,right:10,fontSize:10,borderRadius:4})}>YouTube</span>
                 </div>
-                <div style={{padding:'14px 18px'}}>
-                  <div style={R({gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 5})}>
+                <div style={{padding:'12px 16px'}}>
+                  <div style={R({gap: 4, flexWrap: 'wrap', alignItems: 'center', marginBottom: 4})}>
                     <div style={{fontSize:13,fontWeight:700,color:C.t1,lineHeight:1.4,fontFamily:C.FD}}>{r.title}</div>
-                    {todayPlanTargets.articleTitles.has(r.title) && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, fontWeight:700, display: 'inline-flex', alignItems: 'center', gap: 3})}><CalendarClock size={10}/>Today's plan</span>}
-                    {hasNotes && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, display: 'inline-flex', alignItems: 'center', gap: 3})}><ScrollText size={10}/>Has Notes</span>}
+                    {todayPlanTargets.articleTitles.has(r.title) && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, fontWeight:700, display: 'inline-flex', alignItems: 'center', gap: 4})}><CalendarClock size={10}/>Today's plan</span>}
+                    {hasNotes && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, display: 'inline-flex', alignItems: 'center', gap: 4})}><ScrollText size={10}/>Has Notes</span>}
                   </div>
                   <div style={{fontSize:11,color:C.t3,lineHeight:1.55,marginBottom:12}}>{r.desc}</div>
                   <div style={R({justifyContent:'space-between', flexWrap: 'wrap', gap: 8})}>
-                    <div style={R({gap:6})}>
+                    <div style={R({gap:4})}>
                       <span style={pill(catMeta(r.cat).dim,catMeta(r.cat).light,{fontSize:10})}>{catMeta(r.cat).emoji} {r.cat}</span>
                       <span style={pill('rgba(255,255,255,0.06)',C.t3,{fontSize:10})}>{r.difficulty}</span>
                     </div>
@@ -7607,7 +7606,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                         {openNotes[r.title] ? 'Hide Notes' : 'Notes'}
                       </button>
 
-                      <button style={{...btnSm('rgba(239,68,68,0.15)',{color:'#f87171',border:'1px solid rgba(239,68,68,0.3)',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>setVM({ytId:r.ytId,title:r.title,url:r.url})}><Play size={11} fill="currentColor"/>Watch</button>
+                      <button style={{...btnSm('rgba(239,68,68,0.15)',{color:'#f87171',border:'1px solid rgba(239,68,68,0.3)',fontSize:11}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>setVM({ytId:r.ytId,title:r.title,url:r.url})}><Play size={11} fill="currentColor"/>Watch</button>
                     </div>
                   </div>
                   {openNotes[r.title] && (
@@ -7657,11 +7656,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               const hasNotes = !!user?.resourceNotes?.[r.title];
               const cm=catMeta(r.cat);
               return(
-                <motion.div key={i} whileHover={{y:-2,borderColor:`${cm.color}45`,boxShadow:`0 10px 30px ${cm.color}18`}} style={glass({padding:18,transition:'all .18s',position:'relative',borderLeft:`3px solid ${cm.color}`,overflow:'hidden'})}>
+                <motion.div key={i} whileHover={{y:-2,borderColor:`${cm.color}45`,boxShadow:`0 10px 30px ${cm.color}18`}} style={glass({padding:16,transition: CONTROL_TRANSITION,position:'relative',borderLeft:`3px solid ${cm.color}`,overflow:'hidden'})}>
                   <div style={{position:'absolute',top:0,right:0,width:120,height:120,background:`radial-gradient(circle at top right, ${cm.dim}, transparent 70%)`,pointerEvents:'none'}}/>
                   <div style={R({justifyContent:'space-between',marginBottom:12,position:'relative'})}>
                     <span style={pill(`${col}18`,col,{fontSize:10})}>{r.type}</span>
-                    <div style={R({gap:6})}>
+                    <div style={R({gap:4})}>
                       {r.free?<span style={pill(C.greenDim,C.greenL,{fontSize:10})}>FREE</span>:<span style={pill(C.amberDim,C.amberL,{fontSize:10})}>Paid</span>}
                       <span style={pill(cm.dim,cm.light,{fontSize:10})}>{cm.emoji} {r.cat}</span>
                       <span style={pill('rgba(255,255,255,0.06)',C.t3,{fontSize:10})}>{r.difficulty}</span>
@@ -7672,7 +7671,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                         style={{
                           background: 'none',
                           border: 'none',
-                          padding: 2,
+                          padding: 4,
                           cursor: 'pointer',
                           color: isSaved ? C.amberL : C.t3,
                           transition: 'color 0.15s',
@@ -7686,14 +7685,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                       </button>
                     </div>
                   </div>
-                  <div style={R({gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 6})}>
+                  <div style={R({gap: 4, flexWrap: 'wrap', alignItems: 'center', marginBottom: 4})}>
                     <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{r.title}</div>
-                    {todayPlanTargets.articleTitles.has(r.title) && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, fontWeight:700, display: 'inline-flex', alignItems: 'center', gap: 3})}><CalendarClock size={10}/>Today's plan</span>}
-                    {hasNotes && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, display: 'inline-flex', alignItems: 'center', gap: 3})}><ScrollText size={10}/>Has Notes</span>}
+                    {todayPlanTargets.articleTitles.has(r.title) && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, fontWeight:700, display: 'inline-flex', alignItems: 'center', gap: 4})}><CalendarClock size={10}/>Today's plan</span>}
+                    {hasNotes && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, display: 'inline-flex', alignItems: 'center', gap: 4})}><ScrollText size={10}/>Has Notes</span>}
                   </div>
-                  <div style={{fontSize:12,color:C.t2,lineHeight:1.65,marginBottom:14}}>{r.desc}</div>
+                  <div style={{fontSize:12,color:C.t2,lineHeight:1.65,marginBottom:12}}>{r.desc}</div>
                   <div style={R({justifyContent:'space-between', flexWrap: 'wrap', gap: 8})}>
-                    <a href={r.url} target="_blank" rel="noreferrer" style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}30`,textDecoration:'none',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}>Open<ExternalLink size={11}/></a>
+                    <a href={r.url} target="_blank" rel="noreferrer" style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}30`,textDecoration:'none',fontSize:11}),display:'inline-flex',alignItems:'center',gap:4}}>Open<ExternalLink size={11}/></a>
 
                     <div style={R({gap:8})}>
                       {/* Studied checkbox / check pill */}
@@ -7872,18 +7871,18 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       <button key={s.view} onClick={()=>{goPortfolio(s.view);play('click');}} aria-label={`Open ${s.label}`}
         style={{
           boxSizing:'border-box',textAlign:'left',font:'inherit',color:'inherit',cursor:'pointer',
-          padding:13,borderRadius:12,background:C.surf2,border:`1px solid ${C.b1}`,
+          padding:12,borderRadius:12,background:C.surf2,border:`1px solid ${C.b1}`,
           borderLeft:`3px solid ${s.col}`,
         }}>
-        <div style={R({gap:6,marginBottom:6})}>
+        <div style={R({gap:4,marginBottom:4})}>
           <s.ic size={13} color={s.col}/>
-          <span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>{s.label}</span>
+          <span style={{fontSize:10,fontWeight:700,color:C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>{s.label}</span>
         </div>
-        <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{s.value==null?'—':s.value}</div>
-        <div style={{fontSize:10,color:C.t3,marginTop:2}}>{s.sub}</div>
+        <div style={{fontSize:18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))',fontWeight:800,fontFamily:C.FM,color:C.t1}}>{s.value==null?'—':s.value}</div>
+        <div style={{fontSize:10,color:C.t3,marginTop:4}}>{s.sub}</div>
       </button>
     );
-    const tileGrid={display:'grid',gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(auto-fill,minmax(160px,1fr))',gap:10};
+    const tileGrid={display:'grid',gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(auto-fill,minmax(160px,1fr))',gap:8};
 
     // ── "What do I actually do next?" ────────────────────────────────────────
     // Derived from the same rows every dashboard on this page reads, so it can never suggest
@@ -7908,7 +7907,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           :'Just getting started. This number only measures what’s been entered — adding your real activities and hours is the fastest way to move it.';
 
     return(
-      <div style={CC({gap:22})}>
+      <div style={CC({gap:20})}>
         <PanelHero tourTag="portfolio-deep-overview" icon={Building2} color={C.blue} color2={C.green} m={isMobile}
           eyebrow="Portfolio" title="Your Application"
           sub="Everything you’re building for college. Start with the card below."
@@ -7944,21 +7943,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <button onClick={()=>goPortfolio('tracked')} aria-label="Open the Tracked tab"
           style={{
             ...glass({padding:isMobile?14:16}), textAlign:'left', font:'inherit', color:'inherit', cursor:'pointer', width:'100%',
-            display:'flex', alignItems:'center', gap:14, flexWrap:'wrap',
+            display:'flex', alignItems:'center', gap:12, flexWrap:'wrap',
             background:`linear-gradient(120deg,${tint(trackNeeds?C.rose:C.violet,0.09)},rgba(255,255,255,0.02) 60%)`,
             border:`1px solid ${tint(trackNeeds?C.rose:C.violet,0.24)}`,
           }}>
-          <div style={{width:34,height:34,borderRadius:10,background:`linear-gradient(135deg,${C.violet},${C.indigo})`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+          <div style={{width:34,height:34,borderRadius:8,background:`linear-gradient(135deg,${C.violet},${C.indigo})`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
             <Brain size={17} color="#fff"/>
           </div>
           <div style={{flex:1,minWidth:200}}>
-            <div style={{fontSize:10,fontWeight:800,letterSpacing:'.1em',textTransform:'uppercase',color:accentText(C.violet)}}>Today’s check-in on what you’re tracking</div>
-            <div style={{fontSize:13,fontWeight:700,color:C.t1,marginTop:3,fontFamily:C.FD}}>
+            <div style={{fontSize:10,fontWeight:800,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color:accentText(C.violet)}}>Today’s check-in on what you’re tracking</div>
+            <div style={{fontSize:13,fontWeight:700,color:C.t1,marginTop:4,fontFamily:C.FD}}>
               {portSnapshot?trackReport.headline:'Pulling in everything you\u2019re tracking\u2026'}
             </div>
-            {portSnapshot&&trackReport.focus&&<div style={{fontSize:11.5,color:C.t3,marginTop:3}}>First up: {trackReport.focus.name} — {trackReport.focus.nextStep}</div>}
+            {portSnapshot&&trackReport.focus&&<div style={{fontSize:11.5,color:C.t3,marginTop:4}}>First up: {trackReport.focus.name} — {trackReport.focus.nextStep}</div>}
           </div>
-          <span style={{...pill(tint(C.violet,0.14),accentText(C.violet),{fontSize:11,gap:5}),flexShrink:0}}>Open Tracked<ArrowRight size={11}/></span>
+          <span style={{...pill(tint(C.violet,0.14),accentText(C.violet),{fontSize:11,gap:4}),flexShrink:0}}>Open Tracked<ArrowRight size={11}/></span>
         </button>
 
         {/* ── Opportunities & Competitions, as a doorway ──────────────────────────────────────
@@ -7973,37 +7972,37 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             border:`1px solid ${tint(C.gold,0.26)}`, display:'flex', flexDirection:'column', gap:12,
           }}>
           <div style={R({gap:12,flexWrap:'wrap'})}>
-            <div style={{width:34,height:34,borderRadius:10,background:`linear-gradient(135deg,${C.gold},${C.orange})`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            <div style={{width:34,height:34,borderRadius:8,background:`linear-gradient(135deg,${C.gold},${C.orange})`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
               <Trophy size={17} color="#fff"/>
             </div>
             <div style={{flex:1,minWidth:200}}>
-              <div style={{fontSize:10,fontWeight:800,letterSpacing:'.1em',textTransform:'uppercase',color:accentText(C.gold)}}>Things to go do</div>
-              <div style={{fontSize:13,fontWeight:700,color:C.t1,marginTop:3,fontFamily:C.FD}}>
+              <div style={{fontSize:10,fontWeight:800,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color:accentText(C.gold)}}>Things to go do</div>
+              <div style={{fontSize:13,fontWeight:700,color:C.t1,marginTop:4,fontFamily:C.FD}}>
                 {opportunityPreview.matches.length
                   ?`Your top ${opportunityPreview.matches.length} picks out of ${OPPORTUNITIES.length} real programs`
                   :`${OPPORTUNITIES.length} real programs — competitions, research, volunteering and summer programs`}
               </div>
-              <div style={{fontSize:11.5,color:C.t3,marginTop:3}}>
+              <div style={{fontSize:11.5,color:C.t3,marginTop:4}}>
                 {opportunityPreview.profile.activeThemeIds.length
                   ?`Picked for you because you’re into ${opportunityPreview.profile.activeThemeIds.slice(0,3).map(id=>THEME_BY_ID[id]?.label.toLowerCase()).filter(Boolean).join(', ')}${opportunityPreview.profile.usingInferredThemes?' — tap to confirm that’s right':''}`
                   :'Tell us what you care about and these change to match'}
               </div>
             </div>
-            <span style={{...pill(tint(C.gold,0.16),accentText(C.gold),{fontSize:11,gap:5}),flexShrink:0}}>Open Opportunities<ArrowRight size={11}/></span>
+            <span style={{...pill(tint(C.gold,0.16),accentText(C.gold),{fontSize:11,gap:4}),flexShrink:0}}>Open Opportunities<ArrowRight size={11}/></span>
           </div>
           {opportunityPreview.matches.length>0&&(
             <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)',gap:8}}>
               {opportunityPreview.matches.map(m=>{
                 const mc=m.match>=80?C.green:m.match>=60?C.blue:C.amber;
                 return(
-                  <div key={m.item.id} style={{padding:'10px 12px',borderRadius:11,background:C.surf2,border:`1px solid ${C.b1}`,borderLeft:`3px solid ${mc}`}}>
-                    <div style={R({gap:6,marginBottom:4})}>
+                  <div key={m.item.id} style={{padding:'8px 12px',borderRadius:12,background:C.surf2,border:`1px solid ${C.b1}`,borderLeft:`3px solid ${mc}`}}>
+                    <div style={R({gap:4,marginBottom:4})}>
                       <span style={{fontSize:12,fontWeight:800,fontFamily:C.FM,color:mc}}>{m.match}%</span>
-                      <span style={{fontSize:9,color:C.t4,letterSpacing:'.06em'}}>MATCH</span>
+                      <span style={{fontSize:9,color:C.t4,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>MATCH</span>
                       <span style={{marginLeft:'auto',fontSize:9.5,color:C.t4}}>{m.item.type}</span>
                     </div>
                     <div style={{fontSize:11.5,fontWeight:700,color:C.t1,lineHeight:1.35}}>{m.item.name}</div>
-                    <div style={{fontSize:10.5,color:C.t3,marginTop:3,lineHeight:1.45,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{m.reason}</div>
+                    <div style={{fontSize:10.5,color:C.t3,marginTop:4,lineHeight:1.45,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{m.reason}</div>
                   </div>
                 );
               })}
@@ -8016,12 +8015,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* ── Where to go ──────────────────────────────────────────────────────────────────────
             The map of the tab. Six doors up front — the ones nearly every student needs — and the
             remaining six behind one remembered tap, so this reads as a menu rather than a wall. */}
-        <div style={glass({padding:18})}>
-          <div style={R({justifyContent:'space-between',marginBottom:6,gap:10,flexWrap:'wrap'})}>
+        <div style={glass({padding:16})}>
+          <div style={R({justifyContent:'space-between',marginBottom:4,gap:8,flexWrap:'wrap'})}>
             <SL extra={{margin:0,display:'flex',alignItems:'center',gap:8}}><PIcon size={12}/>Where do you want to work?</SL>
             <span style={pill(C.s3,C.t3,{fontSize:10})}>Level {lvl} {levelInfo.tier} · {streak}-day streak</span>
           </div>
-          <div style={{marginBottom:13}}>
+          <div style={{marginBottom:12}}>
             <HelpNote>Each box is one part of your application. The big number is how much you have in it so far — tap any of them to add to it.</HelpNote>
           </div>
           <div style={tileGrid}>{primarySections.filter(s=>tileOpen(s.view)).map(sectionTile)}</div>
@@ -8044,24 +8043,24 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           icon={TrendingUp} color={strengthColor} m={isMobile}>
           <div style={CC({gap:16})}>
             {/* Application-strength readiness gauge — one score synthesizing academics, clinical exposure, application progress, and activities */}
-            <div style={{...glass2({padding:16}),display:'flex',alignItems:'center',gap:18,flexWrap:'wrap',background:`linear-gradient(135deg,${strengthColor}10,transparent)`,border:`1px solid ${strengthColor}28`}}>
+            <div style={{...glass2({padding:16}),display:'flex',alignItems:'center',gap:16,flexWrap:'wrap',background:`linear-gradient(135deg,${strengthColor}10,transparent)`,border:`1px solid ${strengthColor}28`}}>
               <Arc pct={strength.score} size={68} stroke={6} color={strengthColor} label={`${strength.score}`} sub="/100"/>
               <div style={{flex:1,minWidth:210}}>
-                <div style={{fontSize:11,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>Overall application strength</div>
-                <div style={{fontSize:18,fontWeight:800,color:strengthColor,fontFamily:C.FD,marginTop:2}}>{strength.label}</div>
-                <div style={{fontSize:11.5,color:C.t2,marginTop:5,lineHeight:1.55}}>{strengthPlain}</div>
-                <div style={{fontSize:10.5,color:C.t4,marginTop:5,lineHeight:1.5}}>Made of four things: what you’ve studied, your clinical exposure, how far along the application itself is, and your activity hours.</div>
+                <div style={{fontSize:11,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>Overall application strength</div>
+                <div style={{fontSize:18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))',fontWeight:800,color:strengthColor,fontFamily:C.FD,marginTop:4}}>{strength.label}</div>
+                <div style={{fontSize:11.5,color:C.t2,marginTop:4,lineHeight:1.55}}>{strengthPlain}</div>
+                <div style={{fontSize:10.5,color:C.t4,marginTop:4,lineHeight:1.5}}>Made of four things: what you’ve studied, your clinical exposure, how far along the application itself is, and your activity hours.</div>
               </div>
-              <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+              <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                 {Object.entries(strength.subscores).map(([k,v])=>{
                   const m=subscoreMeta[k]||{col:C.blue,Ic:Circle};
                   return(
-                    <div key={k} style={{textAlign:'center',minWidth:76,padding:'10px 12px',borderRadius:12,background:`${m.col}0f`,border:`1px solid ${m.col}28`}}>
+                    <div key={k} style={{textAlign:'center',minWidth:76,padding:'8px 12px',borderRadius:12,background:`${m.col}0f`,border:`1px solid ${m.col}28`}}>
                       <m.Ic size={13} color={m.col} style={{marginBottom:4}}/>
-                      <div style={{fontSize:16,fontWeight:800,fontFamily:C.FM,color:m.col}}>{v}%</div>
-                      <div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.04em',marginTop:2}}>{k}</div>
-                      <div style={{height:3,background:'rgba(255,255,255,0.06)',borderRadius:2,overflow:'hidden',marginTop:6}}>
-                        <div style={{height:'100%',width:`${Math.min(100,v)}%`,background:m.col,borderRadius:2}}/>
+                      <div style={{fontSize:16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))',fontWeight:800,fontFamily:C.FM,color:m.col}}>{v}%</div>
+                      <div style={{fontSize:9,color:C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginTop:4}}>{k}</div>
+                      <div style={{height:3,background:'rgba(255,255,255,0.06)',borderRadius: 4,overflow:'hidden',marginTop:4}}>
+                        <div style={{height:'100%',width:`${Math.min(100,v)}%`,background:m.col,borderRadius: 4}}/>
                       </div>
                     </div>
                   );
@@ -8073,7 +8072,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 These are the LONG game (a whole-application benchmark); the weekly goals at the top are
                 how you actually move them. Both are shown so the week has a horizon behind it. */}
             <div>
-              <SL extra={{marginBottom:6}}>Your hours vs. what {curPath?.label} usually looks for</SL>
+              <SL extra={{marginBottom:4}}>Your hours vs. what {curPath?.label} usually looks for</SL>
               <div style={{marginBottom:12}}>
                 <HelpNote>These are whole-high-school totals, not weekly ones — most students take years to fill them. Tap a label to go log more.</HelpNote>
               </div>
@@ -8083,8 +8082,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 {l:'Research / independent project hours',val:resH,target:100,col:C.amber,view:'research'},
                 {l:'Volunteer hours',val:volH,target:benchmarks.volunteerHours||150,col:C.violet,view:'resume'},
               ].map(({l,val,target,col,view})=>(
-                <div key={l} style={{marginBottom:14}}>
-                  <div style={R({justifyContent:'space-between',marginBottom:6})}>
+                <div key={l} style={{marginBottom:12}}>
+                  <div style={R({justifyContent:'space-between',marginBottom:4})}>
                     <button onClick={()=>goPortfolio(view)} style={{all:'unset',cursor:'pointer',fontSize:12,color:C.t2,fontFamily:C.FB}}>{l}</button>
                     <span style={{fontSize:11,fontFamily:C.FM,color:val>=target?C.green:C.t3,display:'inline-flex',alignItems:'center',gap:4}}>{val} / {target}{val>=target&&<Check size={11}/>}</span>
                   </div>
@@ -8108,7 +8107,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               {insights.slice(1,4).map((ins,i)=>{
                 const sevColor={high:C.rose,medium:C.amber,low:C.t3,positive:C.green}[ins.severity];
                 return(
-                  <div key={i} style={{...glass2({padding:14,display:'flex',alignItems:'center',gap:12}),borderLeft:`3px solid ${sevColor}`}}>
+                  <div key={i} style={{...glass2({padding:12,display:'flex',alignItems:'center',gap:12}),borderLeft:`3px solid ${sevColor}`}}>
                     <Lightbulb size={15} color={sevColor} style={{flexShrink:0}}/>
                     <span style={{flex:1,fontSize:12.5,color:C.t2,lineHeight:1.5}}>{ins.text}</span>
                     {ins.ctaLabel&&<button style={btnSm(`${sevColor}18`,{color:sevColor,border:`1px solid ${sevColor}30`,fontSize:11,flexShrink:0})} onClick={()=>ins.ctaTab==='prep'?goPrep(ins.ctaView):goPortfolio(ins.ctaView)}>{ins.ctaLabel}</button>}
@@ -8127,11 +8126,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <div style={CC({gap:8})}>
               <AnimatePresence>
                 {portActivities.map((act)=>{const col=actColors[act.activity_type]||C.blue;return(
-                  <motion.div key={act.id} initial={{opacity:0,x:-10}} animate={{opacity:1,x:0}} exit={{opacity:0,x:10}} style={{...glass2({display:'flex',alignItems:'center',gap:14,padding:'14px 18px'})}}>
-                    <div style={{width:4,height:44,borderRadius:2,background:`linear-gradient(180deg,${col},${col}60)`,flexShrink:0,boxShadow:`0 0 8px ${col}40`}}/>
+                  <motion.div key={act.id} initial={{opacity:0,x:-10}} animate={{opacity:1,x:0}} exit={{opacity:0,x:10}} style={{...glass2({display:'flex',alignItems:'center',gap:12,padding:'12px 16px'})}}>
+                    <div style={{width:4,height:44,borderRadius: 4,background:`linear-gradient(180deg,${col},${col}60)`,flexShrink:0,boxShadow:`0 0 8px ${col}40`}}/>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{act.position}{act.organization?` · ${act.organization}`:''}</div>
-                      <div style={{fontSize:11,color:C.t3,marginTop:2,fontFamily:C.FM}}>{act.activity_type} · {Math.round(annualH(act))}h/yr · {act.status}</div>
+                      <div style={{fontSize:11,color:C.t3,marginTop:4,fontFamily:C.FM}}>{act.activity_type} · {Math.round(annualH(act))}h/yr · {act.status}</div>
                     </div>
                   </motion.div>
                 );})}
@@ -8316,23 +8315,23 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <PageHeader icon={LineChart} color={accent} eyebrow="Progress" title="Your Progress"
           sub="Readiness, credibility, and performance across your pathway." m={isMobile}
           right={!isMobile&&(
-            <div style={R({gap:10})}>
-              <div style={{...pill(`${levelInfo.tierColor}1e`,accentText(levelInfo.tierColor),{fontSize:12,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:6}}><TierIcon size={12}/>Lv.{lvl} {levelInfo.tier}</div>
-              {streak>0&&<div style={{...pill(C.amberDim,C.amberL,{fontSize:12,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:6}}><Flame size={12}/>{streak}d</div>}
-              <div style={{...pill(C.greenDim,C.greenL,{fontSize:12,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:6}}><Trophy size={12}/>{achiev.size}</div>
+            <div style={R({gap:8})}>
+              <div style={{...pill(`${levelInfo.tierColor}1e`,accentText(levelInfo.tierColor),{fontSize:12,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:4}}><TierIcon size={12}/>Lv.{lvl} {levelInfo.tier}</div>
+              {streak>0&&<div style={{...pill(C.amberDim,C.amberL,{fontSize:12,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:4}}><Flame size={12}/>{streak}d</div>}
+              <div style={{...pill(C.greenDim,C.greenL,{fontSize:12,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:4}}><Trophy size={12}/>{achiev.size}</div>
             </div>
           )}/>
-        <div style={{marginTop:18}}>
+        <div style={{marginTop:16}}>
           <SubNav items={progressSubnav} active={progressView} onChange={setProgressView} accent={accent} m={isMobile} tourPrefix="progress-sub" hrefFor={progressHref} locked={unlocks.locked('progress')[0]}/>
         </div>
-        <div style={{...CC({gap:22}),marginTop:18}}>
+        <div style={{...CC({gap:20}),marginTop:16}}>
         {progressView==='overview'&&<>
         {/* Application-strength readiness gauge */}
         <div data-tour="progress-deep-overview" style={{...glass({padding:20}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap',background:`linear-gradient(135deg,${strengthColor}12,transparent)`,border:`1px solid ${strengthColor}30`}}>
           <Arc pct={strength.score} size={72} stroke={6} color={strengthColor} label={`${strength.score}`} sub="/100"/>
           <div style={{flex:1,minWidth:200}}>
-            <div style={{fontSize:11,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>Application Strength</div>
-            <div style={{fontSize:18,fontWeight:800,color:strengthColor,fontFamily:C.FD,marginTop:2}}>{strength.label}</div>
+            <div style={{fontSize:11,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>Application Strength</div>
+            <div style={{fontSize:18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))',fontWeight:800,color:strengthColor,fontFamily:C.FD,marginTop:4}}>{strength.label}</div>
             <div style={{fontSize:11,color:C.t3,marginTop:4}}>Academic {strength.subscores.academic}% · Clinical {strength.subscores.clinical}% · Application {strength.subscores.application}% · Activities {strength.subscores.activities}%</div>
           </div>
           <button style={btnG({fontSize:12})} onClick={()=>goPortfolio('overview')}>View Portfolio<ChevronRight size={13}/></button>
@@ -8342,11 +8341,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             (goal, obstacles, study method, what they want to accomplish) so it's visibly tying
             into the rest of the app instead of vanishing after the paywall screen. Same data
             feeds Medabrain's system prompt — see src/lib/studentProfile.js. */}
-        <div style={{...glass2({padding:16}),display:'flex',alignItems:'flex-start',gap:14}}>
-          <div style={{width:32,height:32,borderRadius:9,flexShrink:0,background:C.violetDim,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center'}}><Target size={15} color={C.violetL}/></div>
+        <div style={{...glass2({padding:16}),display:'flex',alignItems:'flex-start',gap:12}}>
+          <div style={{width:32,height:32,borderRadius:8,flexShrink:0,background:C.violetDim,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center'}}><Target size={15} color={C.violetL}/></div>
           <div style={{flex:1,minWidth:0}}>
-            <div style={R({justifyContent:'space-between',marginBottom:6})}>
-              <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>From your onboarding</div>
+            <div style={R({justifyContent:'space-between',marginBottom:4})}>
+              <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>From your onboarding</div>
               {onboardingCompleteness.pct<100&&<span style={pill(C.amberDim,C.amberL,{fontSize:9.5})}>{onboardingCompleteness.pct}% complete</span>}
             </div>
             {onboardingRecap.length>0?(
@@ -8367,7 +8366,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           {insights.map((ins,i)=>{
             const sevColor={high:C.rose,medium:C.amber,low:C.t3,positive:C.green}[ins.severity];
             return(
-              <div key={i} style={{...glass2({padding:14,display:'flex',alignItems:'center',gap:12}),borderLeft:`3px solid ${sevColor}`}}>
+              <div key={i} style={{...glass2({padding:12,display:'flex',alignItems:'center',gap:12}),borderLeft:`3px solid ${sevColor}`}}>
                 <Lightbulb size={15} color={sevColor} style={{flexShrink:0}}/>
                 <span style={{flex:1,fontSize:12.5,color:C.t2,lineHeight:1.5}}>{ins.text}</span>
                 {ins.ctaLabel&&<button style={btnSm(`${sevColor}18`,{color:sevColor,border:`1px solid ${sevColor}30`,fontSize:11,flexShrink:0})} onClick={()=>ins.ctaTab==='prep'?goPrep(ins.ctaView):goPortfolio(ins.ctaView)}>{ins.ctaLabel}</button>}
@@ -8377,25 +8376,25 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         </div>}
 
         {/* Diagnostic result */}
-        {diagPath&&<div style={{...glass2({padding:16,display:'flex',alignItems:'center',gap:14})}}>
-          {(()=>{const DIc=PATH_ICONS[user.diagnosticResult]||Compass;return <div style={{width:38,height:38,borderRadius:11,background:`${diagPath.accent}18`,border:`1px solid ${diagPath.accent}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><DIc size={17} color={diagPath.accent}/></div>;})()}
+        {diagPath&&<div style={{...glass2({padding:16,display:'flex',alignItems:'center',gap:12})}}>
+          {(()=>{const DIc=PATH_ICONS[user.diagnosticResult]||Compass;return <div style={{width:38,height:38,borderRadius:12,background:`${diagPath.accent}18`,border:`1px solid ${diagPath.accent}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><DIc size={17} color={diagPath.accent}/></div>;})()}
           <div style={{flex:1}}>
-            <div style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Your Diagnostic Result</div>
-            <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,marginTop:2}}>{diagPath.label}{eSpec!==user.diagnosticResult?` — currently on ${curPath?.label}`:''}</div>
+            <div style={{fontSize:10,fontWeight:700,color:C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>Your Diagnostic Result</div>
+            <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,marginTop:4}}>{diagPath.label}{eSpec!==user.diagnosticResult?` — currently on ${curPath?.label}`:''}</div>
           </div>
-          <button style={btnG({fontSize:11,padding:'6px 14px'})} onClick={()=>{setDIntro(false);setDD(false);setDS(0);setDA([]);goPrep('diagnostic');}}>Retake<RefreshCw size={12} style={{marginLeft:4}}/></button>
+          <button style={btnG({fontSize:11,padding:'4px 12px'})} onClick={()=>{setDIntro(false);setDD(false);setDS(0);setDA([]);goPrep('diagnostic');}}>Retake<RefreshCw size={12} style={{marginLeft:4}}/></button>
         </div>}
 
         {/* Identity / Level card */}
-        <div style={{...glass({padding:22}),background:`linear-gradient(135deg,${levelInfo.tierColor}22,${accent}10)`,border:`1px solid ${levelInfo.tierColor}35`}}>
+        <div style={{...glass({padding:20}),background:`linear-gradient(135deg,${levelInfo.tierColor}22,${accent}10)`,border:`1px solid ${levelInfo.tierColor}35`}}>
           <div style={R({gap:16,flexWrap:'wrap',justifyContent:'space-between'})}>
-            <div style={R({gap:14})}>
+            <div style={R({gap:12})}>
               <div style={{width:52,height:52,borderRadius:16,background:`${levelInfo.tierColor}25`,border:`1.5px solid ${levelInfo.tierColor}55`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                 <TierIcon size={24} color={accentText(levelInfo.tierColor)}/>
               </div>
               <div>
-                <div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Level {lvl} · {levelInfo.tier}</div>
-                <div style={{fontSize:12,color:C.t3,marginTop:2,display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+                <div style={{fontSize:20, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))',fontWeight:800,color:C.t1,fontFamily:C.FD}}>Level {lvl} · {levelInfo.tier}</div>
+                <div style={{fontSize:12,color:C.t3,marginTop:4,display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
                   <span>{(user.xp||0).toLocaleString()} XP total{streak>0?` · ${streak}-day streak`:''}</span>
                   {streakFreezes>0&&<span style={{...pill(C.blueDim,C.blueL,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4}}><Snowflake size={10}/>{streakFreezes} freeze{streakFreezes>1?'s':''}</span>}
                 </div>
@@ -8403,22 +8402,22 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             </div>
             <div style={{textAlign:'right',minWidth:120}}>
               <div style={{fontSize:12,color:nearLevelUp?C.amberL:C.t2,fontFamily:C.FM,fontWeight:600}}>{nearLevelUp?`Almost there!`:`${xpIn} / ${xpForNext} XP`}</div>
-              <div style={{fontSize:11,color:C.t3,marginTop:2}}>{xpForNext-xpIn} XP to Level {lvl+1}</div>
+              <div style={{fontSize:11,color:C.t3,marginTop:4}}>{xpForNext-xpIn} XP to Level {lvl+1}</div>
             </div>
           </div>
           <div style={{marginTop:16}}><Bar pct={levelInfo.pct} color={nearLevelUp?C.amber:levelInfo.tierColor} h={8} glow/></div>
         </div>
 
         {/* Weekly Quests */}
-        <div style={glass({padding:18})}>
-          <SL extra={{marginBottom:14}}>This Week's Quests</SL>
-          <div style={CC({gap:10})}>
+        <div style={glass({padding:16})}>
+          <SL extra={{marginBottom:12}}>This Week's Quests</SL>
+          <div style={CC({gap:8})}>
             {quests.map(q=>{const claimed=claimedQuests.has(q.id);const almostDone=!q.done&&q.pct>=80;return(
               <motion.div
                 key={q.id}
                 animate={almostDone?{scale:[1,1.015,1]}:{scale:1}}
                 transition={almostDone?{duration:1.4,repeat:Infinity,ease:'easeInOut'}:{}}
-                style={{...glass2({padding:14}),border:almostDone?`1px solid ${C.amber}45`:undefined,boxShadow:almostDone?`0 0 16px ${C.amber}22`:undefined}}
+                style={{...glass2({padding:12}),border:almostDone?`1px solid ${C.amber}45`:undefined,boxShadow:almostDone?`0 0 16px ${C.amber}22`:undefined}}
               >
                 <div style={R({justifyContent:'space-between',marginBottom:8})}>
                   <span style={{fontSize:12,fontWeight:600,color:q.done?C.t1:C.t2}}>{q.label}</span>
@@ -8446,11 +8445,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         </div>
 
         {/* Profiling roadmap — transparent about what's NOT tracked yet */}
-        <details style={{...glass2({padding:14}),cursor:'pointer'}}>
+        <details style={{...glass2({padding:12}),cursor:'pointer'}}>
           <summary style={{fontSize:12,fontWeight:700,color:C.t2,display:'flex',alignItems:'center',gap:8,listStyle:'none'}}>
             <Brain size={13} color={C.t3}/>Deeper profiling — coming soon
           </summary>
-          <p style={{fontSize:11.5,color:C.t3,lineHeight:1.6,marginTop:10,marginBottom:0}}>
+          <p style={{fontSize:11.5,color:C.t3,lineHeight: 1.55,marginTop:8,marginBottom:0}}>
             Right now, Progress only reflects what's stored on this device or account — quiz scores, verified lessons, and Portfolio entries. No behavioral tracking or analytics pipeline runs today. A phased profiling system is planned: first, richer local study-pattern insights (already seeding data via lesson study/verify events); later, optional opt-in sync for cross-device history; eventually, anonymized cohort benchmarking. See <code>docs/PROFILING_PLAN.md</code> in the repo for the full design.
           </p>
         </details>
@@ -8524,15 +8523,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <div style={R({gap:16,flexWrap:'wrap'})}>
             <div style={{width:52,height:52,borderRadius:16,background:C.greenDim,border:`1px solid ${C.green}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><ShieldCheck size={24} color={C.greenL}/></div>
             <div style={{flex:1,minWidth:200}}>
-              <div style={{fontSize:11,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>Credibility Score</div>
-              <div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD,marginTop:2}}>{verifiedUnitCount} of {quizGatedUnitCount||unitMasteryList.length} units verified</div>
+              <div style={{fontSize:11,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>Credibility Score</div>
+              <div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD,marginTop:4}}>{verifiedUnitCount} of {quizGatedUnitCount||unitMasteryList.length} units verified</div>
               <div style={{fontSize:11.5,color:C.t2,marginTop:4,lineHeight:1.5}}>{quizGatedUnitCount>0?'Verified units required passing a curated quiz for every lesson — not just opening a link.':'This pathway hasn\'t been migrated to quiz-verified lessons yet — progress below is self-reported.'}</div>
             </div>
           </div>
         </div>
         {unitMasteryList.map(({unit,lessonStates,anyQuizGated,allVerified})=>(
-          <div key={unit.id} style={glass({padding:18})}>
-            <div style={R({justifyContent:'space-between',marginBottom:14})}>
+          <div key={unit.id} style={glass({padding:16})}>
+            <div style={R({justifyContent:'space-between',marginBottom:12})}>
               <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{unit.title}</div>
               {anyQuizGated
                 ?(allVerified?<span style={pill(C.greenDim,C.greenL,{fontSize:10})}><ShieldCheck size={10} style={{marginRight:4}}/>Verified</span>:<span style={pill(C.amberDim,C.amberL,{fontSize:10})}>In progress</span>)
@@ -8540,7 +8539,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             </div>
             <div style={CC({gap:8})}>
               {lessonStates.map(({lesson,status,hasQuiz})=>(
-                <div key={lesson.id} style={{...glass2({padding:'10px 14px'}),display:'flex',alignItems:'center',gap:10}}>
+                <div key={lesson.id} style={{...glass2({padding:'8px 12px'}),display:'flex',alignItems:'center',gap:8}}>
                   {status==='verified'&&<ShieldCheck size={14} color={C.green}/>}
                   {status==='legacy_done'&&<Check size={14} color={C.green}/>}
                   {status==='studying'&&<BookOpen size={14} color={C.amberL}/>}
@@ -8565,9 +8564,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <div style={{height:220,position:'relative'}}>
               <Radar data={radarData} options={radarOpts}/>
             </div>
-            <div style={{marginTop:14,...CC({gap:8})}}>
+            <div style={{marginTop:12,...CC({gap:8})}}>
               {catStats.map(({cat,avg,taken,total})=>(
-                <div key={cat} style={R({gap:10})}>
+                <div key={cat} style={R({gap:8})}>
                   <span style={{fontSize:11,color:C.t2,flex:1,fontFamily:C.FB}}>{cat.split('/')[0]}</span>
                   <span style={{fontSize:11,fontFamily:C.FM,color:C.t3}}>{taken}/{total}</span>
                   <span style={{fontSize:13,fontWeight:700,fontFamily:C.FM,color:avg!==null?scCol(avg):C.t3,minWidth:36,textAlign:'right'}}>{avg!==null?`${avg}%`:'—'}</span>
@@ -8582,14 +8581,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <div style={{position:'relative',height:160,display:'flex',alignItems:'center',justifyContent:'center'}}>
               <Doughnut data={doughnutData} options={doughnutOpts}/>
               <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',pointerEvents:'none'}}>
-                <span style={{fontSize:26,fontWeight:800,fontFamily:C.FM,color:accent}}>{mastery}%</span>
+                <span style={{fontSize:26, letterSpacing: 'calc(-0.53px + var(--msp-letter-spacing))', lineHeight: 'calc(1.28 * var(--msp-line-scale))',fontWeight:800,fontFamily:C.FM,color:accent}}>{mastery}%</span>
                 <span style={{fontSize:10,color:C.t3}}>complete</span>
               </div>
             </div>
             <div style={{marginTop:16,...CC({gap:8})}}>
               {(curPath?.units||[]).map(unit=>{const p=unitM(unit);return(
-                <div key={unit.id} style={{marginBottom:2}}>
-                  <div style={R({justifyContent:'space-between',marginBottom:5})}>
+                <div key={unit.id} style={{marginBottom:4}}>
+                  <div style={R({justifyContent:'space-between',marginBottom:4})}>
                     <span style={{fontSize:11,color:C.t2,fontFamily:C.FB}}>{unit.title}</span>
                     <span style={{fontSize:11,fontFamily:C.FM,color:p===100?C.green:accent}}>{p}%</span>
                   </div>
@@ -8617,15 +8616,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         </div>}
 
         {/* Benchmark bars vs. active pathway targets */}
-        <div style={glass({padding:18})}>
+        <div style={glass({padding:16})}>
           <SL>Progress Toward {curPath?.label} Benchmarks</SL>
           {[
             {l:'Clinical / Shadowing Hours',val:clinicalHoursTotal,target:(benchmarks.clinicalHours||60)+(benchmarks.shadowingHours||20),col:accent},
             {l:'Leadership Hours',val:leadH,target:benchmarks.leadershipHours||100,col:C.blue},
             {l:'Volunteer Hours',val:volH,target:benchmarks.volunteerHours||150,col:C.violet},
           ].map(({l,val,target,col})=>(
-            <div key={l} style={{marginBottom:14}}>
-              <div style={R({justifyContent:'space-between',marginBottom:6})}>
+            <div key={l} style={{marginBottom:12}}>
+              <div style={R({justifyContent:'space-between',marginBottom:4})}>
                 <span style={{fontSize:12,color:C.t2,fontFamily:C.FB}}>{l}</span>
                 <span style={{fontSize:11,fontFamily:C.FM,color:val>=target?C.green:C.t3,display:'inline-flex',alignItems:'center',gap:4}}>{val} / {target}{val>=target&&<Check size={11}/>}</span>
               </div>
@@ -8644,13 +8643,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 <div key={i} style={{...glass2({padding:'12px 16px'}),...R()}}>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:13,fontWeight:600,color:C.t1,fontFamily:C.FD,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{quiz?.title||record.quizId}</div>
-                    <div style={{fontSize:11,color:C.t3,marginTop:1}}>{quiz?.cat} · {new Date(record.completedAt).toLocaleDateString()}</div>
+                    <div style={{fontSize:11,color:C.t3,marginTop:4}}>{quiz?.cat} · {new Date(record.completedAt).toLocaleDateString()}</div>
                   </div>
                   <div style={R({gap:12})}>
-                    <div style={{width:90,height:5,background:C.s4,borderRadius:3,overflow:'hidden',alignSelf:'center'}}>
-                      <div style={{height:'100%',width:`${record.score}%`,background:sc,borderRadius:3,boxShadow:`0 0 6px ${sc}60`}}/>
+                    <div style={{width:90,height:5,background:C.s4,borderRadius:4,overflow:'hidden',alignSelf:'center'}}>
+                      <div style={{height:'100%',width:`${record.score}%`,background:sc,borderRadius:4,boxShadow:`0 0 6px ${sc}60`}}/>
                     </div>
-                    <span style={{fontSize:15,fontWeight:800,fontFamily:C.FM,color:sc,minWidth:44,textAlign:'right'}}>{record.score}%</span>
+                    <span style={{fontSize:15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',fontWeight:800,fontFamily:C.FM,color:sc,minWidth:44,textAlign:'right'}}>{record.score}%</span>
                   </div>
                 </div>
               );
@@ -8659,7 +8658,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         </div>}
 
         {/* Study activity heatmap — proof-of-the-work belongs here, not on Home's daily snapshot */}
-        <div style={glass({padding:18,overflowX:'auto'})}>
+        <div style={glass({padding:16,overflowX:'auto'})}>
           <StreakHeatmap accent={accent}/>
         </div>
 
@@ -8675,7 +8674,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* Achievements — every locked badge shows a live progress bar via the shared
             achievementProgress memo (kept in sync with the Home strip and with the actual
             unlock conditions in checkAchievements). */}
-        <div data-tour="progress-deep-achievements" style={glass({padding:18})}>
+        <div data-tour="progress-deep-achievements" style={glass({padding:16})}>
           <SL>Achievements ({achiev.size}/{Object.keys(ACHIEVEMENTS).length})</SL>
           <div style={G(4,10,{},isMobile)}>
             {Object.values(ACHIEVEMENTS).map(a=>{
@@ -8683,9 +8682,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               const prog=achievementProgress[a.key];const pct=prog?Math.min(100,Math.round((prog[0]/prog[1])*100)):null;
               return(
               <div key={a.key} title={`${a.name}: ${a.desc}${has?` (+${a.xp} XP)`:''}`} style={{...glass2({padding:12,textAlign:'center',opacity:has?1:.55,border:has?`1px solid ${C.amber}30`:undefined,transition:'opacity .2s'})}}>
-                <div style={{display:'flex',justifyContent:'center',marginBottom:6}}><AIc size={20} color={has?C.amberL:C.t3}/></div>
+                <div style={{display:'flex',justifyContent:'center',marginBottom:4}}><AIc size={20} color={has?C.amberL:C.t3}/></div>
                 <div style={{fontSize:10,fontWeight:600,color:has?C.amberL:C.t3,lineHeight:1.3,fontFamily:C.FD}}>{a.name}</div>
-                {has&&<div style={{...pill(C.amberDim,C.amberL,{fontSize:9,marginTop:6,fontFamily:C.FM})}}>+{a.xp}xp</div>}
+                {has&&<div style={{...pill(C.amberDim,C.amberL,{fontSize:9,marginTop:4,fontFamily:C.FM})}}>+{a.xp}xp</div>}
                 {!has&&pct!==null&&<div style={{marginTop:8}}>
                   <Bar pct={pct} color={accent} h={3}/>
                   <div style={{fontSize:9,color:C.t3,marginTop:4,fontFamily:C.FM}}>{prog[0]}/{prog[1]}</div>
@@ -8708,10 +8707,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // groups (Profile & Goals / Study Setup / Preferences & Data / Account) instead of one
     // undifferentiated stack — the actual cards inside are unchanged.
     const Group=({icon:Icon,title,children})=>(
-      <div style={CC({gap:14})}>
-        <div style={R({gap:9})}>
-          <div style={{width:22,height:22,borderRadius:6,background:`${accent}18`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon size={12} color={accent}/></div>
-          <span style={{fontSize:11,fontWeight:800,color:accent,letterSpacing:'.1em',textTransform:'uppercase'}}>{title}</span>
+      <div style={CC({gap:12})}>
+        <div style={R({gap:8})}>
+          <div style={{width:22,height:22,borderRadius:4,background:`${accent}18`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon size={12} color={accent}/></div>
+          <span style={{fontSize:11,fontWeight:800,color:accent,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>{title}</span>
         </div>
         {children}
       </div>
@@ -8731,16 +8730,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       return`${Math.round(h/24)}d ago`;
     };
     return(
-      <div style={CC({gap:30})}>
+      <div style={CC({gap:28})}>
         {/* Hero */}
-        <div style={{...glass({padding:26}),background:`linear-gradient(135deg,${accent}14,transparent)`,border:`1px solid ${accent}26`,display:'flex',alignItems:'center',gap:18,flexWrap:'wrap'}}>
-          <div style={{width:58,height:58,borderRadius:16,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`2px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:24,color:onTint(accent),boxShadow:`0 8px 24px ${accent}30`,flexShrink:0}}>
+        <div style={{...glass({padding:24}),background:`linear-gradient(135deg,${accent}14,transparent)`,border:`1px solid ${accent}26`,display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
+          <div style={{width:58,height:58,borderRadius:16,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`2px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:24, letterSpacing: 'calc(-0.47px + var(--msp-letter-spacing))', lineHeight: 'calc(1.32 * var(--msp-line-scale))',color:onTint(accent),boxShadow:`0 8px 24px ${accent}30`,flexShrink:0}}>
             {user.name[0].toUpperCase()}
           </div>
           <div style={{flex:1,minWidth:200}}>
-            <div style={{fontSize:11,fontWeight:700,color:accent,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:4}}>Settings</div>
+            <div style={{fontSize:11,fontWeight:700,color:accent,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom:4}}>Settings</div>
             <div style={R({gap:12,alignItems:'baseline',flexWrap:'wrap'})}>
-              <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{user.name}</h2>
+              <h2 style={{fontSize:24, lineHeight: 'calc(1.32 * var(--msp-line-scale))',fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing: 'calc(-0.47px + var(--msp-letter-spacing))',margin:0}}>{user.name}</h2>
               {user.age && <span style={{fontSize:14,color:C.t3,fontFamily:C.FM}}>Age {user.age}</span>}
             </div>
             <div style={R({gap:8,marginTop:8,flexWrap:'wrap'})}>
@@ -8779,11 +8778,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             back off keeps everything already earned (unlocks are one-way, see
             featureUnlock.js) and only re-hides what was never reached. */}
         <Group icon={Compass} title="Navigation">
-          <div style={glass({padding:18})}>
+          <div style={glass({padding:16})}>
             <div style={R({justifyContent:'space-between',gap:16,flexWrap:'wrap'})}>
               <div style={{flex:1,minWidth:240}}>
-                <SL extra={{marginBottom:6}}>Show every feature</SL>
-                <p style={{fontSize:12.5,color:C.t3,lineHeight:1.6,margin:0}}>
+                <SL extra={{marginBottom:4}}>Show every feature</SL>
+                <p style={{fontSize:12.5,color:C.t3,lineHeight: 1.55,margin:0}}>
                   {user.navMode===NAV_MODES.EVERYTHING
                     ? <>Every tab and sub-tab is visible, including ones you haven't used yet.</>
                     : <>We're showing you {navItems.length} main sections and unlocking the rest as you go, so you always know where to start. Turn this on to see all of it now.</>}
@@ -8803,7 +8802,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   play('select');
                   toast.success(on?'Showing every feature.':'Back to guided — everything you’ve unlocked stays unlocked.');
                 }}
-                style={{...(user.navMode===NAV_MODES.EVERYTHING?btn(accentGrad(accent),{fontSize:12,padding:'9px 18px'}):btnG({fontSize:12,padding:'9px 18px'})),flexShrink:0}}
+                style={{...(user.navMode===NAV_MODES.EVERYTHING?btn(accentGrad(accent),{fontSize:12,padding:'8px 16px'}):btnG({fontSize:12,padding:'8px 16px'})),flexShrink:0}}
               >
                 {user.navMode===NAV_MODES.EVERYTHING?<><Check size={14}/>Showing everything</>:<><Layers size={14}/>Show everything</>}
               </button>
@@ -8815,14 +8814,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* ── What Medabrain knows about you ─────────────────────────────────── */}
         {settingsView==='medabrain'&&
         <Group icon={Brain} title="What Medabrain Knows About You">
-          <div style={glass({padding:18})}>
+          <div style={glass({padding:16})}>
             <SL>Your personal brief</SL>
-            <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>
+            <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight: 1.55}}>
               {briefEntryCount>0
                 ? <>You've told Medabrain <strong style={{color:C.t1}}>{briefEntryCount} thing{briefEntryCount===1?'':'s'}</strong> about yourself in your own words. Every answer you get — in the coach, in Portfolio, in Prep and in the SAT tab — is shaped by this first, ahead of your sign-up answers and your tracked data.</>
                 : <>Medabrain currently only knows the boxes you ticked when you signed up. Talk to it about your family, your school, what worries you and where you want to end up, and it will use that everywhere in the app — and treat it as more authoritative than anything else it has.</>}
             </p>
-            <button style={{...btn(C.violetGrad,{fontSize:12,padding:'9px 18px'})}} onClick={()=>{setTab('prep');setPrepView('coach');setCoachView('about');}}>
+            <button style={{...btn(C.violetGrad,{fontSize:12,padding:'8px 16px'})}} onClick={()=>{setTab('prep');setPrepView('coach');setCoachView('about');}}>
               <Volume2 size={14}/>{briefEntryCount>0?'Add or edit what it knows':'Tell Medabrain about yourself'}
             </button>
           </div>
@@ -8833,12 +8832,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <Group icon={UserCog} title="Profile & Goals">
         <div data-tour="settings-deep-profile" style={glass()}>
           <SL>Display Name</SL>
-          <div style={CC({gap:4,marginBottom:14})}><input style={inp()} placeholder={user.name} value={sName} onChange={e=>setSN(e.target.value)}/></div>
+          <div style={CC({gap:4,marginBottom:12})}><input style={inp()} placeholder={user.name} value={sName} onChange={e=>setSN(e.target.value)}/></div>
           <button style={btn(accentGrad(accent))} onClick={()=>{if(!sName.trim())return;const nextName=sName.trim();saveUser({...user,name:nextName});AuthAPI.updateMe({name:nextName}).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});setSN('');toast.success('Name updated');}}>Save Name</button>
 
-          <div style={{marginTop:18}}>
+          <div style={{marginTop:16}}>
             <SL>Age</SL>
-            <div style={CC({gap:4,marginBottom:14})}><input style={inp({width:'auto'})} type="number" min="5" max="120" placeholder={user.age ? String(user.age) : 'Your age'} value={sAge} onChange={e=>setSAge(e.target.value)}/></div>
+            <div style={CC({gap:4,marginBottom:12})}><input style={inp({width:'auto'})} type="number" min="5" max="120" placeholder={user.age ? String(user.age) : 'Your age'} value={sAge} onChange={e=>setSAge(e.target.value)}/></div>
             <button style={btn(accentGrad(accent))} onClick={()=>{const age=Number(sAge);if(isNaN(age)||age<5||age>120)return;saveUser({...user,age});setSAge('');toast.success('Age updated');}}>Save Age</button>
           </div>
         </div>
@@ -8848,9 +8847,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             days in front of you. This card exists so Settings, the tab everyone searches when
             they want to change something, still leads there instead of dead-ending. */}
         <div style={glass()}>
-          <div style={R({justifyContent:'space-between',marginBottom:10,flexWrap:'wrap',gap:8})}>
+          <div style={R({justifyContent:'space-between',marginBottom:8,flexWrap:'wrap',gap:8})}>
             <SL extra={{marginBottom:0}}>Streak Goals</SL>
-            <span style={{...pill(C.amberDim,C.amberL,{fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}>
+            <span style={{...pill(C.amberDim,C.amberL,{fontSize:11}),display:'inline-flex',alignItems:'center',gap:4}}>
               <Flame size={11}/>{streak} day{streak===1?'':'s'}
             </span>
           </div>
@@ -8860,7 +8859,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             for a <strong style={{color:C.t2}}>{streakTarget}-day</strong> streak. A day only counts once
             you've actually finished that much work; opening the app doesn't count.
           </p>
-          <button style={{...btnG({fontSize:12}),display:'inline-flex',alignItems:'center',gap:6,marginTop:4}} onClick={()=>goProgress('streak')}>
+          <button style={{...btnG({fontSize:12}),display:'inline-flex',alignItems:'center',gap:4,marginTop:4}} onClick={()=>goProgress('streak')}>
             <Flame size={12}/>Change in Progress → Streak<ChevronRight size={12}/>
           </button>
         </div>
@@ -8871,28 +8870,28 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <div data-tour="settings-deep-goals" style={glass()}>
           <div style={R({justifyContent:'space-between',marginBottom:8})}>
             <SL extra={{marginBottom:0}}>Your Goals</SL>
-            {!sGoalsEditing&&<button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setSGoal(user.goal||null);setSObstacles(user.obstacles||[]);setSStudyMethod(user.studyMethod||null);setSAccomplish(user.accomplish||[]);setSStudyHours(user.studyHours||null);setSGoalsEditing(true);}}><Pencil size={12}/>Edit</button>}
+            {!sGoalsEditing&&<button style={{...btnG({fontSize:11,padding:'4px 12px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setSGoal(user.goal||null);setSObstacles(user.obstacles||[]);setSStudyMethod(user.studyMethod||null);setSAccomplish(user.accomplish||[]);setSStudyHours(user.studyHours||null);setSGoalsEditing(true);}}><Pencil size={12}/>Edit</button>}
           </div>
           {!sGoalsEditing?(
             onboardingRecap.length>0?(
-              <div style={CC({gap:10})}>
+              <div style={CC({gap:8})}>
                 {onboardingRecap.map(item=>(
                   <div key={item.label}>
-                    <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.06em',textTransform:'uppercase'}}>{item.label}</div>
-                    <div style={{fontSize:13,color:C.t1,marginTop:2}}>{item.value}</div>
+                    <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>{item.label}</div>
+                    <div style={{fontSize:13,color:C.t1,marginTop:4}}>{item.value}</div>
                   </div>
                 ))}
               </div>
             ):(
-              <p style={{fontSize:13,color:C.t3,lineHeight:1.6}}>You haven't set a goal yet — click Edit to tell Medabrain what you're working toward, what's slowing you down, and what you want to accomplish.</p>
+              <p style={{fontSize:13,color:C.t3,lineHeight: 1.55}}>You haven't set a goal yet — click Edit to tell Medabrain what you're working toward, what's slowing you down, and what you want to accomplish.</p>
             )
           ):(
-            <div style={CC({gap:18})}>
+            <div style={CC({gap:16})}>
               <div id="settings-field-goal" style={focusStyle('goal')}>
                 <SL>Top goal</SL>
-                <div style={CC({gap:6})}>
+                <div style={CC({gap:4})}>
                   {GOAL_OPTIONS.map(o=>(
-                    <div key={o.value} onClick={()=>setSGoal(o.value)} style={{...glass2({padding:'10px 14px',cursor:'pointer',border:sGoal===o.value?`1px solid ${accent}60`:undefined}),display:'flex',alignItems:'center',gap:10}}>
+                    <div key={o.value} onClick={()=>setSGoal(o.value)} style={{...glass2({padding:'8px 12px',cursor:'pointer',border:sGoal===o.value?`1px solid ${accent}60`:undefined}),display:'flex',alignItems:'center',gap:8}}>
                       <div style={{width:16,height:16,borderRadius:'50%',border:`2px solid ${sGoal===o.value?accent:C.b2}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{sGoal===o.value&&<div style={{width:8,height:8,borderRadius:'50%',background:accent}}/>}</div>
                       <span style={{fontSize:12.5,color:C.t2}}>{o.label}</span>
                     </div>
@@ -8901,9 +8900,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               </div>
               <div id="settings-field-obstacles" style={focusStyle('obstacles')}>
                 <SL>What's in your way (select all that apply)</SL>
-                <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(2,1fr)',gap:6}}>
+                <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(2,1fr)',gap:4}}>
                   {OBSTACLE_OPTIONS.map(o=>{const checked=sObstacles.includes(o.value);return(
-                    <div key={o.value} onClick={()=>setSObstacles(list=>checked?list.filter(v=>v!==o.value):[...list,o.value])} style={{...glass2({padding:'10px 12px',cursor:'pointer',border:checked?`1px solid ${accent}60`:undefined}),display:'flex',alignItems:'center',gap:9}}>
+                    <div key={o.value} onClick={()=>setSObstacles(list=>checked?list.filter(v=>v!==o.value):[...list,o.value])} style={{...glass2({padding:'8px 12px',cursor:'pointer',border:checked?`1px solid ${accent}60`:undefined}),display:'flex',alignItems:'center',gap:8}}>
                       <div style={{width:15,height:15,borderRadius:4,border:`2px solid ${checked?accent:C.b2}`,background:checked?accent:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{checked&&<Check size={10} color="#fff"/>}</div>
                       <span style={{fontSize:12,color:C.t2}}>{o.label}</span>
                     </div>
@@ -8912,9 +8911,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               </div>
               <div id="settings-field-accomplish" style={focusStyle('accomplish')}>
                 <SL>What you want to accomplish (select all that apply)</SL>
-                <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(2,1fr)',gap:6}}>
+                <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(2,1fr)',gap:4}}>
                   {ACCOMPLISH_OPTIONS.map(o=>{const checked=sAccomplish.includes(o.value);return(
-                    <div key={o.value} onClick={()=>setSAccomplish(list=>checked?list.filter(v=>v!==o.value):[...list,o.value])} style={{...glass2({padding:'10px 12px',cursor:'pointer',border:checked?`1px solid ${accent}60`:undefined}),display:'flex',alignItems:'center',gap:9}}>
+                    <div key={o.value} onClick={()=>setSAccomplish(list=>checked?list.filter(v=>v!==o.value):[...list,o.value])} style={{...glass2({padding:'8px 12px',cursor:'pointer',border:checked?`1px solid ${accent}60`:undefined}),display:'flex',alignItems:'center',gap:8}}>
                       <div style={{width:15,height:15,borderRadius:4,border:`2px solid ${checked?accent:C.b2}`,background:checked?accent:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{checked&&<Check size={10} color="#fff"/>}</div>
                       <span style={{fontSize:12,color:C.t2}}>{o.label}</span>
                     </div>
@@ -8923,9 +8922,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               </div>
               <div id="settings-field-studyMethod" style={focusStyle('studyMethod')}>
                 <SL>Current study method</SL>
-                <div style={CC({gap:6})}>
+                <div style={CC({gap:4})}>
                   {STUDY_METHOD_OPTIONS.map(o=>(
-                    <div key={o.value} onClick={()=>setSStudyMethod(o.value)} style={{...glass2({padding:'10px 14px',cursor:'pointer',border:sStudyMethod===o.value?`1px solid ${accent}60`:undefined}),display:'flex',alignItems:'center',gap:10}}>
+                    <div key={o.value} onClick={()=>setSStudyMethod(o.value)} style={{...glass2({padding:'8px 12px',cursor:'pointer',border:sStudyMethod===o.value?`1px solid ${accent}60`:undefined}),display:'flex',alignItems:'center',gap:8}}>
                       <div style={{width:16,height:16,borderRadius:'50%',border:`2px solid ${sStudyMethod===o.value?accent:C.b2}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{sStudyMethod===o.value&&<div style={{width:8,height:8,borderRadius:'50%',background:accent}}/>}</div>
                       <span style={{fontSize:12.5,color:C.t2}}>{o.label}</span>
                     </div>
@@ -8934,16 +8933,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               </div>
               <div id="settings-field-studyHours" style={focusStyle('studyHours')}>
                 <SL>Weekly study time</SL>
-                <div style={CC({gap:6})}>
+                <div style={CC({gap:4})}>
                   {STUDY_HOURS_OPTIONS.map(o=>(
-                    <div key={o.value} onClick={()=>setSStudyHours(o.value)} style={{...glass2({padding:'10px 14px',cursor:'pointer',border:sStudyHours===o.value?`1px solid ${accent}60`:undefined}),display:'flex',alignItems:'center',gap:10}}>
+                    <div key={o.value} onClick={()=>setSStudyHours(o.value)} style={{...glass2({padding:'8px 12px',cursor:'pointer',border:sStudyHours===o.value?`1px solid ${accent}60`:undefined}),display:'flex',alignItems:'center',gap:8}}>
                       <div style={{width:16,height:16,borderRadius:'50%',border:`2px solid ${sStudyHours===o.value?accent:C.b2}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{sStudyHours===o.value&&<div style={{width:8,height:8,borderRadius:'50%',background:accent}}/>}</div>
                       <span style={{fontSize:12.5,color:C.t2}}>{o.label}</span>
                     </div>
                   ))}
                 </div>
               </div>
-              <div style={R({gap:10})}>
+              <div style={R({gap:8})}>
                 <button style={btn()} onClick={()=>{saveUser({...user,goal:sGoal,obstacles:sObstacles,studyMethod:sStudyMethod,accomplish:sAccomplish,studyHours:sStudyHours});setSGoalsEditing(false);toast.success('Goals updated — Medabrain will use this right away.');}}>Save Goals</button>
                 <button style={btnG()} onClick={()=>setSGoalsEditing(false)}>Cancel</button>
               </div>
@@ -8960,19 +8959,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             a new device (that path only restores name/grade from the server), had no way to fix
             the single field the whole Timeline is gated on. Saving here re-stamps gradeStageYear
             so the auto-advance in effectiveGradeStage() counts from today, not from signup. */}
-        <div style={glass({padding:18})}>
+        <div style={glass({padding:16})}>
           <SL>Class year</SL>
-          <p style={{fontSize:12,color:C.t2,marginBottom:14,lineHeight:1.6}}>Drives your Timeline, your roadmap, and how Medabrain paces its advice — a freshman and a senior get completely different calendars. We move you up a year automatically each August.</p>
+          <p style={{fontSize:12,color:C.t2,marginBottom:12,lineHeight: 1.55}}>Drives your Timeline, your roadmap, and how Medabrain paces its advice — a freshman and a senior get completely different calendars. We move you up a year automatically each August.</p>
           <div style={R({gap:8,flexWrap:'wrap'})}>
             {GRADE_STAGES.map(g=>{
               const on=(user?.gradeStage||null)===g.key;
               return (
                 <button key={g.key} onClick={()=>{if(on)return;saveUser({...user,gradeStage:g.key,gradeStageYear:academicFallYear(new Date())});toast.success(`Class year set to ${g.label}`);}} style={{
-                  ...glass2({padding:'10px 14px',cursor:'pointer',border:on?`1px solid ${tint(accent,0.55)}`:undefined,background:on?tint(accent,0.12):undefined}),
+                  ...glass2({padding:'8px 12px',cursor:'pointer',border:on?`1px solid ${tint(accent,0.55)}`:undefined,background:on?tint(accent,0.12):undefined}),
                   textAlign:'left',
                 }}>
                   <div style={{fontSize:12.5,fontWeight:700,color:on?accentText(accent):C.t2,fontFamily:C.FD}}>{g.label}</div>
-                  <div style={{fontSize:10.5,color:C.t3,marginTop:2}}>{g.sub}</div>
+                  <div style={{fontSize:10.5,color:C.t3,marginTop:4}}>{g.sub}</div>
                 </button>
               );
             })}
@@ -8985,17 +8984,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             first" on the Plans tab with a button to Settings that led to no way of answering it.
             That is a dead end, not a gate. Saving here also feeds the Medabrain system prompt,
             the admissions calculator's comparable GPA, and the plan's pacing. */}
-        <div style={{...glass({padding:18}),...focusStyle('gpaBand')}} id="settings-field-gpaBand">
+        <div style={{...glass({padding:16}),...focusStyle('gpaBand')}} id="settings-field-gpaBand">
           <SL>Your Grades</SL>
-          <p style={{fontSize:12,color:C.t2,marginBottom:14,lineHeight:1.6}}>The one academic fact Medabrain's Oracle needs before it will build your full plan — roughly where your grades sit. Rough is fine; it paces the plan, it isn't a transcript.</p>
+          <p style={{fontSize:12,color:C.t2,marginBottom:12,lineHeight: 1.55}}>The one academic fact Medabrain's Oracle needs before it will build your full plan — roughly where your grades sit. Rough is fine; it paces the plan, it isn't a transcript.</p>
           <div>
             <SL>Your grades right now</SL>
-            <div style={R({gap:7,flexWrap:'wrap'})}>
+            <div style={R({gap:8,flexWrap:'wrap'})}>
               {GPA_OPTIONS.map(o=>{
                 const on=(user?.gpaBand||null)===o.value;
                 return(
                   <button key={o.value} onClick={()=>{saveUser({...user,gpaBand:o.value});toast.success('Grades updated');}} style={{
-                    ...glass2({padding:'9px 14px',cursor:'pointer',border:on?`1px solid ${tint(accent,0.55)}`:undefined,background:on?tint(accent,0.12):undefined}),
+                    ...glass2({padding:'8px 12px',cursor:'pointer',border:on?`1px solid ${tint(accent,0.55)}`:undefined,background:on?tint(accent,0.12):undefined}),
                     fontSize:12.5,fontWeight:on?700:500,color:on?accentText(accent):C.t2,textAlign:'left',
                   }}>{o.label}</button>
                 );
@@ -9007,12 +9006,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* Science coursework and hands-on health experience. Not readiness gates, but both are
             read directly by the plan generator and the coach prompt, and both were onboarding-only
             — so the app's picture of a student froze on the day they signed up. */}
-        <div style={glass({padding:18})}>
+        <div style={glass({padding:16})}>
           <SL>Science Courses & Health Experience</SL>
-          <p style={{fontSize:12,color:C.t2,marginBottom:14,lineHeight:1.6}}>Keep these current as you take more classes and get more hours in — your plan and Medabrain's advice both change when they do.</p>
-          <div style={{marginBottom:18}}>
+          <p style={{fontSize:12,color:C.t2,marginBottom:12,lineHeight: 1.55}}>Keep these current as you take more classes and get more hours in — your plan and Medabrain's advice both change when they do.</p>
+          <div style={{marginBottom:16}}>
             <SL>Science courses taken or in progress</SL>
-            <div style={R({gap:7,flexWrap:'wrap'})}>
+            <div style={R({gap:8,flexWrap:'wrap'})}>
               {SCIENCE_OPTIONS.map(o=>{
                 const on=(user?.sciences||[]).includes(o.value);
                 return(
@@ -9020,8 +9019,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                     const cur=user?.sciences||[];
                     saveUser({...user,sciences:on?cur.filter(v=>v!==o.value):[...cur,o.value]});
                   }} style={{
-                    ...glass2({padding:'8px 13px',cursor:'pointer',border:on?`1px solid ${tint(accent,0.55)}`:undefined,background:on?tint(accent,0.12):undefined}),
-                    fontSize:12,fontWeight:on?700:500,color:on?accentText(accent):C.t2,display:'inline-flex',alignItems:'center',gap:5,
+                    ...glass2({padding:'8px 12px',cursor:'pointer',border:on?`1px solid ${tint(accent,0.55)}`:undefined,background:on?tint(accent,0.12):undefined}),
+                    fontSize:12,fontWeight:on?700:500,color:on?accentText(accent):C.t2,display:'inline-flex',alignItems:'center',gap:4,
                   }}>{on&&<Check size={11}/>}{o.label}</button>
                 );
               })}
@@ -9029,7 +9028,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           </div>
           <div>
             <SL>Hands-on health experience</SL>
-            <div style={R({gap:7,flexWrap:'wrap'})}>
+            <div style={R({gap:8,flexWrap:'wrap'})}>
               {EXPERIENCE_OPTIONS.map(o=>{
                 const on=(user?.healthExperience||[]).includes(o.value);
                 return(
@@ -9037,8 +9036,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                     const cur=user?.healthExperience||[];
                     saveUser({...user,healthExperience:on?cur.filter(v=>v!==o.value):[...cur,o.value]});
                   }} style={{
-                    ...glass2({padding:'8px 13px',cursor:'pointer',border:on?`1px solid ${tint(accent,0.55)}`:undefined,background:on?tint(accent,0.12):undefined}),
-                    fontSize:12,fontWeight:on?700:500,color:on?accentText(accent):C.t2,display:'inline-flex',alignItems:'center',gap:5,
+                    ...glass2({padding:'8px 12px',cursor:'pointer',border:on?`1px solid ${tint(accent,0.55)}`:undefined,background:on?tint(accent,0.12):undefined}),
+                    fontSize:12,fontWeight:on?700:500,color:on?accentText(accent):C.t2,display:'inline-flex',alignItems:'center',gap:4,
                   }}>{on&&<Check size={11}/>}{o.label}</button>
                 );
               })}
@@ -9049,7 +9048,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <div data-tour="settings-deep-studytrack" style={glass()}>
           <div style={R({justifyContent:'space-between',marginBottom:8})}>
             <SL extra={{marginBottom:0}}>Study Track</SL>
-            <button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDIntro(true);goPrep('diagnostic');}}>Full pathway details<ChevronRight size={12}/></button>
+            <button style={{...btnG({fontSize:11,padding:'4px 12px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setDIntro(true);goPrep('diagnostic');}}>Full pathway details<ChevronRight size={12}/></button>
           </div>
           <p style={{fontSize:13,color:C.t2,marginBottom:16}}>Current: <span style={{color:accentText(curPath?.accent||accent),fontWeight:700,fontFamily:C.FD}}>{curPath?.label}</span></p>
           <div style={G(2,10,{},isMobile)}>
@@ -9057,7 +9056,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               <motion.div key={key} whileHover={{borderColor:`${p.accent}40`}} onClick={()=>setSS(sSpec===key?'':key)} style={{...glass2({padding:16,cursor:'pointer',border:sSpec===key?`1px solid ${p.accent}60`:eSpec===key?`1px solid ${p.accent}30`:undefined,transition:'border-color .15s'})}}>
                 <div style={{fontSize:13,fontWeight:700,color:sSpec===key?accentText(p.accent):eSpec===key?accentText(p.accent):C.t2,fontFamily:C.FD}}>{p.label}</div>
                 {p.tagline&&<div style={{fontSize:10.5,color:C.t3,marginTop:4,lineHeight:1.5}}>{p.tagline}</div>}
-                <div style={{fontSize:11,color:C.t4,marginTop:6,fontFamily:C.FM}}>{p.units.length} units · {p.units.reduce((s,u)=>s+u.lessons.length,0)} lessons</div>
+                <div style={{fontSize:11,color:C.t4,marginTop:4,fontFamily:C.FM}}>{p.units.length} units · {p.units.reduce((s,u)=>s+u.lessons.length,0)} lessons</div>
                 {eSpec===key&&<div style={{fontSize:10,color:accentText(p.accent),marginTop:4,fontWeight:700,display:'inline-flex',alignItems:'center',gap:4}}><Check size={10}/>Current</div>}
               </motion.div>
             ))}
@@ -9066,24 +9065,24 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         </div>
 
         <div data-tour="settings-deep-courseload" style={glass({padding:20})}>
-          <div style={{...R({justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:10}),marginBottom:4}}>
+          <div style={{...R({justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:8}),marginBottom:4}}>
             <SL extra={{marginBottom:0}}>Current Course Load</SL>
             <span style={pill(tint(accent,0.14),accent,{fontSize:10.5,fontWeight:800})}>
               {(user.courses||[]).length} selected
             </span>
           </div>
-          <p style={{fontSize:13,color:C.t2,marginBottom:18,lineHeight:1.6}}>Tell us what you're taking so Medabrain and the Quiz Library can point you to relevant material — this feeds directly into your quiz recommendations and AI coaching.</p>
+          <p style={{fontSize:13,color:C.t2,marginBottom:16,lineHeight:1.6}}>Tell us what you're taking so Medabrain and the Quiz Library can point you to relevant material — this feeds directly into your quiz recommendations and AI coaching.</p>
           {COURSE_GROUPS.map(g=>{
             const GroupIcon=COURSE_GROUP_ICONS[g.group]||BookOpen;
             const groupActiveCount=g.items.filter(c=>(user.courses||[]).includes(c)).length;
             return(
-              <div key={g.group} style={{marginBottom:18}}>
-                <div style={{...R({gap:7}),marginBottom:9}}>
+              <div key={g.group} style={{marginBottom:16}}>
+                <div style={{...R({gap:8}),marginBottom:8}}>
                   <GroupIcon size={12} color={C.t3}/>
-                  <span style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>{g.group}</span>
+                  <span style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>{g.group}</span>
                   {groupActiveCount>0&&<span style={{fontSize:10,fontWeight:700,color:accent,fontFamily:C.FM}}>· {groupActiveCount}</span>}
                 </div>
-                <div style={R({gap:7,flexWrap:'wrap'})}>
+                <div style={R({gap:8,flexWrap:'wrap'})}>
                   {g.items.map(course=>{
                     const active=(user.courses||[]).includes(course);
                     return(
@@ -9093,7 +9092,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                           saveUser({...user,courses:next});
                         }}
                         style={{
-                          display:'inline-flex',alignItems:'center',gap:5,padding:'7px 14px',borderRadius:8,cursor:'pointer',
+                          display:'inline-flex',alignItems:'center',gap:4,padding:'8px 12px',borderRadius:8,cursor:'pointer',
                           fontSize:12,fontWeight:600,fontFamily:C.FB,transition:'background .15s,border-color .15s,color .15s',
                           background:active?tint(accent,0.16):C.s3,
                           border:`1px solid ${active?`${accent}55`:C.b1}`,
@@ -9107,13 +9106,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               </div>
             );
           })}
-          <div style={{...R({gap:10,marginTop:4,paddingTop:16,borderTop:`1px solid ${C.b1}`})}}>
-            <button type="button" role="switch" aria-checked={!!user.apIb} onClick={()=>saveUser({...user,apIb:!user.apIb})} style={{width:40,height:22,borderRadius:11,background:user.apIb?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${user.apIb?accent:C.b2}`,padding:0}}>
-              <div style={{width:16,height:16,borderRadius:'50%',background:user.apIb?'#fff':C.s1,border:user.apIb?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:user.apIb?20:2,transition:'left .2s',boxShadow:C.shadowSm}}/>
+          <div style={{...R({gap:8,marginTop:4,paddingTop:16,borderTop:`1px solid ${C.b1}`})}}>
+            <button type="button" role="switch" aria-checked={!!user.apIb} onClick={()=>saveUser({...user,apIb:!user.apIb})} style={{width:40,height:22,borderRadius:12,background:user.apIb?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${user.apIb?accent:C.b2}`,padding:0}}>
+              <div style={{width:16,height:16,borderRadius:'50%',background:user.apIb?'#fff':C.s1,border:user.apIb?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:2,transform:`translateX(${user.apIb?18:0}px)`,transition:'transform 140ms cubic-bezier(.4,0,.2,1)',boxShadow:C.shadowSm}}/>
             </button>
             <div>
               <div style={{fontSize:13,fontWeight:600,color:C.t1}}>I'm an AP/IB student</div>
-              <div style={{fontSize:11,color:C.t3,marginTop:1}}>Unlocks AP/IB exam dates on your Milestones tab</div>
+              <div style={{fontSize:11,color:C.t3,marginTop:4}}>Unlocks AP/IB exam dates on your Milestones tab</div>
             </div>
           </div>
         </div>
@@ -9122,23 +9121,23 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* ── Preferences & Data ───────────────────────────────────────────────── */}
         {settingsView==='data'&&
         <Group icon={Volume2} title="Preferences & Data">
-        <div data-tour="settings-deep-preferences" style={glass({padding:18})}>
+        <div data-tour="settings-deep-preferences" style={glass({padding:16})}>
           <div style={R({justifyContent:'space-between'})}>
             <div>
               <div style={{fontSize:13,fontWeight:600,color:C.t1,fontFamily:C.FD}}>Sound Effects</div>
-              <div style={{fontSize:11,color:C.t3,marginTop:2}}>Audio feedback for correct answers, level-ups, and achievements</div>
+              <div style={{fontSize:11,color:C.t3,marginTop:4}}>Audio feedback for correct answers, level-ups, and achievements</div>
             </div>
             <div onClick={()=>{const v=!sfxOn;setSfxOn(v);setSFX(v);}} style={{width:44,height:24,borderRadius:12,background:sfxOn?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${sfxOn?accent:C.b2}`}}>
-              <div style={{width:18,height:18,borderRadius:'50%',background:sfxOn?'#fff':C.s1,border:sfxOn?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:sfxOn?22:2,transition:'left .2s',boxShadow:C.shadowSm}}/>
+              <div style={{width:18,height:18,borderRadius:'50%',background:sfxOn?'#fff':C.s1,border:sfxOn?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:2,transform:`translateX(${sfxOn?20:0}px)`,transition:'transform 140ms cubic-bezier(.4,0,.2,1)',boxShadow:C.shadowSm}}/>
             </div>
           </div>
           <div style={{...R({justifyContent:'space-between'}),marginTop:16,paddingTop:16,borderTop:`1px solid ${C.b1}`}}>
             <div>
               <div style={{fontSize:13,fontWeight:600,color:C.t1,fontFamily:C.FD}}>Celebration Effects</div>
-              <div style={{fontSize:11,color:C.t3,marginTop:2}}>Confetti bursts for level-ups, streaks, and achievements</div>
+              <div style={{fontSize:11,color:C.t3,marginTop:4}}>Confetti bursts for level-ups, streaks, and achievements</div>
             </div>
             <div onClick={()=>{const v=!confettiOn;setConfettiOn(v);setConfettiEnabled(v);}} style={{width:44,height:24,borderRadius:12,background:confettiOn?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${confettiOn?accent:C.b2}`}}>
-              <div style={{width:18,height:18,borderRadius:'50%',background:confettiOn?'#fff':C.s1,border:confettiOn?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:confettiOn?22:2,transition:'left .2s',boxShadow:C.shadowSm}}/>
+              <div style={{width:18,height:18,borderRadius:'50%',background:confettiOn?'#fff':C.s1,border:confettiOn?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:2,transform:`translateX(${confettiOn?20:0}px)`,transition:'transform 140ms cubic-bezier(.4,0,.2,1)',boxShadow:C.shadowSm}}/>
             </div>
           </div>
         </div>
@@ -9146,48 +9145,48 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* Honors the "you can change this anytime in Settings" promise made during onboarding's
             toggleAddBack/toggleRollover steps — see applyRolloverPrefs/applyAddBackPrefs in
             masterPlanGenerator.js for how these actually shape the Plans tab's day-by-day plan. */}
-        <div data-tour="settings-deep-planprefs" style={glass({padding:18})}>
+        <div data-tour="settings-deep-planprefs" style={glass({padding:16})}>
           <div style={R({justifyContent:'space-between'})}>
             <div>
               <div style={{fontSize:13,fontWeight:600,color:C.t1,fontFamily:C.FD}}>Add Extra Sessions Back</div>
-              <div style={{fontSize:11,color:C.t3,marginTop:2}}>If you finish a day's plan early, tomorrow's load gets a little lighter.</div>
+              <div style={{fontSize:11,color:C.t3,marginTop:4}}>If you finish a day's plan early, tomorrow's load gets a little lighter.</div>
             </div>
             <div onClick={()=>saveUser({...user,addBack:!(user.addBack!==false)})} style={{width:44,height:24,borderRadius:12,background:user.addBack!==false?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${user.addBack!==false?accent:C.b2}`}}>
-              <div style={{width:18,height:18,borderRadius:'50%',background:user.addBack!==false?'#fff':C.s1,border:user.addBack!==false?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:user.addBack!==false?22:2,transition:'left .2s',boxShadow:C.shadowSm}}/>
+              <div style={{width:18,height:18,borderRadius:'50%',background:user.addBack!==false?'#fff':C.s1,border:user.addBack!==false?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:2,transform:`translateX(${user.addBack!==false?20:0}px)`,transition:'transform 140ms cubic-bezier(.4,0,.2,1)',boxShadow:C.shadowSm}}/>
             </div>
           </div>
           <div style={{...R({justifyContent:'space-between'}),marginTop:16,paddingTop:16,borderTop:`1px solid ${C.b1}`}}>
             <div>
               <div style={{fontSize:13,fontWeight:600,color:C.t1,fontFamily:C.FD}}>Rollover Missed Sessions</div>
-              <div style={{fontSize:11,color:C.t3,marginTop:2}}>Missed tasks get folded into the next generated day instead of lost.</div>
+              <div style={{fontSize:11,color:C.t3,marginTop:4}}>Missed tasks get folded into the next generated day instead of lost.</div>
             </div>
             <div onClick={()=>saveUser({...user,rollover:!(user.rollover!==false)})} style={{width:44,height:24,borderRadius:12,background:user.rollover!==false?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${user.rollover!==false?accent:C.b2}`}}>
-              <div style={{width:18,height:18,borderRadius:'50%',background:user.rollover!==false?'#fff':C.s1,border:user.rollover!==false?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:user.rollover!==false?22:2,transition:'left .2s',boxShadow:C.shadowSm}}/>
+              <div style={{width:18,height:18,borderRadius:'50%',background:user.rollover!==false?'#fff':C.s1,border:user.rollover!==false?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:2,transform:`translateX(${user.rollover!==false?20:0}px)`,transition:'transform 140ms cubic-bezier(.4,0,.2,1)',boxShadow:C.shadowSm}}/>
             </div>
           </div>
         </div>
 
-        <div data-tour="settings-deep-backup" style={glass({padding:18})}>
+        <div data-tour="settings-deep-backup" style={glass({padding:16})}>
           <SL>Data & Backup</SL>
-          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Export all your progress data as a JSON file. Useful for backup or transferring to a new device.</p>
-          <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{DB.exportAllData();toast.success('Export started — check your Downloads folder');}}><Package size={14}/>Export All Data</button>
+          <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight:1.65}}>Export all your progress data as a JSON file. Useful for backup or transferring to a new device.</p>
+          <button style={{...btnG({fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{DB.exportAllData();toast.success('Export started — check your Downloads folder');}}><Package size={14}/>Export All Data</button>
         </div>
 
-        <div style={glass({padding:18})}>
+        <div style={glass({padding:16})}>
           <SL>Medabrain Chat History</SL>
-          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Clear every saved Medabrain conversation — a scoped reset that leaves your XP, streak, quiz scores, and pathway progress untouched.</p>
-          <button style={{...btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={clearAllChats}><Trash2 size={13}/>Clear All Chats{coachThreads.length>0?` (${coachThreads.length})`:''}</button>
+          <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight:1.65}}>Clear every saved Medabrain conversation — a scoped reset that leaves your XP, streak, quiz scores, and pathway progress untouched.</p>
+          <button style={{...btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={clearAllChats}><Trash2 size={13}/>Clear All Chats{coachThreads.length>0?` (${coachThreads.length})`:''}</button>
         </div>
 
-        <div style={glass({padding:18})}>
+        <div style={glass({padding:16})}>
           <SL>Help</SL>
-          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Not sure where everything lives? Replay the full guided tour — every tab, every sub-view inside Prep, Portfolio, and Progress, Settings, and the ⌘K quick-switcher.</p>
-          <div style={R({gap:10,flexWrap:'wrap'})}>
-            <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={startTour}><Compass size={14}/>Replay App Tour</button>
+          <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight:1.65}}>Not sure where everything lives? Replay the full guided tour — every tab, every sub-view inside Prep, Portfolio, and Progress, Settings, and the ⌘K quick-switcher.</p>
+          <div style={R({gap:8,flexWrap:'wrap'})}>
+            <button style={{...btnG({fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={startTour}><Compass size={14}/>Replay App Tour</button>
             {/* Dev-only: preview the first-run onboarding wizard without touching this account's
                 saved profile. Kept as a minimal inline link (not a full card) so it doesn't
                 compete for attention with real settings. Remove once onboarding is stable. */}
-            <button style={{...btnG({fontSize:12,padding:'9px 18px',opacity:0.6}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setPreviewOnboarding(true)} title="Dev-only — doesn't touch your saved profile"><RotateCcw size={14}/>Replay Onboarding</button>
+            <button style={{...btnG({fontSize:12,padding:'8px 16px',opacity:0.6}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>setPreviewOnboarding(true)} title="Dev-only — doesn't touch your saved profile"><RotateCcw size={14}/>Replay Onboarding</button>
           </div>
         </div>
         </Group>}
@@ -9206,16 +9205,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             email links to directly. */}
         {settingsView==='family'&&
         <Group icon={Users} title="Family Access">
-          <div style={glass({padding:18})}>
+          <div style={glass({padding:16})}>
             <SL>Who can see your progress</SL>
-            <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>
+            <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight:1.65}}>
               Share your progress with a parent or guardian. They'd see your streak, XP, lessons passed and test scores — never your Medabrain chats, your lesson notes, or your essays. Nothing is shared until they accept, and you can cut it off here at any time.
             </p>
             {/* Said here because the student is the one who gets asked "how do I do this?" — and
                 because the honest answer removes the objection. The old flow made inviting a
                 parent feel like signing them up for something; it is now a link and half a
                 minute. */}
-            <p style={{fontSize:12.5,color:C.t3,marginBottom:14,lineHeight:1.65}}>
+            <p style={{fontSize:12.5,color:C.t3,marginBottom:12,lineHeight:1.65}}>
               It's quick for them: they open the link in the email, read what would be shared, and
               press confirm — no password, no code to wait for, and they never sign in as you. If
               you'd rather text them the link yourself, use "Just give me the link" below; that
@@ -9224,7 +9223,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             </p>
             {/* Said on the student's screen because they are the one who decides to invite, and
                 because "they can message me" is a fact about the deal they are agreeing to. */}
-            <p style={{fontSize:12.5,color:C.t3,marginBottom:14,lineHeight:1.65}}>
+            <p style={{fontSize:12.5,color:C.t3,marginBottom:12,lineHeight:1.65}}>
               Once you're connected they can also send you a short note, a question, or a request
               to sit a quiz on a topic. It appears here, never as an email or a notification, and
               you can answer in a line, mark it done, or say not this week. None of it changes
@@ -9237,23 +9236,23 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               not folded into a disclosure. A student deciding whether to invite a parent is
               making a privacy decision, and the answer to "what would they actually see" has to
               be on the screen where the decision is made rather than one tap away in a policy. */}
-          <div style={glass({padding:18})}>
+          <div style={glass({padding:16})}>
             <SL>What a parent would see</SL>
             <div style={G(2,14,{},isMobile)}>
               <div>
-                <div style={{fontSize:11,fontWeight:800,color:C.greenL,letterSpacing:'.08em',textTransform:'uppercase',marginBottom:8}}>Shared</div>
+                <div style={{fontSize:11,fontWeight:800,color:C.greenL,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom:8}}>Shared</div>
                 {['Study streak and days studied','XP, level and lessons passed','Quiz averages and practice-test scores','Achievements you have earned'].map(t=>(
-                  <div key={t} style={{...R({gap:8,alignItems:'flex-start'}),marginBottom:7}}>
-                    <Check size={13} color={C.greenL} style={{flexShrink:0,marginTop:3}}/>
+                  <div key={t} style={{...R({gap:8,alignItems:'flex-start'}),marginBottom:8}}>
+                    <Check size={13} color={C.greenL} style={{flexShrink:0,marginTop:4}}/>
                     <span style={{fontSize:12.5,color:C.t2,lineHeight:1.5}}>{t}</span>
                   </div>
                 ))}
               </div>
               <div>
-                <div style={{fontSize:11,fontWeight:800,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase',marginBottom:8}}>Never shared</div>
+                <div style={{fontSize:11,fontWeight:800,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom:8}}>Never shared</div>
                 {['Medabrain conversations','Lesson notes and highlights','Essay drafts and application writing','Individual quiz answers'].map(t=>(
-                  <div key={t} style={{...R({gap:8,alignItems:'flex-start'}),marginBottom:7}}>
-                    <X size={13} color={C.t3} style={{flexShrink:0,marginTop:3}}/>
+                  <div key={t} style={{...R({gap:8,alignItems:'flex-start'}),marginBottom:8}}>
+                    <X size={13} color={C.t3} style={{flexShrink:0,marginTop:4}}/>
                     <span style={{fontSize:12.5,color:C.t2,lineHeight:1.5}}>{t}</span>
                   </div>
                 ))}
@@ -9264,18 +9263,18 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           {/* The other direction: a parent who does not have an account yet. Every other route
               into the parent dashboard assumes the parent found it themselves; this one lets the
               student hand it over, which is how most of these actually start. */}
-          <div style={glass({padding:18})}>
+          <div style={glass({padding:16})}>
             <SL>Your parent doesn't have an account yet?</SL>
-            <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>
+            <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight:1.65}}>
               Send them this link. It explains the parent dashboard, what it shows and what it
               never shows, and walks them through creating their own account — they never sign in
               as you, and they never see this side of the app.
             </p>
-            <div style={R({gap:10,flexWrap:'wrap'})}>
-              <a href={PARENT_HUB_PATH} target="_blank" rel="noopener noreferrer" style={{...btnG({fontSize:12,padding:'9px 18px'}),textDecoration:'none'}}>
+            <div style={R({gap:8,flexWrap:'wrap'})}>
+              <a href={PARENT_HUB_PATH} target="_blank" rel="noopener noreferrer" style={{...btnG({fontSize:12,padding:'8px 16px'}),textDecoration:'none'}}>
                 <ExternalLink size={14}/>Open the parent page
               </a>
-              <button style={{...btnG({fontSize:12,padding:'9px 18px'})}} onClick={()=>{
+              <button style={{...btnG({fontSize:12,padding:'8px 16px'})}} onClick={()=>{
                 const url=`${window.location.origin}${PARENT_HUB_PATH}`;
                 navigator.clipboard?.writeText(url).then(()=>toast.success('Link copied — send it to them.')).catch(()=>toast.error('Could not copy the link.'));
               }}><Copy size={14}/>Copy the link</button>
@@ -9286,19 +9285,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* ── Account ──────────────────────────────────────────────────────────── */}
         {settingsView==='account'&&
         <Group icon={ShieldCheck} title="Account">
-        <div data-tour="settings-deep-account" style={glass({padding:18})}>
+        <div data-tour="settings-deep-account" style={glass({padding:16})}>
           <SL>Account</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight:1.65}}>Signed in as <strong style={{color:C.t1}}>{account?.email}</strong>. Your whole profile — XP, streak, quiz scores, flashcards, pathway progress, achievements, Medabrain chats, and your Portfolio — syncs to this account, so signing in anywhere else picks up right where you left off.</p>
           {/* Makes the otherwise-invisible cross-device sync machinery (progressSync.js)
               visible and checkable, instead of the student just having to trust it works. */}
-          <div style={{...R({gap:8}),marginBottom:14,padding:'8px 12px',borderRadius:10,background:C.s2,border:`1px solid ${C.b1}`,width:'fit-content'}}>
+          <div style={{...R({gap:8}),marginBottom:12,padding:'8px 12px',borderRadius:8,background:C.s2,border:`1px solid ${C.b1}`,width:'fit-content'}}>
             {syncStatus.state==='syncing'&&<><RefreshCw size={13} color={C.blueL} style={{animation:'spin 1s linear infinite'}}/><span style={{fontSize:12,color:C.blueL,fontWeight:600}}>Syncing…</span></>}
             {syncStatus.state==='pending'&&<><Clock size={13} color={C.t3}/><span style={{fontSize:12,color:C.t3}}>Changes pending sync…</span></>}
             {syncStatus.state==='synced'&&<><Cloud size={13} color={C.greenL}/><span style={{fontSize:12,color:C.greenL,fontWeight:600}}>Synced{syncTimeLabel(syncStatus.lastSyncedAt)?` ${syncTimeLabel(syncStatus.lastSyncedAt)}`:''}</span></>}
-            {syncStatus.state==='error'&&<><CloudOff size={13} color={C.amber}/><span style={{fontSize:12,color:C.amber}} title={syncStatus.error||''}>Offline — your progress is safe on this device and will sync automatically when you reconnect.</span><button onClick={()=>{ProgressSync.retrySyncNow().catch(()=>{});}} style={{marginLeft:2,fontSize:11,fontWeight:700,color:C.blueL,background:'none',border:'none',cursor:'pointer',padding:0,textDecoration:'underline'}}>Retry now</button></>}
+            {syncStatus.state==='error'&&<><CloudOff size={13} color={C.amber}/><span style={{fontSize:12,color:C.amber}} title={syncStatus.error||''}>Offline — your progress is safe on this device and will sync automatically when you reconnect.</span><button onClick={()=>{ProgressSync.retrySyncNow().catch(()=>{});}} style={{marginLeft:4,fontSize:11,fontWeight:700,color:C.blueL,background:'none',border:'none',cursor:'pointer',padding:0,textDecoration:'underline'}}>Retry now</button></>}
             {syncStatus.state==='idle'&&<><Cloud size={13} color={C.t3}/><span style={{fontSize:12,color:C.t3}}>Not synced yet</span></>}
           </div>
-          <button style={{...btnG({fontSize:12,padding:'9px 18px'})}} onClick={async()=>{try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();window.location.reload();}}>Sign Out</button>
+          <button style={{...btnG({fontSize:12,padding:'8px 16px'})}} onClick={async()=>{try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();window.location.reload();}}>Sign Out</button>
         </div>
 
         {/* ── Your data & your rights ──────────────────────────────────────
@@ -9309,13 +9308,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             statement to consumers quite apart from GDPR Art. 15/17/20, the
             CCPA's access and deletion rights, and the equivalents in the
             Colorado, Connecticut, Virginia, Texas and Oregon acts. */}
-        <div style={glass({padding:18})}>
+        <div style={glass({padding:16})}>
           <SL>Your Data & Your Rights</SL>
-          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>
+          <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight:1.65}}>
             Your data is yours. Download everything we hold, or delete the account and all of it, whenever you want — no reason needed, and no penalty for asking. Read the <a href={LEGAL_VIEWS.privacy} onClick={openLegalLink(LEGAL_VIEWS.privacy)} style={{color:C.blueL,fontWeight:600}}>Privacy Policy</a> for exactly what we hold and who else ever sees it.
           </p>
-          <div style={R({gap:10,flexWrap:'wrap'})}>
-            <button style={{...btnG({fontSize:12,padding:'9px 18px'})}} onClick={async()=>{
+          <div style={R({gap:8,flexWrap:'wrap'})}>
+            <button style={{...btnG({fontSize:12,padding:'8px 16px'})}} onClick={async()=>{
               try{ await AuthAPI.exportMyData(); toast.success('Your data is downloading.'); }
               catch(err){ toast.error(err.message||'Could not export your data.'); }
             }}><Download size={14}/>Download my data</button>
@@ -9342,7 +9341,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <div data-tour="settings-deep-danger" style={{...glass({border:`1px solid rgba(244,63,94,0.2)`})}}>
           <SL extra={{color:C.rose}}>Danger Zone</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:16,lineHeight:1.65}}>These actions are permanent and cannot be undone.</p>
-          <div style={R({gap:10,flexWrap:'wrap'})}>
+          <div style={R({gap:8,flexWrap:'wrap'})}>
             <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12})} onClick={()=>{if(window.confirm('Reset all quiz scores and lesson progress?')){DB.resetPathway();DB.resetQuizScores();DB.resetCatPerf();setPathway_({});setQScores_({});setQHistory([]);setCatPerf_({});toast.success('Progress reset successfully.');}}} >Reset Progress</button>
             {/* Deleting the plan clears the server copy AND its version history, not just this
                 device's — otherwise the next sign-in would helpfully restore the plan the
@@ -9365,8 +9364,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
         {settingsView==='account'&&<>
         {/* About */}
-        <div style={glass({padding:18})}>
-          <div style={{fontSize:11,color:C.t3,lineHeight:1.9,fontFamily:C.FM}}>
+        <div style={glass({padding:16})}>
+          <div style={{fontSize:11,color:C.t3,lineHeight: 1.55,fontFamily:C.FM}}>
             MedSchoolPrep v3.0 &nbsp;·&nbsp; {TOTAL_QUESTIONS} questions &nbsp;·&nbsp; {ELIB.length} resources &nbsp;·&nbsp; {Object.keys(FLASH_DECKS).length} decks<br/>
             Powered by: ts-fsrs (FSRS-4.5 spaced repetition) · compromise (offline NLP) · Medabrain on Groq · Fuse.js · Dexie.js · KaTeX · Chart.js · Framer Motion · react-hot-toast · canvas-confetti · jsPDF · marked<br/>
             Flashcard scheduling runs on FSRS, the open-source algorithm Anki uses by default · Flashcard generation runs fully offline on your device, extracting cards directly from your notes — no account, API key, or network call required · Medabrain is powered by large language model technology · Your progress is cached on this device via IndexedDB and synced to your account so it follows you to any browser you sign into
@@ -9380,14 +9379,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             trademark attributions and the "this is not medical advice" notice
             would exist only on a surface their account has permanently left
             behind. */}
-        <div style={glass({padding:18})}>
+        <div style={glass({padding:16})}>
           <SL>Legal</SL>
-          <div style={R({gap:14,flexWrap:'wrap',marginBottom:14})}>
+          <div style={R({gap:12,flexWrap:'wrap',marginBottom:12})}>
             <a href={LEGAL_VIEWS.terms} onClick={openLegalLink(LEGAL_VIEWS.terms)} style={{fontSize:13,color:C.blueL,fontWeight:600}}>Terms of Service</a>
             <a href={LEGAL_VIEWS.privacy} onClick={openLegalLink(LEGAL_VIEWS.privacy)} style={{fontSize:13,color:C.blueL,fontWeight:600}}>Privacy Policy</a>
             <a href={`mailto:${LEGAL.contactEmail}`} style={{fontSize:13,color:C.blueL,fontWeight:600}}>Contact us</a>
           </div>
-          <div style={{fontSize:11,color:C.t3,lineHeight:1.8}}>
+          <div style={{fontSize:11,color:C.t3,lineHeight: 1.55}}>
             MedSchoolPrep is an independent study tool. It is not a medical school, is not affiliated with or endorsed by any testing organisation, university, or health system, and does not confer academic credit or any credential. All lessons, quizzes, career material and AI coach output are for general educational and career-exploration purposes only — they are not medical, legal, financial, or professional advice, and no clinical or health decision should be based on them. Score estimates are our own approximations, not official scores, and are not a prediction or guarantee of any result. Always confirm deadlines and requirements directly with the college, scholarship provider, or testing organisation.<br/><br/>
             {TRADEMARK_NOTICE.map((line,i)=><React.Fragment key={i}>{line}{i<TRADEMARK_NOTICE.length-1?' ':''}</React.Fragment>)}
           </div>
@@ -9432,7 +9431,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <div style={{minHeight:'var(--msp-vh)',width:'100%',flex:1,background:`radial-gradient(ellipse 90% 55% at 50% -10%,${qAccent}18 0%,transparent 60%),${C.bg}`,color:C.t1,fontFamily:C.FB}}>
           <Toaster position="top-right"/>
           <div style={{maxWidth:780,margin:'0 auto',padding:'24px 24px 60px'}}>
-            <div style={{...glass({padding:'14px 22px',marginBottom:18}),...R()}}>
+            <div style={{...glass({padding:'12px 20px',marginBottom:16}),...R()}}>
               <span style={pill(C.blueDim,C.blueL,{fontSize:11})}>{aQuiz.cat}</span>
               <span style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD,marginLeft:4}}>{aQuiz.title}</span>
               <span style={{marginLeft:'auto',...pill(C.s3,C.t3,{fontSize:10})}}>{aQuiz.diff}</span>
@@ -9569,7 +9568,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const pA=curPath?.accent||C.blue, pA2=curPath?.accent2||C.blueL;
     return(
       <div style={{position:'relative'}}>
-        <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:0,transition:'background 0.7s ease',background:`radial-gradient(ellipse 65% 42% at 88% -6%,${pA}1a 0%,transparent 58%),radial-gradient(ellipse 55% 38% at -5% 102%,${pA2}14 0%,transparent 58%),radial-gradient(ellipse 40% 30% at 50% 40%,${pA}08 0%,transparent 60%)`}}/>
+        <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:0,transition:'background 360ms ease',background:`radial-gradient(ellipse 65% 42% at 88% -6%,${pA}1a 0%,transparent 58%),radial-gradient(ellipse 55% 38% at -5% 102%,${pA2}14 0%,transparent 58%),radial-gradient(ellipse 40% 30% at 50% 40%,${pA}08 0%,transparent 60%)`}}/>
         <div style={{position:'relative',zIndex:1}}>
           <SubNav items={prepSubnav.map(n=>n.id==='flashcards'&&dueDeckCount>0?{...n,badge:dueDeckCount}:n)} active={prepView} onChange={setPrepView} accent={pA} m={isMobile} tourPrefix="prep-sub" hrefFor={prepHref} locked={unlocks.locked('prep')[0]}/>
           {user.masterPlan&&(
@@ -9791,7 +9790,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   function tPlans(){
     if(activePathways.length===0){
       return(
-        <div style={CC({gap:22})}>
+        <div style={CC({gap:20})}>
           <PanelHero icon={Compass} color={C.fuchsia} color2={C.violet} m={isMobile}
             eyebrow="Plans" title="Pick Your Pathway First"
             sub="Your pathway shapes your whole roadmap. Take the diagnostic, or pick one — you can switch later."/>
@@ -9799,8 +9798,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <div style={{position:'absolute',inset:0,background:C.oceanGrad,opacity:0.05,pointerEvents:'none'}}/>
             <div style={{position:'relative',width:56,height:56,borderRadius:16,background:C.oceanGrad,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 8px 22px ${C.cyan}40`}}><Compass size={26} color="#fff"/></div>
             <div style={{position:'relative',flex:1,minWidth:220}}>
-              <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Not sure which fits? Take the diagnostic.</div>
-              <div style={{fontSize:12,color:C.t2,marginTop:3}}>{DIAG_QS.length} questions about how you think, what actually interests you, and what these careers look like day to day — takes about 6 minutes.</div>
+              <div style={{fontSize:15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',fontWeight:800,color:C.t1,fontFamily:C.FD}}>Not sure which fits? Take the diagnostic.</div>
+              <div style={{fontSize:12,color:C.t2,marginTop:4}}>{DIAG_QS.length} questions about how you think, what actually interests you, and what these careers look like day to day — takes about 6 minutes.</div>
             </div>
             <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(C.oceanGrad,{fontSize:13,padding:'12px 24px',boxShadow:`0 6px 18px ${C.cyan}35,inset 0 1px 0 rgba(255,255,255,0.15)`}),display:'inline-flex',alignItems:'center',gap:8,flexShrink:0,position:'relative'}} onClick={()=>{setDD(false);setDS(0);setDA([]);setDIntro(false);goPrep('diagnostic');}}>Start Diagnostic<ChevronRight size={15}/></motion.button>
           </motion.div>
@@ -9981,7 +9980,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* ══ MOBILE HEADER ════════════════════════════════════════════════════ */}
         {isMobile && (
           <header style={{padding:'12px 16px',borderBottom:`1px solid ${C.b1}`,background:C.s0,display:'flex',alignItems:'center',justifyContent:'space-between',zIndex:100}}>
-            <div style={R({gap:10,minWidth:0})}>
+            <div style={R({gap:8,minWidth:0})}>
               <AnimatedLogo size={30} variant="hover" glow={false}/>
               {/* On a phone the wordmark gives way to the pathway switcher the moment there's
                   more than one pathway to switch between — knowing (and changing) which track
@@ -9999,8 +9998,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>MedSchoolPrep</div>
               )}
             </div>
-            <div style={R({gap:10})}>
-              <button data-tour="cmdk" onClick={()=>setCmdOpen(true)} aria-label="Quick switch" style={{width:32,height:32,borderRadius:10,background:C.s2,border:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.t2,cursor:'pointer'}}><Search size={14}/></button>
+            <div style={R({gap:8})}>
+              <button data-tour="cmdk" onClick={()=>setCmdOpen(true)} aria-label="Quick switch" style={{width:32,height:32,borderRadius:8,background:C.s2,border:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.t2,cursor:'pointer'}}><Search size={14}/></button>
               <ThemeToggle mode={a11y.themeMode} onChange={m=>updateA11y({themeMode:m})} size={32} align="right" accent={accent}/>
               {/* The two things in the header that are counting down: the streak (today ends)
                   and any live XP boost (this one ends sooner). A boost applied silently to a
@@ -10012,7 +10011,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 <div style={{fontSize:10,color:C.t3,fontFamily:C.FM}}>Lv.{lvl}</div>
                 <div style={{fontSize:11,fontWeight:700,color:C.t1}}>{user.name}</div>
               </div>
-              <div onClick={() => setTab('settings')} style={{width:32,height:32,borderRadius:10,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`1.5px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:12,color:onTint(accent),cursor:'pointer'}}>{user.name[0].toUpperCase()}</div>
+              <div onClick={() => setTab('settings')} style={{width:32,height:32,borderRadius:8,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`1.5px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:12,color:onTint(accent),cursor:'pointer'}}>{user.name[0].toUpperCase()}</div>
             </div>
           </header>
         )}
@@ -10021,21 +10020,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {!isMobile && (
           <aside style={{width:236,flexShrink:0,display:'flex',flexDirection:'column',overflow:'hidden',borderRight:`1px solid ${C.b1}`,background:`linear-gradient(180deg,${C.s0} 0%,${C.bg} 100%)`,position:'relative',zIndex:10}}>
             <div style={{position:'absolute',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,transparent,${accent}60,transparent)`}}/>
-            <div style={{padding:'20px 18px 16px',borderBottom:`1px solid ${C.b1}`}}>
-              <div style={R({gap:11})}>
+            <div style={{padding:'20px 16px 16px',borderBottom:`1px solid ${C.b1}`}}>
+              <div style={R({gap:12})}>
                 <AnimatedLogo size={34} variant="breathe"/>
                 <div>
                   <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>MedSchoolPrep</div>
-                  <div style={{fontSize:9,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase'}}>YOUR PATH INTO MEDICINE</div>
+                  <div style={{fontSize:9,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>YOUR PATH INTO MEDICINE</div>
                 </div>
               </div>
             </div>
-            <button data-tour="cmdk" onClick={()=>setCmdOpen(true)} style={{margin:'12px 18px 0',padding:'8px 12px',borderRadius:9,background:C.s2,border:`1px solid ${C.b1}`,color:C.t3,fontSize:12,fontFamily:C.FB,display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}>
-              <Search size={13}/><span style={{flex:1,textAlign:'left'}}>Jump to…</span><span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM,padding:'2px 6px'})}}>⌘K</span>
+            <button data-tour="cmdk" onClick={()=>setCmdOpen(true)} style={{margin:'12px 16px 0px',padding:'8px 12px',borderRadius:8,background:C.s2,border:`1px solid ${C.b1}`,color:C.t3,fontSize:12,fontFamily:C.FB,display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}>
+              <Search size={13}/><span style={{flex:1,textAlign:'left'}}>Jump to…</span><span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM,padding:'4px 4px'})}}>⌘K</span>
             </button>
-            <div onClick={()=>setTab('settings')} style={{padding:'14px 18px',borderBottom:`1px solid ${C.b1}`,cursor:'pointer',background:tab==='settings'?`${settingsAccent}12`:undefined}}>
-              <div style={R({gap:11,marginBottom:12})}>
-                <div style={{width:36,height:36,borderRadius:11,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`1.5px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:14,color:onTint(accent),flexShrink:0}}>
+            <div onClick={()=>setTab('settings')} style={{padding:'12px 16px',borderBottom:`1px solid ${C.b1}`,cursor:'pointer',background:tab==='settings'?`${settingsAccent}12`:undefined}}>
+              <div style={R({gap:12,marginBottom:12})}>
+                <div style={{width:36,height:36,borderRadius:12,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`1.5px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:14,color:onTint(accent),flexShrink:0}}>
                   {user.name[0].toUpperCase()}
                 </div>
                 <div style={{flex:1,minWidth:0}}>
@@ -10045,7 +10044,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 <Settings size={15} color={C.t3}/>
               </div>
               <Bar pct={levelInfo.pct} color={accent} h={3} glow/>
-              {streak>0&&<div style={{...R({gap:6,marginTop:8})}}><span style={pill(C.amberDim,C.amberL,{fontSize:10})}><Flame size={10}/>{streak}d streak</span></div>}
+              {streak>0&&<div style={{...R({gap:4,marginTop:8})}}><span style={pill(C.amberDim,C.amberL,{fontSize:10})}><Flame size={10}/>{streak}d streak</span></div>}
             </div>
             {/* The switcher lives in the shell, not on the Pathways page, and that placement is
                 the feature: a student writing an essay in Portfolio or grinding SAT questions can
@@ -10053,7 +10052,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 first. Parallel pathways are a property of the whole app, so the control for them
                 belongs where the whole app can see it. */}
             {pathwayRows.length>0&&(
-              <div style={{padding:'12px 18px',borderBottom:`1px solid ${C.b1}`}}>
+              <div style={{padding:'12px 16px',borderBottom:`1px solid ${C.b1}`}}>
                 <PathwayQuickSwitch
                   rows={pathwayRows} focused={focusedPathway}
                   onFocus={switchPath} onResume={resumePathwayRow}
@@ -10062,7 +10061,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 />
               </div>
             )}
-            <nav style={{flex:1,padding:'8px 10px',overflowY:'auto'}}>
+            <nav style={{flex:1,padding:'8px 8px',overflowY:'auto'}}>
               {navItems.map(n=>{
                 const active=tab===n.id;
                 const nc=navColor[n.id]||accent;
@@ -10080,14 +10079,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   // A real <a href>, not a div: ⌘-click opens the tab in a new browser tab,
                   // the destination shows in the status bar on hover, and screen readers get
                   // a link with aria-current instead of an unlabelled clickable box.
-                  <motion.a key={n.id} href={tabHref(n.id)} aria-current={active?'page':undefined} data-tour={`nav-${n.id}`} whileHover={{background:active?`${nc}22`:'rgba(255,255,255,0.04)',x:2}} onClick={e=>onNavLinkClick(e,()=>{setTab(n.id);play('click');})} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,cursor:'pointer',marginBottom:2,background:active?`${nc}18`:undefined,color:active?onTint(nc):C.t2,fontWeight:active?700:500,fontSize:14,fontFamily:C.FB,borderLeft:active?`2px solid ${nc}`:'2px solid transparent',transition:'all .2s',textDecoration:'none'}}>
+                  <motion.a key={n.id} href={tabHref(n.id)} aria-current={active?'page':undefined} data-tour={`nav-${n.id}`} whileHover={{background:active?`${nc}22`:'rgba(255,255,255,0.04)',x:2}} onClick={e=>onNavLinkClick(e,()=>{setTab(n.id);play('click');})} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 12px',borderRadius:8,cursor:'pointer',marginBottom:4,background:active?`${nc}18`:undefined,color:active?onTint(nc):C.t2,fontWeight:active?700:500,fontSize:14,fontFamily:C.FB,borderLeft:active?`2px solid ${nc}`:'2px solid transparent',transition: CONTROL_TRANSITION,textDecoration:'none'}}>
                     <n.ic size={17} color={active?nc:undefined} style={{opacity:active?1:0.7}}/>
-                    <span style={{flex:1, display:'inline-flex', alignItems:'center', gap:6}}>
+                    <span style={{flex:1, display:'inline-flex', alignItems:'center', gap:4}}>
                       <span>{n.label}</span>
                       {n.id==='sat' && (
                         <span className="pbeta" style={{
                           fontSize:9,
-                          padding:'1px 5px',
+                          padding:'4px 4px',
                           borderRadius:4,
                           background: C.skyDim || tint(C.sky, 0.15),
                           color: isLight() ? C.sky : C.skyL,
@@ -10100,7 +10099,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                         </span>
                       )}
                     </span>
-                    {badge&&<span style={pill(C.amberDim,C.amberL,{fontSize:9,padding:'1px 7px'})}>{badge}</span>}
+                    {badge&&<span style={pill(C.amberDim,C.amberL,{fontSize:9,padding:'4px 8px'})}>{badge}</span>}
                     {/* Medabrain: this pillar has an outstanding plan task due today — see
                         planPillarsDueToday above. Distinct violet dot (not the amber due-deck
                         count pill above) so the two signals never read as one thing. */}
@@ -10125,7 +10124,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <a
               href={settingsHref('family')} aria-current={tab==='settings'&&settingsView==='family'?'page':undefined}
               onClick={e=>onNavLinkClick(e,()=>{goFamily();play('click');})}
-              style={{display:'flex',alignItems:'center',gap:9,padding:'10px 14px',borderTop:`1px solid ${C.b1}`,textDecoration:'none',color:C.t2,fontSize:12.5,fontFamily:C.FB}}
+              style={{display:'flex',alignItems:'center',gap:8,padding:'8px 12px',borderTop:`1px solid ${C.b1}`,textDecoration:'none',color:C.t2,fontSize:12.5,fontFamily:C.FB}}
             >
               <Users size={14} color={C.violet}/>
               <span style={{flex:1}}>{familyLinkCount>0?`Family access · ${familyLinkCount}`:'Invite a parent'}</span>
@@ -10135,7 +10134,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   into a thing that interrupts you. */}
               {familyUnread>0&&(
                 <span aria-label={`${familyUnread} unread message${familyUnread===1?'':'s'}`} style={{
-                  minWidth:17,height:17,padding:'0 5px',borderRadius:9,display:'inline-flex',
+                  minWidth:17,height:17,padding:'0px 4px',borderRadius:8,display:'inline-flex',
                   alignItems:'center',justifyContent:'center',background:C.amber,color:onTint(C.amber),
                   fontSize:10.5,fontWeight:800,
                 }}>{familyUnread>9?'9+':familyUnread}</span>
@@ -10147,7 +10146,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 app picked the theme and the student lived with it. The full
                 picker (previews, high contrast, type size) is still there — this
                 is the switch itself, where a switch belongs. */}
-            <div style={{padding:'10px 14px',borderTop:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+            <div style={{padding:'8px 12px',borderTop:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
               <span style={{fontSize:11,color:C.t3,fontWeight:600}}>Theme</span>
               <ThemeToggle mode={a11y.themeMode} onChange={m=>updateA11y({themeMode:m})} size={32} align="right" placement="above" accent={accent}/>
             </div>
@@ -10207,10 +10206,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 // flex:1 (not a fixed width) so the bar stays balanced regardless of item count —
                 // was width:70 back when there were only 5 tabs; fixed widths would overflow once
                 // Plans made it 6.
-                <a key={n.id} href={tabHref(n.id)} aria-current={tab===n.id?'page':undefined} data-tour={`nav-${n.id}`} onClick={e=>onNavLinkClick(e,()=>setTab(n.id))} style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:tab===n.id?nc:C.t3,cursor:'pointer',flex:'1 1 0',minWidth:0,padding:'0 2px',textDecoration:'none'}}>
+                <a key={n.id} href={tabHref(n.id)} aria-current={tab===n.id?'page':undefined} data-tour={`nav-${n.id}`} onClick={e=>onNavLinkClick(e,()=>setTab(n.id))} style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:tab===n.id?nc:C.t3,cursor:'pointer',flex:'1 1 0',minWidth:0,padding:'0px 4px',textDecoration:'none'}}>
                   <div style={{position:'relative',display:'flex'}}>
                     <n.ic size={navItems.length<=5?22:19} color={tab===n.id?nc:C.t3}/>
-                    {badge&&<span style={{position:'absolute',top:-4,right:-9,...pill(C.amberDim,C.amberL,{fontSize:9,padding:'0 5px'})}}>{badge}</span>}
+                    {badge&&<span style={{position:'absolute',top:-4,right:-9,...pill(C.amberDim,C.amberL,{fontSize:9,padding:'0px 4px'})}}>{badge}</span>}
                     {/* Medabrain: this pillar has an outstanding plan task due today — offset to
                         the opposite corner from the due-deck badge above so both can show at once
                         without overlapping. */}
@@ -10221,8 +10220,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                     {n.id==='sat' && (
                       <span className="pbeta" style={{
                         fontSize:8,
-                        padding:'0px 3px',
-                        borderRadius:3,
+                        padding:'0px 4px',
+                        borderRadius:4,
                         background: C.skyDim || tint(C.sky, 0.15),
                         color: isLight() ? C.sky : C.skyL,
                         border:`1px solid ${tint(C.sky, 0.35)}`,
@@ -10247,7 +10246,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               <motion.div initial={{opacity:0,y:-10,scale:.98}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:-10,scale:.98}} transition={{duration:.16}}
                 style={{width:'min(520px,92vw)',maxHeight:'64vh',display:'flex',flexDirection:'column',background:C.s1,borderRadius:16,border:`1px solid ${C.b2}`,boxShadow:'0 24px 70px rgba(0,0,0,0.65)',overflow:'hidden'}}
                 onClick={e=>e.stopPropagation()}>
-                <div style={{display:'flex',alignItems:'center',gap:10,padding:'14px 16px',borderBottom:`1px solid ${C.b1}`}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,padding:'12px 16px',borderBottom:`1px solid ${C.b1}`}}>
                   <Search size={16} color={C.t3}/>
                   <input autoFocus value={cmdQ} onChange={e=>setCmdQ(e.target.value)} onKeyDown={onCmdInputKeyDown} placeholder="Jump to Prep, Portfolio, Progress…" style={{flex:1,background:'none',border:'none',outline:'none',color:C.t1,fontSize:14,fontFamily:C.FB}}/>
                   <span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM})}}>ESC</span>
@@ -10262,21 +10261,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                     const items=filteredCmds.filter(c=>c.group===group);
                     if(!items.length)return null;
                     return(
-                      <div key={group} style={{marginBottom:6}}>
-                        <div style={{fontSize:9.5,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',padding:'8px 10px 4px'}}>{group}</div>
+                      <div key={group} style={{marginBottom:4}}>
+                        <div style={{fontSize:9.5,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', padding:'8px 8px 4px'}}>{group}</div>
                         {items.map(cmd=>{
                           const idx=filteredCmds.indexOf(cmd);
                           const active=idx===cmdActiveIdx;
                           return(
-                            <motion.div key={cmd.id} onMouseEnter={()=>setCmdActiveIdx(idx)} whileHover={{background:'rgba(255,255,255,0.05)'}} onClick={()=>runCommand(cmd)} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 10px',borderRadius:9,cursor:'pointer',color:C.t1,fontSize:13,background:active?`${accent}16`:undefined,border:active?`1px solid ${accent}30`:'1px solid transparent'}}>
+                            <motion.div key={cmd.id} onMouseEnter={()=>setCmdActiveIdx(idx)} whileHover={{background:'rgba(255,255,255,0.05)'}} onClick={()=>runCommand(cmd)} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 8px',borderRadius:8,cursor:'pointer',color:C.t1,fontSize:13,background:active?`${accent}16`:undefined,border:active?`1px solid ${accent}30`:'1px solid transparent'}}>
                               <cmd.ic size={15} color={cmd.locked?C.t4:accent}/>
                               <span style={{flex:1,minWidth:0}}>
                                 <span style={{color:cmd.locked?C.t2:C.t1}}>{cmd.label}</span>
                                 {/* A locked row says what opens it. "Not shown yet" with no
                                     "yet what?" is a closed door with no handle. */}
-                                {cmd.hint&&<span style={{display:'block',fontSize:10.5,color:C.t4,marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{cmd.hint}</span>}
+                                {cmd.hint&&<span style={{display:'block',fontSize:10.5,color:C.t4,marginTop:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{cmd.hint}</span>}
                               </span>
-                              {active?<span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM,padding:'2px 6px'})}}>↵</span>:<ChevronRight size={13} color={C.t4}/>}
+                              {active?<span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM,padding:'4px 4px'})}}>↵</span>:<ChevronRight size={13} color={C.t4}/>}
                             </motion.div>
                           );
                         })}

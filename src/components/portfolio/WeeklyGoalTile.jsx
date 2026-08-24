@@ -79,24 +79,24 @@ export default function WeeklyGoalTile({
         background: met
           ? `linear-gradient(160deg,${tint(C.green, 0.10)},rgba(255,255,255,0.02) 60%)`
           : `linear-gradient(160deg,${tint(color, 0.07)},rgba(255,255,255,0.02) 60%)`,
-        display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0,
+        display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0,
       }}
     >
       {/* ── Header: what this is, and the door into it ── */}
-      <div style={R({ gap: 9, alignItems: 'flex-start' })}>
+      <div style={R({ gap: 8, alignItems: 'flex-start' })}>
         <div style={{
-          width: 30, height: 30, borderRadius: 9, background: tint(color, 0.16),
+          width: 30, height: 30, borderRadius: 8, background: tint(color, 0.16),
           border: `1px solid ${tint(color, 0.3)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
         }}>
           <Icon size={15} color={color} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, fontFamily: C.FD, lineHeight: 1.25 }}>{metric.label}</div>
-          {total != null && <div style={{ fontSize: 10, color: C.t3, marginTop: 2 }}>{total} {metric.totalLabel}</div>}
+          {total != null && <div style={{ fontSize: 10, color: C.t3, marginTop: 4 }}>{total} {metric.totalLabel}</div>}
         </div>
         {onOpen && (
           <button onClick={() => onOpen(metric.view)} aria-label={`Open ${metric.label}`} title={`Open ${metric.label}`}
-            style={{ all: 'unset', cursor: 'pointer', padding: 4, borderRadius: 6, color: C.t3, display: 'flex' }}>
+            style={{ all: 'unset', cursor: 'pointer', padding: 4, borderRadius: 4, color: C.t3, display: 'flex' }}>
             <ArrowRight size={14} />
           </button>
         )}
@@ -104,11 +104,11 @@ export default function WeeklyGoalTile({
 
       {/* ── The number, and what it's measured against ── */}
       <div style={R({ gap: 8, alignItems: 'baseline' })}>
-        <span style={{ fontSize: 26, fontWeight: 800, fontFamily: C.FM, color: met ? C.green : C.t1, lineHeight: 1 }}>
+        <span style={{ fontSize: 26, letterSpacing: 'calc(-0.53px + var(--msp-letter-spacing))', fontWeight: 800, fontFamily: C.FM, color: met ? C.green : C.t1, lineHeight: 1 }}>
           {formatValue(value)}
         </span>
         {hasGoal && <span style={{ fontSize: 13, color: C.t3, fontFamily: C.FM }}>/ {formatValue(target)}</span>}
-        <span style={{ fontSize: 10.5, color: C.t3, marginLeft: 'auto', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+        <span style={{ fontSize: 10.5, color: C.t3, marginLeft: 'auto', letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>
           {metric.unitShort || metric.unit} this week
         </span>
       </div>
@@ -116,21 +116,21 @@ export default function WeeklyGoalTile({
       {/* ── Progress ── */}
       {hasGoal ? (
         <div>
-          <div style={{ height: 7, background: C.s4, borderRadius: 7, overflow: 'hidden', position: 'relative' }}
+          <div style={{ height: 7, background: C.s4, borderRadius: 8, overflow: 'hidden', position: 'relative' }}
             role="progressbar" aria-valuenow={pct ?? 0} aria-valuemin={0} aria-valuemax={100}
             aria-label={`${metric.label}: ${value} of ${target} ${metric.unit}`}>
             <motion.div
               initial={{ width: 0 }} animate={{ width: `${Math.min(100, pct ?? 0)}%` }}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              style={{ height: '100%', borderRadius: 7, background: `linear-gradient(90deg,${progressColor},${tint(progressColor, 0.55)})`, boxShadow: met ? `0 0 10px ${tint(C.green, 0.5)}` : 'none' }}
+              style={{ height: '100%', borderRadius: 8, background: `linear-gradient(90deg,${progressColor},${tint(progressColor, 0.55)})`, boxShadow: met ? `0 0 10px ${tint(C.green, 0.5)}` : 'none' }}
             />
             {/* Pace marker — where you'd be if you spread the goal evenly across the week. */}
             {!met && (
               <div title="Where an even pace puts you today"
-                style={{ position: 'absolute', top: -1, bottom: -1, left: `${Math.min(99, expectedPct)}%`, width: 2, background: C.b3, borderRadius: 2 }} />
+                style={{ position: 'absolute', top: -1, bottom: -1, left: `${Math.min(99, expectedPct)}%`, width: 2, background: C.b3, borderRadius: 4 }} />
             )}
           </div>
-          <div style={R({ justifyContent: 'space-between', marginTop: 6, gap: 8 })}>
+          <div style={R({ justifyContent: 'space-between', marginTop: 4, gap: 8 })}>
             <span style={{ fontSize: 10.5, color: pacingMeta?.color || C.t3, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               {met ? <><Check size={11} />Goal met</> : pacingMeta?.label}
             </span>
@@ -144,19 +144,19 @@ export default function WeeklyGoalTile({
         // could be filling and isn't", which is the feeling that makes someone set a target.
         // A dashed callout box here just added height and said the same thing as the button.
         <div>
-          <div style={{ height: 7, background: C.s4, borderRadius: 7, opacity: 0.6 }} aria-hidden />
-          <div style={{ fontSize: 10.5, color: C.t3, marginTop: 6 }}>No goal yet — you decide the number.</div>
+          <div style={{ height: 7, background: C.s4, borderRadius: 8, opacity: 0.6 }} aria-hidden />
+          <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4 }}>No goal yet — you decide the number.</div>
         </div>
       )}
 
       {/* ── Meta Brain's standing recommendation (never auto-applied) ── */}
       {recommendation && (
         <div style={{
-          ...glass2({ padding: '8px 10px' }),
+          ...glass2({ padding: '8px 8px' }),
           background: tint(C.violet, 0.07), border: `1px solid ${tint(C.violet, 0.2)}`,
-          display: 'flex', flexDirection: 'column', gap: 6,
+          display: 'flex', flexDirection: 'column', gap: 4,
         }}>
-          <div style={R({ gap: 6 })}>
+          <div style={R({ gap: 4 })}>
             <Brain size={12} color={C.violetL} style={{ flexShrink: 0 }} />
             <span style={{ fontSize: 10.5, color: C.t2, flex: 1, minWidth: 0 }}>
               Meta Brain suggests <b style={{ color: accentText(C.violet), fontFamily: C.FM }}>{formatValue(recommendation.target)}</b> {metric.unit}
@@ -182,30 +182,30 @@ export default function WeeklyGoalTile({
 
       {/* ── The student's own control ── */}
       {editing ? (
-        <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+        <div style={R({ gap: 4, flexWrap: 'wrap' })}>
           <button aria-label="Decrease target" onClick={() => setDraft((d) => String(Math.max(metric.min, Number(d || 0) - metric.step)))}
-            style={btnSm(C.s3, { color: C.t1, padding: '6px 9px' })}><Minus size={12} /></button>
+            style={btnSm(C.s3, { color: C.t1, padding: '4px 8px' })}><Minus size={12} /></button>
           <input
             value={draft} onChange={(e) => setDraft(e.target.value.replace(/[^\d.]/g, ''))} inputMode="decimal"
             aria-label={`Weekly target for ${metric.label}`}
             onKeyDown={(e) => { if (e.key === 'Enter') commit(draft); if (e.key === 'Escape') setEditing(false); }}
             style={{
               width: 68, textAlign: 'center', background: C.inputBg, border: `1px solid ${tint(color, 0.4)}`,
-              borderRadius: 8, padding: '7px 8px', color: C.t1, fontSize: 14, fontFamily: C.FM, outline: 'none',
+              borderRadius: 8, padding: '8px 8px', color: C.t1, fontSize: 14, fontFamily: C.FM, outline: 'none',
             }}
           />
           <button aria-label="Increase target" onClick={() => setDraft((d) => String(Math.min(metric.ceiling, Number(d || 0) + metric.step)))}
-            style={btnSm(C.s3, { color: C.t1, padding: '6px 9px' })}><Plus size={12} /></button>
+            style={btnSm(C.s3, { color: C.t1, padding: '4px 8px' })}><Plus size={12} /></button>
           <button onClick={() => commit(draft)} style={btnSm(tint(color, 0.2), { color: onTint(color), fontSize: 11 })}>
             <Check size={12} />Set goal
           </button>
-          <button onClick={() => setEditing(false)} aria-label="Cancel" style={btnSm(C.s3, { color: C.t3, padding: '6px 9px' })}><X size={12} /></button>
+          <button onClick={() => setEditing(false)} aria-label="Cancel" style={btnSm(C.s3, { color: C.t3, padding: '4px 8px' })}><X size={12} /></button>
           <div style={{ width: '100%', fontSize: 10, color: C.t4 }}>
             Realistic range for this tracker: {metric.min}–{metric.ceiling} {metric.unit} per week.
           </div>
         </div>
       ) : (
-        <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+        <div style={R({ gap: 4, flexWrap: 'wrap' })}>
           <button onClick={() => { setDraft(String(target ?? recommendation?.target ?? metric.defaultTarget)); setEditing(true); }}
             style={btnSm(hasGoal ? C.s3 : tint(color, 0.18), { color: hasGoal ? C.t2 : onTint(color), fontSize: 11 })}>
             {hasGoal ? <><Pencil size={11} />Change goal</> : <><Pencil size={11} />Pick my own number</>}
@@ -216,10 +216,10 @@ export default function WeeklyGoalTile({
             </button>
           )}
           {spark && (
-            <div title="Your last 6 weeks" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'flex-end', gap: 2, height: 18 }}>
+            <div title="Your last 6 weeks" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'flex-end', gap: 4, height: 18 }}>
               {spark.map((h, i) => (
                 <div key={i} style={{
-                  width: 5, height: `${Math.max(8, h * 100)}%`, borderRadius: 2,
+                  width: 5, height: `${Math.max(8, h * 100)}%`, borderRadius: 4,
                   background: i === spark.length - 1 ? color : tint(color, 0.35),
                 }} />
               ))}

@@ -160,12 +160,12 @@ export default function AdmissionCalculatorPanel({
   const blockedCount = results.filter(r => r.blocked).length;
 
   return (
-    <div style={CC({ gap: 22 })}>
+    <div style={CC({ gap: 20 })}>
       <PanelHero tourTag="portfolio-deep-calc" icon={Calculator} color={C.gold} color2={C.orange} m={isMobile}
         eyebrow="Admissions Calculator"
         title="What your real chances look like"
         sub="Built to be right rather than encouraging. Every estimate is a range, benchmarked against the median admitted student rather than the twenty-fifth percentile, weighted by what each programme actually publishes, and honest about what is randomness."
-        right={saving ? <span style={pill(C.s3, C.t3, { fontSize: 10.5, gap: 5 })}><Loader2 size={10} className="spin" /> saving</span> : null}
+        right={saving ? <span style={pill(C.s3, C.t3, { fontSize: 10.5, gap: 4 })}><Loader2 size={10} className="spin" /> saving</span> : null}
         stats={[
           { value: completeness.have, label: `of ${completeness.total} answered`, color: completeness.ratio >= 0.85 ? C.green : C.amber },
           { value: scoredProfiles.length, label: 'programmes scored', color: C.blue },
@@ -193,7 +193,7 @@ export default function AdmissionCalculatorPanel({
         {loaded
           ? <IntakeForm answers={answers} onAnswer={onAnswer} derived={derived}
               completeness={completeness} priorityFields={priorityFields} isMobile={isMobile} />
-          : <div style={{ textAlign: 'center', padding: 30, color: C.t3, fontSize: 12.5 }}><Loader2 size={16} className="spin" /> Loading what you told us last time…</div>}
+          : <div style={{ textAlign: 'center', padding: 28, color: C.t3, fontSize: 12.5 }}><Loader2 size={16} className="spin" /> Loading what you told us last time…</div>}
       </Disclosure>
 
       {/* ── Choosing programmes ───────────────────────────────────────────── */}
@@ -207,19 +207,19 @@ export default function AdmissionCalculatorPanel({
 
         <div style={{ position: 'relative' }}>
           <Search size={14} color={C.t3} style={{ position: 'absolute', left: 12, top: 12 }} />
-          <input style={inp({ paddingLeft: 34 })} placeholder="Search a school or programme — e.g. UMKC, RPI, Drexel, nursing…"
+          <input style={inp({ paddingLeft: 32 })} placeholder="Search a school or programme — e.g. UMKC, RPI, Drexel, nursing…"
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
 
         {searchResults.length > 0 && (
-          <div style={{ ...CC({ gap: 6 }), marginTop: 10 }}>
+          <div style={{ ...CC({ gap: 4 }), marginTop: 8 }}>
             {searchResults.map(p => (
               <button key={p.id} onClick={() => { setSelected(s => [...s, p.id]); setSearch(''); }}
-                style={{ ...glass2({ padding: '10px 13px', display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', textAlign: 'left' }), width: '100%' }}>
+                style={{ ...glass2({ padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'center', cursor: 'pointer', textAlign: 'left' }), width: '100%' }}>
                 <Plus size={13} color={C.violet} style={{ flexShrink: 0 }} />
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{p.name}</span>
-                  <span style={{ display: 'block', fontSize: 10.5, color: C.t3, marginTop: 2 }}>{p.institution}</span>
+                  <span style={{ display: 'block', fontSize: 10.5, color: C.t3, marginTop: 4 }}>{p.institution}</span>
                 </span>
                 {!p.derived && <span style={pill(tint(C.green, 0.14), accentText(C.green), { fontSize: 9 })}>published criteria on file</span>}
               </button>
@@ -230,7 +230,7 @@ export default function AdmissionCalculatorPanel({
         {PROGRAM_PROFILES.some(p => !scoredProfiles.find(s => s.id === p.id)) && (
           <div style={{ marginTop: 12 }}>
             <span style={lbl()}>Programmes whose real requirements we hold</span>
-            <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+            <div style={R({ gap: 4, flexWrap: 'wrap' })}>
               {PROGRAM_PROFILES.filter(p => !scoredProfiles.find(s => s.id === p.id)).map(p => (
                 <button key={p.id} onClick={() => setSelected(s => [...s, p.id])}
                   style={btnSm(C.s3, { fontSize: 11 })}><Plus size={10} />{p.institution.split(' — ')[0].replace('University of ', '')} · {p.name.split('(')[0].trim()}</button>
@@ -250,9 +250,9 @@ export default function AdmissionCalculatorPanel({
         {scoredProfiles.length > 0 && (
           <div style={{ marginTop: 12 }}>
             <span style={lbl()}>Being scored now ({scoredProfiles.length})</span>
-            <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+            <div style={R({ gap: 4, flexWrap: 'wrap' })}>
               {scoredProfiles.map(p => (
-                <span key={p.id} style={pill(tint(C.violet, 0.13), accentText(C.violet), { fontSize: 10.5, gap: 6 })}>
+                <span key={p.id} style={pill(tint(C.violet, 0.13), accentText(C.violet), { fontSize: 10.5, gap: 4 })}>
                   {p.name}
                   {selected.includes(p.id) && (
                     <button onClick={() => setSelected(s => s.filter(x => x !== p.id))}
@@ -268,7 +268,7 @@ export default function AdmissionCalculatorPanel({
       {/* ── Results ───────────────────────────────────────────────────────── */}
       {scoredProfiles.length === 0 ? (
         <div style={{ ...glass({ padding: 40 }), textAlign: 'center' }}>
-          <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.7, maxWidth: 520, margin: '0 auto' }}>
+          <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.55, maxWidth: 520, margin: '0 auto' }}>
             Nothing to score yet. Add a programme above, or build your college list and every school on it appears here automatically.
           </div>
           {onGoTo && (
@@ -280,14 +280,14 @@ export default function AdmissionCalculatorPanel({
       ) : (
         <>
           {blockedCount > 0 && (
-            <div style={{ ...glass2({ padding: 13 }), borderLeft: `3px solid ${C.rose}` }}>
+            <div style={{ ...glass2({ padding: 12 }), borderLeft: `3px solid ${C.rose}` }}>
               <HelpNote color={C.rose} icon={Info}>
                 {blockedCount} of the {results.length} programmes below show no percentage at all, because you do not currently meet a published requirement. That is deliberate: an eight percent chance at a programme you are not eligible for is worse than nothing.
               </HelpNote>
             </div>
           )}
 
-          <div style={R({ gap: 10, flexWrap: 'wrap' })}>
+          <div style={R({ gap: 8, flexWrap: 'wrap' })}>
             <button style={btnG({ fontSize: 12 })}
               onClick={() => { exportAdmissionEstimates(results, { completeness }); toast.success('Exported — the PDF carries the same ranges and the same caveats as the screen.'); }}>
               <FileDown size={13} /> Export these estimates as PDF
@@ -308,7 +308,7 @@ export default function AdmissionCalculatorPanel({
       {/* ── The standing disclosure ───────────────────────────────────────── */}
       <Disclosure id="admissions-honesty" title="What this model can and cannot know"
         sub="Worth reading once." icon={Info} color={C.t3} m={isMobile}>
-        <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.75, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <p style={{ margin: 0 }}>
             This is an estimate, and the range around it is the honest part. No model has access to your essays, your letters, the reader who picked up your file, what that programme needed the year you applied, or who else applied. At the most selective programmes those things decide more of the outcome than everything we can measure put together — which is exactly why the ranges get wider, not narrower, as the programmes get harder.
           </p>

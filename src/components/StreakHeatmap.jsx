@@ -43,20 +43,20 @@ export default function StreakHeatmap({ accent = C.blue }) {
 
   return (
     <div>
-      <div style={R({ justifyContent: 'space-between', marginBottom: 6 })}>
+      <div style={R({ justifyContent: 'space-between', marginBottom: 4 })}>
         <div style={{ ...lbl(), marginBottom: 0 }}>Study Activity</div>
         <span style={{ fontSize: 11, color: C.t3 }}>{studiedCount} of last {activeDayCount} days</span>
       </div>
-      <div style={{ overflowX: 'auto', paddingBottom: 2 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${WEEKS},1fr)`, gap: 3, width: 'fit-content', marginBottom: 3 }}>
+      <div style={{ overflowX: 'auto', paddingBottom: 4 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${WEEKS},1fr)`, gap: 4, width: 'fit-content', marginBottom: 4 }}>
           {monthLabels.map((m, i) => (
             <div key={i} style={{ fontSize: 8.5, color: C.t4, fontFamily: C.FM, height: 11 }}>{m}</div>
           ))}
         </div>
-        <div style={{display:'grid',gridTemplateColumns:`repeat(${WEEKS},1fr)`,gridAutoFlow:'column',gridTemplateRows:'repeat(7,1fr)',gap:3,width:'fit-content'}}>
+        <div style={{display:'grid',gridTemplateColumns:`repeat(${WEEKS},1fr)`,gridAutoFlow:'column',gridTemplateRows:'repeat(7,1fr)',gap:4,width:'fit-content'}}>
           {cells.map(c => (
             <div key={c.key} title={`${c.date.toLocaleDateString(undefined,{month:'short',day:'numeric'})}${c.active?' — studied':c.future?'':' — no study logged'}`} style={{
-              width:10,height:10,borderRadius:2,
+              width:10,height:10,borderRadius: 4,
               background: c.future ? 'transparent' : c.active ? accent : C.s3,
               opacity: c.future ? 0 : c.active ? 1 : 0.6,
               boxShadow: c.active ? `0 0 5px ${accent}60` : undefined,

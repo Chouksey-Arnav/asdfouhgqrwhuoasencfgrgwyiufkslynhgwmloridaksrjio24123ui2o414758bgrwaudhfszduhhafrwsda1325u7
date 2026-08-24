@@ -161,7 +161,7 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain, pathw
   const financeProfile = pathwayKey ? FINANCE_BY_PATHWAY[pathwayKey] : null;
 
   return (
-    <div style={CC({gap:22})}>
+    <div style={CC({gap:20})}>
       <PanelHero tourTag="portfolio-deep-aid" icon={Handshake} color={accent} color2={C.teal}
         eyebrow="Paying for it" title="Financial Aid"
         sub="What each health pathway costs, who pays for it in exchange for service, and every scholarship you're tracking."
@@ -170,26 +170,26 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain, pathw
       <TrackQueueNotice entries={pendingEntries.filter(e => e.resource === 'scholarships' || e.resource === 'deadlines')} status={trackStatus} onRetried={load}/>
 
       {/* ── 1. The framing nobody gives them ───────────────────────────────── */}
-      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.blue,0.07)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.blue,0.22)}`}}>
+      <div style={{...glass({padding:16}),background:`linear-gradient(120deg,${tint(C.blue,0.07)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.blue,0.22)}`}}>
         <SectionTitle icon={Scale} color={C.blueL}>Debt Trajectory by Pathway</SectionTitle>
         <DebtTrajectoryTable audience="student" highlightPathwayKey={pathwayKey}
           defaultExpandedId={financeProfile?.id || null}/>
       </div>
 
       {/* ── 2. Their own numbers ───────────────────────────────────────────── */}
-      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.green,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.green,0.2)}`}}>
+      <div style={{...glass({padding:16}),background:`linear-gradient(120deg,${tint(C.green,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.green,0.2)}`}}>
         <SectionTitle icon={Calculator} color={C.greenL}>What It Would Cost You, Start to Finish</SectionTitle>
         <PathwayCostCalculator accent={C.green} defaultPathwayId={financeProfile?.id || 'md'}/>
       </div>
 
       {/* ── 3. The routes with a deadline in high school ───────────────────── */}
-      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.teal,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.teal,0.2)}`}}>
+      <div style={{...glass({padding:16}),background:`linear-gradient(120deg,${tint(C.teal,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.teal,0.2)}`}}>
         <SectionTitle icon={Shield} color={C.tealL}>Service Commitments & Loan Forgiveness</SectionTitle>
         <ServiceCommitmentPrograms accent={C.teal} pathwayFinanceId={financeProfile?.id || null}/>
       </div>
 
       {/* ── 4. What they can actually win now ──────────────────────────────── */}
-      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.fuchsia,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.fuchsia,0.2)}`}}>
+      <div style={{...glass({padding:16}),background:`linear-gradient(120deg,${tint(C.fuchsia,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.fuchsia,0.2)}`}}>
         <SectionTitle icon={Stethoscope} color={C.fuchsia}>Health-Career Scholarships</SectionTitle>
         <HealthCareerScholarships accent={C.fuchsia} pathwayFinanceId={financeProfile?.id || null}/>
       </div>
@@ -201,18 +201,18 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain, pathw
           scholarship silently never reaches the Deadlines tab or its auto-suggestions. This
           closes that loop by naming the gap and putting the date field right here. */}
       {missingDeadlines.length > 0 && (
-        <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.amber,0.07)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.amber,0.24)}`}}>
+        <div style={{...glass({padding:16}),background:`linear-gradient(120deg,${tint(C.amber,0.07)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.amber,0.24)}`}}>
           <SectionTitle icon={CalendarX} color={C.amberL}>
             {missingDeadlines.length} tracked scholarship{missingDeadlines.length === 1 ? '' : 's'} without a deadline
           </SectionTitle>
-          <p style={{fontSize:12,color:C.t2,lineHeight:1.6,marginBottom:12}}>
+          <p style={{fontSize:12,color:C.t2,lineHeight: 1.55,marginBottom:12}}>
             These are tracked, but they can't count down or show up on your Deadlines tab until they have a real date. Look the current deadline up on the program's official site and add it here — we deliberately don't guess it for you.
           </p>
           <div style={CC({gap:8})}>
             {missingDeadlines.map(s => (
-              <div key={s.id} style={{...glass2({padding:'10px 12px'}),display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+              <div key={s.id} style={{...glass2({padding:'8px 12px'}),display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
                 <span style={{flex:1,minWidth:140,fontSize:12.5,fontWeight:600,color:C.t1}}>{s.name}</span>
-                <input type="date" style={inp({width:'auto',fontSize:12,padding:'6px 10px'})}
+                <input type="date" style={inp({width:'auto',fontSize:12,padding:'4px 8px'})}
                   onChange={e => { if (e.target.value) updateRow(s.id, { deadline: e.target.value }); }}/>
               </div>
             ))}
@@ -228,7 +228,7 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain, pathw
         </div>
       )}
 
-      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.violet,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.2)}`}}>
+      <div style={{...glass({padding:16}),background:`linear-gradient(120deg,${tint(C.violet,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.2)}`}}>
         <SectionTitle icon={SearchIcon} color={C.violetL}>Scholarship Database</SectionTitle>
         <ScholarshipDatabase accent={C.violet} onTrack={trackScholarship} trackedKeys={trackedScholarshipKeys} pendingKeys={pendingScholarshipKeys} askMedabrain={askMedabrain}/>
       </div>
@@ -236,7 +236,7 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain, pathw
       <ScholarshipResearchAdd accent={accent} onTrack={addResearchedScholarship}/>
 
       {!loading && scholarships.length === 0 ? (
-        <div style={glass({padding:30,textAlign:'center'})}>
+        <div style={glass({padding:28,textAlign:'center'})}>
           <div style={{fontSize:14,color:C.t2}}>No scholarships tracked yet.</div>
         </div>
       ) : (
@@ -247,13 +247,13 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain, pathw
             const isOpen = expandedId === s.id;
             return (
               <div key={s.id} style={{...glass2({padding:0,overflow:'hidden'}),borderLeft:`3px solid ${st.color}`,background:`linear-gradient(120deg,${tint(st.color,0.05)},rgba(255,255,255,0.02) 55%)`}}>
-                <div style={{display:'flex',alignItems:'center',gap:14,padding:14,cursor:details?'pointer':'default'}} onClick={()=>details&&setExpandedId(isOpen?null:s.id)}>
-                  <div style={{width:34,height:34,borderRadius:10,background:tint(st.color,0.13),border:`1px solid ${tint(st.color,0.25)}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <div style={{display:'flex',alignItems:'center',gap:12,padding:12,cursor:details?'pointer':'default'}} onClick={()=>details&&setExpandedId(isOpen?null:s.id)}>
+                  <div style={{width:34,height:34,borderRadius:8,background:tint(st.color,0.13),border:`1px solid ${tint(st.color,0.25)}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                     {s.status==='awarded'?<Trophy size={15} color={st.color}/>:<DollarSign size={15} color={st.color}/>}
                   </div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:13,fontWeight:700,color:C.t1}}>{s.name}</div>
-                    <div style={R({gap:8,marginTop:3,flexWrap:'wrap'})}>
+                    <div style={R({gap:8,marginTop:4,flexWrap:'wrap'})}>
                       {s.amount && <span style={{fontSize:11,color:s.status==='awarded'?C.greenL:C.t3,fontWeight:s.status==='awarded'?700:400,fontFamily:C.FM}}>${s.amount.toLocaleString()}</span>}
                       {s.deadline ? <span style={{fontSize:11,color:C.t3}}>Due {new Date(s.deadline+'T00:00:00').toLocaleDateString()}</span>
                         : details?.deadlineText && <span style={{fontSize:11,color:C.t4}}>{details.deadlineText}</span>}
@@ -261,25 +261,25 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain, pathw
                       <span style={pill(tint(st.color,0.13),st.color,{fontSize:9})}>{st.label}</span>
                     </div>
                   </div>
-                  <select style={inp({width:'auto',fontSize:12,padding:'6px 10px'})} value={s.status} onClick={e=>e.stopPropagation()} onChange={e=>updateRow(s.id,{status:e.target.value})}>
+                  <select style={inp({width:'auto',fontSize:12,padding:'4px 8px'})} value={s.status} onClick={e=>e.stopPropagation()} onChange={e=>updateRow(s.id,{status:e.target.value})}>
                     {STATUSES.map(x => <option key={x.id} value={x.id}>{x.label}</option>)}
                   </select>
                   <button style={btnSm(C.roseDim,{color:C.rose})} onClick={e=>{e.stopPropagation();removeRow(s.id);}}><Trash2 size={12}/></button>
                   {details && (isOpen ? <ChevronUp size={15} color={C.t3}/> : <ChevronDown size={15} color={C.t3}/>)}
                 </div>
                 {isOpen && details && (
-                  <div style={{padding:'0 14px 14px',borderTop:`1px solid ${C.b1}`,marginTop:2,paddingTop:12}}>
+                  <div style={{padding:'0px 12px 12px',borderTop:`1px solid ${C.b1}`,marginTop:4,paddingTop:12}}>
                     <div style={CC({gap:8})}>
                       {details.org && <div style={{...R({gap:8}),fontSize:12,color:C.t2}}><Building2 size={12} color={C.t3}/><span><b style={{color:C.t1}}>Organization:</b> {details.org}</span></div>}
-                      {details.eligibility && <div style={{...R({gap:8,alignItems:'flex-start'}),fontSize:12,color:C.t2}}><Users size={12} color={C.t3} style={{marginTop:2}}/><span><b style={{color:C.t1}}>Eligibility:</b> {details.eligibility}</span></div>}
+                      {details.eligibility && <div style={{...R({gap:8,alignItems:'flex-start'}),fontSize:12,color:C.t2}}><Users size={12} color={C.t3} style={{marginTop:4}}/><span><b style={{color:C.t1}}>Eligibility:</b> {details.eligibility}</span></div>}
                       {(details.amountText || details.deadlineText) && (
                         <div style={{display:'flex',gap:16,flexWrap:'wrap'}}>
                           {details.amountText && <div style={{...R({gap:8}),fontSize:12,color:C.t2}}><DollarSign size={12} color={C.t3}/><span><b style={{color:C.t1}}>Typical amount:</b> {details.amountText}</span></div>}
                           {details.deadlineText && <div style={{...R({gap:8}),fontSize:12,color:C.t2}}><CalendarPlus size={12} color={C.t3}/><span><b style={{color:C.t1}}>Typical deadline:</b> {details.deadlineText}</span></div>}
                         </div>
                       )}
-                      {details.description && <div style={{...R({gap:8,alignItems:'flex-start'}),fontSize:12,color:C.t2,lineHeight:1.6}}><FileText size={12} color={C.t3} style={{marginTop:2,flexShrink:0}}/><span>{details.description}</span></div>}
-                      {details.sourceLabel && <div style={{fontSize:10,color:C.t4,marginTop:2}}>{details.sourceLabel==='ai'?'Researched by Medabrain — confirm details on the official site before applying.':'From the MedSchoolPrep scholarship database — confirm details on the official site before applying.'}</div>}
+                      {details.description && <div style={{...R({gap:8,alignItems:'flex-start'}),fontSize:12,color:C.t2,lineHeight:1.6}}><FileText size={12} color={C.t3} style={{marginTop:4,flexShrink:0}}/><span>{details.description}</span></div>}
+                      {details.sourceLabel && <div style={{fontSize:10,color:C.t4,marginTop:4}}>{details.sourceLabel==='ai'?'Researched by Medabrain — confirm details on the official site before applying.':'From the MedSchoolPrep scholarship database — confirm details on the official site before applying.'}</div>}
                     </div>
                   </div>
                 )}
@@ -299,14 +299,14 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain, pathw
       <Disclosure id="aid-fafsa" icon={Landmark} color={C.tealL} title="FAFSA & CSS Profile — the forms"
         sub="The paperwork that decides how much of the above you actually pay. Mostly filled in with a parent, and only urgent in the autumn of senior year.">
         <div style={CC({gap:12})}>
-          <p style={{fontSize:12,color:C.t2,lineHeight:1.65,margin:0}}>
+          <p style={{fontSize:12,color:C.t2,lineHeight: 1.55,margin:0}}>
             FAFSA typically opens October 1 of your senior year — add it to your Deadlines tab so it
             counts down alongside your application deadlines. It is what qualifies you for federal
             loans, work-study and most institutional need-based aid, so skipping it because "we won't
             qualify" is the most common expensive mistake in this whole area: several federal loan
             programs and many college scholarships require it regardless of income.
           </p>
-          <p style={{fontSize:12,color:C.t2,lineHeight:1.65,margin:0}}>
+          <p style={{fontSize:12,color:C.t2,lineHeight: 1.55,margin:0}}>
             The CSS Profile is a separate, more detailed form used mainly by private colleges to
             award their own money. Mark which of your schools require it, and their financial aid
             deadlines, on the College List tab — they show up here.
@@ -314,7 +314,7 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain, pathw
           {aidSchools.length > 0 ? (
             <div style={CC({gap:8})}>
               {aidSchools.map(c => (
-                <div key={c.id} style={{...glass2({padding:'10px 12px'}),display:'flex',alignItems:'center',gap:10}}>
+                <div key={c.id} style={{...glass2({padding:'8px 12px'}),display:'flex',alignItems:'center',gap:8}}>
                   <div style={{flex:1,minWidth:0}}>
                     <span style={{fontSize:13,fontWeight:600,color:C.t1}}>{c.name}</span>
                     {c.css_profile_required && <span style={{marginLeft:8,fontSize:10,color:C.violetL}}>CSS Profile</span>}

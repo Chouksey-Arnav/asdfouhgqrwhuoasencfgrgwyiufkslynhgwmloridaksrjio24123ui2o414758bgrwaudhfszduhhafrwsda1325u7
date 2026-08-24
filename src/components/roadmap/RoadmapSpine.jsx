@@ -295,18 +295,18 @@ export default function RoadmapSpine({
   return (
     <div>
       {/* ── Frame header: where you are, and the controls ── */}
-      <div style={{ ...R({ gap: 10, flexWrap: 'wrap', marginBottom: 10 }) }}>
+      <div style={{ ...R({ gap: 8, flexWrap: 'wrap', marginBottom: 8 }) }}>
         <div style={{ ...R({ gap: 8 }), minWidth: 0 }}>
           <span style={{
-            fontSize: 12.5, fontWeight: 800, color: C.t1, fontFamily: C.FM, letterSpacing: '-.01em',
-            padding: '4px 10px', borderRadius: 8, background: tint(C.sky, 0.1), border: `1px solid ${tint(C.sky, 0.2)}`,
+            fontSize: 12.5, fontWeight: 800, color: C.t1, fontFamily: C.FM, 
+            padding: '4px 8px', borderRadius: 8, background: tint(C.sky, 0.1), border: `1px solid ${tint(C.sky, 0.2)}`,
           }}>{visibleRange}</span>
           <span style={{ fontSize: 11, color: C.t4 }}>
             {markers.length} dated item{markers.length === 1 ? '' : 's'}
           </span>
         </div>
         <span style={{ flex: 1 }} />
-        <div style={{ ...R({ gap: 6 }) }}>
+        <div style={{ ...R({ gap: 4 }) }}>
           <IconBtn label="Scroll back" onClick={() => scrollToX(view.left - view.width * 0.8, { smooth: !reducedMotion })} disabled={!canLeft}>
             <ChevronLeft size={14} />
           </IconBtn>
@@ -357,7 +357,7 @@ export default function RoadmapSpine({
             overscrollBehaviorX: 'contain',
             cursor: dragging ? 'grabbing' : 'grab',
             userSelect: dragging ? 'none' : 'auto',
-            borderRadius: 14,
+            borderRadius: 12,
             outlineOffset: 3,
           }}
         >
@@ -491,12 +491,12 @@ export default function RoadmapSpine({
               >
                 <span style={{
                   display: 'block', fontSize: 9, fontWeight: 800, color: C.t4,
-                  letterSpacing: '.12em', textTransform: 'uppercase', whiteSpace: 'nowrap',
+                  letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', whiteSpace: 'nowrap',
                   textOverflow: 'ellipsis', overflow: 'hidden',
                 }}>{s.label}</span>
                 {s.theme && s.theme !== s.label && (
                   <span style={{
-                    display: 'block', fontSize: 11, fontWeight: 700, color: C.t3, marginTop: 2,
+                    display: 'block', fontSize: 11, fontWeight: 700, color: C.t3, marginTop: 4,
                     whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden',
                   }}>{s.theme}</span>
                 )}
@@ -585,15 +585,15 @@ export default function RoadmapSpine({
       <div style={{ ...R({ gap: 16, flexWrap: 'wrap', marginTop: 12 }) }}>
         <LegendDot filled label="Confirmed date" />
         <LegendDot label="Approximate — exact date varies" />
-        <span style={{ ...R({ gap: 6 }) }}>
-          <span style={{ width: 14, height: 8, borderRadius: 3, background: tint(C.amber, 0.5) }} />
+        <span style={{ ...R({ gap: 4 }) }}>
+          <span style={{ width: 14, height: 8, borderRadius: 4, background: tint(C.amber, 0.5) }} />
           <span style={{ fontSize: 10.5, color: C.t4 }}>Heavier stretch</span>
         </span>
-        <span style={{ ...R({ gap: 6 }) }}>
+        <span style={{ ...R({ gap: 4 }) }}>
           <CheckCircle2 size={11} color={C.green} />
           <span style={{ fontSize: 10.5, color: C.t4 }}>Done</span>
         </span>
-        <span style={{ ...R({ gap: 6 }) }}>
+        <span style={{ ...R({ gap: 4 }) }}>
           {isMobile ? <Hand size={11} color={C.t4} /> : <MousePointer2 size={11} color={C.t4} />}
           <span style={{ fontSize: 10.5, color: C.t4 }}>
             {isMobile ? 'Swipe the line to move through your year' : 'Drag the line to move through your year'}
@@ -618,7 +618,7 @@ function MarkerCard({ marker, pinned, onOpen, onClear, isMobile, markerCount }) 
       transition: 'border-color .18s, background .18s',
     }}>
       {empty ? (
-        <div style={{ fontSize: 12, color: C.t4, lineHeight: 1.7 }}>
+        <div style={{ fontSize: 12, color: C.t4, lineHeight: 1.55 }}>
           {markerCount
             ? <>Tap or hover any marker on the line to see what it is, when it runs and how urgent it is right now. Nothing here moves your roadmap — it is a reading surface.</>
             : <>Nothing on your roadmap carries a date yet. Items waiting on a date you have to look up appear in <b style={{ color: C.t3 }}>Everything</b>.</>}
@@ -629,15 +629,15 @@ function MarkerCard({ marker, pinned, onOpen, onClear, isMobile, markerCount }) 
             <div style={{ fontSize: isMobile ? 13.5 : 14.5, fontWeight: 800, color: C.t1, lineHeight: 1.35 }}>
               {marker.title}
             </div>
-            {marker.item.org && <div style={{ fontSize: 11, color: C.t4, marginTop: 2 }}>{marker.item.org}</div>}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, alignItems: 'center', marginTop: 9 }}>
+            {marker.item.org && <div style={{ fontSize: 11, color: C.t4, marginTop: 4 }}>{marker.item.org}</div>}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginTop: 8 }}>
               <TrackChip track={marker.item.track} />
               <UrgencyChip urgency={marker.urgency} />
               {/* The ONLY sanctioned way a date reaches this screen. */}
               <ItemDate item={marker.item} size={11.5} />
             </div>
           </div>
-          <div style={{ ...R({ gap: 7 }) }}>
+          <div style={{ ...R({ gap: 8 }) }}>
             <button type="button" onClick={onOpen} style={chipBtn(color)}>Open this</button>
             {pinned && <button type="button" onClick={onClear} style={chipBtn(C.t3)}>Clear</button>}
           </div>
@@ -690,7 +690,7 @@ function Scrubber({ markers, width, view, todayX, onScrub, isMobile }) {
       role="presentation"
       data-roadmap-scrubber=""
       style={{
-        position: 'relative', height: H, marginTop: 10, borderRadius: 9,
+        position: 'relative', height: H, marginTop: 8, borderRadius: 8,
         background: C.surf2, border: `1px solid ${C.b1}`, overflow: 'hidden',
         cursor: covered ? 'default' : grabbing ? 'grabbing' : 'pointer',
         touchAction: 'none', opacity: covered ? 0.45 : 1,
@@ -700,20 +700,20 @@ function Scrubber({ markers, width, view, todayX, onScrub, isMobile }) {
       {markers.map((mk) => (
         <span key={`s-${mk.id}`} style={{
           position: 'absolute', left: `${(mk.x / width) * 100}%`, top: H / 2 - 5,
-          width: 2, height: 10, borderRadius: 1, transform: 'translateX(-1px)',
+          width: 2, height: 10, borderRadius: 4, transform: 'translateX(-1px)',
           background: mk.done ? tint(C.green, 0.7) : tint(mk.color, 0.85),
         }} />
       ))}
       {todayX != null && (
         <span style={{
           position: 'absolute', left: `${(todayX / width) * 100}%`, top: 4, bottom: 4,
-          width: 2, background: C.green, transform: 'translateX(-1px)', borderRadius: 1,
+          width: 2, background: C.green, transform: 'translateX(-1px)', borderRadius: 4,
         }} />
       )}
       {/* The frame: where the rail above is currently looking. */}
       <span style={{
         position: 'absolute', top: 2, bottom: 2, left: frameLeft, width: frameWidth,
-        borderRadius: 7, border: `1.5px solid ${tint(C.violet, 0.75)}`,
+        borderRadius: 8, border: `1.5px solid ${tint(C.violet, 0.75)}`,
         background: tint(C.violet, 0.13), pointerEvents: 'none',
         transition: grabbing ? 'none' : 'left .06s linear, width .12s ease',
       }} />
@@ -748,15 +748,15 @@ function IconBtn({ children, label, onClick, disabled }) {
 }
 
 const chipBtn = (color) => ({
-  display: 'inline-flex', alignItems: 'center', gap: 5,
+  display: 'inline-flex', alignItems: 'center', gap: 4,
   background: tint(color, 0.14), border: `1px solid ${tint(color, 0.32)}`,
-  color, borderRadius: 8, padding: '6px 11px', fontSize: 11.5, fontWeight: 700,
+  color, borderRadius: 8, padding: '4px 12px', fontSize: 11.5, fontWeight: 700,
   fontFamily: C.FB, cursor: 'pointer', whiteSpace: 'nowrap',
 });
 
 function LegendDot({ filled = false, label }) {
   return (
-    <span style={{ ...R({ gap: 6 }) }}>
+    <span style={{ ...R({ gap: 4 }) }}>
       <span style={{
         width: 9, height: 9, borderRadius: '50%',
         background: filled ? C.violet : 'transparent',

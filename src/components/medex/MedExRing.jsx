@@ -178,12 +178,12 @@ export default function MedExRing({
       }}>
         <CountUp value={Math.round(score)} animate={shouldAnimate} style={{
           fontSize: size * 0.26, fontWeight: 900, color: C.t1, fontFamily: C.FD,
-          lineHeight: 1, letterSpacing: '-.03em',
+          lineHeight: 1, letterSpacing: 'calc(-0.03em + var(--msp-letter-spacing))',
         }} />
         {band && (
           <div style={{
             marginTop: size * 0.045, fontSize: Math.max(9.5, size * 0.058), fontWeight: 700,
-            color, letterSpacing: '.1em', textTransform: 'uppercase', textAlign: 'center',
+            color, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', textAlign: 'center',
           }}>{band.label}</div>
         )}
         {caption && (

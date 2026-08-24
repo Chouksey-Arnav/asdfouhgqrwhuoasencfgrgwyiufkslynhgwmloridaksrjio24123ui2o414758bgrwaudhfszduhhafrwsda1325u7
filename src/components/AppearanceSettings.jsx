@@ -23,7 +23,7 @@ import {
   RotateCcw, Check, Accessibility, AlignLeft, Sparkles, Info, SunMoon,
   MoonStar, CloudSun,
 } from 'lucide-react';
-import { C, DARK, LIGHT, BALANCED, BALANCED_LIGHT, glass, glass2, btn, btnG, R, CC, pill, tint, lbl } from '../lib/theme';
+import { C, DARK, LIGHT, BALANCED, BALANCED_LIGHT, glass, glass2, btn, btnG, R, CC, pill, tint, lbl, CONTROL_TRANSITION } from '../lib/theme';
 import { DEFAULTS, FONT_SCALE_STEPS, systemReducedMotion, motionReduced } from '../lib/a11y';
 
 // Which DEFAULTS keys belong to which card, so each card can show its own
@@ -42,9 +42,9 @@ function Toggle({ id, label, description, checked, onChange, accent = C.blue, ba
   return (
     <div style={{ ...R({ justifyContent: 'space-between', gap: 16, alignItems: 'flex-start' }) }}>
       <label htmlFor={id} style={{ cursor: 'pointer', minWidth: 0, flex: 1 }}>
-        <div style={{ ...R({ gap: 7 }), marginBottom: 2 }}>
+        <div style={{ ...R({ gap: 8 }), marginBottom: 4 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: C.t1, fontFamily: C.FD }}>{label}</span>
-          {badge && <span style={pill(tint(accent, 0.14), accent, { fontSize: 9, padding: '1px 7px' })}>{badge}</span>}
+          {badge && <span style={pill(tint(accent, 0.14), accent, { fontSize: 9, padding: '4px 8px' })}>{badge}</span>}
         </div>
         <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55 }}>{description}</div>
       </label>
@@ -70,8 +70,11 @@ function Toggle({ id, label, description, checked, onChange, accent = C.blue, ba
             width: 18, height: 18, borderRadius: '50%',
             background: checked ? '#fff' : C.s1,
             border: checked ? 'none' : `1px solid ${C.b2}`,
-            position: 'absolute', top: 3, left: checked ? 23 : 3,
-            transition: 'left .2s', boxShadow: C.shadowSm,
+            position: 'absolute', top: 3, left: 3,
+            // translateX rather than `left`: the knob is the one thing on the
+            // screen that moves on every settings tap, and `left` relayouts.
+            transform: `translateX(${checked ? 20 : 0}px)`,
+            transition: 'transform 140ms cubic-bezier(.4,0,.2,1)', boxShadow: C.shadowSm,
           }} />
         </div>
       </div>
@@ -82,9 +85,9 @@ function Toggle({ id, label, description, checked, onChange, accent = C.blue, ba
 function Segmented({ label, description, value, options, onChange, accent = C.blue }) {
   return (
     <div>
-      <div style={{ fontSize: 13, fontWeight: 600, color: C.t1, fontFamily: C.FD, marginBottom: 2 }}>{label}</div>
-      {description && <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginBottom: 9 }}>{description}</div>}
-      <div role="radiogroup" aria-label={label} style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 3, padding: 3, borderRadius: 10, background: C.s2, border: `1px solid ${C.b1}` }}>
+      <div style={{ fontSize: 13, fontWeight: 600, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>{label}</div>
+      {description && <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginBottom: 8 }}>{description}</div>}
+      <div role="radiogroup" aria-label={label} style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 4, padding: 4, borderRadius: 8, background: C.s2, border: `1px solid ${C.b1}` }}>
         {options.map(o => {
           const on = value === o.value;
           return (
@@ -92,10 +95,10 @@ function Segmented({ label, description, value, options, onChange, accent = C.bl
               key={String(o.value)} role="radio" aria-checked={on}
               onClick={() => onChange(o.value)}
               style={{
-                padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                padding: '4px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
                 background: on ? tint(accent, 0.18) : 'transparent',
                 color: on ? accent : C.t3, fontSize: 12, fontWeight: on ? 700 : 600, fontFamily: C.FB,
-                transition: 'all .15s',
+                transition: CONTROL_TRANSITION,
               }}
             >
               {o.label}
@@ -111,11 +114,11 @@ function Slider({ label, description, value, min, max, step, onChange, format, a
   const id = `msp-slider-${label.replace(/\s+/g, '-').toLowerCase()}`;
   return (
     <div>
-      <div style={R({ justifyContent: 'space-between', marginBottom: 2 })}>
+      <div style={R({ justifyContent: 'space-between', marginBottom: 4 })}>
         <label htmlFor={id} style={{ fontSize: 13, fontWeight: 600, color: C.t1, fontFamily: C.FD }}>{label}</label>
         <span style={{ fontSize: 11, color: accent, fontFamily: C.FM, fontWeight: 700 }}>{format(value)}</span>
       </div>
-      {description && <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginBottom: 9 }}>{description}</div>}
+      {description && <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginBottom: 8 }}>{description}</div>}
       <input
         id={id} type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(Number(e.target.value))}
@@ -128,13 +131,13 @@ function Slider({ label, description, value, min, max, step, onChange, format, a
 const Card = React.forwardRef(function Card({ icon: Icon, title, subtitle, hue, changed, onReset, children }, ref) {
   return (
     <div ref={ref} style={{ ...glass({ padding: 20 }), scrollMarginTop: 84 }}>
-      <div style={{ ...R({ gap: 11, alignItems: 'flex-start' }), marginBottom: 16 }}>
-        <div style={{ width: 30, height: 30, borderRadius: 9, background: tint(hue, 0.14), border: `1px solid ${tint(hue, 0.28)}`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+      <div style={{ ...R({ gap: 12, alignItems: 'flex-start' }), marginBottom: 16 }}>
+        <div style={{ width: 30, height: 30, borderRadius: 8, background: tint(hue, 0.14), border: `1px solid ${tint(hue, 0.28)}`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
           <Icon size={15} color={hue} />
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={R({ gap: 8 })}>
-            <span style={{ fontSize: 14.5, fontWeight: 700, color: C.t1, fontFamily: C.FD, letterSpacing: '-.01em' }}>{title}</span>
+            <span style={{ fontSize: 14.5, fontWeight: 700, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.01px + var(--msp-letter-spacing))' }}>{title}</span>
             {changed && (
               <span
                 title="Customized from default"
@@ -142,11 +145,11 @@ const Card = React.forwardRef(function Card({ icon: Icon, title, subtitle, hue, 
               />
             )}
           </div>
-          {subtitle && <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginTop: 2 }}>{subtitle}</div>}
+          {subtitle && <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginTop: 4 }}>{subtitle}</div>}
         </div>
         {changed && onReset && <CardResetButton hue={hue} onClick={onReset} />}
       </div>
-      <div style={CC({ gap: 18 })}>{children}</div>
+      <div style={CC({ gap: 16 })}>{children}</div>
     </div>
   );
 });
@@ -158,21 +161,21 @@ const Card = React.forwardRef(function Card({ icon: Icon, title, subtitle, hue, 
 function ThemePreview({ palette }) {
   return (
     <div style={{
-      height: 66, borderRadius: 10, overflow: 'hidden', border: `1px solid ${palette.b2}`,
+      height: 66, borderRadius: 8, overflow: 'hidden', border: `1px solid ${palette.b2}`,
       background: palette.bg, display: 'flex', pointerEvents: 'none',
     }}>
-      <div style={{ width: 26, background: palette.s0, borderRight: `1px solid ${palette.b1}`, padding: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <div style={{ height: 5, borderRadius: 2, background: palette.blue }} />
-        <div style={{ height: 5, borderRadius: 2, background: palette.b3 }} />
-        <div style={{ height: 5, borderRadius: 2, background: palette.b2 }} />
+      <div style={{ width: 26, background: palette.s0, borderRight: `1px solid ${palette.b1}`, padding: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div style={{ height: 5, borderRadius: 4, background: palette.blue }} />
+        <div style={{ height: 5, borderRadius: 4, background: palette.b3 }} />
+        <div style={{ height: 5, borderRadius: 4, background: palette.b2 }} />
       </div>
-      <div style={{ flex: 1, padding: 7, display: 'flex', flexDirection: 'column', gap: 5 }}>
-        <div style={{ height: 7, width: '58%', borderRadius: 3, background: palette.t1 }} />
-        <div style={{ height: 5, width: '82%', borderRadius: 3, background: palette.t3 }} />
-        <div style={{ flex: 1, borderRadius: 6, background: palette.s2, border: `1px solid ${palette.b1}`, display: 'flex', alignItems: 'center', padding: '0 6px', gap: 4 }}>
-          <div style={{ width: 12, height: 5, borderRadius: 3, background: palette.violet }} />
-          <div style={{ width: 18, height: 5, borderRadius: 3, background: palette.green }} />
-          <div style={{ width: 10, height: 5, borderRadius: 3, background: palette.amber }} />
+      <div style={{ flex: 1, padding: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div style={{ height: 7, width: '58%', borderRadius: 4, background: palette.t1 }} />
+        <div style={{ height: 5, width: '82%', borderRadius: 4, background: palette.t3 }} />
+        <div style={{ flex: 1, borderRadius: 4, background: palette.s2, border: `1px solid ${palette.b1}`, display: 'flex', alignItems: 'center', padding: '0px 4px', gap: 4 }}>
+          <div style={{ width: 12, height: 5, borderRadius: 4, background: palette.violet }} />
+          <div style={{ width: 18, height: 5, borderRadius: 4, background: palette.green }} />
+          <div style={{ width: 10, height: 5, borderRadius: 4, background: palette.amber }} />
         </div>
       </div>
     </div>
@@ -218,7 +221,7 @@ function CardResetButton({ hue, onClick }) {
     <button
       onClick={onClick}
       style={{
-        display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 7,
+        display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 8,
         border: `1px solid ${tint(hue, 0.3)}`, background: 'transparent', color: hue,
         fontSize: 10.5, fontWeight: 700, fontFamily: C.FB, cursor: 'pointer', flexShrink: 0,
       }}
@@ -264,10 +267,10 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
 
       {/* ── Intro + quick jump ───────────────────────────────────────────── */}
       <div>
-        <p style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.6, marginBottom: 12 }}>
+        <p style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.55, marginBottom: 12 }}>
           Every control below applies immediately and stays saved on this device. Jump to a section:
         </p>
-        <div role="tablist" aria-label="Jump to accessibility section" style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+        <div role="tablist" aria-label="Jump to accessibility section" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {navSections().map(sec => {
             const Icon = sec.icon;
             const on = cardChanged(sec.id);
@@ -275,7 +278,7 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
               <button
                 key={sec.id} type="button" onClick={() => jumpTo(sec.id)}
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8,
+                  display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 8,
                   border: `1px solid ${on ? tint(sec.hue, 0.35) : C.b1}`, background: on ? tint(sec.hue, 0.1) : C.s2,
                   color: on ? sec.hue : C.t2, fontSize: 11.5, fontWeight: 600, fontFamily: C.FB, cursor: 'pointer',
                 }}
@@ -311,7 +314,7 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
                 onClick={() => set({ themeMode: choice.value })}
                 aria-pressed={on}
                 style={{
-                  textAlign: 'left', padding: 12, borderRadius: 14, cursor: 'pointer',
+                  textAlign: 'left', padding: 12, borderRadius: 12, cursor: 'pointer',
                   border: `2px solid ${on ? accent : C.b1}`,
                   background: on ? tint(accent, 0.07) : C.surf2,
                   transition: 'border-color .18s, background .18s',
@@ -319,19 +322,19 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
                 }}
               >
                 <ThemePreview palette={palette} />
-                <div style={{ ...R({ justifyContent: 'space-between' }), marginTop: 10 }}>
-                  <div style={R({ gap: 6 })}>
+                <div style={{ ...R({ justifyContent: 'space-between' }), marginTop: 8 }}>
+                  <div style={R({ gap: 4 })}>
                     <Icon size={13} color={on ? accent : C.t3} />
                     <span style={{ fontSize: 13, fontWeight: 700, color: on ? C.t1 : C.t2 }}>{choice.label}</span>
                     {choice.badge && (
-                      <span style={pill(tint(accent, 0.13), accent, { fontSize: 8.5, padding: '1px 6px', letterSpacing: '.06em' })}>
+                      <span style={pill(tint(accent, 0.13), accent, { fontSize: 8.5, padding: '4px 4px', letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' })}>
                         {choice.badge}
                       </span>
                     )}
                   </div>
                   {on && <Check size={14} color={accent} />}
                 </div>
-                <div style={{ fontSize: 11, color: C.t3, marginTop: 3, lineHeight: 1.45 }}>{choice.note}</div>
+                <div style={{ fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.45 }}>{choice.note}</div>
               </button>
             );
           })}
@@ -394,10 +397,10 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
         <div>
           <span style={lbl()}>Live preview</span>
           <div className="msp-prose" style={{ ...glass2({ padding: 16 }), background: C.s2 }}>
-            <div style={{ fontSize: 15, fontWeight: 800, fontFamily: C.FD, color: C.t1, marginBottom: 6, letterSpacing: '-.02em' }}>
+            <div style={{ fontSize: 15, fontWeight: 800, fontFamily: C.FD, color: C.t1, marginBottom: 4, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))' }}>
               The passage below is set at your current settings
             </div>
-            <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.75 }}>
+            <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.55 }}>
               A researcher studying sleep in adolescents found that students who kept a consistent bedtime scored
               higher on tests of working memory than those whose sleep varied night to night — even when total
               hours slept were the same.
@@ -405,8 +408,8 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
             <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 12 }}>
               <span style={pill(tint(C.violet, 0.14), C.violetL)}>A chip</span>
               <span style={pill(tint(C.green, 0.14), C.greenL)}>Correct</span>
-              <button style={btn(C.blueGrad, { padding: '7px 16px', fontSize: 12 })}>A button</button>
-              <button style={btnG({ padding: '7px 16px', fontSize: 12 })}>Secondary</button>
+              <button style={btn(C.blueGrad, { padding: '8px 16px', fontSize: 12 })}>A button</button>
+              <button style={btnG({ padding: '8px 16px', fontSize: 12 })}>Secondary</button>
             </div>
           </div>
         </div>
@@ -499,21 +502,21 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
       </Card>
 
       {/* ── Reset ─────────────────────────────────────────────────────────── */}
-      <div style={{ ...glass({ padding: 18 }), ...R({ justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }) }}>
+      <div style={{ ...glass({ padding: 16 }), ...R({ justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }) }}>
         <div style={R({ gap: 12, alignItems: 'flex-start' })}>
-          <div style={{ width: 30, height: 30, borderRadius: 9, background: tint(C.t3, 0.14), border: `1px solid ${tint(C.t3, 0.28)}`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+          <div style={{ width: 30, height: 30, borderRadius: 8, background: tint(C.t3, 0.14), border: `1px solid ${tint(C.t3, 0.28)}`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
             <Accessibility size={15} color={C.t2} />
           </div>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>
               {changedCount === 0 ? 'Everything is at its default' : `${changedCount} setting${changedCount === 1 ? '' : 's'} changed from default`}
             </div>
-            <div style={{ fontSize: 11.5, color: C.t3, marginTop: 2, lineHeight: 1.5 }}>These apply on this device and stay put between sessions. Your theme choice is left as-is — reset just one card with its own "Reset section" button, or clear everything else here.</div>
+            <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>These apply on this device and stay put between sessions. Your theme choice is left as-is — reset just one card with its own "Reset section" button, or clear everything else here.</div>
           </div>
         </div>
         <button
           onClick={reset} disabled={changedCount === 0}
-          style={btnG({ fontSize: 12.5, padding: '9px 18px', opacity: changedCount === 0 ? 0.4 : 1, cursor: changedCount === 0 ? 'default' : 'pointer', flexShrink: 0 })}
+          style={btnG({ fontSize: 12.5, padding: '8px 16px', opacity: changedCount === 0 ? 0.4 : 1, cursor: changedCount === 0 ? 'default' : 'pointer', flexShrink: 0 })}
         >
           {justReset ? <><Check size={13} /> Reset</> : <><RotateCcw size={13} /> Reset everything</>}
         </button>

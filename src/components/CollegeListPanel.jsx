@@ -276,7 +276,7 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
   }, [recBrainCacheKey]);
 
   return (
-    <div style={CC({gap: 22})}>
+    <div style={CC({gap: 20})}>
       <PanelHero tourTag="portfolio-deep-colleges" icon={GraduationCap} color={accent} color2={C.blue} m={isMobile}
         eyebrow="College List" title="Where you're going to apply"
         sub="Every school you’re considering, with its deadlines and checklist."
@@ -304,7 +304,7 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
           analysis about a list that didn't exist yet. It leads now. */}
       <div style={{...glass({padding:isMobile?15:18}),background:`linear-gradient(120deg,${tint(accent,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(accent,0.2)}`}}>
         <SectionTitle icon={Plus} color={accent}>Add a school</SectionTitle>
-        <div style={R({gap:10,flexWrap:'wrap'})}>
+        <div style={R({gap:8,flexWrap:'wrap'})}>
           <CollegeAutocomplete
             value={newName}
             onChange={setNewName}
@@ -324,7 +324,7 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
           </select>
           <button style={btn(accent!==C.blue?accent:C.blueGrad)} onClick={addCollege}><Plus size={14}/>Add</button>
         </div>
-        <div style={{...CC({gap:7}),marginTop:11}}>
+        <div style={{...CC({gap:8}),marginTop:12}}>
           {hintSat
             ? <HelpNote>Pick a school from the dropdown and we'll guess Reach, Target or Safety for you by comparing its typical SAT/ACT against your {scores.primaryTest === 'ACT' && scores.act != null ? `ACT ${scores.act} (about SAT ${hintSat})` : `SAT ${hintSat}`}. Change it whenever you want.</HelpNote>
             : <HelpNote>Not sure whether a school is a reach or a safety? Add a GPA term in Activities &amp; Résumé and we'll work it out from your grades.</HelpNote>}
@@ -350,13 +350,13 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
           : `We'll match you against ${SCHOOL_DATA.length} U.S. schools once you've added a GPA term.`}>
       <div>
         {!scores.hasScore ? (
-          <div style={{fontSize:12.5,color:C.t3,lineHeight:1.6}}>
+          <div style={{fontSize:12.5,color:C.t3,lineHeight: 1.55}}>
             No test score on file. Add a GPA term in Activities &amp; Résumé and we'll compare your grades against
             all {SCHOOL_DATA.length} U.S. schools we track, then suggest a mix of reach, target and safety schools right here.
           </div>
         ) : (
           <>
-            <div style={{...R({gap:8,flexWrap:'wrap',marginBottom:14})}}>
+            <div style={{...R({gap:8,flexWrap:'wrap',marginBottom:12})}}>
               {scores.sat != null && (
                 <span style={pill(`${C.blue}18`, C.blue)}>Your SAT {scores.sat}</span>
               )}
@@ -371,7 +371,7 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
               </span>
             </div>
 
-            <div style={{marginBottom:14}}>
+            <div style={{marginBottom:12}}>
               <HelpNote>Every suggestion shows the school's own SAT and ACT range next to yours, so you can see why we called it a reach or a safety. “Add” puts it on your list already filed; “Pass” hides it.</HelpNote>
             </div>
 
@@ -379,13 +379,13 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
                 list is missing. These are derived from the data, not from the model, so they
                 stay correct even when Meta Brain is unreachable. */}
             {insights.length > 0 && (
-              <div style={{...CC({gap:7}),marginBottom:16}}>
+              <div style={{...CC({gap:8}),marginBottom:16}}>
                 {insights.map((ins, i) => {
                   const col = ins.tone === 'good' ? C.green : ins.tone === 'warn' ? C.amber : C.blue;
                   const Icon = ins.tone === 'good' ? CheckCircle2 : ins.tone === 'warn' ? AlertTriangle : Lightbulb;
                   return (
-                    <div key={i} style={{...R({gap:9,alignItems:'flex-start',padding:'9px 12px'}),borderRadius:10,background:tint(col,0.06),border:`1px solid ${tint(col,0.16)}`}}>
-                      <Icon size={13} color={col} style={{flexShrink:0,marginTop:2}}/>
+                    <div key={i} style={{...R({gap:8,alignItems:'flex-start',padding:'8px 12px'}),borderRadius:8,background:tint(col,0.06),border:`1px solid ${tint(col,0.16)}`}}>
+                      <Icon size={13} color={col} style={{flexShrink:0,marginTop:4}}/>
                       <span style={{fontSize:12,color:C.t2,lineHeight:1.55}}>{ins.text}</span>
                     </div>
                   );
@@ -394,10 +394,10 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
             )}
 
             {recBrain && (
-              <div style={{...glass2({padding:14}),marginBottom:16,background:`linear-gradient(120deg,${tint(C.violet,0.08)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.25)}`}}>
+              <div style={{...glass2({padding:12}),marginBottom:16,background:`linear-gradient(120deg,${tint(C.violet,0.08)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.25)}`}}>
                 <div style={R({gap:8,marginBottom:recBrain.loading?0:8})}>
                   <Sparkles size={13} color={C.violetL}/>
-                  <span style={{fontSize:11,fontWeight:700,color:C.violetL,textTransform:'uppercase',letterSpacing:'.06em'}}>Meta Brain on your matches</span>
+                  <span style={{fontSize:11,fontWeight:700,color:C.violetL, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>Meta Brain on your matches</span>
                 </div>
                 {recBrain.loading && <div style={R({gap:8,color:C.t3,fontSize:12})}><Loader2 size={13} className="spin"/>Reading your scores against these schools…</div>}
                 {recBrain.error && <div style={{fontSize:12,color:C.t3}}>Couldn't reach Meta Brain right now — the matches below are still scored from your real SAT/ACT.</div>}
@@ -409,17 +409,17 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
               <div style={R({gap:8,fontSize:12.5,color:C.t3})}>
                 <Info size={13}/>You've already added every school we'd match to your score right now.
                 {dismissedRecs.length > 0 && (
-                  <button style={btnSm(C.s4,{marginLeft:2})} onClick={()=>setDismissedRecs([])}><RefreshCw size={11}/>Show passed-on schools</button>
+                  <button style={btnSm(C.s4,{marginLeft:4})} onClick={()=>setDismissedRecs([])}><RefreshCw size={11}/>Show passed-on schools</button>
                 )}
               </div>
             ) : (
-              <div style={CC({gap:9})}>
+              <div style={CC({gap:8})}>
                 {recommendations.map(rec => {
                   const cat = CATEGORIES.find(c => c.id === rec.category) || CATEGORIES[1];
                   const busy = addingRec === rec.name;
                   return (
-                    <div key={rec.name} style={{...glass2({padding:13}),borderLeft:`3px solid ${cat.color}`,background:`linear-gradient(120deg,${tint(cat.color,0.05)},rgba(255,255,255,0.02) 50%)`}}>
-                      <div style={R({gap:10,flexWrap:'wrap',alignItems:'flex-start'})}>
+                    <div key={rec.name} style={{...glass2({padding:12}),borderLeft:`3px solid ${cat.color}`,background:`linear-gradient(120deg,${tint(cat.color,0.05)},rgba(255,255,255,0.02) 50%)`}}>
+                      <div style={R({gap:8,flexWrap:'wrap',alignItems:'flex-start'})}>
                         <div style={{flex:1,minWidth:180}}>
                           <div style={R({gap:8,flexWrap:'wrap'})}>
                             <span style={{fontSize:13.5,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{rec.name}</span>
@@ -427,13 +427,13 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
                             <span style={pill(`${C.violet}14`, C.violetL)}>{rec.fit}% fit</span>
                             {rec.school.bsmd && <span style={pill(`${C.green}14`, C.green)}>BS/MD</span>}
                           </div>
-                          <div style={{fontSize:11,color:C.t3,marginTop:5,fontFamily:C.FM}}>
+                          <div style={{fontSize:11,color:C.t3,marginTop:4,fontFamily:C.FM}}>
                             {rec.school.state} · {rec.school.type} · SAT {rec.school.sat} · ACT {rec.school.act} · {rec.school.accept}% admit
                           </div>
-                          <div style={{fontSize:11.5,color:C.t3,marginTop:6,lineHeight:1.55}}>{rec.reason}</div>
+                          <div style={{fontSize:11.5,color:C.t3,marginTop:4,lineHeight:1.55}}>{rec.reason}</div>
                         </div>
-                        <div style={R({gap:6,flexShrink:0})}>
-                          <button style={btn(accent!==C.blue?accent:C.blueGrad,{fontSize:12,padding:'7px 12px'})} disabled={busy} onClick={()=>addRecommendation(rec)}>
+                        <div style={R({gap:4,flexShrink:0})}>
+                          <button style={btn(accent!==C.blue?accent:C.blueGrad,{fontSize:12,padding:'8px 12px'})} disabled={busy} onClick={()=>addRecommendation(rec)}>
                             {busy ? <Loader2 size={13} className="spin"/> : <Plus size={13}/>}Add
                           </button>
                           <button style={btnSm(C.s4)} title="Not interested" onClick={()=>setDismissedRecs(prev=>[...prev, rec.name])}>Pass</button>
@@ -452,14 +452,14 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
       {loading ? (
         <div style={{fontSize:13,color:C.t3}}>Loading…</div>
       ) : colleges.length === 0 ? (
-        <div style={glass({padding:30,textAlign:'center'})}>
-          <div style={{width:48,height:48,borderRadius:14,background:tint(accent,0.12),border:`1px solid ${tint(accent,0.28)}`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px'}}>
+        <div style={glass({padding:28,textAlign:'center'})}>
+          <div style={{width:48,height:48,borderRadius:12,background:tint(accent,0.12),border:`1px solid ${tint(accent,0.28)}`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px'}}>
             <School size={22} color={accent}/>
           </div>
           <div style={{fontSize:14,color:C.t2}}>No schools on your list yet — add one above, or add one of the schools we've matched to your scores.</div>
         </div>
       ) : (
-        <div style={CC({gap:10})}>
+        <div style={CC({gap:8})}>
           <div style={R({gap:8,flexWrap:'wrap'})}>
             <School size={14} color={accent}/>
             <span style={{fontSize:13.5,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Your list</span>
@@ -478,7 +478,7 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
             const suggested = stats && scores.hasScore ? categorizeSchool(stats, scores.effectiveSat) : null;
             return (
               <div key={college.id} style={{...glass2({padding:0,overflow:'hidden'}),borderLeft:`3px solid ${cat.color}`,background:`linear-gradient(120deg,${tint(cat.color,0.05)},rgba(255,255,255,0.02) 50%)`}}>
-                <div style={{...R({gap:12,padding:14,cursor:'pointer'})}} onClick={()=>setExpanded(isOpen?null:college.id)}>
+                <div style={{...R({gap:12,padding:12,cursor:'pointer'})}} onClick={()=>setExpanded(isOpen?null:college.id)}>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={R({gap:8})}>
                       <span style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{college.name}</span>
@@ -500,14 +500,14 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
                     <div style={{fontSize:11,color:C.t3,marginTop:4,display:'flex',alignItems:'center',gap:8}}>
                       {items.length ? `${doneCount}/${items.length} checklist items` : 'No checklist yet'}
                       {items.length > 0 && (
-                        <span style={{flex:'0 1 90px',height:4,background:'rgba(255,255,255,0.06)',borderRadius:3,overflow:'hidden',display:'inline-block'}}>
-                          <span style={{display:'block',height:'100%',width:`${checklistPct}%`,background:checklistPct===100?C.green:cat.color,borderRadius:3}}/>
+                        <span style={{flex:'0 1 90px',height:4,background:'rgba(255,255,255,0.06)',borderRadius:4,overflow:'hidden',display:'inline-block'}}>
+                          <span style={{display:'block',height:'100%',width:`${checklistPct}%`,background:checklistPct===100?C.green:cat.color,borderRadius:4}}/>
                         </span>
                       )}
                       {college.css_profile_required && <span style={{color:C.violetL}}>· CSS Profile required</span>}
                     </div>
                   </div>
-                  <select style={inp({width:'auto',fontSize:12,padding:'6px 10px'})} value={college.status} onClick={e=>e.stopPropagation()} onChange={e=>updateCollege(college.id, { status: e.target.value })}>
+                  <select style={inp({width:'auto',fontSize:12,padding:'4px 8px'})} value={college.status} onClick={e=>e.stopPropagation()} onChange={e=>updateCollege(college.id, { status: e.target.value })}>
                     {STATUSES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
                   </select>
                   <button style={btnSm(C.roseDim,{color:C.rose})} onClick={e=>{e.stopPropagation();removeCollege(college.id);}}><Trash2 size={12}/></button>
@@ -516,7 +516,7 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
                 <AnimatePresence>
                   {isOpen && (
                     <motion.div initial={{height:0,opacity:0}} animate={{height:'auto',opacity:1}} exit={{height:0,opacity:0}} style={{overflow:'hidden'}}>
-                      <div style={{padding:'0 14px 16px',borderTop:`1px solid ${C.b1}`,marginTop:2,paddingTop:14}}>
+                      <div style={{padding:'0px 12px 16px',borderTop:`1px solid ${C.b1}`,marginTop:4,paddingTop:12}}>
                         <div style={G(2,10,{},true)}>
                           <div>
                             <label style={lbl()}>EA/ED Deadline</label>
@@ -527,7 +527,7 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
                             <input type="date" style={inp()} value={college.rd_deadline||''} onChange={e=>updateCollege(college.id,{rd_deadline:e.target.value})} />
                           </div>
                         </div>
-                        <div style={G(2,10,{marginTop:10},true)}>
+                        <div style={G(2,10,{marginTop:8},true)}>
                           <div>
                             <label style={lbl()}>Financial Aid Deadline</label>
                             <input type="date" style={inp()} value={college.financial_aid_deadline||''} onChange={e=>updateCollege(college.id,{financial_aid_deadline:e.target.value})} />
@@ -535,16 +535,16 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
                           <div>
                             <label style={lbl()}>Requires CSS Profile?</label>
                             <div onClick={()=>updateCollege(college.id,{css_profile_required:!college.css_profile_required})} style={{...R({gap:8,cursor:'pointer',height:38})}}>
-                              <div style={{width:36,height:20,borderRadius:10,background:college.css_profile_required?accent:C.s4,position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${college.css_profile_required?accent:C.b2}`}}>
-                                <div style={{width:14,height:14,borderRadius:'50%',background:college.css_profile_required?'#fff':C.s1,border:college.css_profile_required?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:college.css_profile_required?18:2,transition:'left .2s'}}/>
+                              <div style={{width:36,height:20,borderRadius:8,background:college.css_profile_required?accent:C.s4,position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${college.css_profile_required?accent:C.b2}`}}>
+                                <div style={{width:14,height:14,borderRadius:'50%',background:college.css_profile_required?'#fff':C.s1,border:college.css_profile_required?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:2,transform:`translateX(${college.css_profile_required?16:0}px)`,transition:'transform 140ms cubic-bezier(.4,0,.2,1)'}}/>
                               </div>
                               <span style={{fontSize:12,color:C.t2}}>{college.css_profile_required?'Yes':'No'}</span>
                             </div>
                           </div>
                         </div>
-                        <div style={{marginTop:14}}>
+                        <div style={{marginTop:12}}>
                           <label style={lbl()}>Checklist</label>
-                          <div style={CC({gap:6})}>
+                          <div style={CC({gap:4})}>
                             {items.map(item => (
                               <div key={item.id} style={{...R({gap:8,cursor:'pointer'})}} onClick={()=>toggleChecklistItem(college.id, item)}>
                                 <div style={{width:16,height:16,borderRadius:4,border:`1.5px solid ${item.done?accent:C.b2}`,background:item.done?accent:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
@@ -555,7 +555,7 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
                             ))}
                           </div>
                         </div>
-                        <div style={{marginTop:14}}>
+                        <div style={{marginTop:12}}>
                           <label style={lbl()}>Notes</label>
                           <textarea style={{...inp(),minHeight:60,resize:'vertical'}} value={college.notes||''}
                             onChange={e=>setColleges(prev=>prev.map(c=>c.id===college.id?{...c,notes:e.target.value}:c))}
@@ -595,11 +595,11 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
               <div style={{...glass2({padding:16}),background:`linear-gradient(120deg,${tint(C.violet,0.08)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.25)}`}}>
                 <div style={R({gap:8,marginBottom:brainTake.loading?0:8})}>
                   <Sparkles size={13} color={C.violetL}/>
-                  <span style={{fontSize:11,fontWeight:700,color:C.violetL,textTransform:'uppercase',letterSpacing:'.06em'}}>Meta Brain on your list</span>
+                  <span style={{fontSize:11,fontWeight:700,color:C.violetL, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>Meta Brain on your list</span>
                 </div>
                 {brainTake.loading && <div style={R({gap:8,color:C.t3,fontSize:12})}><Loader2 size={13} className="spin"/>Reading your list…</div>}
                 {brainTake.error && <div style={{fontSize:12,color:C.t3}}>Couldn't reach Meta Brain right now — your list above is still correct.</div>}
-                {brainTake.content && !brainTake.loading && <div style={{fontSize:12.5,color:C.t2,lineHeight:1.6}} dangerouslySetInnerHTML={{__html:renderMarkdown(brainTake.content)}}/>}
+                {brainTake.content && !brainTake.loading && <div style={{fontSize:12.5,color:C.t2,lineHeight: 1.55}} dangerouslySetInnerHTML={{__html:renderMarkdown(brainTake.content)}}/>}
               </div>
             )}
           </div>

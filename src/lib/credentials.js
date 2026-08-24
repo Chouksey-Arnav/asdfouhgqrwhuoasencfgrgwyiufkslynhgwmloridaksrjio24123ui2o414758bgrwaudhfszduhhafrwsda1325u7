@@ -137,7 +137,7 @@ export function ageGateFor(credential, age) {
  * that being wrong about it matters.
  */
 export function typicalAgeForGrade(gradeStage) {
-  return { freshman: 14, sophomore: 15, junior: 16, senior: 17, gap: 18 }[gradeStage] ?? null;
+  return { freshman: 14, sophomore: 15, junior: 16, senior: 17, gap: 16 }[gradeStage] ?? null;
 }
 
 /**

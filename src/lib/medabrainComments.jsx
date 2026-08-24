@@ -124,17 +124,17 @@ function renderMedabrainToast(line, { duration = 4200, title = 'Medabrain' } = {
     <motion.div
       initial={{ scale: 0.85, opacity: 0, x: 20 }} animate={{ scale: 1, opacity: 1, x: 0 }} exit={{ scale: 0.85, opacity: 0 }}
       style={{
-        background: C.s1, border: `1px solid ${tint(C.violet, 0.35)}`, borderRadius: 14, padding: '12px 16px',
+        background: C.s1, border: `1px solid ${tint(C.violet, 0.35)}`, borderRadius: 12, padding: '12px 16px',
         display: 'flex', alignItems: 'flex-start', gap: 12, boxShadow: `0 8px 28px rgba(0,0,0,0.55), 0 0 0 1px ${tint(C.violet, 0.15)}`,
         maxWidth: 360, fontFamily: C.FB, cursor: 'pointer',
       }}
       onClick={() => toast.dismiss(t.id)}
     >
-      <div style={{ width: 28, height: 28, borderRadius: 9, background: tint(C.violet, 0.2), border: `1px solid ${tint(C.violet, 0.35)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <div style={{ width: 28, height: 28, borderRadius: 8, background: tint(C.violet, 0.2), border: `1px solid ${tint(C.violet, 0.35)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         <Brain size={14} color={C.violetL} />
       </div>
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 9.5, fontWeight: 800, color: C.violetL, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 3 }}>{title}</div>
+        <div style={{ fontSize: 9.5, fontWeight: 800, color: C.violetL, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 4 }}>{title}</div>
         <div style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.5 }}>{line}</div>
       </div>
     </motion.div>

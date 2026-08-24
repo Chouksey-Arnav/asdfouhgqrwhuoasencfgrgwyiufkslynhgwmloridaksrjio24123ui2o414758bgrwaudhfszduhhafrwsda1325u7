@@ -423,19 +423,19 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
   const stale = planIsStale(plan, user);
 
   return (
-    <div style={CC({ gap: 22 })}>
+    <div style={CC({ gap: 20 })}>
       {stale && <StaleProfileBanner accent={accent} onRefresh={handleRefreshFromProfile} />}
       {plan.generation?.degraded && <DegradedBanner accent={accent} onRetry={handleReplanWindow} busy={extending} generation={plan.generation} />}
       <PlanHeader plan={plan} weekNumber={weekNumber} phase={phase} accent={accent} onRegenerate={handleRegenerate} onRestore={handleRestoreRevision} onReplan={handleReplanWindow} replanning={extending} />
 
       <PlanVoiceNotes user={user} saveUser={saveUser} plan={plan} liveSignals={liveSignals} ensurePortfolio={ensurePortfolio} accent={accent} />
 
-      <div style={{ display: 'flex', gap: 6 }}>
+      <div style={{ display: 'flex', gap: 4 }}>
         {[{ id: 'week', label: 'Today & Tomorrow', icon: CalendarClock }, { id: 'roadmap', label: 'Full Roadmap', icon: MapIcon }].map(v => {
           const active = view === v.id;
           return (
             <button key={v.id} onClick={() => setView(v.id)} style={{
-              display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 16px', borderRadius: 999,
+              display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 999,
               border: active ? `1px solid ${accent}66` : `1px solid ${C.b1}`, background: active ? `${accent}22` : 'rgba(255,255,255,0.02)',
               color: active ? onTint(accent) : C.t2, fontWeight: active ? 700 : 500, fontSize: 12.5, fontFamily: C.FB, cursor: 'pointer',
             }}>
@@ -478,7 +478,7 @@ function ChecklistRow({ item, accent, onClick, clickable, justCompleted }) {
       transition={justCompleted ? { duration: 0.45, ease: 'easeOut' } : undefined}
       style={{
         all: clickable ? 'unset' : undefined, cursor: clickable ? 'pointer' : 'default', boxSizing: 'border-box', width: '100%',
-        ...glass2({ padding: '10px 14px' }), display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
+        ...glass2({ padding: '8px 12px' }), display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left',
         border: state === 'done' ? `1px solid ${C.green}35` : undefined,
       }}>
       <AnimatePresence mode="wait" initial={false}>
@@ -499,8 +499,8 @@ function ChecklistRow({ item, accent, onClick, clickable, justCompleted }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 12.5, color: C.t1, fontWeight: 600 }}>{label}</div>
         {state === 'done'
-          ? <div style={{ fontSize: 10, color: C.t3, marginTop: 1 }}>Already have this from your onboarding</div>
-          : (clickable && hint) ? <div style={{ fontSize: 10, color: C.t3, marginTop: 1 }}>Tap to open · {hint}</div> : null}
+          ? <div style={{ fontSize: 10, color: C.t3, marginTop: 4 }}>Already have this from your onboarding</div>
+          : (clickable && hint) ? <div style={{ fontSize: 10, color: C.t3, marginTop: 4 }}>Tap to open · {hint}</div> : null}
       </div>
       {clickable && state !== 'done' && <ArrowRight size={13} color={C.amberL} style={{ flexShrink: 0 }} />}
     </Wrapper>
@@ -532,19 +532,19 @@ function LockedState({ readiness, accent, isMobile, goSettings, onGoActivity, on
     <div data-tour="plans-deep-hero" style={{ ...glass({ padding: 0, overflow: 'hidden', position: 'relative' }), border: `1px solid ${C.amber}30` }}>
       <div style={{ position: 'absolute', inset: 0, background: C.auroraGrad, opacity: 0.05, pointerEvents: 'none' }} />
       <div style={{ position: 'relative', padding: isMobile ? '28px 20px' : '46px 40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-        <div style={{ width: 60, height: 60, borderRadius: 18, background: `${C.amber}20`, border: `1.5px solid ${C.amber}45`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 60, height: 60, borderRadius: 16, background: `${C.amber}20`, border: `1.5px solid ${C.amber}45`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Lock size={26} color={C.amberL} />
         </div>
         <div>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: C.amberL, marginBottom: 8 }}>Almost ready</div>
-          <h2 style={{ fontSize: 22, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.03em', margin: 0 }}>A few things first</h2>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.amberL, marginBottom: 8 }}>Almost ready</div>
+          <h2 style={{ fontSize: 22, lineHeight: 'calc(1.35 * var(--msp-line-scale))', fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.4px + var(--msp-letter-spacing))', margin: 0 }}>A few things first</h2>
         </div>
-        <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.7, maxWidth: 460, margin: 0 }}>
+        <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.55, maxWidth: 460, margin: 0 }}>
           Medabrain's Oracle builds the best possible plan when it actually knows where you stand — not too much, just enough to be confident. Onboarding already answered some of this for you. <b style={{ color: C.t1 }}>Tap any unfinished item below</b> and it'll take you straight to the exact place you answer it.
         </p>
         {profileItems.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 340 }}>
-            <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, textAlign: 'left' }}>Your profile</div>
+            <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, textAlign: 'left' }}>Your profile</div>
             {/* Every unfinished row is a working link into the exact Settings field that answers
                 it (see settingsFocus in App.jsx — it opens the right editor, scrolls the field
                 into view and highlights it). These were previously inert text, so a student
@@ -558,7 +558,7 @@ function LockedState({ readiness, accent, isMobile, goSettings, onGoActivity, on
         )}
         {activityItems.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 340 }}>
-            <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, textAlign: 'left' }}>Show us where you stand</div>
+            <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, textAlign: 'left' }}>Show us where you stand</div>
             {activityItems.map(m => (
               <ChecklistRow key={m.field} item={m} accent={accent} clickable={m.state !== 'done' && !!onGoActivity}
                 onClick={() => onGoActivity?.(m)} justCompleted={justCompleted.has(m.field)} />
@@ -566,7 +566,7 @@ function LockedState({ readiness, accent, isMobile, goSettings, onGoActivity, on
           </div>
         )}
         {missingProfile.length > 0 && (
-          <button style={btn(C.auroraGrad, { padding: '13px 28px', fontSize: 14 })} onClick={() => goSettings?.(missingProfile[0]?.goField || null)}>
+          <button style={btn(C.auroraGrad, { padding: '12px 28px', fontSize: 14 })} onClick={() => goSettings?.(missingProfile[0]?.goField || null)}>
             Update My Profile
           </button>
         )}
@@ -581,17 +581,17 @@ function EmptyState({ onBuild, accent, isMobile }) {
     <div data-tour="plans-deep-hero" style={{ ...glass({ padding: 0, overflow: 'hidden', position: 'relative' }), border: `1px solid ${C.pink}35` }}>
       <div style={{ position: 'absolute', inset: 0, background: PLAN_GRAD, opacity: 0.07, pointerEvents: 'none' }} />
       <div style={{ position: 'relative', padding: isMobile ? '28px 20px' : '46px 40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-        <div style={{ width: 60, height: 60, borderRadius: 18, background: PLAN_GRAD, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 10px 30px ${C.pink}50` }}>
+        <div style={{ width: 60, height: 60, borderRadius: 16, background: PLAN_GRAD, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 10px 30px ${C.pink}50` }}>
           <CalendarClock size={28} color="#fff" />
         </div>
         <div>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: C.pinkL, marginBottom: 8 }}>Medabrain Oracle · Plans</div>
-          <h2 style={{ fontSize: 24, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.03em', margin: 0 }}>Build your full plan</h2>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.pinkL, marginBottom: 8 }}>Medabrain Oracle · Plans</div>
+          <h2 style={{ fontSize: 24, lineHeight: 'calc(1.32 * var(--msp-line-scale))', fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.47px + var(--msp-letter-spacing))', margin: 0 }}>Build your full plan</h2>
         </div>
-        <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.7, maxWidth: 480, margin: 0 }}>
+        <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.55, maxWidth: 480, margin: 0 }}>
           Phases and milestones for the months ahead — and then, in real detail, <b style={{ color: C.pinkL }}>today and tomorrow</b>: the exact quizzes, lessons, drafts and hours to work on, why each one is on your plan, and when in the day it belongs. Grounded in your whole profile, your entire Portfolio, and only the lessons you can actually open right now. It rewrites itself every day around what you've actually done.
         </p>
-        <button style={btn(PLAN_GRAD, { padding: '13px 28px', fontSize: 14 })} onClick={onBuild}>
+        <button style={btn(PLAN_GRAD, { padding: '12px 28px', fontSize: 14 })} onClick={onBuild}>
           <Sparkles size={15} />Build My Full Plan
         </button>
         <div style={{ fontSize: 11, color: C.t3 }}>Give it a minute — Medabrain's deepest model reads your whole profile and genuinely thinks this through. It's slow on purpose.</div>
@@ -608,7 +608,7 @@ function GeneratingCard({ label, accent }) {
         animate={{ rotate: 360 }} transition={{ duration: 2.2, repeat: Infinity, ease: 'linear' }}
         style={{ width: 52, height: 52, borderRadius: '50%', border: `3px solid ${C.pink}25`, borderTopColor: C.pink, margin: '0 auto 20px' }}
       />
-      <div style={{ fontSize: 15, fontWeight: 700, color: C.t1, fontFamily: C.FD, marginBottom: 6 }}>Building your full plan</div>
+      <div style={{ fontSize: 15, fontWeight: 700, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>Building your full plan</div>
       <div style={{ fontSize: 11, color: C.t4, marginBottom: 12 }}>This is meant to take a while — it's thinking, not loading.</div>
       <AnimatePresence mode="wait">
         <motion.div key={label} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} style={{ fontSize: 12.5, color: C.t3 }}>
@@ -650,7 +650,7 @@ function DegradedBanner({ accent, onRetry, busy, generation }) {
       <ShieldAlert size={15} color={C.roseL} style={{ flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 220, fontSize: 12.5, color: C.t1, lineHeight: 1.5 }}>
         Some of this plan is Medabrain's basic fallback — its planning model couldn't be reached while this was built, so parts of it are generic rather than written for you.
-        {generation?.errors?.length ? <span style={{ display: 'block', fontSize: 10.5, color: C.t3, marginTop: 3 }}>{generation.errors[0]}</span> : null}
+        {generation?.errors?.length ? <span style={{ display: 'block', fontSize: 10.5, color: C.t3, marginTop: 4 }}>{generation.errors[0]}</span> : null}
       </div>
       <button onClick={onRetry} disabled={busy} style={{ ...btnSm(accentFill(accent), { color: C.onAccent }), opacity: busy ? 0.6 : 1 }}>
         {busy ? 'Retrying…' : 'Rebuild it properly'}
@@ -696,20 +696,20 @@ function PlanHistoryMenu({ accent, onRestore }) {
         {open && (
           <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
             style={{ ...glass({ padding: 12, position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 290, zIndex: 40 }), border: `1px solid ${accent}35` }}>
-            <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 8 }}>Earlier versions of this plan</div>
+            <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, marginBottom: 8 }}>Earlier versions of this plan</div>
             {loading && <div style={{ fontSize: 11.5, color: C.t3 }}>Loading…</div>}
             {!loading && history?.length === 0 && (
               <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.5 }}>No earlier versions saved yet. Every time you rebuild your roadmap, the version it replaces is kept here.</div>
             )}
             {!loading && history?.map(h => (
-              <div key={h.revision} style={{ ...glass2({ padding: '9px 11px' }), marginBottom: 6 }}>
+              <div key={h.revision} style={{ ...glass2({ padding: '8px 12px' }), marginBottom: 4 }}>
                 <div style={{ fontSize: 11.5, fontWeight: 700, color: C.t1, lineHeight: 1.35 }}>{h.headline}</div>
-                <div style={{ fontSize: 10, color: C.t3, marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: C.t3, marginTop: 4 }}>
                   {new Date(h.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                   {h.reason ? ` · replaced on ${h.reason}` : ''}
                 </div>
                 <button onClick={() => restore(h.revision)} disabled={!!restoring}
-                  style={{ ...btnSm(`${accent}18`, { color: accent, fontSize: 10.5 }), marginTop: 7, opacity: restoring ? 0.6 : 1 }}>
+                  style={{ ...btnSm(`${accent}18`, { color: accent, fontSize: 10.5 }), marginTop: 8, opacity: restoring ? 0.6 : 1 }}>
                   {restoring === h.revision ? 'Restoring…' : 'Restore this version'}
                 </button>
               </div>
@@ -726,11 +726,11 @@ function PlanHeader({ plan, weekNumber, phase, accent, onRegenerate, onRestore, 
     // overflow stays visible so the Versions dropdown below can escape the card; the gradient
     // background still clips to the border radius on its own.
     <div data-tour="plans-deep-hero" style={{ ...glass({ padding: 0, overflow: 'visible' }), border: `1px solid ${accent}30`, background: `linear-gradient(135deg,${accent}12,transparent 60%)`, position: 'relative' }}>
-      <div style={{ padding: '22px 24px' }}>
+      <div style={{ padding: '20px 24px' }}>
         <div style={R({ justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' })}>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: C.pinkL, marginBottom: 6 }}>Your Full Plan · Medabrain Oracle</div>
-            <h1 style={{ fontSize: 22, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em', margin: 0, lineHeight: 1.25 }}>{plan.headline}</h1>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.pinkL, marginBottom: 4 }}>Your Full Plan · Medabrain Oracle</div>
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))', margin: 0, lineHeight: 1.25 }}>{plan.headline}</h1>
           </div>
           <div style={R({ gap: 8 })}>
             {weekNumber && <span style={pill(`${accent}18`, accent, { fontSize: 11 })}>Week {weekNumber} of {plan.horizonWeeks}</span>}
@@ -743,9 +743,9 @@ function PlanHeader({ plan, weekNumber, phase, accent, onRegenerate, onRestore, 
             <button style={btnSm('rgba(255,255,255,0.06)', { color: C.t2 })} onClick={onRegenerate}><RefreshCw size={11} />Rebuild Roadmap</button>
           </div>
         </div>
-        <p style={{ fontSize: 13, color: C.t2, lineHeight: 1.7, margin: '14px 0 0', maxWidth: 780 }}>{plan.overview}</p>
+        <p style={{ fontSize: 13, color: C.t2, lineHeight: 1.7, margin: '12px 0px 0px', maxWidth: 780 }}>{plan.overview}</p>
         {phase && (
-          <div style={{ marginTop: 14, ...glass2({ padding: '10px 14px', display: 'flex', gap: 10, alignItems: 'center' }) }}>
+          <div style={{ marginTop: 12, ...glass2({ padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'center' }) }}>
             <Target size={13} color={accent} style={{ flexShrink: 0 }} />
             <div style={{ fontSize: 12, color: C.t1 }}><b>{phase.title}</b> — {phase.theme}</div>
           </div>
@@ -821,15 +821,15 @@ function PlanVoiceNotes({ user, saveUser, plan, liveSignals, ensurePortfolio, ac
     <div style={glass({ padding: 16 })}>
       <div style={R({ gap: 8, marginBottom: 8 })}>
         <Mic size={13} color={accent} />
-        <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3 }}>Tell Medabrain More</span>
+        <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3 }}>Tell Medabrain More</span>
       </div>
-      <p style={{ fontSize: 12, color: C.t3, lineHeight: 1.55, margin: '0 0 12px' }}>
+      <p style={{ fontSize: 12, color: C.t3, lineHeight: 1.55, margin: '0px 0px 12px' }}>
         Anything your plan should account for — an upcoming trip, a new goal, a subject you want more of — say it or type it, and it's folded straight into your roadmap.
       </p>
       {notes.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 12 }}>
           {notes.map((n, i) => (
-            <span key={i} style={{ ...pill('rgba(255,255,255,0.04)', C.t2, { fontSize: 10.5 }), display: 'inline-flex', alignItems: 'center', gap: 6, maxWidth: 320 }}>
+            <span key={i} style={{ ...pill('rgba(255,255,255,0.04)', C.t2, { fontSize: 10.5 }), display: 'inline-flex', alignItems: 'center', gap: 4, maxWidth: 320 }}>
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n}</span>
               <button onClick={() => removeNote(i)} style={{ all: 'unset', cursor: 'pointer', display: 'flex', opacity: 0.6 }} aria-label="Remove note"><X size={10} /></button>
             </span>
@@ -837,20 +837,20 @@ function PlanVoiceNotes({ user, saveUser, plan, liveSignals, ensurePortfolio, ac
         </div>
       )}
       <textarea
-        style={{ width: '100%', minHeight: 60, resize: 'vertical', background: C.s2, border: `1px solid ${listening ? C.green : C.b1}`, borderRadius: 10, padding: '10px 12px', color: C.t1, fontSize: 12.5, lineHeight: 1.55, fontFamily: C.FB, outline: 'none', boxSizing: 'border-box' }}
+        style={{ width: '100%', minHeight: 60, resize: 'vertical', background: C.s2, border: `1px solid ${listening ? C.green : C.b1}`, borderRadius: 8, padding: '8px 12px', color: C.t1, fontSize: 12.5, lineHeight: 1.55, fontFamily: C.FB, outline: 'none', boxSizing: 'border-box' }}
         placeholder={listening ? 'Listening — speak what you want added…' : sttSupported ? 'Tap the mic and speak, or type here…' : 'Type what you want added to your plan…'}
         value={draft}
         onChange={e => setDraft(e.target.value)}
       />
-      <div style={R({ gap: 8, marginTop: 10 })}>
+      <div style={R({ gap: 8, marginTop: 8 })}>
         {sttSupported && (
           <button onClick={toggleMic} disabled={submitting}
-            style={{ ...btnSm(listening ? C.rose : 'rgba(255,255,255,0.04)', { color: listening ? '#fff' : C.t2, border: listening ? 'none' : `1px solid ${C.b1}` }), display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            style={{ ...btnSm(listening ? C.rose : 'rgba(255,255,255,0.04)', { color: listening ? '#fff' : C.t2, border: listening ? 'none' : `1px solid ${C.b1}` }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             <Mic size={12} />{listening ? 'Stop' : 'Speak'}
           </button>
         )}
         <button onClick={submit} disabled={!draft.trim() || submitting}
-          style={{ ...btnSm(accentFill(accent), { color: C.onAccent }), display: 'inline-flex', alignItems: 'center', gap: 6, opacity: !draft.trim() || submitting ? 0.55 : 1 }}>
+          style={{ ...btnSm(accentFill(accent), { color: C.onAccent }), display: 'inline-flex', alignItems: 'center', gap: 4, opacity: !draft.trim() || submitting ? 0.55 : 1 }}>
           {submitting ? <RefreshCw size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <Sparkles size={12} />}
           {submitting ? 'Updating plan…' : 'Add to My Plan'}
         </button>
@@ -920,7 +920,7 @@ function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDa
   const dragCtx = { drag, hoverDate, registerDayEl, registerTaskEl, onDragStart: handleDragStart, onDragMove: handleDragMove, onDragEnd: handleDragEnd, onSnooze: onSnoozeTask, onMoveClick: openMoveMenu };
 
   return (
-    <div style={CC({ gap: 14 })}>
+    <div style={CC({ gap: 12 })}>
       <div style={G(3, 12, {}, isMobile)}>
         <PillarCard icon={Compass} title="Prep" text={plan.pillarStrategy?.prep} color={C.violet} />
         <PillarCard icon={GraduationCap} title="Portfolio" text={plan.pillarStrategy?.portfolio} color={C.green} />
@@ -928,13 +928,13 @@ function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDa
       </div>
 
       {upcoming.length === 0 && !extending && (
-        <div style={glass({ padding: 22, textAlign: 'center' })}>
+        <div style={glass({ padding: 20, textAlign: 'center' })}>
           <div style={{ fontSize: 13, color: C.t2 }}>Your plan is between windows — it'll pick back up shortly.</div>
         </div>
       )}
 
       {extending && (
-        <div style={{ ...glass2({ padding: '12px 16px' }), display: 'flex', alignItems: 'center', gap: 10, border: `1px solid ${C.pink}35`, background: `${C.pink}0d` }}>
+        <div style={{ ...glass2({ padding: '12px 16px' }), display: 'flex', alignItems: 'center', gap: 8, border: `1px solid ${C.pink}35`, background: `${C.pink}0d` }}>
           <RefreshCw size={14} color={C.pinkL} className="spin" style={{ flexShrink: 0 }} />
           <span style={{ fontSize: 12.5, color: C.t1 }}>Medabrain is rethinking today and tomorrow against everything you've done since — this takes a moment on purpose.</span>
         </div>
@@ -946,7 +946,7 @@ function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDa
           collapsed row in a long list of days. Two days is the whole plan — there is nothing to
           scroll past, and hiding half of it behind a chevron would be hiding half the plan. */}
       {restOfWeek.length > 0 && (
-        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, margin: '4px 0 -4px' }}>Next — drag a task between days to reschedule it</div>
+        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, margin: '4px 0 -4px' }}>Next — drag a task between days to reschedule it</div>
       )}
       {restOfWeek.map(day => (
         <DayCard
@@ -958,13 +958,13 @@ function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDa
         />
       ))}
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap', padding: '4px 0' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap', padding: '4px 0px' }}>
         <span style={{ fontSize: 11, color: C.t3, textAlign: 'center' }}>
           Your plan is just today and tomorrow, on purpose — and it rewrites itself every day around what you've actually done.
         </span>
         {onReplan && (
           <button onClick={onReplan} disabled={extending}
-            style={{ ...btnSm(`${C.pink}18`, { color: C.pinkL, border: `1px solid ${C.pink}40`, fontSize: 11 }), display: 'inline-flex', alignItems: 'center', gap: 5, opacity: extending ? 0.55 : 1 }}>
+            style={{ ...btnSm(`${C.pink}18`, { color: C.pinkL, border: `1px solid ${C.pink}40`, fontSize: 11 }), display: 'inline-flex', alignItems: 'center', gap: 4, opacity: extending ? 0.55 : 1 }}>
             <RefreshCw size={11} />{extending ? 'Replanning…' : 'Replan these two days'}
           </button>
         )}
@@ -989,15 +989,15 @@ function MoveDayPicker({ moveFor, upcoming, accent, onPick, onClose }) {
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, backdropFilter: 'blur(6px)' }}
           onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
           <motion.div initial={{ opacity: 0, y: 12, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.97 }}
-            style={{ ...glass({ padding: 18, maxWidth: 380, width: '100%' }), border: `1px solid ${accent}35` }}>
+            style={{ ...glass({ padding: 16, maxWidth: 380, width: '100%' }), border: `1px solid ${accent}35` }}>
             <div style={R({ justifyContent: 'space-between', marginBottom: 12 })}>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 3 }}>Move task</div>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, marginBottom: 4 }}>Move task</div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{moveFor.taskTitle}</div>
               </div>
               <button onClick={onClose} style={{ all: 'unset', cursor: 'pointer', display: 'flex', color: C.t3 }} aria-label="Close"><X size={16} /></button>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {upcoming.map(day => {
                 const isFrom = day.date === moveFor.fromDate;
                 const label = day.date === today ? 'Today' : day.date === tomorrow ? 'Tomorrow' : fmtDateLabel(day.date);
@@ -1051,7 +1051,7 @@ function DraggableTaskRow({ task, date, onToggle, onJump, dragCtx, isSpotlight, 
         onMoveClick={() => dragCtx.onMoveClick(task.id, date, task.title)}
         isSpotlight={isSpotlight} accent={accent} reducedMotion={reducedMotion}
         dragHandle={
-          <span onPointerDown={e => controls.start(e)} style={{ cursor: 'grab', touchAction: 'none', display: 'flex', flexShrink: 0, marginTop: 2, color: C.t4 }} aria-hidden="true">
+          <span onPointerDown={e => controls.start(e)} style={{ cursor: 'grab', touchAction: 'none', display: 'flex', flexShrink: 0, marginTop: 4, color: C.t4 }} aria-hidden="true">
             <GripVertical size={14} />
           </span>
         }
@@ -1082,7 +1082,7 @@ function TodayHero({ day, accent, onToggleTask, jumpTo, dragCtx, reducedMotion }
       background: isDropTarget ? `linear-gradient(135deg,${accent}22,transparent 60%)` : `linear-gradient(135deg,${accent}14,transparent 60%)`,
       transition: 'background .15s, border-color .15s',
     }}>
-      <div style={{ padding: '18px 20px 6px', display: 'flex', gap: 16, alignItems: 'center' }}>
+      <div style={{ padding: '16px 20px 4px', display: 'flex', gap: 16, alignItems: 'center' }}>
         <div style={{
           width: 54, height: 54, borderRadius: '50%', flexShrink: 0,
           background: `conic-gradient(${accent} ${pct * 3.6}deg, rgba(255,255,255,0.08) 0deg)`,
@@ -1093,23 +1093,23 @@ function TodayHero({ day, accent, onToggleTask, jumpTo, dragCtx, reducedMotion }
           </div>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+          <div style={R({ gap: 4, flexWrap: 'wrap' })}>
             <span style={pill(`${accent}22`, accent, { fontSize: 9.5, fontWeight: 800 })}>TODAY</span>
             {totalMinutes > 0 && <span style={pill(`${C.pink}16`, C.pinkL, { fontSize: 9.5, fontWeight: 700 })}>{totalMinutes}m planned</span>}
           </div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 5, letterSpacing: '-.02em' }}>{day.headline || fmtDateLabel(day.date)}</div>
-          <div style={{ fontSize: 11.5, color: C.t3, marginTop: 1 }}>{day.headline ? `${fmtDateLabel(day.date)} · ${day.theme}` : day.theme}</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 4, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>{day.headline || fmtDateLabel(day.date)}</div>
+          <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4 }}>{day.headline ? `${fmtDateLabel(day.date)} · ${day.theme}` : day.theme}</div>
         </div>
       </div>
       {/* Medabrain's read on the day as a whole — what matters most, and what to drop if the day
           gets away from them. A per-task "why" answers "why this"; this answers "why this shape". */}
       {day.coachNote && (
-        <div style={{ margin: '4px 18px 0', padding: '10px 13px', borderRadius: 11, background: `linear-gradient(135deg, ${C.pink}12, transparent 70%)`, border: `1px solid ${C.pink}28`, display: 'flex', gap: 9, alignItems: 'flex-start' }}>
-          <Sparkles size={13} color={C.pinkL} style={{ flexShrink: 0, marginTop: 2 }} />
+        <div style={{ margin: '4px 16px 0px', padding: '8px 12px', borderRadius: 12, background: `linear-gradient(135deg, ${C.pink}12, transparent 70%)`, border: `1px solid ${C.pink}28`, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+          <Sparkles size={13} color={C.pinkL} style={{ flexShrink: 0, marginTop: 4 }} />
           <p style={{ fontSize: 12, color: C.t1, lineHeight: 1.6, margin: 0 }}>{day.coachNote}</p>
         </div>
       )}
-      <div style={{ padding: '10px 18px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ padding: '8px 16px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {day.tasks.map(t => {
           const isSpotlight = !!spotlightTask && t.id === spotlightTask.id;
           return dragCtx
@@ -1129,10 +1129,10 @@ function TodayHero({ day, accent, onToggleTask, jumpTo, dragCtx, reducedMotion }
 function PillarCard({ icon: Icon, title, text, color }) {
   if (!text) return null;
   return (
-    <div style={{ ...glass2({ padding: 14 }), borderLeft: `2px solid ${color}` }}>
-      <div style={R({ gap: 7, marginBottom: 6 })}>
+    <div style={{ ...glass2({ padding: 12 }), borderLeft: `2px solid ${color}` }}>
+      <div style={R({ gap: 8, marginBottom: 4 })}>
         <Icon size={13} color={color} />
-        <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', color }}>{title}</span>
+        <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color }}>{title}</span>
       </div>
       <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>{text}</div>
     </div>
@@ -1155,17 +1155,17 @@ function DayCard({ day, isToday, accent, expanded, onToggleExpand, onToggleTask,
       background: isDropTarget ? `linear-gradient(135deg,${accent}20,transparent 60%)` : isToday ? `linear-gradient(135deg,${accent}10,transparent 60%)` : undefined,
       transition: 'background .15s, border-color .15s',
     }}>
-      <button onClick={onToggleExpand} style={{ all: 'unset', cursor: 'pointer', display: 'block', width: '100%', boxSizing: 'border-box', padding: '14px 18px' }}>
-        <div style={R({ justifyContent: 'space-between', gap: 10 })}>
-          <div style={R({ gap: 10 })}>
+      <button onClick={onToggleExpand} style={{ all: 'unset', cursor: 'pointer', display: 'block', width: '100%', boxSizing: 'border-box', padding: '12px 16px' }}>
+        <div style={R({ justifyContent: 'space-between', gap: 8 })}>
+          <div style={R({ gap: 8 })}>
             {isToday && <span style={pill(`${accent}22`, accent, { fontSize: 9.5, fontWeight: 800 })}>TODAY</span>}
             {isTomorrow && <span style={pill(`${C.pink}1e`, C.pinkL, { fontSize: 9.5, fontWeight: 800 })}>TOMORROW</span>}
             <div>
               <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{day.headline || fmtDateLabel(day.date)}</div>
-              <div style={{ fontSize: 11, color: C.t3, marginTop: 1 }}>{day.headline ? `${fmtDateLabel(day.date)} · ${day.theme}` : day.theme}</div>
+              <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>{day.headline ? `${fmtDateLabel(day.date)} · ${day.theme}` : day.theme}</div>
             </div>
           </div>
-          <div style={R({ gap: 10 })}>
+          <div style={R({ gap: 8 })}>
             {isDropTarget && <span style={{ fontSize: 10.5, color: accent, fontWeight: 700 }}>Drop here</span>}
             {totalMinutes > 0 && <span style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM }}>{totalMinutes}m</span>}
             <span style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM }}>{doneCount}/{total}</span>
@@ -1176,10 +1176,10 @@ function DayCard({ day, isToday, accent, expanded, onToggleExpand, onToggleTask,
       <AnimatePresence initial={false}>
         {expanded && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: 'hidden' }}>
-            <div style={{ padding: '0 18px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ padding: '0px 16px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {day.coachNote && (
-                <div style={{ padding: '10px 13px', borderRadius: 11, background: `linear-gradient(135deg, ${C.pink}10, transparent 70%)`, border: `1px solid ${C.pink}25`, display: 'flex', gap: 9, alignItems: 'flex-start', marginBottom: 2 }}>
-                  <Sparkles size={13} color={C.pinkL} style={{ flexShrink: 0, marginTop: 2 }} />
+                <div style={{ padding: '8px 12px', borderRadius: 12, background: `linear-gradient(135deg, ${C.pink}10, transparent 70%)`, border: `1px solid ${C.pink}25`, display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 4 }}>
+                  <Sparkles size={13} color={C.pinkL} style={{ flexShrink: 0, marginTop: 4 }} />
                   <p style={{ fontSize: 11.5, color: C.t1, lineHeight: 1.6, margin: 0 }}>{day.coachNote}</p>
                 </div>
               )}
@@ -1232,7 +1232,7 @@ function TaskRow({ task, onToggle, onJump, onSnooze, onMoveClick, dragHandle, is
       animate={isSpotlight && !reducedMotion ? { boxShadow: [spotlightRing, `0 0 0 3px ${ringColor}70, 0 0 22px ${ringColor}66`, spotlightRing] } : undefined}
       transition={isSpotlight && !reducedMotion ? { boxShadow: { duration: 2.2, repeat: Infinity, ease: 'easeInOut' } } : undefined}
       style={{
-        ...glass2({ padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'flex-start' }),
+        ...glass2({ padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'flex-start' }),
         opacity: task.done ? 0.55 : 1,
         borderLeft: isSpotlight ? `2px solid ${ringColor}` : `2px solid ${meta.color}45`,
         boxShadow: isSpotlight && reducedMotion ? spotlightRing : undefined,
@@ -1240,72 +1240,72 @@ function TaskRow({ task, onToggle, onJump, onSnooze, onMoveClick, dragHandle, is
       {dragHandle}
       {autoVerify ? (
         <span title={task.done ? 'Verified automatically — you actually did this' : 'Checks off automatically when you complete it — no self-report'}
-          style={{ marginTop: 1, flexShrink: 0, display: 'flex', cursor: 'default' }} aria-label={task.done ? 'Verified' : 'Verifies automatically'}>
+          style={{ marginTop: 4, flexShrink: 0, display: 'flex', cursor: 'default' }} aria-label={task.done ? 'Verified' : 'Verifies automatically'}>
           {task.done ? <ShieldCheck size={17} color={C.green} /> : <ShieldCheck size={17} color={C.t4} style={{ opacity: 0.5 }} />}
         </span>
       ) : (
-        <button onClick={onToggle} style={{ all: 'unset', cursor: 'pointer', marginTop: 1, flexShrink: 0 }} aria-label="Toggle task done">
+        <button onClick={onToggle} style={{ all: 'unset', cursor: 'pointer', marginTop: 4, flexShrink: 0 }} aria-label="Toggle task done">
           {task.done ? <CheckCircle2 size={17} color={C.green} /> : <Circle size={17} color={C.t3} />}
         </button>
       )}
-      <div style={{ width: 22, height: 22, borderRadius: 6, background: `${meta.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+      <div style={{ width: 22, height: 22, borderRadius: 4, background: `${meta.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 4 }}>
         <Icon size={11} color={meta.color} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 12.5, fontWeight: 600, color: C.t1, textDecoration: task.done ? 'line-through' : 'none' }}>{task.title}</div>
-        {task.detail && <div style={{ fontSize: 11, color: C.t3, marginTop: 2, lineHeight: 1.5 }}>{task.detail}</div>}
+        {task.detail && <div style={{ fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>{task.detail}</div>}
         {/* The "why" is what separates a plan from a checklist — one sentence naming the real
             reason this task is on THIS student's day. Only rendered when generation produced one;
             plans made before this field existed simply show the detail line as they always did. */}
         {task.why && !task.done && (
-          <div style={{ fontSize: 11, color: C.pinkL, marginTop: 5, lineHeight: 1.5, paddingLeft: 8, borderLeft: `2px solid ${C.pink}45` }}>{task.why}</div>
+          <div style={{ fontSize: 11, color: C.pinkL, marginTop: 4, lineHeight: 1.5, paddingLeft: 8, borderLeft: `2px solid ${C.pink}45` }}>{task.why}</div>
         )}
         {task.successCriteria && !task.done && (
           <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4, lineHeight: 1.45 }}>
             <span style={{ fontWeight: 700, color: C.t2 }}>Done well: </span>{task.successCriteria}
           </div>
         )}
-        <div style={R({ gap: 8, marginTop: 6, flexWrap: 'wrap' })}>
+        <div style={R({ gap: 8, marginTop: 4, flexWrap: 'wrap' })}>
           {task.timeOfDay && task.timeOfDay !== 'anytime' && (
             <span style={pill(`${C.pink}14`, C.pinkL, { fontSize: 9, fontWeight: 700, textTransform: 'capitalize' })}>{task.timeOfDay}</span>
           )}
           {task.retargetedFrom && (
             <span title={`Originally "${task.retargetedFrom}" — swapped because that lesson isn't available to you right now.`}
-              style={{ ...pill(`${C.cyan}18`, C.cyanL || C.cyan, { fontSize: 9 }), display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+              style={{ ...pill(`${C.cyan}18`, C.cyanL || C.cyan, { fontSize: 9 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               <RefreshCw size={9} />Auto-adjusted
             </span>
           )}
           <span style={pill(`${meta.color}15`, meta.color, { fontSize: 9 })}>{meta.label}</span>
           {isSpotlight && (
-            <span style={{ ...pill(`${ringColor}20`, ringColor, { fontSize: 9, fontWeight: 800 }), display: 'inline-flex', alignItems: 'center', gap: 3, textTransform: 'uppercase', letterSpacing: '.03em' }}>
+            <span style={{ ...pill(`${ringColor}20`, ringColor, { fontSize: 9, fontWeight: 800 }), display: 'inline-flex', alignItems: 'center', gap: 4, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>
               <Sparkles size={9} />Medabrain's pick
             </span>
           )}
           {task.rolledOverFrom && (
-            <span style={{ ...pill(`${C.amber}18`, C.amberL, { fontSize: 9 }), display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+            <span style={{ ...pill(`${C.amber}18`, C.amberL, { fontSize: 9 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               <Undo2 size={9} />Carried over
             </span>
           )}
           {autoVerify && (task.done
-            ? <span style={pill(C.greenDim || `${C.green}18`, C.green, { fontSize: 9 })}><ShieldCheck size={9} style={{ marginRight: 3, verticalAlign: -1 }} />Verified</span>
+            ? <span style={pill(C.greenDim || `${C.green}18`, C.green, { fontSize: 9 })}><ShieldCheck size={9} style={{ marginRight: 4, verticalAlign: -1 }} />Verified</span>
             : <span style={pill('rgba(255,255,255,0.04)', C.t4, { fontSize: 9 })}>Auto-verifies</span>)}
-          {task.estMinutes > 0 && <span style={R({ gap: 3 })}><Clock size={10} color={C.t3} /><span style={{ fontSize: 10, color: C.t3 }}>{task.estMinutes}m</span></span>}
+          {task.estMinutes > 0 && <span style={R({ gap: 4 })}><Clock size={10} color={C.t3} /><span style={{ fontSize: 10, color: C.t3 }}>{task.estMinutes}m</span></span>}
           {canReschedule && onSnooze && (
             <button onClick={onSnooze} title="Snooze to tomorrow" aria-label="Snooze this task to tomorrow"
-              style={{ all: 'unset', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 3, padding: '3px 8px', borderRadius: 999, border: `1px solid ${C.b1}`, color: C.t3, fontSize: 10 }}>
+              style={{ all: 'unset', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 999, border: `1px solid ${C.b1}`, color: C.t3, fontSize: 10 }}>
               <Sunrise size={10} />Snooze
             </button>
           )}
           {canReschedule && onMoveClick && (
             <button onClick={onMoveClick} title="Move to another day" aria-label="Move this task to another day"
-              style={{ all: 'unset', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 3, padding: '3px 8px', borderRadius: 999, border: `1px solid ${C.b1}`, color: C.t3, fontSize: 10 }}>
+              style={{ all: 'unset', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 999, border: `1px solid ${C.b1}`, color: C.t3, fontSize: 10 }}>
               <CalendarPlus size={10} />Move
             </button>
           )}
           {canJump && (
             <motion.button whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }} onClick={onJump} aria-label="Open this task's resource"
               style={{
-                display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 11px', borderRadius: 999,
+                display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 999,
                 border: `1px solid ${meta.color}45`, background: `${meta.color}16`, color: meta.color,
                 fontSize: 10.5, fontWeight: 700, fontFamily: C.FB, cursor: 'pointer', maxWidth: '100%',
                 boxShadow: `0 2px 8px ${meta.color}22`,
@@ -1323,10 +1323,10 @@ function TaskRow({ task, onToggle, onJump, onSnooze, onMoveClick, dragHandle, is
 // ── Full Roadmap view ──────────────────────────────────────────────────────
 function RoadmapView({ plan, accent, isMobile, expandedPhase, setExpandedPhase }) {
   return (
-    <div style={CC({ gap: 18 })}>
-      <div style={glass({ padding: 18 })}>
+    <div style={CC({ gap: 16 })}>
+      <div style={glass({ padding: 16 })}>
         <SectionLabel icon={MapIcon} title="Phases" color={C.violet} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
           {plan.phases.map((ph, i) => (
             <PhaseCard key={ph.id} phase={ph} index={i} plan={plan} accent={accent}
               expanded={expandedPhase === ph.id} onToggle={() => setExpandedPhase(expandedPhase === ph.id ? null : ph.id)} />
@@ -1334,21 +1334,21 @@ function RoadmapView({ plan, accent, isMobile, expandedPhase, setExpandedPhase }
         </div>
       </div>
 
-      <div style={glass({ padding: 18 })}>
+      <div style={glass({ padding: 16 })}>
         <SectionLabel icon={Flag} title="Milestones" color={C.blue} />
         <div style={{ marginTop: 12 }}>
           {plan.milestones.map((m, i) => (
-            <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+            <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
                 <span style={{ width: 9, height: 9, borderRadius: '50%', background: C.blue, boxShadow: `0 0 8px ${C.blue}` }} />
-                {i < plan.milestones.length - 1 && <span style={{ width: 2, flex: 1, background: `${C.blue}30`, marginTop: 2 }} />}
+                {i < plan.milestones.length - 1 && <span style={{ width: 2, flex: 1, background: `${C.blue}30`, marginTop: 4 }} />}
               </div>
               <div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{m.title}</span>
                   <span style={pill(`${C.blue}18`, C.blueL, { fontSize: 9.5 })}>Week {m.weekTarget}</span>
                 </div>
-                {m.detail && <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.5, marginTop: 2 }}>{m.detail}</div>}
+                {m.detail && <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.5, marginTop: 4 }}>{m.detail}</div>}
               </div>
             </div>
           ))}
@@ -1356,9 +1356,9 @@ function RoadmapView({ plan, accent, isMobile, expandedPhase, setExpandedPhase }
       </div>
 
       {plan.riskMitigation?.length > 0 && (
-        <div style={glass({ padding: 18 })}>
+        <div style={glass({ padding: 16 })}>
           <SectionLabel icon={ShieldAlert} title="Watching out for" color={C.rose} />
-          <div style={G(2, 10, { marginTop: 10 }, isMobile)}>
+          <div style={G(2, 10, { marginTop: 8 }, isMobile)}>
             {plan.riskMitigation.map((r, i) => (
               <div key={i} style={{ ...glass2({ padding: 12 }), borderLeft: `2px solid ${C.rose}` }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: C.t1, marginBottom: 4 }}>{r.obstacle}</div>
@@ -1370,10 +1370,10 @@ function RoadmapView({ plan, accent, isMobile, expandedPhase, setExpandedPhase }
       )}
 
       {plan.ninetyDayGoal && (
-        <div style={{ padding: '14px 16px', borderRadius: 11, background: `linear-gradient(135deg,${C.amber}14,transparent)`, border: `1px solid ${C.amber}30`, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <TrendingUp size={15} color={C.amberL} style={{ flexShrink: 0, marginTop: 1 }} />
+        <div style={{ padding: '12px 16px', borderRadius: 12, background: `linear-gradient(135deg,${C.amber}14,transparent)`, border: `1px solid ${C.amber}30`, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+          <TrendingUp size={15} color={C.amberL} style={{ flexShrink: 0, marginTop: 4 }} />
           <div>
-            <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.amberL, marginBottom: 3 }}>Where you could be in 90 days</div>
+            <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.amberL, marginBottom: 4 }}>Where you could be in 90 days</div>
             <p style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.6, margin: 0 }}>{plan.ninetyDayGoal}</p>
           </div>
         </div>
@@ -1387,9 +1387,9 @@ function RoadmapView({ plan, accent, isMobile, expandedPhase, setExpandedPhase }
 
 function SectionLabel({ icon: Icon, title, color }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <Icon size={13} color={color} />
-      <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3 }}>{title}</span>
+      <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3 }}>{title}</span>
     </div>
   );
 }
@@ -1398,13 +1398,13 @@ function PhaseCard({ phase, index, plan, accent, expanded, onToggle }) {
   const weeks = plan.weeklyThemes.filter(w => w.week >= phase.weekStart && w.week <= phase.weekEnd);
   return (
     <div style={glass2({ padding: 0, overflow: 'hidden' })}>
-      <button onClick={onToggle} style={{ all: 'unset', cursor: 'pointer', display: 'block', width: '100%', boxSizing: 'border-box', padding: 14 }}>
-        <div style={R({ justifyContent: 'space-between', gap: 10 })}>
-          <div style={R({ gap: 10 })}>
-            <span style={{ width: 24, height: 24, borderRadius: 7, background: `${accent}22`, color: accent, fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{index + 1}</span>
+      <button onClick={onToggle} style={{ all: 'unset', cursor: 'pointer', display: 'block', width: '100%', boxSizing: 'border-box', padding: 12 }}>
+        <div style={R({ justifyContent: 'space-between', gap: 8 })}>
+          <div style={R({ gap: 8 })}>
+            <span style={{ width: 24, height: 24, borderRadius: 8, background: `${accent}22`, color: accent, fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{index + 1}</span>
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{phase.title}</div>
-              <div style={{ fontSize: 11, color: C.t3, marginTop: 1 }}>Weeks {phase.weekStart}–{phase.weekEnd} · {phase.theme}</div>
+              <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>Weeks {phase.weekStart}–{phase.weekEnd} · {phase.theme}</div>
             </div>
           </div>
           <motion.div animate={{ rotate: expanded ? 180 : 0 }} style={{ color: C.t3, flexShrink: 0 }}><ChevronDown size={15} /></motion.div>
@@ -1413,24 +1413,24 @@ function PhaseCard({ phase, index, plan, accent, expanded, onToggle }) {
       <AnimatePresence initial={false}>
         {expanded && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: 'hidden' }}>
-            <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ padding: '0px 12px 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', color: C.t3, marginBottom: 6 }}>Objectives</div>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, marginBottom: 4 }}>Objectives</div>
                 {phase.objectives.map((o, i) => (
                   <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 4 }}>
-                    <CheckCircle2 size={12} color={accent} style={{ flexShrink: 0, marginTop: 2 }} />
+                    <CheckCircle2 size={12} color={accent} style={{ flexShrink: 0, marginTop: 4 }} />
                     <span style={{ fontSize: 12, color: C.t2, lineHeight: 1.5 }}>{o}</span>
                   </div>
                 ))}
               </div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                 {phase.resources.map((r, i) => <span key={i} style={pill(`${accent}15`, accent, { fontSize: 10 })}>{r}</span>)}
               </div>
               <div style={{ fontSize: 11.5, color: C.t3, fontStyle: 'italic' }}>Success looks like: {phase.successMetric}</div>
               {weeks.length > 0 && (
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', color: C.t3, marginBottom: 6 }}>Week-by-week in this phase</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, marginBottom: 4 }}>Week-by-week in this phase</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {weeks.map(w => (
                       <div key={w.week} style={{ display: 'flex', gap: 8, alignItems: 'baseline', fontSize: 11.5 }}>
                         <span style={{ color: C.t3, fontFamily: C.FM, fontSize: 10, flexShrink: 0, width: 44 }}>Wk {w.week}</span>

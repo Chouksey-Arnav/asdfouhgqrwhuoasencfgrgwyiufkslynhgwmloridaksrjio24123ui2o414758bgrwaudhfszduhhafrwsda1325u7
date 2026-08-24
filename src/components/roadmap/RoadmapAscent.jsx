@@ -96,9 +96,9 @@ export default function RoadmapAscent({
         />
       ) : (
         <div style={{
-          marginTop: 12, padding: '14px 16px', borderRadius: 12,
+          marginTop: 12, padding: '12px 16px', borderRadius: 12,
           background: C.surf2, border: `1px solid ${C.b1}`,
-          fontSize: 12, color: C.t3, lineHeight: 1.7,
+          fontSize: 12, color: C.t3, lineHeight: 1.55,
         }}>
           There is not enough on your roadmap yet to draw the climb — a curve through three points
           says less than the sentence above it. Add a few items, or rebuild your roadmap, and this
@@ -114,9 +114,9 @@ export default function RoadmapAscent({
           type="button"
           onClick={onExplore}
           style={{
-            marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 6,
+            marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 4,
             background: tint(C.violet, 0.14), border: `1px solid ${tint(C.violet, 0.32)}`,
-            color: C.violetL || C.violet, borderRadius: 9, padding: '8px 14px',
+            color: C.violetL || C.violet, borderRadius: 8, padding: '8px 12px',
             fontSize: 12, fontWeight: 700, fontFamily: C.FB, cursor: 'pointer',
           }}
         >
@@ -142,10 +142,10 @@ function ClimbHeadline({ climb, schools, isMobile, compact }) {
     }}>
       <Score value={now.score} band={now.band} label="today" color={C.t3} isMobile={isMobile} />
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
         <div style={{
           ...pill(tint(C.green, 0.16), C.green, {
-            fontSize: isMobile ? 11 : 12, fontWeight: 800, padding: '4px 11px', gap: 4,
+            fontSize: isMobile ? 11 : 12, fontWeight: 800, padding: '4px 12px', gap: 4,
             border: `1px solid ${tint(C.green, 0.34)}`,
           }),
         }}>
@@ -158,10 +158,10 @@ function ClimbHeadline({ climb, schools, isMobile, compact }) {
 
       {!compact && !!schools.length && (
         <div style={{ flex: 1, minWidth: 180 }}>
-          <div style={{ fontSize: 9.5, fontWeight: 800, color: C.t4, letterSpacing: '.1em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 9.5, fontWeight: 800, color: C.t4, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
             Pointed at
           </div>
-          <div style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: C.t1, marginTop: 3, lineHeight: 1.4 }}>
+          <div style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: C.t1, marginTop: 4, lineHeight: 1.4 }}>
             {schools.join(' · ')}
           </div>
         </div>
@@ -175,13 +175,13 @@ function Score({ value, band, label, color, isMobile, strong = false }) {
     <div style={{ flexShrink: 0 }}>
       <div style={{
         fontSize: isMobile ? (strong ? 34 : 28) : (strong ? 42 : 34),
-        fontWeight: 800, fontFamily: C.FD, letterSpacing: '-.04em', lineHeight: 1,
+        fontWeight: 800, fontFamily: C.FD, letterSpacing: 'calc(-0.04em + var(--msp-letter-spacing))', lineHeight: 1,
         color: strong ? C.t1 : C.t2,
       }}>
         {value}
       </div>
       <div style={{ fontSize: 10.5, fontWeight: 800, color, marginTop: 4 }}>{band}</div>
-      <div style={{ fontSize: 9.5, color: C.t4, marginTop: 1 }}>{label}</div>
+      <div style={{ fontSize: 9.5, color: C.t4, marginTop: 4 }}>{label}</div>
     </div>
   );
 }
@@ -240,7 +240,7 @@ function ClimbChart({ climb, schools, isMobile, reducedMotion, compact }) {
   const focus = hover != null ? pts[hover] : null;
 
   return (
-    <div ref={wrapRef} style={{ marginTop: 14 }}>
+    <div ref={wrapRef} style={{ marginTop: 12 }}>
       <div style={{ position: 'relative' }}>
         <svg
           width="100%" height={h} viewBox={`0 0 ${width} ${h}`}
@@ -409,12 +409,12 @@ function ClimbChart({ climb, schools, isMobile, reducedMotion, compact }) {
             names and they are text, not a path. */}
         <div style={{
           position: 'absolute', right: PAD.right, top: PAD.top - 6,
-          display: 'flex', alignItems: 'center', gap: 5,
+          display: 'flex', alignItems: 'center', gap: 4,
           pointerEvents: 'none', maxWidth: '52%',
         }}>
           <Flag size={11} color={C.green} style={{ flexShrink: 0 }} />
           <span style={{
-            fontSize: 9.5, fontWeight: 800, color: C.green, letterSpacing: '.04em',
+            fontSize: 9.5, fontWeight: 800, color: C.green, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
           }}>
             {schools.length ? schools[0] + (schools.length > 1 ? ` +${schools.length - 1}` : '') : 'Your target schools'}
@@ -452,8 +452,8 @@ function Legend({ isMobile }) {
   return (
     <div style={{ display: 'flex', gap: isMobile ? 10 : 14, flexWrap: 'wrap', marginTop: 4 }}>
       {COMPONENTS.map((c) => (
-        <span key={c.id} title={c.blurb} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, color: C.t3 }}>
-          <span style={{ width: 9, height: 9, borderRadius: 3, background: tint(C[c.colorKey], 0.6), display: 'inline-block' }} />
+        <span key={c.id} title={c.blurb} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: C.t3 }}>
+          <span style={{ width: 9, height: 9, borderRadius: 4, background: tint(C[c.colorKey], 0.6), display: 'inline-block' }} />
           {c.label}
         </span>
       ))}
@@ -469,14 +469,13 @@ function Legend({ isMobile }) {
 function ContributionRows({ climb, isMobile }) {
   const max = Math.max(1, ...climb.contributions.map((c) => c.to));
   return (
-    <div style={{ marginTop: 18 }}>
+    <div style={{ marginTop: 16 }}>
       <div style={{
-        fontSize: 10, fontWeight: 800, color: C.t3, letterSpacing: '.1em',
-        textTransform: 'uppercase', marginBottom: 10,
+        fontSize: 10, fontWeight: 800, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8,
       }}>
         What this year builds
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {climb.contributions.map((row) => {
           const meta = COMPONENTS.find((c) => c.id === row.component);
           const color = C[meta.colorKey];
@@ -485,12 +484,12 @@ function ContributionRows({ climb, isMobile }) {
             <div key={row.component}>
               <div style={{
                 display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
-                gap: 10, marginBottom: 5,
+                gap: 8, marginBottom: 4,
               }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>{meta.label}</span>
                 <span style={{ fontSize: 10.5, color: C.t4, fontFamily: C.FM, whiteSpace: 'nowrap' }}>
                   {row.from} → {row.to}
-                  {gain > 0 && <b style={{ color: C.green, marginLeft: 6 }}>+{gain}</b>}
+                  {gain > 0 && <b style={{ color: C.green, marginLeft: 4 }}>+{gain}</b>}
                 </span>
               </div>
               {/* Two stacked bars: what is already there, and what this year
@@ -530,11 +529,11 @@ function ContributionRows({ climb, isMobile }) {
 function HonestyNote() {
   return (
     <div style={{
-      display: 'flex', gap: 9, alignItems: 'flex-start', marginTop: 18,
-      background: C.surf2, border: `1px solid ${C.b1}`, borderRadius: 10, padding: '11px 13px',
+      display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 16,
+      background: C.surf2, border: `1px solid ${C.b1}`, borderRadius: 8, padding: '12px 12px',
     }}>
-      <Info size={13} color={C.t3} style={{ flexShrink: 0, marginTop: 2 }} />
-      <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.7 }}>
+      <Info size={13} color={C.t3} style={{ flexShrink: 0, marginTop: 4 }} />
+      <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.55 }}>
         <b style={{ color: C.t2 }}>This is not a chance of getting in.</b> Nobody outside an
         admissions office can work that number out, and anything that shows you one is guessing.
         What this draws is <b style={{ color: C.t2 }}>our own 0–100 readiness score</b> — the same

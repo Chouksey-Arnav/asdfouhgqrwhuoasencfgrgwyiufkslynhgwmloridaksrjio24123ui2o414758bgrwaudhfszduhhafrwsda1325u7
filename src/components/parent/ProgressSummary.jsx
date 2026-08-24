@@ -37,17 +37,17 @@ function Stat({ icon: Icon, hue, label, value, sub, means }) {
   return (
     <div style={glass2({ display: 'flex', gap: 12, alignItems: 'flex-start' })}>
       <div style={{
-        width: 32, height: 32, borderRadius: 9, flexShrink: 0, display: 'flex',
+        width: 32, height: 32, borderRadius: 8, flexShrink: 0, display: 'flex',
         alignItems: 'center', justifyContent: 'center',
         background: tint(hue, 0.13), border: `1px solid ${tint(hue, 0.28)}`,
       }}>
         <Icon size={15} color={hue} />
       </div>
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 18, fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.1 }}>{value}</div>
-        <div style={{ fontSize: 11.5, color: C.t2, marginTop: 2 }}>{label}</div>
-        {sub && <div style={{ fontSize: 11, color: C.t3, marginTop: 2 }}>{sub}</div>}
-        {means && <div style={{ fontSize: 10.5, color: C.t3, marginTop: 6, lineHeight: 1.5 }}>{means}</div>}
+        <div style={{ fontSize: 18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.1 }}>{value}</div>
+        <div style={{ fontSize: 11.5, color: C.t2, marginTop: 4 }}>{label}</div>
+        {sub && <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>{sub}</div>}
+        {means && <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>{means}</div>}
       </div>
     </div>
   );
@@ -66,15 +66,15 @@ function Calendar({ days }) {
   for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));
   return (
     <div>
-      <div style={{ display: 'flex', gap: 3 }}>
+      <div style={{ display: 'flex', gap: 4 }}>
         {weeks.map((week, wi) => (
-          <div key={wi} style={{ display: 'flex', flexDirection: 'column', gap: 3, flex: 1 }}>
+          <div key={wi} style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
             {week.map((day) => (
               <div
                 key={day.date}
                 title={`${day.date}${day.active ? ' — studied' : ''}`}
                 style={{
-                  height: 9, borderRadius: 2,
+                  height: 9, borderRadius: 4,
                   background: day.active ? C.green : C.b1,
                   border: day.active ? 'none' : `1px solid ${C.b0}`,
                 }}
@@ -83,7 +83,7 @@ function Calendar({ days }) {
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: C.t3, marginTop: 6 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: C.t3, marginTop: 4 }}>
         <span>8 weeks ago</span><span>Today</span>
       </div>
     </div>
@@ -118,12 +118,12 @@ function Digest({ summary }) {
   const hue = { strong: C.green, steady: C.blue, quiet: C.amber, new: C.t3 }[digest.tone] || C.blue;
   return (
     <div style={glass({ padding: 20, borderColor: tint(hue, 0.28), background: tint(hue, 0.05) })}>
-      <div style={R({ gap: 9, marginBottom: 10 })}>
+      <div style={R({ gap: 8, marginBottom: 8 })}>
         <Brain size={15} color={hue} />
         <span style={{ fontSize: 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{digest.headline}</span>
       </div>
-      <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.65 }}>{digest.body}</div>
-      <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.65, marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.b1}` }}>
+      <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.55 }}>{digest.body}</div>
+      <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.55, marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.b1}` }}>
         {digest.suggestion}
       </div>
     </div>
@@ -144,9 +144,9 @@ export default function ProgressSummary({ summary }) {
       <Digest summary={summary} />
 
       <div style={glass({ padding: 20 })}>
-        <div style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 })}>
+        <div style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 })}>
           <div>
-            <div style={{ fontSize: 19, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
+            <div style={{ fontSize: 19, letterSpacing: 'calc(-0.23px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
               {student?.name || 'Your student'}
             </div>
             <div style={{ fontSize: 12.5, color: C.t3 }}>
@@ -156,19 +156,19 @@ export default function ProgressSummary({ summary }) {
           </div>
           {effort?.streakDays > 0 && (
             <span style={pill(tint(C.orange, 0.14), C.orangeL)}>
-              <Flame size={12} style={{ marginRight: 5 }} /> {effort.streakDays}-day streak
+              <Flame size={12} style={{ marginRight: 4 }} /> {effort.streakDays}-day streak
             </span>
           )}
         </div>
 
         {neverStarted ? (
-          <div style={{ fontSize: 13, color: C.t2, marginTop: 14, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 13, color: C.t2, marginTop: 12, lineHeight: 1.55 }}>
             They haven't started studying yet. Nothing to report — this page will fill in on its own
             once they do, usually within a few minutes of their first session.
           </div>
         ) : (
           <div style={{ marginTop: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 8 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8 }}>
               Study days
             </div>
             <Calendar days={effort?.calendar} />
@@ -216,7 +216,7 @@ export default function ProgressSummary({ summary }) {
       </div>
 
       {coursework?.quizzes?.trend != null && (
-        <div style={glass2({ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' })}>
+        <div style={glass2({ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' })}>
           <span style={{ fontSize: 12.5, color: C.t2 }}>Recent quizzes vs earlier ones:</span>
           <Delta value={coursework.quizzes.trend} unit=" points" />
         </div>
@@ -225,12 +225,12 @@ export default function ProgressSummary({ summary }) {
 
       {milestones?.length > 0 && (
         <div style={glass({ padding: 20 })}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 12 }}>
             Recently
           </div>
-          <div style={CC({ gap: 10 })}>
+          <div style={CC({ gap: 8 })}>
             {milestones.map((m, i) => (
-              <div key={`${m.kind}-${m.at}-${i}`} style={R({ gap: 10 })}>
+              <div key={`${m.kind}-${m.at}-${i}`} style={R({ gap: 8 })}>
                 <Award size={14} color={C.amberL} style={{ flexShrink: 0 }} />
                 <span style={{ fontSize: 13, color: C.t1, textTransform: 'capitalize' }}>{m.label}</span>
                 {m.score != null && <span style={{ fontSize: 12, color: C.t3 }}>({m.score}%)</span>}
@@ -247,7 +247,7 @@ export default function ProgressSummary({ summary }) {
         visible stops using the coach honestly — which costs them the most useful part of the app.
         Cheap to state; expensive to leave implicit.
       */}
-      <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6, padding: '0 4px' }}>
+      <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6, padding: '0px 4px' }}>
         You're seeing effort and results. Coach conversations, lesson notes, and essay drafts stay
         private to {student?.name || 'your student'} — by design, so this stays a place they can
         think out loud.

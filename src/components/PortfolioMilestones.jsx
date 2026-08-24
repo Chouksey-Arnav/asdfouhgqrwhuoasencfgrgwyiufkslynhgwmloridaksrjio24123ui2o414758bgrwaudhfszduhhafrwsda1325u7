@@ -470,9 +470,9 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
 
   if (!timeline) {
     return (
-      <div style={CC({ gap: 18 })}>
+      <div style={CC({ gap: 16 })}>
         <Hero accent={accent} timeline={null} isMobile={isMobile} onExport={null} />
-        <div style={{ ...glass({ padding: 26, textAlign: 'center' }), color: C.t3, fontSize: 13 }}>
+        <div style={{ ...glass({ padding: 24, textAlign: 'center' }), color: C.t3, fontSize: 13 }}>
           <Loader size={16} className="spin" style={{ verticalAlign: 'middle', marginRight: 8 }} />
           Building your timeline…
         </div>
@@ -485,7 +485,7 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
   const yoursCount = deadlineRows.length;
 
   return (
-    <div style={CC({ gap: 18 })}>
+    <div style={CC({ gap: 16 })}>
       <Hero accent={accent} timeline={timeline} isMobile={isMobile} onExport={exportCalendar} />
 
       <TrackQueueNotice entries={pendingEntries.filter(e => e.resource === 'deadlines')} status={trackStatus} onRetried={refresh} />
@@ -510,7 +510,7 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
           showing the wrong one is worse than showing none. */}
       {!gradeLabel && (
         <CalloutCard color={C.amber} icon={GraduationCap} title="Set your class year to unlock the generated calendar">
-          <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.65, margin: 0 }}>
+          <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, margin: 0 }}>
             We don't know what grade you're in, so we won't guess your admissions calendar — a freshman and a senior get
             completely different dates. Anything you add below still works right now and still counts down on your Home dashboard.
           </p>
@@ -541,12 +541,12 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
             These come from dates you already entered on College List and Financial Aid, plus FAFSA and AP/IB. None of them are
             guesses — add one and it becomes an exact date in the list below.
           </p>
-          <div style={CC({ gap: 6 })}>
+          <div style={CC({ gap: 4 })}>
             {suggestions.map((s, i) => (
-              <div key={`${s.title}-${i}`} style={{ ...glass2({ padding: '10px 12px' }), display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div key={`${s.title}-${i}`} style={{ ...glass2({ padding: '8px 12px' }), display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12.5, fontWeight: 600, color: C.t1 }}>{s.title}</div>
-                  <div style={{ fontSize: 10.5, color: C.t3, marginTop: 2 }}>{fmtDate(s.due_date)} · {s.source}</div>
+                  <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4 }}>{fmtDate(s.due_date)} · {s.source}</div>
                 </div>
                 <button style={btnSm('rgba(255,255,255,0.06)', { color: C.t2 })}
                   onClick={() => addDeadline({ title: s.title, due_date: s.due_date, kind: s.kind, college_id: s.college_id })}>
@@ -570,14 +570,14 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
             deadline date, so {dateless.length === 1 ? 'it' : 'they'} can't appear below. Add the real date from the program's site on the
             Financial Aid tab — we don't guess deadlines.
           </p>
-          <div style={CC({ gap: 6 })}>
+          <div style={CC({ gap: 4 })}>
             {dateless.slice(0, 8).map(s => (
-              <div key={s.id} style={{ ...glass2({ padding: '9px 12px' }), fontSize: 12.5, color: C.t2 }}>{s.name}</div>
+              <div key={s.id} style={{ ...glass2({ padding: '8px 12px' }), fontSize: 12.5, color: C.t2 }}>{s.name}</div>
             ))}
             {dateless.length > 8 && <div style={{ fontSize: 11, color: C.t3 }}>…and {dateless.length - 8} more</div>}
           </div>
           {onNavigate && (
-            <button onClick={() => onNavigate('portfolio', 'aid')} style={btnG({ marginTop: 12, fontSize: 11.5, padding: '7px 14px' })}>
+            <button onClick={() => onNavigate('portfolio', 'aid')} style={btnG({ marginTop: 12, fontSize: 11.5, padding: '8px 12px' })}>
               Open Financial Aid<ArrowRight size={11} />
             </button>
           )}
@@ -614,9 +614,9 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
 
           {/* Where these dates come from — said once, plainly, so a generated date is
               never mistaken for one the student confirmed. */}
-          <div style={{ ...glass2({ padding: '11px 14px' }), display: 'flex', gap: 9, alignItems: 'flex-start' }}>
-            <Info size={13} color={C.t3} style={{ marginTop: 2, flexShrink: 0 }} />
-            <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6 }}>
+          <div style={{ ...glass2({ padding: '12px 12px' }), display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            <Info size={13} color={C.t3} style={{ marginTop: 4, flexShrink: 0 }} />
+            <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55 }}>
               <b style={{ color: C.t2 }}>{stats.fromYourData}</b> of these came from what you've logged — those dates are exact.{' '}
               <b style={{ color: C.t2 }}>{stats.generated}</b> are typical-year dates worked out from your class year, courses, test track and college list. They're marked <span style={pill(C.s3, C.t3, { fontSize: 9 })}>typical</span> — check them on the school's own site before you plan around them.
             </div>
@@ -634,7 +634,7 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
           its rows. So whenever anything is filtering, the state and the way out are printed
           outside the door, in words. */}
       {filtersOn && (
-        <div style={{ ...glass2({ padding: '10px 13px' }), display: 'flex', gap: 9, alignItems: 'center', flexWrap: 'wrap', border: `1px solid ${tint(accent, 0.28)}` }}>
+        <div style={{ ...glass2({ padding: '8px 12px' }), display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', border: `1px solid ${tint(accent, 0.28)}` }}>
           <Filter size={12} color={accent} style={{ flexShrink: 0 }} />
           <span style={{ flex: 1, minWidth: 160, fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>
             You're only seeing {[
@@ -643,7 +643,7 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
               monthFilter ? fmtMonth(monthFilter) : null,
             ].filter(Boolean).join(' · ')} — some of your dates are hidden.
           </span>
-          <button onClick={clearFilters} style={btnSm(tint(accent, 0.16), { color: onTint(accent), fontSize: 11, padding: '5px 12px', flexShrink: 0 })}>
+          <button onClick={clearFilters} style={btnSm(tint(accent, 0.16), { color: onTint(accent), fontSize: 11, padding: '4px 12px', flexShrink: 0 })}>
             <X size={11} />Show everything
           </button>
         </div>
@@ -652,8 +652,8 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
       <Disclosure id="milestones-filters" icon={Filter} color={accent} m={isMobile}
         title="Find a particular date"
         sub="Narrow to your own dates, a category, or a month.">
-      <div style={CC({ gap: 10 })}>
-        <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+      <div style={CC({ gap: 8 })}>
+        <div style={R({ gap: 8, flexWrap: 'wrap' })}>
           {LENSES.map(l => {
             const on = lens === l.id;
             const Ic = l.icon;
@@ -661,7 +661,7 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
             return (
               <button key={l.id} onClick={() => setLens(l.id)} aria-pressed={on} style={{
                 ...pill(on ? tint(col, 0.18) : C.s3, on ? col : C.t3, {
-                  fontSize: 11, gap: 5, fontWeight: 700, padding: '5px 13px',
+                  fontSize: 11, gap: 4, fontWeight: 700, padding: '4px 12px',
                   border: `1px solid ${on ? tint(col, 0.42) : C.b1}`,
                 }),
                 cursor: 'pointer', display: 'inline-flex', alignItems: 'center',
@@ -674,7 +674,7 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
           })}
           <span style={{ flex: 1 }} />
           {filtersOn && (
-            <button onClick={clearFilters} style={{ ...btnSm(C.s3, { fontSize: 11, color: C.t3, padding: '5px 12px' }) }}>
+            <button onClick={clearFilters} style={{ ...btnSm(C.s3, { fontSize: 11, color: C.t3, padding: '4px 12px' }) }}>
               <X size={11} />Clear filters
             </button>
           )}
@@ -685,9 +685,9 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
         )}
 
         {kindsPresent.length > 1 && (
-          <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+          <div style={R({ gap: 8, flexWrap: 'wrap' })}>
             <button onClick={() => setKindFilter(null)} style={{
-              ...pill(kindFilter ? C.s3 : tint(accent, 0.16), kindFilter ? C.t3 : accent, { fontSize: 10.5, gap: 5, border: `1px solid ${kindFilter ? C.b1 : tint(accent, 0.35)}` }),
+              ...pill(kindFilter ? C.s3 : tint(accent, 0.16), kindFilter ? C.t3 : accent, { fontSize: 10.5, gap: 4, border: `1px solid ${kindFilter ? C.b1 : tint(accent, 0.35)}` }),
               cursor: 'pointer', display: 'inline-flex', alignItems: 'center',
             }}><Filter size={10} />All categories</button>
             {kindsPresent.map(k => {
@@ -696,7 +696,7 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
               const Ic = KIND_ICON[k.id] || CalendarDays;
               return (
                 <button key={k.id} onClick={() => setKindFilter(on ? null : k.id)} title={k.blurb} aria-pressed={on} style={{
-                  ...pill(on ? tint(col, 0.18) : C.s3, on ? col : C.t3, { fontSize: 10.5, gap: 5, border: `1px solid ${on ? tint(col, 0.4) : C.b1}` }),
+                  ...pill(on ? tint(col, 0.18) : C.s3, on ? col : C.t3, { fontSize: 10.5, gap: 4, border: `1px solid ${on ? tint(col, 0.4) : C.b1}` }),
                   cursor: 'pointer', display: 'inline-flex', alignItems: 'center',
                 }}><Ic size={10} />{k.label}</button>
               );
@@ -735,20 +735,20 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
           produce for themselves: how long the work takes is knowledge about programs they have
           never applied to. "When is it" remains one tap away. */}
       {visibleUpcoming.length > 1 && (
-        <div style={{ ...glass2({ padding: '10px 13px' }), display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ ...glass2({ padding: '8px 12px' }), display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           <Flame size={12} color={sortMode === 'urgency' ? C.amberL : C.t3} style={{ flexShrink: 0 }} />
           <span style={{ flex: 1, minWidth: 180, fontSize: 11.5, color: C.t3, lineHeight: 1.55 }}>
             {sortMode === 'urgency'
               ? 'Ordered by how soon you have to start, not by which date is soonest — a deadline in 90 days that needs two months of work outranks one in 30 that takes an afternoon.'
               : 'Ordered by date, soonest first.'}
           </span>
-          <div style={R({ gap: 6, flexShrink: 0 })}>
+          <div style={R({ gap: 4, flexShrink: 0 })}>
             {[{ id: 'urgency', label: 'By urgency' }, { id: 'date', label: 'By date' }].map(o => {
               const on = sortMode === o.id;
               return (
                 <button key={o.id} onClick={() => setSortMode(o.id)} aria-pressed={on} style={{
                   ...pill(on ? tint(accent, 0.18) : C.s3, on ? accent : C.t3, {
-                    fontSize: 11, fontWeight: 700, padding: '5px 12px',
+                    fontSize: 11, fontWeight: 700, padding: '4px 12px',
                     border: `1px solid ${on ? tint(accent, 0.4) : C.b1}`,
                   }),
                   cursor: 'pointer',
@@ -776,7 +776,7 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
               <Disclosure id="milestones-later" icon={CalendarDays} color={C.sky} m={isMobile}
                 title={`Further ahead (${laterCount} ${laterCount === 1 ? 'date' : 'dates'})`}
                 sub={`Everything from ${laterGroups[0].label} onwards — worth knowing about, nothing you can do today.`}>
-                <div style={CC({ gap: 14 })}>
+                <div style={CC({ gap: 12 })}>
                   {laterGroups.map(group => (
                     <MilestoneGroup key={group.key} group={group} accent={accent} openId={openId} setOpenId={setOpenId}
                       onGo={go} onDelete={removeDeadline} onComplete={completeRow} isMobile={isMobile} />
@@ -807,7 +807,7 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
 
       {visibleUpcoming.length > 0 && (
         <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <button onClick={exportCalendar} style={btnG({ fontSize: 12, padding: '9px 18px' })}>
+          <button onClick={exportCalendar} style={btnG({ fontSize: 12, padding: '8px 16px' })}>
             <CalendarPlus size={13} />Export {timeline.upcoming.filter(e => e.days >= 0).length} upcoming to your calendar
           </button>
         </div>
@@ -897,7 +897,7 @@ function BrainTake({ summary }) {
     <div style={{ ...glass2({ padding: 16 }), background: `linear-gradient(120deg,${tint(C.violet, 0.08)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.violet, 0.25)}` }}>
       <div style={R({ gap: 8, marginBottom: summary.loading ? 0 : 8 })}>
         <Sparkles size={13} color={C.violetL} />
-        <span style={{ fontSize: 11, fontWeight: 700, color: C.violetL, textTransform: 'uppercase', letterSpacing: '.06em' }}>What to do first</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: C.violetL, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>What to do first</span>
       </div>
       {summary.loading && <div style={R({ gap: 8, color: C.t3, fontSize: 12 })}><Loader2 size={13} className="spin" />Working out what's most urgent…</div>}
       {summary.content && !summary.loading && <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(summary.content) }} />}
@@ -925,30 +925,30 @@ function AddMilestone({ accent, open, setOpen, onAdd }) {
   if (!open) {
     return (
       <button onClick={() => setOpen(true)} style={{
-        ...glass({ padding: '13px 18px' }),
+        ...glass({ padding: '12px 16px' }),
         background: `linear-gradient(120deg,${tint(accent, 0.07)},rgba(255,255,255,0.02) 55%)`,
         border: `1px dashed ${tint(accent, 0.34)}`,
-        display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', width: '100%',
+        display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', width: '100%',
         textAlign: 'left', font: 'inherit', color: 'inherit',
       }}>
-        <div style={{ width: 28, height: 28, borderRadius: 9, background: tint(accent, 0.14), border: `1px solid ${tint(accent, 0.3)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: 28, height: 28, borderRadius: 8, background: tint(accent, 0.14), border: `1px solid ${tint(accent, 0.3)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <Plus size={14} color={accent} />
         </div>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 12.5, fontWeight: 600, color: C.t1 }}>Add your own date</div>
-          <div style={{ fontSize: 11, color: C.t3, marginTop: 1 }}>A supplement, an interview, a program application — anything with a date lands in the feed below and on your Home dashboard.</div>
+          <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>A supplement, an interview, a program application — anything with a date lands in the feed below and on your Home dashboard.</div>
         </div>
       </button>
     );
   }
 
   return (
-    <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(accent, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(accent, 0.2)}` }}>
+    <div style={{ ...glass({ padding: 16 }), background: `linear-gradient(120deg,${tint(accent, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(accent, 0.2)}` }}>
       <div style={R({ justifyContent: 'space-between', marginBottom: 12 })}>
         <SectionTitle icon={Plus} color={accent} extra={{ marginBottom: 0 }}>Add your own date</SectionTitle>
-        <button onClick={() => setOpen(false)} aria-label="Close" style={btnSm(C.s3, { color: C.t3, padding: '5px 10px' })}><X size={12} /></button>
+        <button onClick={() => setOpen(false)} aria-label="Close" style={btnSm(C.s3, { color: C.t3, padding: '4px 8px' })}><X size={12} /></button>
       </div>
-      <form onSubmit={submit} style={R({ gap: 10, flexWrap: 'wrap' })}>
+      <form onSubmit={submit} style={R({ gap: 8, flexWrap: 'wrap' })}>
         <input style={inp({ flex: 1, minWidth: 180 })} placeholder="e.g. Stanford EA deadline" value={title} onChange={e => setTitle(e.target.value)} />
         <input type="date" aria-label="Date" style={inp({ width: 'auto' })} value={date} onChange={e => setDate(e.target.value)} />
         <select aria-label="Category" style={inp({ width: 'auto' })} value={kind} onChange={e => setKind(e.target.value)}>
@@ -990,8 +990,8 @@ function MonthStrip({ events, active, onPick, accent }) {
   if (!months.some(m => m.count)) return null;
 
   return (
-    <div style={{ ...glass2({ padding: '12px 14px' }), overflowX: 'auto' }}>
-      <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end', minWidth: 480 }}>
+    <div style={{ ...glass2({ padding: '12px 12px' }), overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', minWidth: 480 }}>
         {months.map(m => {
           const on = active === m.key;
           const col = m.urgent ? C.rose : m.count ? accent : C.t4;
@@ -1004,7 +1004,7 @@ function MonthStrip({ events, active, onPick, accent }) {
               title={m.count ? `${m.count} in ${m.label} ${m.year}${m.urgent ? ` · ${m.urgent} critical` : ''}` : `Nothing in ${m.label} ${m.year}`}
               style={{
                 all: 'unset', flex: 1, minWidth: 30, cursor: m.count ? 'pointer' : 'default',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
                 opacity: m.count ? 1 : 0.4,
               }}>
               <span style={{ fontSize: 9.5, fontFamily: C.FM, color: on ? col : C.t3 }}>{m.count || ''}</span>
@@ -1032,9 +1032,9 @@ function MilestoneGroup({ group, accent, openId, setOpenId, onGo, onDelete, onCo
       border: missed ? `1px solid ${tint(C.rose, 0.3)}` : urgent ? `1px solid ${tint(C.amber, 0.28)}` : undefined,
     }}>
       <SectionTitle icon={missed ? AlertTriangle : urgent ? Flame : Hourglass} color={color}>{group.label} ({group.items.length})</SectionTitle>
-      {group.blurb && <div style={{ fontSize: 11.5, color: C.t3, marginTop: -8, marginBottom: 14, lineHeight: 1.55 }}>{group.blurb}</div>}
+      {group.blurb && <div style={{ fontSize: 11.5, color: C.t3, marginTop: -8, marginBottom: 12, lineHeight: 1.55 }}>{group.blurb}</div>}
       <div style={{ position: 'relative' }}>
-        <div style={{ position: 'absolute', left: 14, top: 10, bottom: 10, width: 2, background: `linear-gradient(180deg,${tint(color, 0.35)},${tint(color, 0.04)})`, borderRadius: 2 }} />
+        <div style={{ position: 'absolute', left: 14, top: 10, bottom: 10, width: 2, background: `linear-gradient(180deg,${tint(color, 0.35)},${tint(color, 0.04)})`, borderRadius: 4 }} />
         <div style={CC({ gap: 8 })}>
           {group.items.map(e => (
             <MilestoneRow key={e.id} e={e} open={openId === e.id} onToggle={() => setOpenId(openId === e.id ? null : e.id)}
@@ -1064,31 +1064,31 @@ function MilestoneRow({ e, open, onToggle, onGo, onDelete, onComplete, onReopen,
   const owned = !!e.ownerRef && !!onDelete;
 
   return (
-    <div style={{ display: 'flex', gap: 12, position: 'relative', paddingLeft: 34, opacity: dim ? 0.6 : 1 }}>
+    <div style={{ display: 'flex', gap: 12, position: 'relative', paddingLeft: 32, opacity: dim ? 0.6 : 1 }}>
       <div style={{
         position: 'absolute', left: 8, top: 16, width: 14, height: 14, borderRadius: '50%',
         background: C.s1, border: `2.5px solid ${col}`, boxShadow: pressing ? `0 0 9px ${tint(col, 0.6)}` : 'none',
       }} />
       <div style={{
-        ...glass2({ padding: '11px 13px', flex: 1, minWidth: 0 }),
+        ...glass2({ padding: '12px 12px', flex: 1, minWidth: 0 }),
         background: `linear-gradient(120deg,${tint(kc, 0.06)},rgba(255,255,255,0.02) 60%)`,
         border: `1px solid ${pressing ? tint(col, 0.4) : C.b1}`,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <button onClick={onToggle} style={{
-            all: 'unset', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 11, flex: 1, minWidth: 0, boxSizing: 'border-box',
+            all: 'unset', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0, boxSizing: 'border-box',
           }} aria-expanded={open}>
-            <div style={{ width: 30, height: 30, borderRadius: 9, background: tint(kc, 0.13), border: `1px solid ${tint(kc, 0.28)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: tint(kc, 0.13), border: `1px solid ${tint(kc, 0.28)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Ic size={13} color={kc} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 12.5, fontWeight: 600, color: C.t1, lineHeight: 1.35 }}>{e.title}</div>
-              <div style={{ fontSize: 10.5, color: C.t3, marginTop: 2, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4, display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
                 <span>{fmtDate(e.date)}</span>
                 {meta.label && <span style={{ color: col, fontWeight: 700 }}>· {e.status === 'missed' ? `${countdown(e.days)} — still open` : countdown(e.days)}</span>}
                 {!meta.label && e.days >= 0 && <span>· {countdown(e.days)}</span>}
                 {e.doneLabel && <span style={pill(tint(C.green, 0.14), C.greenL, { fontSize: 9 })}>{e.doneLabel}</span>}
-                {reminder && <span style={pill(C.s3, C.t3, { fontSize: 9, gap: 3 })}><BellRing size={8} />reminder</span>}
+                {reminder && <span style={pill(C.s3, C.t3, { fontSize: 9, gap: 4 })}><BellRing size={8} />reminder</span>}
                 {e.confidence === 'typical' && <span style={pill(C.s3, C.t3, { fontSize: 9 })}>typical</span>}
                 {e.confidence === 'exact' && e.source === 'profile' && <span style={pill(tint(C.sky, 0.12), C.skyL, { fontSize: 9 })}>yours</span>}
                 {e.source === 'roadmap' && <span style={pill(tint(C.fuchsia, 0.12), C.fuchsia, { fontSize: 9 })}>roadmap</span>}
@@ -1099,19 +1099,19 @@ function MilestoneRow({ e, open, onToggle, onGo, onDelete, onComplete, onReopen,
           </button>
           {owned && onComplete && e.status !== 'done' && (
             <button onClick={() => onComplete(e.ownerRef)} aria-label={`Mark ${e.title} done`} title="Mark this done — and update whatever it came from"
-              style={btnSm(tint(C.green, 0.14), { color: C.greenL, padding: '5px 9px', flexShrink: 0 })}>
+              style={btnSm(tint(C.green, 0.14), { color: C.greenL, padding: '4px 8px', flexShrink: 0 })}>
               <CheckCircle2 size={11} />
             </button>
           )}
           {owned && onReopen && e.status === 'done' && (
             <button onClick={() => onReopen(e.ownerRef)} aria-label={`Put ${e.title} back on the list`} title="Put this back on your list"
-              style={btnSm(C.s3, { color: C.t3, padding: '5px 9px', flexShrink: 0 })}>
+              style={btnSm(C.s3, { color: C.t3, padding: '4px 8px', flexShrink: 0 })}>
               <Undo2 size={11} />
             </button>
           )}
           {owned && (
             <button onClick={() => onDelete(e.ownerRef, e.id)} aria-label={`Remove ${e.title}`} title="Remove this date"
-              style={btnSm(C.roseDim, { color: C.rose, padding: '5px 9px', flexShrink: 0 })}>
+              style={btnSm(C.roseDim, { color: C.rose, padding: '4px 8px', flexShrink: 0 })}>
               <Trash2 size={11} />
             </button>
           )}
@@ -1121,21 +1121,21 @@ function MilestoneRow({ e, open, onToggle, onGo, onDelete, onComplete, onReopen,
             the run-up is long enough for the placement to be surprising — a sentence explaining
             why a two-week task is where it is would be noise. */}
         {showUrgency && urgency.reason && (
-          <div style={{ fontSize: 11, color: urgency.band.rank <= 2 ? C.amberL : C.t3, lineHeight: 1.55, marginTop: 8, paddingLeft: 41 }}>
+          <div style={{ fontSize: 11, color: urgency.band.rank <= 2 ? C.amberL : C.t3, lineHeight: 1.55, marginTop: 8, paddingLeft: 40 }}>
             {urgency.reason}
           </div>
         )}
         {open && (
-          <div style={{ marginTop: 11, paddingTop: 11, borderTop: `1px solid ${C.b1}` }}>
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}` }}>
             <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.65 }}>{e.detail}</div>
             {e.why && (
-              <div style={{ marginTop: 9, display: 'flex', gap: 7, alignItems: 'flex-start' }}>
-                <Sparkles size={11} color={C.violetL} style={{ marginTop: 3, flexShrink: 0 }} />
+              <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                <Sparkles size={11} color={C.violetL} style={{ marginTop: 4, flexShrink: 0 }} />
                 <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6, fontStyle: 'italic' }}>{e.why}</div>
               </div>
             )}
             {e.action && onGo && (
-              <button onClick={() => onGo(e.action)} style={btnSm(C.s3, { marginTop: 11, fontSize: 11.5, gap: 6 })}>
+              <button onClick={() => onGo(e.action)} style={btnSm(C.s3, { marginTop: 12, fontSize: 11.5, gap: 4 })}>
                 {e.action.label}<ArrowRight size={11} />
               </button>
             )}
@@ -1157,7 +1157,7 @@ function CollapsibleList({ id, title, icon: Icon, color, blurb, items, onGo, onD
   return (
     <Disclosure id={id} title={title} sub={blurb} icon={Icon} color={color}>
       <div style={{ position: 'relative' }}>
-        <div style={{ position: 'absolute', left: 14, top: 10, bottom: 10, width: 2, background: tint(color, 0.18), borderRadius: 2 }} />
+        <div style={{ position: 'absolute', left: 14, top: 10, bottom: 10, width: 2, background: tint(color, 0.18), borderRadius: 4 }} />
         <div style={CC({ gap: 8 })}>
           {items.map(e => <MilestoneRow key={e.id} e={e} open={false} onToggle={() => {}} onGo={onGo} onDelete={onDelete} onReopen={onReopen} dim={dim} />)}
         </div>
@@ -1168,8 +1168,8 @@ function CollapsibleList({ id, title, icon: Icon, color, blurb, items, onGo, onD
 
 function CalloutCard({ color, icon, title, right, children }) {
   return (
-    <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(color, 0.07)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(color, 0.24)}` }}>
-      <div style={R({ justifyContent: 'space-between', marginBottom: right ? 12 : 0, gap: 10, flexWrap: 'wrap' })}>
+    <div style={{ ...glass({ padding: 16 }), background: `linear-gradient(120deg,${tint(color, 0.07)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(color, 0.24)}` }}>
+      <div style={R({ justifyContent: 'space-between', marginBottom: right ? 12 : 0, gap: 8, flexWrap: 'wrap' })}>
         <SectionTitle icon={icon} color={color} extra={{ marginBottom: right ? 0 : 12 }}>{title}</SectionTitle>
         {right}
       </div>
@@ -1180,12 +1180,12 @@ function CalloutCard({ color, icon, title, right, children }) {
 
 function EmptyNote({ accent, icon: Icon = CalendarDays, text, cta }) {
   return (
-    <div style={glass({ padding: 26, textAlign: 'center' })}>
-      <div style={{ width: 46, height: 46, borderRadius: 14, background: tint(accent, 0.12), border: `1px solid ${tint(accent, 0.28)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+    <div style={glass({ padding: 24, textAlign: 'center' })}>
+      <div style={{ width: 46, height: 46, borderRadius: 12, background: tint(accent, 0.12), border: `1px solid ${tint(accent, 0.28)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
         <Icon size={20} color={accent} />
       </div>
       <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.65, maxWidth: 520, margin: '0 auto' }}>{text}</div>
-      {cta && <button onClick={cta.onClick} style={btnG({ marginTop: 14, fontSize: 12, padding: '8px 16px' })}>{cta.label}</button>}
+      {cta && <button onClick={cta.onClick} style={btnG({ marginTop: 12, fontSize: 12, padding: '8px 16px' })}>{cta.label}</button>}
     </div>
   );
 }
@@ -1225,50 +1225,50 @@ export function TimelineNextCard({ user, accent = C.blue, onNavigate, limit = 4 
   const leadColor = lead.status === 'missed' ? C.roseL : leadUrgent ? C.amberL : kindColor(lead.kind);
 
   return (
-    <div style={{ ...glass({ padding: 18 }), border: leadUrgent ? `1px solid ${tint(leadColor, 0.4)}` : undefined }}>
+    <div style={{ ...glass({ padding: 16 }), border: leadUrgent ? `1px solid ${tint(leadColor, 0.4)}` : undefined }}>
       <div style={R({ gap: 8, marginBottom: 12 })}>
         <Milestone size={14} color={leadColor} />
-        <span style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase' }}>What's next</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>What's next</span>
         {gradeLabel && <span style={pill(C.s3, C.t3, { fontSize: 9.5 })}>{gradeLabel}</span>}
         <span style={{ flex: 1 }} />
         {onNavigate && (
-          <button onClick={() => onNavigate('portfolio', 'milestones')} style={{ all: 'unset', cursor: 'pointer', fontSize: 11, color: C.t3, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+          <button onClick={() => onNavigate('portfolio', 'milestones')} style={{ all: 'unset', cursor: 'pointer', fontSize: 11, color: C.t3, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             {stats.upcoming} ahead<ChevronRight size={12} />
           </button>
         )}
       </div>
 
-      <div style={R({ gap: 10, alignItems: 'baseline', marginBottom: 2 })}>
-        <span style={{ fontSize: 28, fontWeight: 800, color: leadColor, fontFamily: C.FD }}>
+      <div style={R({ gap: 8, alignItems: 'baseline', marginBottom: 4 })}>
+        <span style={{ fontSize: 28, letterSpacing: 'calc(-0.6px + var(--msp-letter-spacing))', lineHeight: 'calc(1.25 * var(--msp-line-scale))', fontWeight: 800, color: leadColor, fontFamily: C.FD }}>
           {lead.status === 'missed' ? '!' : lead.days === 0 ? 'Today' : lead.days}
         </span>
         {lead.days > 0 && <span style={{ fontSize: 12, color: C.t3 }}>day{lead.days === 1 ? '' : 's'} until</span>}
         {lead.status === 'missed' && <span style={{ fontSize: 12, color: C.roseL }}>{countdown(lead.days)} and still open</span>}
       </div>
       <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{lead.title}</div>
-      <div style={{ fontSize: 11, color: C.t3, marginTop: 2, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ fontSize: 11, color: C.t3, marginTop: 4, display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
         <span>{fmtDate(lead.date)}</span>
         {lead.confidence === 'typical' && <span style={pill(C.s3, C.t3, { fontSize: 9 })}>typical date</span>}
       </div>
-      {lead.why && <div style={{ fontSize: 11.5, color: C.t2, marginTop: 8, lineHeight: 1.6 }}>{lead.why}</div>}
+      {lead.why && <div style={{ fontSize: 11.5, color: C.t2, marginTop: 8, lineHeight: 1.55 }}>{lead.why}</div>}
       {(lead.action || lead.ownerRef) && onNavigate && (
         <button
           onClick={() => (lead.action ? onNavigate(lead.action.tab, lead.action.view) : onNavigate('portfolio', 'milestones'))}
-          style={btnSm(C.s3, { marginTop: 12, fontSize: 11.5, gap: 6 })}>
+          style={btnSm(C.s3, { marginTop: 12, fontSize: 11.5, gap: 4 })}>
           {lead.action?.label || 'Open Milestones'}<ArrowRight size={11} />
         </button>
       )}
 
       {items.length > 1 && (
-        <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${C.b1}`, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}`, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {items.slice(1).map(e => {
             const col = kindColor(e.kind);
             const Ic = KIND_ICON[e.kind] || CalendarDays;
             return (
               <button key={e.id} onClick={() => onNavigate?.(e.action?.tab || 'portfolio', e.action?.view || 'milestones')} style={{
-                all: 'unset', cursor: onNavigate ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 9,
+                all: 'unset', cursor: onNavigate ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 8,
               }}>
-                <div style={{ width: 22, height: 22, borderRadius: 7, background: tint(col, 0.13), border: `1px solid ${tint(col, 0.26)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: 22, height: 22, borderRadius: 8, background: tint(col, 0.13), border: `1px solid ${tint(col, 0.26)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Ic size={10} color={col} />
                 </div>
                 <span style={{ fontSize: 12, color: C.t2, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.title}</span>
