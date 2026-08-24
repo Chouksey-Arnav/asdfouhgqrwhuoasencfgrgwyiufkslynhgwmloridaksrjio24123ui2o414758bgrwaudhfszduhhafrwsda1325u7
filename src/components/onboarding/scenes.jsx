@@ -150,7 +150,7 @@ function LiveChart({ answers, g }) {
 // The rail
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** The five chapters as a spine of numbered ticks down the rail's footer. */
+/** The chapters as a spine of numbered ticks down the rail's footer. */
 function ChapterTicks({ chapters, activeIndex, g }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%' }}>

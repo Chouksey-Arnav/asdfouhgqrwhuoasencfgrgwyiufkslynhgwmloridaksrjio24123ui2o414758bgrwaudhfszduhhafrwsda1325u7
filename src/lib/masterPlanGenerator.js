@@ -48,6 +48,7 @@ import {
   SCIENCE_OPTIONS, EXPERIENCE_OPTIONS,
 } from '../components/onboarding/Onboarding';
 import { deriveLoad } from './planGenerator';
+import { gradeStageFor } from './gradeBand';
 
 const labelOf = (opts, v) => opts.find(o => o.value === v)?.label || null;
 const labelsOf = (opts, arr) => (arr || []).map(v => labelOf(opts, v)).filter(Boolean);
@@ -68,6 +69,13 @@ function gradeIdxFromStage(stage) {
   return idx >= 0 ? idx : 2;
 }
 
+// The grade this student is in TODAY, not the one they typed at signup. Every caller below
+// used to read `user.gradeStage` directly, which is a snapshot: a sophomore who signed up in
+// 2025 planned like a sophomore in 2027, and the horizon, the gap list and the prompt's grade
+// label were all a year or two behind reality. Graduation year is the stored attribute now and
+// the grade derives from today's date, so this advances by itself. See src/lib/gradeBand.js.
+const gradeNow = (user) => gradeStageFor(user);
+
 // How many weeks the roadmap should span. Grade stage stands in for "how much
 // runway does this student have" — a freshman gets a longer horizon than a
 // senior, capped to something a human advisor would actually plan (never a
@@ -76,7 +84,7 @@ function gradeIdxFromStage(stage) {
 // generator produces contains test prep any more.
 export function computeHorizonWeeks(user) {
   const byGrade = [28, 24, 20, 16, 16]; // freshman, sophomore, junior, senior, gap
-  return byGrade[gradeIdxFromStage(user?.gradeStage)] ?? 20;
+  return byGrade[gradeIdxFromStage(gradeNow(user))] ?? 20;
 }
 function clampPhaseCount(horizonWeeks) { return Math.min(6, Math.max(3, Math.round(horizonWeeks / 5))); }
 
@@ -374,7 +382,7 @@ function buildPortfolioFactsText(portfolio) {
 function buildPortfolioGapText(portfolio, user) {
   if (!portfolio) return null;
   const p = { ...DEFAULT_PORTFOLIO, ...portfolio };
-  const gradeIdx = gradeIdxFromStage(user?.gradeStage);
+  const gradeIdx = gradeIdxFromStage(gradeNow(user));
   const isUpperclass = gradeIdx >= 2; // junior or later
   const clinicalTotal = p.clinicalHours.reduce((s, h) => s + (h.hours || 0), 0);
   const gaps = [];
@@ -496,7 +504,7 @@ function buildPerformanceFactsText(liveSignals = {}) {
 
 export function buildProfileFactsText(user, liveSignals = {}, portfolio = null, plan = null) {
   const { dailyMinutes, weeklyQuestions } = deriveLoad(user || {});
-  const gradeLabel = GRADE_STAGES[gradeIdxFromStage(user?.gradeStage)]?.label || 'high school';
+  const gradeLabel = GRADE_STAGES[gradeIdxFromStage(gradeNow(user))]?.label || 'high school';
   const goalLabel = labelOf(GOAL_OPTIONS, user?.goal) || 'exploring medicine';
   const obstacles = labelsOf(OBSTACLE_OPTIONS, user?.obstacles);
   const accomplish = labelsOf(ACCOMPLISH_OPTIONS, user?.accomplish);

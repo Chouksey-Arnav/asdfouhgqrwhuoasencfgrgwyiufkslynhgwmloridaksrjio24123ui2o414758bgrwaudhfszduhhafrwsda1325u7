@@ -104,6 +104,26 @@ export const GRADE_LABELS = {
   freshman: 'Freshman', sophomore: 'Sophomore', junior: 'Junior', senior: 'Senior', gap: 'Heading to undergrad',
 };
 
+// ── Grade → band ─────────────────────────────────────────────────────────────
+// The three-band model lives in src/lib/gradeBand.js, which is the source of
+// truth for it. This mapping is duplicated here rather than imported because
+// gradeBand.js imports THIS file (for academicFallYear and GRADE_KEYS), and a
+// cycle between the two would be a real hazard in a module that also has to
+// load under a plain Node verify script. scripts/verifyGradeBand.mjs asserts
+// the two copies agree, so a change to the bands in one place fails the build
+// if it is not made in the other.
+const BAND_GRADES = {
+  explore: ['freshman', 'sophomore'],
+  build: ['junior'],
+  apply: ['senior', 'gap'],
+};
+
+/** The band ids a list of grade keys touches. */
+export function bandsForGrades(grades) {
+  if (!Array.isArray(grades) || !grades.length) return [];
+  return Object.keys(BAND_GRADES).filter(b => grades.some(g => BAND_GRADES[b].includes(g)));
+}
+
 export function gradeIdxOf(gradeStage) {
   const i = GRADE_KEYS.indexOf(gradeStage);
   return i === -1 ? null : i;
@@ -124,6 +144,24 @@ export function gradeIdxOf(gradeStage) {
  * as "applying/just applied" rather than inventing a fifth year of high school.
  */
 export function effectiveGradeStage(user, now = new Date()) {
+  // The stored attribute is the GRADUATION YEAR (src/lib/gradeBand.js), because a graduation
+  // year does not expire and a grade does. When it is present it wins outright: the grade is
+  // arithmetic against today's date, which is what makes the August 1 rollover happen by
+  // itself with nothing written anywhere. The block below is the legacy path — accounts
+  // created before the attribute existed, advanced by elapsed academic years as before.
+  //
+  // (The arithmetic is duplicated from gradeStageFromGraduationYear() rather than imported:
+  // gradeBand.js imports THIS module, and a cycle between them would be a hazard in a file
+  // that also has to load under a plain Node verify script. scripts/verifyGradeBand.mjs
+  // asserts the two agree.)
+  const gradYear = user?.graduationYear;
+  if (gradYear !== null && gradYear !== undefined && gradYear !== '') {
+    const g = Number(gradYear);
+    if (Number.isFinite(g) && g >= 1900) {
+      const yearsOut = g - (academicFallYear(now) + 1);
+      return yearsOut < 0 ? 'gap' : GRADE_KEYS[Math.max(0, 3 - Math.min(3, yearsOut))];
+    }
+  }
   const stage = user?.gradeStage;
   if (!stage || gradeIdxOf(stage) === null) return null;
   const recordedYear = Number.isFinite(user?.gradeStageYear)
@@ -874,18 +912,50 @@ function classify(date, today, { done = false, weight = P.helpful } = {}) {
   return { status: 'upcoming', days };
 }
 
+// Every catalog milestone, INCLUDING the ones for other years.
+//
+// This used to `return` on a grade mismatch, which meant a freshman's timeline
+// simply did not contain "commit by May 1" — the milestone did not exist for
+// them at all. That was the right instinct (a freshman must never be nagged
+// about a date four years out) applied with the wrong tool: it made a whole
+// half of the product invisible to the students who have the most time to get
+// excited about it, and hidden value is unsold value.
+//
+// So nothing is dropped. Out-of-band milestones are emitted with `inBand:false`
+// and a `bands` tag, resolved against the student's OWN class years (so
+// "senior year, November 1" comes out as a real date in their real senior
+// year), and buildTimeline() routes them into `preview` instead of `upcoming`.
+// They are fully readable, they are simply not in the active task list. See
+// src/lib/gradeBand.js and components/BandPreview.jsx.
 function catalogEvents(ctx) {
   const out = [];
+  // No class year on file means we cannot place a single one of these in time — not even as a
+  // preview, since every date in the catalog resolves against the student's own class years. An
+  // empty feed is the honest answer; a confidently wrong calendar is not. (The app asks for the
+  // graduation year on step two of onboarding precisely so this branch is unreachable in
+  // practice — see src/lib/gradeBand.js.)
+  if (!ctx.gradeStage) return out;
   MILESTONES.forEach(m => {
-    if (!m.grades.includes(ctx.gradeStage)) return;
+    const inBand = m.grades.includes(ctx.gradeStage);
+    // `when` gates on the student's real data ("only if they have a UC on their
+    // list"), so it still decides whether a milestone is relevant at all — for
+    // in-band and preview items alike.
     if (m.when && !m.when(ctx)) return;
-    const yearSlot = m.year === 'current' ? (ctx.gradeStage === 'gap' ? 'senior' : ctx.gradeStage) : m.year;
+    // 'current' means "the student's own current year", which is meaningless
+    // for a milestone belonging to a different year. For those, anchor to the
+    // milestone's own first grade so the date lands in the year it describes.
+    const ownYear = m.grades.find(g => g !== 'gap') || 'senior';
+    const currentSlot = ctx.gradeStage === 'gap' ? 'senior' : ctx.gradeStage;
+    const yearSlot = m.year === 'current' ? (inBand ? currentSlot : ownYear) : m.year;
     const date = resolveDate(yearSlot, m.monthDay, ctx.years);
     if (!date) return;
     const done = m.done ? !!m.done(ctx) : false;
     out.push({
       id: m.id, date, title: m.title, detail: m.detail, kind: m.kind, weight: m.weight,
       source: 'catalog', confidence: 'typical',
+      grades: m.grades,
+      bands: bandsForGrades(m.grades),
+      inBand,
       leadDays: m.leadDays || null,
       action: m.action || null,
       why: call(m.why, ctx) || null,
@@ -1159,11 +1229,17 @@ export function buildTimeline({ user = null, snapshot = {}, now = new Date(), co
   const upcoming = [];
   const doneList = [];
   const past = [];
+  // Milestones belonging to another grade band. Not hidden — the Milestones tab renders them
+  // as a fully browsable "the years ahead" section behind the preview banner — and not in the
+  // active task list, which is the entire difference band membership is allowed to make. See
+  // the header of src/lib/gradeBand.js.
+  const preview = [];
   events.forEach(e => {
     // 'logged' is a record of work already done, never a thing to do. A shift logged with
     // tomorrow's date is a data-entry artifact, not a plan, and it must not turn up in the
     // Home card's "what's next" list beside a real deadline.
     if (e.kind === 'logged') past.push(e);
+    else if (e.inBand === false) preview.push(e);
     else if (e.status === 'done') doneList.push(e);
     else if (e.days >= 0 || (e.status === 'missed' && e.date >= missedFloor)) upcoming.push(e);
     else past.push(e);
@@ -1177,11 +1253,12 @@ export function buildTimeline({ user = null, snapshot = {}, now = new Date(), co
   events.forEach(e => { byKind[e.kind] = (byKind[e.kind] || 0) + 1; });
 
   return {
-    ctx, events, upcoming, past, done, next,
+    ctx, events, upcoming, past, done, next, preview,
     groups: groupUpcoming(upcoming, today),
     stats: {
       total: events.length,
       upcoming: upcoming.length,
+      preview: preview.length,
       missed: upcoming.filter(e => e.status === 'missed').length,
       soon: upcoming.filter(e => e.days >= 0 && e.days <= 14).length,
       done: done.length,

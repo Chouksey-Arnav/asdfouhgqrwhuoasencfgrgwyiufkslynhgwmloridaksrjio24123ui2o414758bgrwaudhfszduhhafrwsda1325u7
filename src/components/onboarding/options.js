@@ -132,3 +132,56 @@ export function shortLabel(options, value) {
   const o = options.find(x => x.value === value);
   return o ? (o.short || o.label) : null;
 }
+
+// ── Band-specific questions ──────────────────────────────────────────────────
+// Asked only of the grade band that can actually answer them usefully. See
+// src/lib/onboardingFlow.js for why the tail of the flow branches at all.
+
+// EXPLORE (9th–10th). What science are you in this year — the single fact that
+// decides which lesson units land and which quizzes are worth recommending to a
+// student who has not taken chemistry yet.
+export const SCIENCE_CLASS_OPTIONS = [
+  { value: 'bio', icon: 'dna', short: 'Biology', label: 'Biology', sublabel: 'The usual 9th or 10th grade science' },
+  { value: 'chem', icon: 'flask', short: 'Chemistry', label: 'Chemistry' },
+  { value: 'physics', icon: 'magnet', short: 'Physics', label: 'Physics or physical science' },
+  { value: 'anatomy', icon: 'organ-heart', short: 'Anatomy', label: 'Anatomy / physiology' },
+  { value: 'ap', icon: 'petri', short: 'An AP science', label: 'An AP or IB science' },
+  { value: 'other', icon: 'question', short: 'Something else', label: 'Something else, or none this year' },
+];
+
+// EXPLORE + BUILD. The student's OWN weekly goal, in their words and their
+// numbers — the plan is built to it, so a number they picked is worth more than
+// a better one we chose for them.
+export const WEEKLY_GOAL_OPTIONS = [
+  { value: 'light', icon: 'sprout', short: '2 days/wk', label: 'Two days a week', sublabel: 'Realistic alongside a full course load' },
+  { value: 'steady', icon: 'bolt', short: '4 days/wk', label: 'Four days a week', sublabel: 'Where most students land' },
+  { value: 'daily', icon: 'flame', short: 'Every day', label: 'Almost every day', sublabel: "Ambitious — we'll hold you to it gently" },
+  { value: 'weekend', icon: 'clock', short: 'Weekends', label: 'Weekends only', sublabel: 'Two longer sessions instead of five short ones' },
+];
+
+// BUILD (11th). When the test happens is the spine of a junior year plan.
+export const TESTING_PLAN_OPTIONS = [
+  { value: 'fall_junior', icon: 'hourglass', short: 'This fall', label: 'This fall', sublabel: 'Fall of junior year — the early attempt' },
+  { value: 'spring_junior', icon: 'calendar-busy', short: 'Spring', label: 'Spring of junior year', sublabel: 'The most common first sitting' },
+  { value: 'summer', icon: 'clock', short: 'Summer', label: 'Summer after junior year', sublabel: 'Before senior-year applications open' },
+  { value: 'fall_senior', icon: 'flag-check', short: 'Senior fall', label: 'Fall of senior year', sublabel: 'Cutting it close, but it still works' },
+  { value: 'undecided', icon: 'question', short: 'Not decided', label: "Haven't decided yet", sublabel: "We'll pick a date with you" },
+  { value: 'test_optional', icon: 'eye-off', short: 'Test optional', label: 'Going test-optional', sublabel: "Then the rest of the application carries more weight" },
+];
+
+// APPLY (12th). Deadline triage — the two questions that decide whether this
+// senior's real deadline is eleven weeks away or five months away.
+export const EARLY_APPLICATION_OPTIONS = [
+  { value: 'ed', icon: 'flame', short: 'Early decision', label: 'Yes — early decision somewhere', sublabel: 'Binding. Usually November 1 or 15.' },
+  { value: 'ea', icon: 'bolt', short: 'Early action', label: 'Yes — early action', sublabel: 'Non-binding, same early deadlines' },
+  { value: 'rolling', icon: 'repeat', short: 'Rolling', label: 'Rolling admissions schools', sublabel: 'Earlier is materially better on these' },
+  { value: 'regular', icon: 'clock', short: 'Regular only', label: 'No — regular decision only', sublabel: 'Mostly January 1 and January 15' },
+  { value: 'unsure', icon: 'question', short: 'Not sure', label: "I don't know yet", sublabel: "We'll show you both calendars" },
+];
+
+export const COMBINED_PROGRAM_OPTIONS = [
+  { value: 'yes_applying', icon: 'summit', short: 'Yes, applying', label: 'Yes — I am applying to some', sublabel: 'BS/MD, BS/DO, direct-admit nursing or PA' },
+  { value: 'considering', icon: 'compass', short: 'Considering', label: 'Considering it', sublabel: 'Their deadlines run earlier than everything else' },
+  { value: 'no', icon: 'route', short: 'No', label: 'No — traditional applications', sublabel: 'Undergrad first, health school later' },
+  { value: 'what', icon: 'question', short: 'What are those?', label: "What are those?", sublabel: "Worth two minutes — we'll show you" },
+];

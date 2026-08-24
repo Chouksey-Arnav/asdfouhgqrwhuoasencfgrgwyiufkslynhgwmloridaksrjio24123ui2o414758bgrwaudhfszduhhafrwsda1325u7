@@ -12,18 +12,34 @@
 // → save-progress) rebuilt around medicine rather than generic test prep.
 //
 // Structure of the journey, deliberately shaped as an emotional arc and named
-// in five chapters the student can see (see chapters.js):
-//   1. YOUR WHY — why medicine, who they want to become, how sure they are (one
+// in chapters the student can see (see chapters.js):
+//   1. YOUR CLASS YEAR — birthdate and the graduation year it implies, on one
+//      screen, confirmed rather than assumed. This is step two on purpose: it
+//      decides which of the three flows below the student gets, so every screen
+//      after it is built for someone we have actually met.
+//   2. YOUR WHY — why medicine, who they want to become, how sure they are (one
 //      screen), then an identity moment that names the future.
-//   2. WHERE THEY ARE — grade/score/birthdate on one screen, GPA + sciences on
-//      the next, hands-on experience, then an insight beat that normalizes a
-//      blank slate or celebrates a head start.
-//   3. THEIR RHYTHM — hours, tools and prior apps together, then what the
+//   3. WHERE THEY ARE — GPA + sciences, hands-on experience, then an insight
+//      beat that normalizes a blank slate or celebrates a head start.
+//   4. THEIR RHYTHM — hours, tools and prior apps together, then what the
 //      product actually is.
-//   4. WHERE THEY'RE GOING — the goal they're chasing, then a daily time
+//   5. WHERE THEY'RE GOING — the goal they're chasing, then a daily time
 //      commitment in minutes.
-//   5. THEIR PLAN — obstacles and ambitions together, empathy, potential, plan
-//      preferences, a personal pledge, then real plan generation.
+//   6. THEIR PLAN — obstacles and ambitions together, empathy, potential, plan
+//      preferences, then THE BAND-SPECIFIC TAIL, a personal pledge, and the
+//      name/source screen.
+//
+// ── The tail branches by grade band ──────────────────────────────────────────
+// A ninth grader and a twelfth grader are functionally two different products,
+// so the last few questions — and, more importantly, the screen the app opens
+// on afterwards — differ by band. Explore (9–10) is asked what science class
+// they are in and what their own weekly goal is, and lands on the lesson track.
+// Build (11) is asked when they are taking the SAT/ACT and lands on a
+// pre-populated junior-year portfolio timeline. Apply (12) is offered a skip on
+// the diagnostic, triaged on early and combined-degree deadlines, and lands on
+// the portfolio with real deadlines on it — because a senior dropped at the top
+// of a foundations-upward lesson track will bounce. The three flows live in
+// src/lib/onboardingFlow.js.
 //
 // ── Why the screens are grouped the way they are ─────────────────────────────
 // The flow used to ask the same ~20 things across ~20 screens, one question per
@@ -46,7 +62,6 @@ import OnboardingShell from './OnboardingShell';
 import { SplashStep, WelcomeStep } from './steps/Intro';
 import { ChecklistStep, ProofGraphStep, PlanPreferencesStep } from './steps/generic';
 import { GroupedStep } from './steps/grouped';
-import { StartingPointStep } from './steps/StartingPointStep';
 import { MONTHS as DOB_MONTHS, DAYS as DOB_DAYS, YEARS as DOB_YEARS } from './steps/BirthdateStep';
 import AgeBlockedStep from './steps/AgeBlockedStep';
 import { GoalStep } from './steps/GoalStep';
@@ -63,10 +78,15 @@ import { C } from './primitives';
 import { chapterHue } from './design';
 import { CHAPTERS, STEP_CHAPTER } from './chapters';
 import { isUnderMinAge, isAgeBlocked, recordAgeBlocked } from '../../lib/ageGate';
+import { GraduationYearStep } from './steps/GraduationYearStep';
+import { DiagnosticOfferStep } from './steps/DiagnosticOfferStep';
+import { bandOfGrade, gradeStageFromGraduationYear } from '../../lib/gradeBand';
+import { bandStepKeys, focusCopyFor } from '../../lib/onboardingFlow';
 import {
   STUDY_HOURS_OPTIONS, GOAL_OPTIONS, STUDY_METHOD_OPTIONS, OBSTACLE_OPTIONS, ACCOMPLISH_OPTIONS,
   WHY_MEDICINE_OPTIONS, DREAM_ROLE_OPTIONS, CERTAINTY_OPTIONS, GPA_OPTIONS, SCIENCE_OPTIONS,
-  EXPERIENCE_OPTIONS,
+  EXPERIENCE_OPTIONS, SCIENCE_CLASS_OPTIONS, WEEKLY_GOAL_OPTIONS, TESTING_PLAN_OPTIONS,
+  EARLY_APPLICATION_OPTIONS, COMBINED_PROGRAM_OPTIONS,
 } from './options';
 
 // Option lists live in ./options (dependency-free, shared with the steps and
@@ -82,21 +102,47 @@ export {
 // itself can branch per student (e.g. the obstacle-empathy beat only exists
 // when there's an obstacle to answer). Rehydration is keyed by step KEY, not
 // index, so a draft survives the list changing shape.
+/** The band this student's answers put them in, from the graduation year they
+ *  confirmed on step two. Null until they have confirmed it, which is why every
+ *  band-branching call below defaults to the explore flow. */
+export function bandOfAnswers(answers) {
+  return bandOfGrade(gradeStageFromGraduationYear(answers?.graduationYear));
+}
+
+// The flow branches. The head is the same for every student — those answers are
+// worth having at any age — and the tail is chosen by grade band, because the
+// questions that are worth asking a ninth grader and the questions that are
+// worth asking a senior six weeks from an early-decision deadline have almost
+// nothing in common. See src/lib/onboardingFlow.js for the three flows and for
+// why the branch exists at all.
 function buildSteps(answers) {
+  const band = bandOfAnswers(answers);
   const steps = [
     'splash', 'welcome',
+    // Step two, immediately after the account. Graduation year decides which
+    // flow the student gets from here on, so it cannot be asked any later than
+    // this without the screens in between having been built for a student we
+    // had not met yet. See steps/GraduationYearStep.jsx.
+    'classYear',
     'why', 'identity',
-    'startingPoint', 'academics', 'experience', 'expInsight',
+    'academics', 'experience', 'expInsight',
     'rhythm', 'showcase',
     'goal', 'speed',
     'challenges',
   ];
   if (obstacleEmpathy(answers.obstacles)) steps.push('obstacleEmpathy');
+  steps.push('potential', 'prefs');
+  // Seniors are offered the diagnostic rather than marched through it: six
+  // minutes of career quiz is a strange toll to charge someone whose real
+  // problem is a November 1 deadline. Skipping asks them for their pathway
+  // directly instead, so nothing downstream is left undecided.
+  if (band === 'apply') steps.push('diagnosticOffer');
+  steps.push(...bandStepKeys(band));
   // 'family' sits after the plan preferences and before the pledge: late enough that the student
   // has seen what the product is and can decide whether they want a parent watching it, and early
   // enough that it is not the last thing between them and the app (a share prompt in the final
   // slot reads as a toll gate). See steps/FamilyStep.jsx.
-  steps.push('potential', 'prefs', 'family', 'commitment', 'saveProgress');
+  steps.push('family', 'commitment', 'saveProgress');
   return steps;
 }
 const NO_CHROME = new Set(['splash', 'welcome', 'generating', 'planReady']);
@@ -104,11 +150,13 @@ const NO_CHROME = new Set(['splash', 'welcome', 'generating', 'planReady']);
 const DEFAULT_ANSWERS = {
   // Warm-up / identity
   whyMedicine: null, dreamRole: null, certainty: null,
-  // Situation. gradeIdx starts null rather than pre-selecting junior: the
-  // grade question is now a row of tap targets, and a pre-ticked answer on a
-  // visible control is an answer the student never actually gave — which then
-  // rides into the plan, the timeline and the coach prompts as if it had.
-  gradeIdx: null,
+  // Situation. The class year is stored as a GRADUATION YEAR, not a grade:
+  // a grade is true for ten months and a graduation year is true forever, so
+  // this one self-advances every August instead of quietly going stale. See
+  // src/lib/gradeBand.js. `graduationYearConfirmed` starts false and is what
+  // the Continue button waits on — the year is pre-filled from the birthdate,
+  // and a pre-filled value nobody looked at is not an answer.
+  graduationYear: null, graduationYearConfirmed: false,
   // The birthdate wheels open on an age below the minimum on purpose; see
   // BirthdateWheels. `dobTouched` is what makes the student answer rather than
   // scroll past and get gated on a date they never picked.
@@ -117,6 +165,14 @@ const DEFAULT_ANSWERS = {
   studyHours: null, studyMethod: null, triedApps: null, source: null,
   // Direction
   goal: null, speedLevel: 1,
+  // Band-specific answers. Only the ones this student's flow actually asks for
+  // are ever filled; the rest stay null and nothing downstream assumes them.
+  scienceClass: null, weeklyGoal: null, testingPlan: null,
+  earlyApplication: null, combinedProgram: null,
+  // The senior's diagnostic decision, and the pathway they named if they
+  // skipped it. `skipDiagnostic` rides through to the user record so the app
+  // can re-offer the diagnostic later (see shouldReofferDiagnostic).
+  skipDiagnostic: false, pathway: null,
   obstacles: [], accomplish: [],
   // Preferences & output
   addBack: true, rollover: true, name: '', generatedPlan: null,
@@ -134,7 +190,7 @@ const DEFAULT_ANSWERS = {
 // version prefix retires drafts from earlier flow shapes, whose step keys no
 // longer line up with this one (v4: questions grouped onto shared screens, so
 // most step keys changed).
-function draftKey(account, preview) { return `onboardingDraft:v4:${preview ? 'preview:' : ''}${account?.email || 'anon'}`; }
+function draftKey(account, preview) { return `onboardingDraft:v5:${preview ? 'preview:' : ''}${account?.email || 'anon'}`; }
 function loadDraft(account, preview) {
   try {
     const raw = localStorage.getItem(draftKey(account, preview));
@@ -194,7 +250,7 @@ export default function Onboarding({ account, onComplete, preview = false }) {
   // Runs when the student leaves the screen holding the birthdate wheels, not
   // while they are still spinning them — otherwise every pass through a young
   // year on the way to an older one would trip the gate mid-scroll.
-  function advanceFromStartingPoint() {
+  function advanceFromClassYear() {
     // See the `blocked` init above: preview replays onboarding for an
     // account that already exists, so there is no age decision left to make
     // here — and no real account should ever be deleted just because someone
@@ -228,6 +284,13 @@ export default function Onboarding({ account, onComplete, preview = false }) {
     case 'welcome':
       content = <WelcomeStep account={account} onNext={next} />; break;
 
+    // ── Step two: the class year everything else is sequenced from ────────
+    case 'classYear':
+      content = (
+        <GraduationYearStep value={answers} onChange={patch => update(patch)}
+          onNext={advanceFromClassYear} h={h} YEARS={DOB_YEARS} DAYS={DOB_DAYS} />
+      ); break;
+
     // ── Chapter 1: why medicine ──────────────────────────────────────────
     // Three questions about the same thing — the reason, the picture, the
     // conviction — on one screen instead of three.
@@ -258,9 +321,6 @@ export default function Onboarding({ account, onComplete, preview = false }) {
     case 'identity':
       content = <IdentityStep answers={answers} onNext={next} />; break;
 
-    // ── Chapter 2: where they are now ────────────────────────────────────
-    case 'startingPoint':
-      content = <StartingPointStep value={answers} onChange={patch => update(patch)} onNext={advanceFromStartingPoint} h={h} />; break;
     case 'academics':
       content = (
         <GroupedStep
@@ -357,6 +417,88 @@ export default function Onboarding({ account, onComplete, preview = false }) {
         statLine="Students who follow a structured pre-med plan through high school apply with stronger scores, real clinical exposure, and a story that stands out — the three things admissions actually weighs." onNext={next} />; break;
     case 'prefs':
       content = <PlanPreferencesStep prefs={answers} onChange={patch => update(patch)} onNext={next} h={h} />; break;
+
+    // ── The band-specific tail ────────────────────────────────────────────
+    // Which of these a student sees is decided entirely by the graduation year
+    // they confirmed on step two; see buildSteps() and src/lib/onboardingFlow.js.
+
+    // EXPLORE (9th–10th): what science are you in this year. The one fact that
+    // decides which units land — recommending a chemistry-heavy unit to a
+    // student who has not taken chemistry is how a lesson track loses someone.
+    case 'scienceClass':
+      content = (
+        <GroupedStep
+          eyebrow="This year at school" icon="flask" h={h}
+          title="What science are you taking right now?"
+          subtitle="Your lessons get sequenced around it, so what you learn here lands on top of what you're already doing in class instead of running beside it."
+          questions={[{
+            key: 'scienceClass', prompt: 'Your science class this year', type: 'single',
+            options: SCIENCE_CLASS_OPTIONS, value: answers.scienceClass, onChange: v => update({ scienceClass: v }),
+          }]}
+          showCounter={false} onNext={next} />
+      ); break;
+
+    // EXPLORE + BUILD: the student's OWN weekly goal. A number they picked is
+    // worth more than a better number we picked for them, because the streak,
+    // the plan and the nudges are all measured against it.
+    case 'weeklyGoal':
+      content = (
+        <GroupedStep
+          eyebrow="Your pace" icon="flame" h={h}
+          title="How often do you want to show up?"
+          subtitle="You set this, not us — and you can change it any week. Everything we ask of you gets sized to fit the answer."
+          questions={[{
+            key: 'weeklyGoal', prompt: 'Your weekly goal', type: 'single',
+            options: WEEKLY_GOAL_OPTIONS, value: answers.weeklyGoal, onChange: v => update({ weeklyGoal: v }),
+          }]}
+          showCounter={false} onNext={next} />
+      ); break;
+
+    // BUILD (11th): when the test happens is the spine of a junior-year plan.
+    case 'testingPlan':
+      content = (
+        <GroupedStep
+          eyebrow="Your testing plan" icon="target" h={h}
+          title="When are you taking the SAT or ACT?"
+          subtitle="Junior year is when this gets decided, and the date changes the order of everything else. A rough answer is fine — we'll firm it up with you later."
+          questions={[{
+            key: 'testingPlan', prompt: 'Your first sitting', type: 'single',
+            options: TESTING_PLAN_OPTIONS, value: answers.testingPlan, onChange: v => update({ testingPlan: v }),
+          }]}
+          showCounter={false} onNext={next} />
+      ); break;
+
+    // APPLY (12th): deadline triage. These two answers decide whether this
+    // student's real deadline is eleven weeks away or five months away, which
+    // is the difference between the right home screen and the wrong one.
+    case 'deadlineTriage':
+      content = (
+        <GroupedStep
+          eyebrow="Deadline triage" icon="calendar-busy" h={h}
+          title="Let's find out what's actually due."
+          subtitle="Two questions, and then your portfolio opens with your real deadlines on it. This is the part of senior year that punishes surprises, so we'd rather ask now."
+          questions={[
+            {
+              key: 'earlyApplication', prompt: 'Are you applying anywhere early?',
+              hint: 'Early deadlines land in the first half of November — six to ten weeks before everything else.',
+              type: 'single',
+              options: EARLY_APPLICATION_OPTIONS, value: answers.earlyApplication, onChange: v => update({ earlyApplication: v }),
+            },
+            {
+              key: 'combinedProgram', prompt: 'Any combined-degree or direct-admit programs?',
+              hint: 'BS/MD, BS/DO, direct-admit nursing or PA. Their deadlines run earliest of all, and they ask for extra essays.',
+              type: 'single',
+              options: COMBINED_PROGRAM_OPTIONS, value: answers.combinedProgram, onChange: v => update({ combinedProgram: v }),
+            },
+          ]}
+          onNext={next} />
+      ); break;
+
+    case 'diagnosticOffer':
+      content = (
+        <DiagnosticOfferStep value={answers} onChange={patch => update(patch)} onNext={next} h={h} />
+      ); break;
+
     case 'family':
       content = <FamilyStep value={answers} onChange={patch => update(patch)} onNext={next} h={h} />; break;
     case 'commitment':
@@ -370,7 +512,8 @@ export default function Onboarding({ account, onComplete, preview = false }) {
     case 'saveProgress':
       content = (
         <SaveProgressStep account={account} value={answers.name} onChange={v => update({ name: v })}
-          source={answers.source} onSource={v => update({ source: v })} h={h} onNext={() => finish()} />
+          source={answers.source} onSource={v => update({ source: v })} h={h} onNext={() => finish()}
+          focusNote={focusCopyFor(bandOfAnswers(answers)).body} />
       ); break;
     default:
       content = null;
