@@ -1,0 +1,36 @@
+# Notifies IndexNow (Bing, and anything on the shared protocol — Yandex,
+# Seznam) after every push to main, so a content change doesn't sit unindexed
+# until the next crawl. ChatGPT Search is built on Bing's index, so this is
+# also the fastest path to a new/changed page showing up there.
+#
+# Runs on push rather than as a Vercel deploy hook because deploys here go
+# through Vercel's own GitHub integration, not this repo's Actions — a push
+# to main is the closest signal we have to "production is about to change."
+# The short wait below gives that deploy time to finish before Bing is told
+# to go fetch the new pages.
+name: indexnow
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  submit:
+    name: Submit sitemap URLs to IndexNow
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # Give the Vercel deploy triggered by this same push a head start so
+      # Bing isn't sent to fetch pages before they're live.
+      - name: Wait for the Vercel deploy to land
+        run: sleep 90
+
+      - name: Submit to IndexNow
+        run: npm run indexnow
