@@ -36,6 +36,7 @@ const TIER_ICONS = { Sparkles, Hammer, Compass, Trophy, Sun, ShieldCheck, Crown 
 import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
 import { PATHS, FLASH_DECKS, SCHOOL_DATA, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP, DECK_CATEGORY_ORDER, getDeckCategory, UNIT_STAGES, isUnitTimelyFor } from './data/constants';
+import BandPreview, { BandPreviewTag, BandPreviewBanner } from './components/BandPreview';
 import { LESSON_CONTENT } from './data/lessonContent';
 import { rankQuizzes, getMedabrainPickPrompt, medabrainPicksProgress, MEDABRAIN_PICKS_UNLOCK_AT } from './lib/recommend';
 import { scorePathways, explainMatch } from './lib/diagnosticEngine';
@@ -89,6 +90,18 @@ import {
   freezeCost, canBuyFreeze, repairOffer, repairCost, freezeCapFor,
 } from './lib/streak';
 import { academicFallYear, buildTimeline, summarizeTimelineForPrompt } from './lib/timeline';
+// ── Grade band ──────────────────────────────────────────────────────────────
+// Graduation year is now a core user attribute, and grade band (explore /
+// build / apply) is what the app sequences itself around. The rule everything
+// below obeys: BAND CHANGES EMPHASIS AND NEVER ACCESS — every feature stays
+// visible and clickable to every student, out-of-band surfaces render in
+// preview state (BandPreview) and are simply left out of the active task list.
+// See src/lib/gradeBand.js.
+import { GradeBandProvider } from './lib/useGradeBand';
+import { bandFor, bandOfGrade, confirmationStamp, needsGradYearConfirmation, gradeStageFor, graduationYearFor_user, graduationYearChoices, graduationYearLabel, bandsFromGrades, BAND_BY_ID, BAND_IDS, DESTINATION_BANDS } from './lib/gradeBand';
+import { landingFor, flowForBand, shouldShowReturnScreen, PATHWAY_SKIP_LABEL, DIAGNOSTIC_REOFFER, shouldReofferDiagnostic } from './lib/onboardingFlow';
+import GradYearCheckIn from './components/GradYearCheckIn';
+import ReturningBreakScreen from './components/ReturningBreakScreen';
 import { summarizeRoadmapForPrompt } from './lib/roadmap/model';
 import { rollCosmetic } from './lib/cosmetics';
 import { renderMarkdown } from './lib/renderMarkdown';
@@ -210,7 +223,7 @@ import AppTour from './components/AppTour';
 // Progressive feature unlocking — the nav shows what this student can use today,
 // not everything the product contains. See src/lib/featureUnlock.js for the ladder
 // and why day one is four doors instead of thirty-eight.
-import { unlockState, visibleItems, recordUnlocks, seedExistingAccount, sectionKey, ruleCopy, MARQUEE_IDS, NAV_MODES } from './lib/featureUnlock';
+import { unlockState, visibleItems, recordUnlocks, seedExistingAccount, sectionKey, ruleCopy, studyActions, MARQUEE_IDS, NAV_MODES } from './lib/featureUnlock';
 import NextUnlockCard from './components/NextUnlockCard';
 import UnlockCelebration from './components/UnlockCelebration';
 import Onboarding, { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS, STUDY_HOURS_OPTIONS, GPA_OPTIONS, SCIENCE_OPTIONS, EXPERIENCE_OPTIONS } from './components/onboarding/Onboarding';
@@ -1671,6 +1684,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // True for the rest of this session once completeOnboarding() runs — lets Home greet a
   // genuinely first-time user with "Welcome" instead of the default "Welcome back".
   const [justOnboarded, setJustOnboarded] = useState(false);
+  // Two once-in-a-while interstitials, both dismissed for the rest of the session once handled:
+  // the annual "still on track for the class of 2028?" check-in (first login of a new academic
+  // year) and the "here's what changed and what's due" screen for a student coming back after
+  // three weeks or more away. Both are landing screens rather than modals — see
+  // GradYearCheckIn.jsx and ReturningBreakScreen.jsx.
+  const [gradYearHandled, setGradYearHandled] = useState(false);
+  const [breakScreenHandled, setBreakScreenHandled] = useState(false);
   const [sGrade, setSGrade] = useState(''); // settings: grade-stage editor
   // Dev-only: lets Settings re-open the ~30-screen onboarding wizard to preview it without
   // touching the signed-in account's saved profile. Remove once onboarding is stable.
@@ -2624,13 +2644,22 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // finishes. Creates the local (per-device) profile immediately so the app feels instant, and
   // separately pushes name/grade/onboardingComplete to the Supabase-backed account —
   // fire-and-forget, since local state is already the source of truth for this render.
-  // Which pillar a brand-new user lands in depends on the goal they chose during
-  // onboarding — "explore" sends them to the pathway diagnostic, "application" to Portfolio,
-  // and "boost score" (the default) straight into practice quizzes.
+  // Which pillar a brand-new user lands in depends on their GRADE BAND, not on the goal they
+  // picked — a senior who said "strengthen my academics" still has a November 1 deadline, and a
+  // foundations-upward lesson track is the wrong first screen for them whatever they told us
+  // about their goals. See landingFor() in src/lib/onboardingFlow.js. The goal still shapes the
+  // plan; it just no longer decides the door.
   const completeOnboarding = useCallback((profile)=>{
     const name=(profile.name||'').trim();
     if(!name)return;
-    const gradeStage = GRADE_STAGES[profile.gradeIdx]?.key || null;
+    // The stored attribute is the GRADUATION YEAR, confirmed on step two. gradeStage is written
+    // alongside it purely so older readers of user.gradeStage keep working — nothing derives a
+    // band from it while a graduation year exists, and gradeStageFor() prefers the year, so the
+    // grade advances itself every August 1 with nobody editing anything.
+    const graduationYear = Number.isFinite(Number(profile.graduationYear)) ? Number(profile.graduationYear) : null;
+    const gradeStage = graduationYear
+      ? gradeStageFor({ graduationYear })
+      : (GRADE_STAGES[profile.gradeIdx]?.key || null);
     let age = null;
     if(profile.month && profile.day && profile.year) {
       const birthDate = new Date(profile.year, profile.month - 1, profile.day);
@@ -2645,7 +2674,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // buildCoachSystemPrompt() (src/lib/studentProfile.js) and the
     // onboarding recap card actually use what the student told us.
     saveUser({
-      name, specialty:null, gradeStage, age, xp:0, streak:1, lastActive:Date.now(), email:account?.email,
+      // A senior who skipped the diagnostic told us their pathway on that same screen, so it
+      // lands here rather than leaving them with no pathway at all — the one thing the skip
+      // must never cost them.
+      name, specialty:profile.pathway||null, gradeStage, age, xp:0, streak:1, lastActive:Date.now(), email:account?.email,
       goal:profile.goal||null, obstacles:profile.obstacles||[], studyMethod:profile.studyMethod||null,
       accomplish:profile.accomplish||[], studyHours:profile.studyHours||null,
       generatedPlan:profile.generatedPlan||null,
@@ -2666,6 +2698,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       // wrong year's deadlines with full confidence. See effectiveGradeStage() in
       // src/lib/timeline.js, which advances the stored grade by the years elapsed since.
       gradeStageYear:academicFallYear(new Date()),
+      // ── The core attribute ─────────────────────────────────────────────────────────────
+      // Stored instead of the grade, so it self-advances (see src/lib/gradeBand.js). Stamped
+      // as confirmed for THIS academic year, so the annual check-in doesn't fire at a student
+      // who confirmed their year forty seconds ago on step two.
+      graduationYear,
+      gradYearConfirmedFor:academicFallYear(new Date()),
+      // The band-specific answers. Only the ones this student's flow actually asked for are
+      // ever set; the rest stay null and nothing downstream assumes otherwise.
+      scienceClass:profile.scienceClass||null, weeklyGoalPace:profile.weeklyGoal||null,
+      testingPlan:profile.testingPlan||null,
+      earlyApplication:profile.earlyApplication||null, combinedProgram:profile.combinedProgram||null,
+      // A senior who told us their pathway instead of sitting through the diagnostic. The flag
+      // is what lets the app re-offer the diagnostic later as optional rather than never
+      // mentioning it again — see shouldReofferDiagnostic() in src/lib/onboardingFlow.js.
+      skippedDiagnostic:!!profile.skipDiagnostic,
     });
     AuthAPI.updateMe({ name, gradeLevel:gradeStage, onboardingComplete:true }).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});
     // The parent invitation the student asked for on the family step, sent now that there is an
@@ -2678,9 +2725,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         .then(()=>toast.success(`Request sent to ${parentEmail}. Nothing is shared until they accept.`))
         .catch(()=>toast('We couldn\'t send that request — you can try again in Settings ▸ Family Access.'));
     }
-    if(profile.goal==='explore_pathway') goPrep('diagnostic');
-    else if(profile.goal==='build_application') goPortfolio('overview');
-    else goPrep('quizzes');
+    // The door is chosen by grade band. Explore lands on the lesson track, build on a
+    // pre-populated junior-year portfolio timeline, apply on the portfolio with real deadlines
+    // on it — and a student who skipped the diagnostic skips straight past it rather than being
+    // shown the screen they just declined.
+    const band = bandFor({ graduationYear, gradeStage });
+    const dest = landingFor(band, { skippedDiagnostic: !!profile.skipDiagnostic });
+    if(dest.tab==='portfolio') goPortfolio(dest.view);
+    else goPrep(dest.view);
     toast.success(pickNudge('welcome_new_user',{name}));
     // The handoff from the ~30-screen onboarding flow into the real app used to be completely
     // flat — no different from any other page load — despite being the single biggest payoff
@@ -2867,7 +2919,18 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const paceText = useMemo(()=>describePace(paceStatus,curPath?.label||'this pathway'),[paceStatus,curPath?.label]);
   // The student's class-year label, resolved once — several surfaces need it, and the
   // Pathway view's per-unit "right time for you" badge reads it on every unit row.
-  const gradeLabel = useMemo(()=>GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null,[user?.gradeStage]);
+  // The grade this student is in TODAY, derived from their stored graduation year rather than
+  // read off a snapshot taken at signup — so it advances by itself every August 1 and a
+  // sophomore who signed up in 2025 is not still a sophomore in 2027. See src/lib/gradeBand.js.
+  const effGrade = useMemo(()=>gradeStageFor(user),[user?.graduationYear,user?.gradeStage,user?.gradeStageYear,user?.onboardingCompletedAt]);
+  const gradeBand = useMemo(()=>bandFor(user),[user?.graduationYear,user?.gradeStage,user?.gradeStageYear,user?.onboardingCompletedAt]);
+  const gradeLabel = useMemo(()=>GRADE_STAGES.find(g=>g.key===effGrade)?.label||null,[effGrade]);
+  // The pillars this band does not lead with. They stay in the nav, in full, clickable — the
+  // marker says "most students use this in another year", nothing more. An explore student
+  // keeps Portfolio in the nav from day one on purpose: a ninth grader who never sees the
+  // program tracker will never ask a parent to pay for it.
+  const previewPillars = useMemo(()=>flowForBand(gradeBand).previewPillars||[],[gradeBand]);
+  const bandsAwayFromPillar = useMemo(()=>BAND_IDS.filter(b=>b!==gradeBand),[gradeBand]);
   const levelInfo = getLevelInfo(user?.xp||0);
   const lvl     = levelInfo.level;
   const xpIn    = levelInfo.xpIntoLevel;
@@ -6037,9 +6100,22 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               <div style={{fontSize:15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',fontWeight:800,color:C.t1,fontFamily:C.FD}}>Not sure which fits? Take the diagnostic.</div>
               <div style={{fontSize:12,color:C.t2,marginTop:4}}>{DIAG_QS.length} questions about how you think, what actually interests you, and what these careers look like day to day — takes about 6 minutes.</div>
             </div>
-            <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(C.oceanGrad,{fontSize:13,padding:'12px 24px',boxShadow:`0 6px 18px ${C.cyan}35,inset 0 1px 0 rgba(255,255,255,0.15)`}),display:'inline-flex',alignItems:'center',gap:8,flexShrink:0,position:'relative'}} onClick={()=>setDIntro(false)}>Start diagnostic<ChevronRight size={15}/></motion.button>
+            <div style={{position:'relative',display:'flex',flexDirection:'column',gap:8,flexShrink:0}}>
+              <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(C.oceanGrad,{fontSize:13,padding:'12px 24px',boxShadow:`0 6px 18px ${C.cyan}35,inset 0 1px 0 rgba(255,255,255,0.15)`}),display:'inline-flex',alignItems:'center',gap:8,position:'relative'}} onClick={()=>setDIntro(false)}>Start diagnostic<ChevronRight size={15}/></motion.button>
+              {/* The skip, given equal weight and put where the decision is actually made.
+                  A real share of juniors, seniors, and students from healthcare families walk in
+                  already knowing their pathway; six minutes of diagnostic charged before they have
+                  seen any value is friction paid by exactly the people who least need it. This
+                  drops them into the pathway list below, which is the thing the diagnostic exists
+                  to produce. The diagnostic itself never goes anywhere — it stays on this screen
+                  and gets re-offered later as optional. See src/lib/onboardingFlow.js. */}
+              <button style={{...btnG({fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:8}}
+                onClick={()=>{saveUser({...user,skippedDiagnostic:true});document.getElementById('pathway-manual-list')?.scrollIntoView({behavior:'smooth',block:'start'});}}>
+                {PATHWAY_SKIP_LABEL}<ChevronRight size={13}/>
+              </button>
+            </div>
           </motion.div>
-          <div>
+          <div id="pathway-manual-list">
             <SectionTitle icon={Route} color={C.cyanL}>All Pathways — Choose Manually</SectionTitle>
             <div style={G(isMobile?1:2,16,{},false)}>
               {Object.entries(PATHS).map(([key,p])=>(
@@ -6121,6 +6197,24 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           onAdd={openPathwayManager}
           m={isMobile} reducedMotion={reducedMotion}
         />
+        {/* The diagnostic, re-offered once to a student who skipped it — as an invitation, not
+            a nag. The framing is the true and useful one: the diagnostic's real value to
+            somebody who already knows their pathway is the SECOND pathway it surfaces, not a
+            confirmation of the first. Dismissing it is permanent; the diagnostic itself stays
+            on the Diagnostic tab forever either way. See src/lib/onboardingFlow.js. */}
+        {shouldReofferDiagnostic(user,{studyActions:studyActions(unlockSignals)})&&(
+          <div style={{...glass({padding:'16px 16px',background:`linear-gradient(135deg,${C.cyanDim},transparent 70%)`,border:`1px solid ${C.cyan}2E`}),display:'flex',gap:16,alignItems:'flex-start',flexWrap:'wrap'}}>
+            <Compass size={18} color={C.cyanL} style={{flexShrink:0,marginTop:4}}/>
+            <div style={{flex:1,minWidth:220}}>
+              <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{DIAGNOSTIC_REOFFER.title}</div>
+              <div style={{fontSize:12.5,color:C.t2,marginTop:4,lineHeight:1.55}}>{DIAGNOSTIC_REOFFER.body}</div>
+            </div>
+            <div style={R({gap:8,flexShrink:0})}>
+              <button style={btnG({fontSize:12,padding:'8px 16px'})} onClick={()=>saveUser({...user,diagnosticReoffered:true})}>{DIAGNOSTIC_REOFFER.dismiss}</button>
+              <button style={btn(C.oceanGrad,{fontSize:12,padding:'8px 16px'})} onClick={()=>{saveUser({...user,diagnosticReoffered:true});setDIntro(false);setDS(0);setDA([]);goPrep('diagnostic');}}>{DIAGNOSTIC_REOFFER.cta}</button>
+            </div>
+          </div>
+        )}
         {/* The stretch between finishing one lesson and opening the next is where a
             student actually decides whether to keep going, and until now nothing in
             the app spoke to them there. One line, state-driven, always pointing at
@@ -6237,7 +6331,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           // what stands between them and it, instead of pointing at a wall.
           const stageMeta=unit.stage?UNIT_STAGES[unit.stage]:null;
           const reachable=ui===0||(units[ui-1]?.lessons||[]).every(l=>isLessonComplete(l,pathway[l.id]));
-          const timely=isUnitTimelyFor(unit,user?.gradeStage)&&!done;
+          const timely=isUnitTimelyFor(unit,effGrade)&&!done;
+          // The unit's recommended BAND, derived from the gradeFocus it already declares — one
+          // tag, no second list to keep in sync. Out-of-band units are marked and left out of the
+          // active task list; they are NOT locked, dimmed, or reordered. Sequencing and unlocking
+          // are untouched, so a ninth grader can open a senior-timed unit today exactly as before
+          // — they simply are not asked to.
+          const unitBands=bandsFromGrades(unit.gradeFocus);
           return(
             <motion.div key={unit.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:ui*.05}} style={{...glass({borderLeft:`3px solid ${done?C.green:accent}55`}),background:`linear-gradient(120deg,${done?C.green:accent}0a,transparent 40%)`}}>
               <div style={R({marginBottom:20})}>
@@ -6249,6 +6349,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                     {stageMeta&&<span title={stageMeta.blurb} style={{...pill(C.s3,C.t2,{fontSize:9.5,fontFamily:C.FM,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'})}}>{stageMeta.label}</span>}
                     {timely&&<span title={reachable?undefined:`Work through ${units[ui-1]?.title} to open this up.`} style={{...pill(C.violetDim,C.violetL,{fontSize:9.5,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:4}}><Sparkles size={9}/>{reachable?`Right time for ${gradeLabel||'your grade'}`:`Worth reaching this year${gradeLabel?` — ${gradeLabel} focus`:''}`}</span>}
                     {done&&<span style={{...pill(C.greenDim,C.greenL,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4}}><Check size={10}/>Mastered</span>}
+                    {!done&&<BandPreviewTag bands={unitBands}/>}
                   </div>
                   <div style={{fontSize:15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',fontWeight:700,color:C.t1,fontFamily:C.FD}}>{unit.title}</div>
                   {unit.blurb&&<div style={{fontSize:11.5,color:C.t3,marginTop:4,lineHeight:1.5,maxWidth:560}}>{unit.blurb}</div>}
@@ -8969,27 +9070,32 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* ── Study Setup ──────────────────────────────────────────────────────── */}
         {settingsView==='study'&&
         <Group icon={Route} title="Study setup">
-        {/* Class year. Captured once during onboarding and, until now, editable nowhere — which
-            meant a student who mis-tapped it, or whose profile was rebuilt from their account on
-            a new device (that path only restores name/grade from the server), had no way to fix
-            the single field the whole Timeline is gated on. Saving here re-stamps gradeStageYear
-            so the auto-advance in effectiveGradeStage() counts from today, not from signup. */}
+        {/* Graduation year — the core attribute the whole app sequences itself around.
+            It is stored instead of the grade so it never goes stale: the grade is derived from
+            today's date, which means it advances by itself every August 1 with nobody editing
+            anything (see src/lib/gradeBand.js). This editor exists for the case the arithmetic
+            cannot see — a student who skipped a grade, repeated one, or graduated early — and
+            for the student who mis-tapped it on step two. Changing it changes EMPHASIS ONLY:
+            what lands in the active task list and what opens in preview. Nothing anywhere in
+            the app becomes unreachable at any class year. */}
         <div style={glass({padding:16})}>
-          <SL>Class year</SL>
-          <p style={{fontSize:12,color:C.t2,marginBottom:12,lineHeight: 1.55}}>Drives your Timeline, your roadmap, and how Medabrain paces its advice — a freshman and a senior get completely different calendars. We move you up a year automatically each August.</p>
+          <SL>Graduation year</SL>
+          <p style={{fontSize:12,color:C.t2,marginBottom:12,lineHeight: 1.55}}>The year you finish high school. It drives your timeline, your roadmap, which lessons come first, and how Medabrain paces its advice. We roll it forward every August, so you should never have to touch this — and changing it never hides anything: every feature stays open at every year.</p>
           <div style={R({gap:8,flexWrap:'wrap'})}>
-            {GRADE_STAGES.map(g=>{
-              const on=(user?.gradeStage||null)===g.key;
+            {(()=>{const cur=graduationYearFor_user(user);const list=graduationYearChoices();const years=cur&&!list.includes(cur)?[...list,cur].sort((a,b)=>a-b):list;return years.map(y=>{
+              const on=cur===y;
+              const info=graduationYearLabel(y);
+              const b=bandOfGrade(info.gradeStage);
               return (
-                <button key={g.key} onClick={()=>{if(on)return;saveUser({...user,gradeStage:g.key,gradeStageYear:academicFallYear(new Date())});toast.success(`Class year set to ${g.label}`);}} style={{
+                <button key={y} onClick={()=>{if(on)return;const patch=confirmationStamp(y);saveUser({...user,...patch});AuthAPI.updateMe({gradeLevel:patch.gradeStage}).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});toast.success(`Class of ${y} — ${info.sub}`);}} style={{
                   ...glass2({padding:'8px 12px',cursor:'pointer',border:on?`1px solid ${tint(accent,0.55)}`:undefined,background:on?tint(accent,0.12):undefined}),
                   textAlign:'left',
                 }}>
-                  <div style={{fontSize:12.5,fontWeight:700,color:on?accentText(accent):C.t2,fontFamily:C.FD}}>{g.label}</div>
-                  <div style={{fontSize:10.5,color:C.t3,marginTop:4}}>{g.sub}</div>
+                  <div style={{fontSize:12.5,fontWeight:700,color:on?accentText(accent):C.t2,fontFamily:C.FM}}>{y}</div>
+                  <div style={{fontSize:10.5,color:C.t3,marginTop:4}}>{info.sub}{b?` · ${BAND_BY_ID[b].label}`:''}</div>
                 </button>
               );
-            })}
+            });})()}
           </div>
         </div>
 
@@ -9434,6 +9540,52 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     );
   }
 
+  // ═══ THE ANNUAL CLASS-YEAR CHECK-IN ════════════════════════════════════════════
+  // First login of a new academic year, once. The rollover itself already happened on August 1
+  // — graduation year is stored, so the grade derives from today's date and needs nobody's
+  // permission to advance. This asks anyway, in one tap, for the one case the arithmetic cannot
+  // see: a student whose graduation year genuinely changed. See gradeBand.js.
+  if(!gradYearHandled && !justOnboarded && needsGradYearConfirmation(user)){
+    return(
+      <ErrorBoundary>
+        <Toaster position="bottom-right"/>
+        <GradYearCheckIn user={user} onConfirm={(patch)=>{
+          setGradYearHandled(true);
+          saveUser({...user,...patch});
+          AuthAPI.updateMe({ gradeLevel:patch.gradeStage }).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});
+          const b=bandFor({...user,...patch});
+          toast.success(`Class of ${patch.graduationYear} — ${BAND_BY_ID[b]?.label||'your'} year. Everything's still where you left it.`);
+        }}/>
+      </ErrorBoundary>
+    );
+  }
+
+  // ═══ COMING BACK AFTER A BREAK ═════════════════════════════════════════════════
+  // Twenty-one days or more away. Usage here collapses during finals and again mid-summer, and
+  // the student who comes back is not resuming — they are re-entering, usually because
+  // something reminded them a deadline exists. Dropping them into the middle of the lesson
+  // sequence they abandoned answers neither of the two questions they walked in with. See
+  // ReturningBreakScreen.jsx.
+  if(!breakScreenHandled && !justOnboarded && shouldShowReturnScreen(user)){
+    const markSeen=()=>{ setBreakScreenHandled(true); saveUser({...user,welcomeBackShownFor:user.lastActive,lastActive:Date.now()}); };
+    // The real, dated items from the same timeline engine the Milestones tab renders, so
+    // "what's due" here is the exact list they can go look at rather than a second opinion.
+    const dueRows=(appTimeline?.upcoming||[]).filter(e=>e.status==='overdue'||e.status==='soon').slice(0,4)
+      .map(e=>({ id:e.id, title:e.title, detail:e.when||e.detail, onOpen:()=>{markSeen();goPortfolio('milestones');} }));
+    const changedRows=(appTimeline?.upcoming||[]).filter(e=>e.status!=='overdue'&&e.status!=='soon').slice(0,3)
+      .map(e=>({ id:e.id, title:e.title, detail:e.when||e.detail, onOpen:()=>{markSeen();goPortfolio('milestones');} }));
+    return(
+      <GradeBandProvider user={user}>
+        <ErrorBoundary>
+          <Toaster position="bottom-right"/>
+          <ReturningBreakScreen user={user} due={dueRows} changed={changedRows}
+            onDismiss={markSeen}
+            onPrimary={()=>{markSeen();goPortfolio('milestones');}}/>
+        </ErrorBoundary>
+      </GradeBandProvider>
+    );
+  }
+
   // ═══ ACTIVE QUIZ FULLSCREEN ════════════════════════════════════════════════════
   if(aQuiz){
     // A verification quiz belongs to the lesson that launched it, so it wears that lesson's
@@ -9585,7 +9737,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       <div style={{position:'relative'}}>
         <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:0,transition:'background 360ms ease',background:`radial-gradient(ellipse 65% 42% at 88% -6%,${pA}1a 0%,transparent 58%),radial-gradient(ellipse 55% 38% at -5% 102%,${pA2}14 0%,transparent 58%),radial-gradient(ellipse 40% 30% at 50% 40%,${pA}08 0%,transparent 60%)`}}/>
         <div style={{position:'relative',zIndex:1}}>
-          <SubNav items={prepSubnav.map(n=>n.id==='flashcards'&&dueDeckCount>0?{...n,badge:dueDeckCount}:n)} active={prepView} onChange={setPrepView} accent={pA} m={isMobile} tourPrefix="prep-sub" hrefFor={prepHref} locked={unlocks.locked('prep')[0]}/>
+          <SubNav items={prepSubnav.map(n=>n.id==='flashcards'&&dueDeckCount>0?{...n,badge:dueDeckCount}:n)} active={prepView} onChange={setPrepView} accent={pA} m={isMobile} tourPrefix="prep-sub" hrefFor={prepHref} locked={unlocks.locked('prep')[0]} bandsFor={id=>DESTINATION_BANDS[`prep/${id}`]}/>
           {user.masterPlan&&(
             <div style={{padding:isMobile?'12px 16px 0':'14px 24px 0'}}>
               <PlanTaskStrip user={user} pillar="prep" accent={pA} onOpenTask={openPlanResource} currentView={prepView} isMobile={isMobile}/>
@@ -9709,7 +9861,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   function tPortWrap(){
     return(
       <div>
-        <SubNav items={portfolioSubnav} active={portfolioView} onChange={setPortfolioView} accent={portfolioAccent} m={isMobile} tourPrefix="portfolio-sub" hrefFor={portfolioHref} locked={unlocks.locked('portfolio')[0]}/>
+        <SubNav items={portfolioSubnav} active={portfolioView} onChange={setPortfolioView} accent={portfolioAccent} m={isMobile} tourPrefix="portfolio-sub" hrefFor={portfolioHref} locked={unlocks.locked('portfolio')[0]} bandsFor={id=>DESTINATION_BANDS[`portfolio/${id}`]}/>
         {user.masterPlan&&(
           <div style={{padding:isMobile?'12px 16px 0':'14px 24px 0'}}>
             <PlanTaskStrip user={user} pillar="portfolio" accent={portfolioAccent} onOpenTask={openPlanResource} currentView={portfolioView} isMobile={isMobile}/>
@@ -9900,6 +10052,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const tRenders={ home:tHome, sat:tSatWrap, prep:tPrep, portfolio:tPortWrap, roadmap:tRoadmap, plans:tPlans, progress:tAnalytics, settings:tSettings };
 
   return(
+    // Every component under here can call useGradeBand() to branch on explore/build/apply
+    // WITHOUT being handed the user — and, by construction, the only thing the hook lets it
+    // decide is emphasis: 'active' or 'preview', never whether something renders at all.
+    // See src/lib/useGradeBand.jsx and components/BandPreview.jsx.
+    <GradeBandProvider user={user}>
     <ErrorBoundary resetKey={tab}>
       <Toaster position="bottom-right" toastOptions={{style:{background:C.s1,color:C.t1,border:`1px solid ${C.b2}`,fontFamily:C.FB,fontSize:13,boxShadow:`0 8px 32px rgba(0,0,0,0.6)`},success:{iconTheme:{primary:C.green,secondary:C.s1}},error:{iconTheme:{primary:C.rose,secondary:C.s1}}}}/>
       <AnimatePresence>
@@ -10098,6 +10255,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                     <n.ic size={17} color={active?nc:undefined} style={{opacity:active?1:0.7}}/>
                     <span style={{flex:1, display:'inline-flex', alignItems:'center', gap:4}}>
                       <span>{n.label}</span>
+                      {/* A pillar that is not this band's focus. The row is a completely normal
+                          row — same link, same click, same URL — and simply says so. See
+                          previewPillars in src/lib/onboardingFlow.js and BandPreview.jsx. */}
+                      {previewPillars.includes(n.id) && <BandPreviewTag bands={bandsAwayFromPillar}/>}
                       {n.id==='sat' && (
                         <span className="pbeta" style={{
                           fontSize:9,
@@ -10319,5 +10480,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {tourActive && <AppTour steps={TOUR_STEPS} onFinish={finishTour} onSkip={finishTour}/>}
       </div>
     </ErrorBoundary>
+    </GradeBandProvider>
   );
 }

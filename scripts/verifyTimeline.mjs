@@ -127,44 +127,63 @@ eq('shiftDays crosses a month', shiftDays('2026-10-15', -28), '2026-09-17');
 
 // ─── 4. THE FRESHMAN GATE ─────────────────────────────────────────────────────
 // The rule the whole feature turns on: nothing about aid, decisions, applications, or letters
-// belongs on a ninth-grader's calendar.
+// belongs on a ninth-grader's ACTIVE LIST.
+//
+// Note the change in what is asserted. This used to check `events` — i.e. that those milestones
+// did not EXIST for a freshman at all. They do now, and deliberately: grade band changes
+// emphasis and never access, so an out-of-band milestone is emitted with inBand:false and routed
+// to `preview`, where the Milestones tab renders it as a fully browsable "the years ahead"
+// section behind the preview banner. A ninth grader who never sees that half of the product will
+// never ask a parent to pay for it. What must stay true — and is what these assertions now
+// pin — is that none of it reaches `upcoming`, the list the app actually asks them to act on.
 {
   const t = build('freshman');
-  const kinds = new Set(t.events.map(e => e.kind));
-  assert('freshman sees no financial-aid milestones', !kinds.has('aid'),
-    [...t.events.filter(e => e.kind === 'aid').map(e => e.title)].join(', '));
-  assert('freshman sees no decision/commit milestones', !kinds.has('decision'),
-    [...t.events.filter(e => e.kind === 'decision').map(e => e.title)].join(', '));
-  assert('freshman sees no application-submission milestones', !kinds.has('application'),
-    [...t.events.filter(e => e.kind === 'application').map(e => e.title)].join(', '));
-  assert('freshman sees no recommender milestones', !kinds.has('recommenders'),
-    [...t.events.filter(e => e.kind === 'recommenders').map(e => e.title)].join(', '));
+  const kinds = new Set(t.upcoming.map(e => e.kind));
+  assert('freshman is not ASKED to do anything about financial aid', !kinds.has('aid'),
+    [...t.upcoming.filter(e => e.kind === 'aid').map(e => e.title)].join(', '));
+  assert('freshman is not ASKED to do anything about decisions/commitments', !kinds.has('decision'),
+    [...t.upcoming.filter(e => e.kind === 'decision').map(e => e.title)].join(', '));
+  assert('freshman is not ASKED to submit applications', !kinds.has('application'),
+    [...t.upcoming.filter(e => e.kind === 'application').map(e => e.title)].join(', '));
+  assert('freshman is not ASKED to line up recommenders', !kinds.has('recommenders'),
+    [...t.upcoming.filter(e => e.kind === 'recommenders').map(e => e.title)].join(', '));
   assert('freshman still gets a real timeline', t.upcoming.length >= 4, `${t.upcoming.length} upcoming`);
-  const horizon = Math.max(...t.events.map(e => daysBetween(t.ctx.today, e.date)));
-  assert('freshman horizon stays inside about a year', horizon <= 400, `${horizon} days out`);
-  assert('nothing on a freshman timeline mentions FAFSA or Decision Day',
-    !t.events.some(e => /fafsa|css profile|decision day|deposit/i.test(e.title)));
+  const horizon = Math.max(...t.upcoming.map(e => daysBetween(t.ctx.today, e.date)));
+  assert('freshman ACTIVE horizon stays inside about a year', horizon <= 400, `${horizon} days out`);
+  assert("nothing a freshman is asked to do mentions FAFSA or Decision Day",
+    !t.upcoming.some(e => /fafsa|css profile|decision day|deposit/i.test(e.title)));
+
+  // The other half of the rule, and the half that is new: it is all still THERE.
+  assert('...but a curious freshman can still browse the senior calendar', t.preview.length >= 10,
+    `${t.preview.length} preview milestones`);
+  assert('...including the ones this app is worth paying for',
+    t.preview.some(e => /fafsa/i.test(e.title)) && t.preview.some(e => /decision day/i.test(e.title)));
+  assert('every previewed milestone says which band it belongs to',
+    t.preview.every(e => Array.isArray(e.bands) && e.bands.length > 0));
+  assert('nothing is in both lists at once',
+    !t.preview.some(p => t.upcoming.some(u => u.id === p.id)));
 }
 
-// A sophomore is the next gate: still no aid, no applications, no letters.
+// A sophomore is the next gate: still nothing about aid, applications or letters ASKED of them.
 {
   const t = build('sophomore');
-  const kinds = new Set(t.events.map(e => e.kind));
-  assert('sophomore sees no aid milestones', !kinds.has('aid'));
-  assert('sophomore sees no application milestones', !kinds.has('application'));
-  assert('sophomore sees no decision milestones', !kinds.has('decision'));
+  const kinds = new Set(t.upcoming.map(e => e.kind));
+  assert('sophomore is not asked about aid', !kinds.has('aid'));
+  assert('sophomore is not asked to submit applications', !kinds.has('application'));
+  assert('sophomore is not asked about decisions', !kinds.has('decision'));
+  assert('sophomore can still browse all of it', t.preview.length >= 10);
 }
 
 // ─── 5. Juniors and seniors get the heavy calendar ────────────────────────────
 {
   const jr = build('junior');
-  const kinds = new Set(jr.events.map(e => e.kind));
+  const kinds = new Set(jr.upcoming.map(e => e.kind));
   assert('junior gets recommender milestones (ask in the spring)', kinds.has('recommenders'));
   assert('junior gets planning/college-list milestones', kinds.has('planning'));
   assert('junior gets essay drafting in the summer', kinds.has('essays'));
-  assert('junior still gets no FAFSA', !jr.events.some(e => /FAFSA/i.test(e.title)),
-    jr.events.filter(e => /FAFSA/i.test(e.title)).map(e => e.date).join(','));
-  const commonApp = jr.events.find(e => e.id === 'jr_lookahead_commonapp');
+  assert('junior is not yet ASKED about FAFSA', !jr.upcoming.some(e => /FAFSA/i.test(e.title)),
+    jr.upcoming.filter(e => /FAFSA/i.test(e.title)).map(e => e.date).join(','));
+  const commonApp = jr.upcoming.find(e => e.id === 'jr_lookahead_commonapp');
   assert('junior gets exactly one senior-year look-ahead', !!commonApp);
   eq('...and it lands on the August after junior year', commonApp?.date, '2027-08-01');
   // Was >= 12. Removing the SAT/ACT calendar (see section 8) took two junior
@@ -454,7 +473,10 @@ eq('shiftDays crosses a month', shiftDays('2026-10-15', -28), '2026-09-17');
 // exist because the failure mode is silent — a milestone quietly dropped from the catalog, or
 // gated to the wrong grade, looks like nothing in review and costs a student a year in the app.
 {
-  const idsFor = (g, clock = NOW) => new Set(build(g, { now: clock }).events.map(e => e.id));
+  // The ACTIVE list, not everything that exists: out-of-band milestones are all present now
+  // (in `preview`), so an id-set built from `events` would say every grade sees everything.
+  const idsFor = (g, clock = NOW) => new Set(build(g, { now: clock }).upcoming.map(e => e.id));
+  const previewIdsFor = (g, clock = NOW) => new Set(build(g, { now: clock }).preview.map(e => e.id));
   const anyYear = (id) => GRADE_KEYS.some(g => [NOW, SPRING].some(c => idsFor(g, c).has(id)));
 
   const HEALTH_IDS = [
@@ -494,8 +516,14 @@ eq('shiftDays crosses a month', shiftDays('2026-10-15', -28), '2026-09-17');
 
   // Grade gating still holds for the new block: nothing here may leak a senior date to a freshman.
   const frIds = idsFor('freshman');
-  assert('a freshman never sees the combined-degree supplemental deadline', !frIds.has('hp_combined_supplements'));
-  assert('a freshman never sees the Regeneron STS entry', !frIds.has('hp_sts'));
+  assert('a freshman is never ASKED about the combined-degree supplemental deadline', !frIds.has('hp_combined_supplements'));
+  assert('a freshman is never ASKED about the Regeneron STS entry', !frIds.has('hp_sts'));
+  // hp_sts is gated on `when` (research logged, or a research pathway), not on band — so a
+  // freshman with an empty portfolio correctly sees it nowhere. Relevance gates still gate;
+  // it is only the GRADE gate that became a preview instead of a disappearance.
+  assert('a freshman with research logged can browse the STS entry',
+    new Set(buildTimeline({ user: userFor('freshman'), snapshot: { ...EMPTY, research: [{ id: 'r1', title: 'Lab' }] }, now: NOW })
+      .preview.map(e => e.id)).has('hp_sts'));
   assert('a freshman IS told combined-degree requirements start now', frIds.has('hp_combined_requirements'));
   assert('a senior is not told combined-degree requirements "start now"',
     !idsFor('senior').has('hp_combined_requirements'));

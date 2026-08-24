@@ -50,7 +50,7 @@ function NameField({ value, onChange, account, onSubmit, g }) {
   );
 }
 
-export function SaveProgressStep({ account, value, onChange, source, onSource, onNext, h }) {
+export function SaveProgressStep({ account, value, onChange, source, onSource, onNext, h, focusNote }) {
   const g = h || flowHue();
   return (
     <GroupedStep
@@ -58,7 +58,13 @@ export function SaveProgressStep({ account, value, onChange, source, onSource, o
       icon="flag-check"
       h={g}
       title="Your plan is ready to be built."
-      subtitle="Thank you for trusting us with this. Getting into medicine can feel overwhelming — everything you just told us goes into making your path clear, structured, and honestly achievable."
+      // `focusNote` is the one sentence saying WHAT THE APP WILL OPEN ON for
+      // this student's grade band (see focusCopyFor in src/lib/onboardingFlow.js).
+      // A senior who is about to land on a deadline board rather than lesson one
+      // should be told so here, on the screen before it happens — the handoff
+      // out of onboarding is the moment a wrong guess about what they came for
+      // costs the most.
+      subtitle={`Thank you for trusting us with this. Getting into medicine can feel overwhelming — everything you just told us goes into making your path clear, structured, and honestly achievable.${focusNote ? ` ${focusNote}` : ''}`}
       questions={[
         {
           key: 'name',

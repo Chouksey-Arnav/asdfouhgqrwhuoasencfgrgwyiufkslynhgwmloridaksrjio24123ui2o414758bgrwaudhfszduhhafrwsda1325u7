@@ -49,7 +49,7 @@ import {
   CalendarDays, Milestone, History, Hourglass, AlertTriangle, CheckCircle2, ChevronRight,
   Sparkles, GraduationCap, Info, ArrowRight, Filter, ListChecks, FileText, Plus, Trash2,
   Stethoscope, TrendingUp, UserCheck, Wallet, ScrollText, Compass, Trophy, BookOpen,
-  CalendarX, Loader2, CalendarPlus, Layers, X, Loader, Flame, Undo2, BellRing,
+  CalendarX, Loader2, CalendarPlus, Layers, X, Loader, Flame, Undo2, BellRing, Telescope,
   // Aliased: `Map` is a JavaScript global.
   Map as MapIcon,
 } from 'lucide-react';
@@ -62,6 +62,9 @@ import { trackItem, cancelQueuedTrack } from '../lib/trackQueue';
 import { usePendingTrackKeys, useTrackQueueDrain } from '../lib/useTrackQueue';
 import { rowDedupeKey, needsDeadlineDate } from '../lib/trackingCatalog';
 import { sortByUrgency, urgencyOf, alertRowsFor, isAlertRow, alertParentRef as alertParentRefOf } from '../lib/milestoneUrgency';
+// The one preview banner, written once and reused everywhere an out-of-band surface renders.
+import { BandPreviewBanner } from './BandPreview';
+import { bandOfGrade } from '../lib/gradeBand';
 import { completionEffects, describeEffects, completeMilestone, reopenMilestone } from '../lib/milestoneSync';
 import { collectProgramPrompts } from '../lib/programEssayPrompts';
 import { showMedabrainToast } from '../lib/medabrainComments';
@@ -419,6 +422,21 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
   const laterGroups = useMemo(() => filteredGroups.slice(NEAR_GROUPS), [filteredGroups]);
   const laterCount = useMemo(() => laterGroups.reduce((n, g) => n + g.items.length, 0), [laterGroups]);
 
+  // The bands the previewed milestones belong to, so the banner names the right year
+  // ("most students use this senior year") rather than a generic later-on.
+  const bandsOfPreview = useMemo(() => {
+    const own = bandOfGrade(timeline?.gradeStage);
+    const out = [];
+    (timeline?.preview || []).forEach(e => (e.bands || []).forEach(b => {
+      // A milestone can span bands (grades: ['sophomore','senior'] touches both explore and
+      // apply), so the student's OWN band can appear on something that is nonetheless out of
+      // band for them. Naming it in the banner would read as "most students use these in 9th
+      // grade" to a ninth grader, which is nonsense — so their own band is dropped here.
+      if (b !== own && !out.includes(b)) out.push(b);
+    }));
+    return out;
+  }, [timeline]);
+
   const visibleUpcoming = useMemo(
     () => (timeline ? timeline.upcoming.filter(matches) : []),
     [timeline, matches]
@@ -509,9 +527,9 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
           is withheld, because a freshman's and a senior's are nothing alike and
           showing the wrong one is worse than showing none. */}
       {!gradeLabel && (
-        <CalloutCard color={C.amber} icon={GraduationCap} title="Set your class year to unlock the generated calendar">
+        <CalloutCard color={C.amber} icon={GraduationCap} title="Set your graduation year to unlock the generated calendar">
           <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, margin: 0 }}>
-            We don't know what grade you're in, so we won't guess your admissions calendar — a freshman and a senior get
+            We don't know what year you graduate, so we won't guess your admissions calendar — a freshman and a senior get
             completely different dates. Anything you add below still works right now and still counts down on your Home dashboard.
           </p>
           {onNavigate && (
@@ -805,6 +823,26 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
           items={timeline.past.filter(e => !hidden.has(e.id))} onGo={go} onDelete={removeDeadline} dim />
       )}
 
+      {/* ── The years ahead ──────────────────────────────────────────────────
+          Every milestone that belongs to a different grade band: the senior
+          application calendar for a ninth grader, the aid deadlines, Decision
+          Day. These are NOT on the feed above and are not counted anywhere as
+          work owed — that is the whole and only difference band membership
+          makes. But they are here, dated against this student's own class
+          years, fully readable, one tap away, because a freshman who never
+          sees any of this has no way to know the app becomes something else
+          in three years. See src/lib/gradeBand.js. */}
+      {(timeline.preview?.length || 0) > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <BandPreviewBanner bands={bandsOfPreview} compact />
+          <CollapsibleList
+            id="milestones-preview"
+            title={`The years ahead (${timeline.preview.length})`} icon={Telescope} color={C.cyanL}
+            blurb="Dates from the parts of the road you haven't reached yet, worked out against your own class years. Nothing here is asked of you and none of it counts toward anything — it is here so you can see where this goes."
+            items={timeline.preview.filter(e => !hidden.has(e.id))} onGo={go} dim />
+        </div>
+      )}
+
       {visibleUpcoming.length > 0 && (
         <div style={{ display: 'flex', justifyContent: 'center' }}>
           <button onClick={exportCalendar} style={btnG({ fontSize: 12, padding: '8px 16px' })}>
@@ -831,7 +869,7 @@ function Hero({ accent, timeline, isMobile, onExport }) {
       title="Every date you have to hit"
       sub={gradeLabel
         ? `Deadlines, test dates and application milestones in one list, soonest first — yours, plus the ones a ${gradeLabel.toLowerCase()}${gradYear ? ` graduating in ${gradYear}` : ''} normally has. Nothing from four years away.`
-        : 'Deadlines, test dates and application milestones in one list, soonest first. Add your own below — and set your class year in Settings and we fill in the rest of the admissions calendar around them.'}
+        : 'Deadlines, test dates and application milestones in one list, soonest first. Add your own below — and set your graduation year in Settings and we fill in the rest of the admissions calendar around them.'}
       stats={stats ? [
         ...(next ? [{ value: next.days === 0 ? 'today' : `${next.days}d`, label: 'to your next one', color: next.days <= 14 ? C.amberL : C.indigoL }] : []),
         { value: stats.upcoming, label: 'coming up', color: C.skyL },
@@ -1213,7 +1251,7 @@ export function TimelineNextCard({ user, accent = C.blue, onNavigate, limit = 4 
     return (
       <div style={{ ...glass({ padding: 16 }), display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ fontSize: 13, color: C.t2 }}>
-          {gradeLabel ? 'Nothing is coming up on your timeline yet — add your colleges and deadlines and it fills in.' : 'Set your class year in Settings and your application timeline builds itself.'}
+          {gradeLabel ? 'Nothing is coming up on your timeline yet — add your colleges and deadlines and it fills in.' : 'Set your graduation year in Settings and your application timeline builds itself.'}
         </div>
         {onNavigate && <button style={btnG({ fontSize: 12, padding: '8px 16px' })} onClick={() => onNavigate('portfolio', 'milestones')}>Open milestones</button>}
       </div>

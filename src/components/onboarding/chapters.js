@@ -9,7 +9,7 @@
 //
 // So the flow now carries structure the student can see: named chapters, a
 // segmented bar where each segment is a chapter, and a literal "3 more to go"
-// under it. Ten questions grouped into five named beats read as five things,
+// under it. A dozen questions grouped into six named beats read as six things,
 // which is the whole trick — the work didn't shrink nearly as much as the
 // perceived work did (though it did shrink: see Onboarding.jsx's step list).
 //
@@ -32,6 +32,18 @@
 // (🩺 📍 ⏱️ 🎯 🚀); those are gone for the reasons written at the top of
 // icons.jsx.
 export const CHAPTERS = [
+  {
+    // One screen, and its own chapter, because it is not a warm-up question —
+    // it is the answer the rest of the flow branches on. See
+    // steps/GraduationYearStep.jsx.
+    key: 'year',
+    label: 'Your class year',
+    rail: 'When you graduate',
+    line: 'One answer, and it shapes every screen after it — including which of them you see.',
+    hues: ['sky', 'cyan'],
+    accent: 'sky',
+    mark: 'pin',
+  },
   {
     key: 'why',
     label: 'Your why',
@@ -82,10 +94,11 @@ export const CHAPTERS = [
 // Which chapter each step belongs to. Steps missing from this map (splash,
 // welcome, generating, planReady, ageBlocked) render without chapter chrome.
 export const STEP_CHAPTER = {
+  classYear: 'year',
+
   why: 'why',
   identity: 'why',
 
-  startingPoint: 'you',
   academics: 'you',
   experience: 'you',
   expInsight: 'you',
@@ -100,6 +113,14 @@ export const STEP_CHAPTER = {
   obstacleEmpathy: 'plan',
   potential: 'plan',
   prefs: 'plan',
+  // The band-specific tail (src/lib/onboardingFlow.js). A student only ever
+  // sees the two or three of these that belong to their band, and the counter
+  // is derived from the live step list, so it stays honest either way.
+  diagnosticOffer: 'plan',
+  scienceClass: 'plan',
+  weeklyGoal: 'plan',
+  testingPlan: 'plan',
+  deadlineTriage: 'plan',
   family: 'plan',
   commitment: 'plan',
   saveProgress: 'plan',
@@ -110,8 +131,10 @@ export const STEP_CHAPTER = {
 // "questions" is what made the old flow feel like thirty questions when it only
 // ever asked about ten things.
 export const QUESTION_STEPS = new Set([
-  'why', 'startingPoint', 'academics', 'experience',
+  'classYear', 'why', 'academics', 'experience',
   'rhythm', 'goal', 'speed', 'challenges', 'prefs', 'saveProgress',
+  // Band-specific; only ever a few of these exist in any one student's flow.
+  'diagnosticOffer', 'scienceClass', 'weeklyGoal', 'testingPlan', 'deadlineTriage',
 ]);
 
 export const chapterByKey = (key) => CHAPTERS.find(c => c.key === key) || null;

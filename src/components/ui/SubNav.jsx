@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { C, tint, onTint, accentFill, CONTROL_TRANSITION } from '../../lib/theme';
 import { isPlainLeftClick } from '../../lib/useAppRouter';
 import { LockedPill } from '../NextUnlockCard';
+import { BandPreviewTag } from '../BandPreview';
 
 // Pill/segmented sub-navigation bar used inside the Prep and Portfolio shells
 // so several absorbed features can live under one top-level tab and switch
@@ -25,7 +26,10 @@ import { LockedPill } from '../NextUnlockCard';
 // used to be and the student has no way to know more is coming or how to get it,
 // which is how progressive disclosure turns into "features that mysteriously don't
 // exist". With it, the sub-nav reads as a sequence with a visible next step.
-export default function SubNav({ items, active, onChange, accent = C.blue, m = false, tourPrefix, hrefFor, locked = null }) {
+// `bandsFor` (optional) maps a sub-view id to the grade bands it is recommended for, so a
+// destination most students use in another year picks up a small "Preview" marker. It never
+// changes whether a pill renders or whether it can be clicked — see components/BandPreview.jsx.
+export default function SubNav({ items, active, onChange, accent = C.blue, m = false, tourPrefix, hrefFor, locked = null, bandsFor = null }) {
   const scrollRef = useRef(null);
   const btnRefs = useRef({});
   const [canLeft, setCanLeft] = useState(false);
@@ -142,6 +146,13 @@ export default function SubNav({ items, active, onChange, accent = C.blue, m = f
             >
               {Icon && <Icon size={13} color={isActive ? c : (it.color ? `${it.color}bb` : C.t3)} />}
               {it.label}
+              {/* A destination most students use in a different year. The pill stays a
+                  completely normal pill — same size, same colors, same click, same URL —
+                  and picks up one small marker. Grade band changes emphasis, never access:
+                  nothing here is dimmed, disabled or reordered, and this row must never be
+                  confused with the `locked` ghost pill at its end, which is a different
+                  mechanism with different rules (see featureUnlock.js). */}
+              <BandPreviewTag bands={bandsFor ? bandsFor(it.id) : null} />
               {!!it.badge && (
                 // Two different backdrops, so two different label colors. The
                 // inactive badge sits on C.s4, which is a light gray in the light
