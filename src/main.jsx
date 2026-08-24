@@ -5,6 +5,7 @@ import AuthGate from './components/AuthGate.jsx';
 import RootErrorBoundary from './components/RootErrorBoundary.jsx';
 import GlobalCrashGuard from './components/GlobalCrashGuard.jsx';
 import PwaUpdatePrompt from './components/PwaUpdatePrompt.jsx';
+import MaintenanceNotice from './components/MaintenanceNotice.jsx';
 import './index.css';
 
 const container = document.getElementById('root');
@@ -17,17 +18,25 @@ const container = document.getElementById('root');
 // the shell and a mounting app are both in the DOM.
 container?.querySelector('#seo-shell')?.remove();
 
+// Temporary site-wide downtime notice — remove this early return once the
+// app is back up to restore normal rendering.
+const MAINTENANCE_MODE = true;
+
 ReactDOM.createRoot(container).render(
   <React.StrictMode>
-    <GlobalCrashGuard>
-      <RootErrorBoundary>
-        <PwaUpdatePrompt />
-        <AuthGate>
-          {({ user, setUser, openLegal }) => (
-            <App account={user} onAccountChange={setUser} onOpenLegal={openLegal} />
-          )}
-        </AuthGate>
-      </RootErrorBoundary>
-    </GlobalCrashGuard>
+    {MAINTENANCE_MODE ? (
+      <MaintenanceNotice />
+    ) : (
+      <GlobalCrashGuard>
+        <RootErrorBoundary>
+          <PwaUpdatePrompt />
+          <AuthGate>
+            {({ user, setUser, openLegal }) => (
+              <App account={user} onAccountChange={setUser} onOpenLegal={openLegal} />
+            )}
+          </AuthGate>
+        </RootErrorBoundary>
+      </GlobalCrashGuard>
+    )}
   </React.StrictMode>
 );
