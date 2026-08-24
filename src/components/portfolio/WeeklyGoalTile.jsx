@@ -191,7 +191,7 @@ export default function WeeklyGoalTile({
             onKeyDown={(e) => { if (e.key === 'Enter') commit(draft); if (e.key === 'Escape') setEditing(false); }}
             style={{
               width: 68, textAlign: 'center', background: C.inputBg, border: `1px solid ${tint(color, 0.4)}`,
-              borderRadius: 8, padding: '8px 8px', color: C.t1, fontSize: 14, fontFamily: C.FM, outline: 'none',
+              borderRadius: 8, padding: '8px 8px', color: C.t1, fontSize: 14, fontFamily: C.FM,
             }}
           />
           <button aria-label="Increase target" onClick={() => setDraft((d) => String(Math.min(metric.ceiling, Number(d || 0) + metric.step)))}

@@ -812,4 +812,4 @@ const debriefTone = (tone) => (
   : { main: C.t3, dim: 'transparent' }
 );
 const iconBtn = () => ({ width: 32, height: 32, borderRadius: 8, display: 'grid', placeItems: 'center', background: C.s3, border: `1px solid ${C.b1}`, cursor: 'pointer' });
-const composerInput = () => ({ width: '100%', minHeight: 84, resize: 'vertical', background: C.s2, border: `1px solid ${C.b1}`, borderRadius: 12, padding: '12px 12px', color: C.t1, fontSize: 14, lineHeight: 1.55, fontFamily: C.FB, outline: 'none' });
+const composerInput = () => ({ width: '100%', minHeight: 84, resize: 'vertical', background: C.s2, border: `1px solid ${C.b1}`, borderRadius: 12, padding: '12px 12px', color: C.t1, fontSize: 14, lineHeight: 1.55, fontFamily: C.FB });

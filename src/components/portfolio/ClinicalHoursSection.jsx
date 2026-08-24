@@ -101,7 +101,12 @@ export default function ClinicalHoursSection({ accent = C.pink, entries = [], se
           </div>
           <div style={R({ gap: 8, flexWrap: 'wrap' })}>
             <input style={inp({ flex: 1, minWidth: 160 })} placeholder="Supervisor name (optional)" value={supervisorName} onChange={e => setSupervisorName(e.target.value)} />
-            <input type="email" style={inp({ flex: 1, minWidth: 160 })} placeholder="Supervisor email (optional)" value={supervisorEmail} onChange={e => setSupervisorEmail(e.target.value)} />
+            {/* Explicitly off, not merely absent. WCAG 1.3.5 is about fields
+                collecting the USER'S own data, and this is their supervisor's
+                address — autofilling the student's own email here would be
+                wrong every single time. Stated so the audit can tell a
+                considered "off" from a forgotten token. */}
+            <input type="email" autoComplete="off" style={inp({ flex: 1, minWidth: 160 })} placeholder="Supervisor email (optional)" value={supervisorEmail} onChange={e => setSupervisorEmail(e.target.value)} />
           </div>
           <div style={R({ gap: 8, flexWrap: 'wrap' })}>
             <input type="number" min="0" step="0.5" style={inp({ width: 110 })} placeholder="Hours" value={hours} onChange={e => setHours(e.target.value)} />

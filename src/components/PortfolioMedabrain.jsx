@@ -202,7 +202,7 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
                     <div style={{ fontSize: 10.5, color: C.t3 }}>Portfolio Intelligence · sees your full tracker</div>
                   </div>
                   {messages.length > 0 && (
-                    <button onClick={() => { setMessages([]); setActionStatus({}); }} title="New conversation" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: C.t3 }}>
+                    <button onClick={() => { setMessages([]); setActionStatus({}); }} aria-label="New conversation" title="New conversation" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: C.t3 }}>
                       <RotateCcw size={15} />
                     </button>
                   )}
@@ -310,7 +310,7 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
                 <input
                   value={input} onChange={e => setInput(e.target.value)}
                   placeholder="Ask about your portfolio…" disabled={loading}
-                  style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.b2}`, borderRadius: 8, padding: '8px 12px', color: C.t1, fontSize: 13, fontFamily: C.FB, outline: 'none' }}
+                  style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.b2}`, borderRadius: 8, padding: '8px 12px', color: C.t1, fontSize: 13, fontFamily: C.FB }}
                 />
                 <button type="submit" disabled={loading || !input.trim()} style={{
                   width: 40, height: 40, borderRadius: 8, border: 'none', flexShrink: 0,

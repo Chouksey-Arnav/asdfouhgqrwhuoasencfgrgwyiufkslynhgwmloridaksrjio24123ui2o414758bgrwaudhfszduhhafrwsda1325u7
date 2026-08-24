@@ -111,7 +111,7 @@ export default function PaceGoalCard({
               onChange={(e) => { setCustomValue(e.target.value); setCustomError(''); }}
               onKeyDown={(e) => { if (e.key === 'Enter') applyWeeks(customValue, { keepStart: hasGoal }); }}
               placeholder="e.g. 6" aria-label="Custom number of weeks"
-              style={{ width: 62, background: 'transparent', border: 'none', outline: 'none', color: C.t1, fontSize: 13, fontFamily: C.FM }}
+              style={{ width: 62, background: 'transparent', border: 'none', color: C.t1, fontSize: 13, fontFamily: C.FM }}
             />
             <span style={{ fontSize: 11.5, color: C.t3 }}>weeks</span>
           </div>

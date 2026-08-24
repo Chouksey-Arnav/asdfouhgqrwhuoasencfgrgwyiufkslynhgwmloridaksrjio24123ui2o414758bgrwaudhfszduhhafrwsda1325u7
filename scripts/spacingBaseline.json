@@ -1,6 +1,6 @@
 {
   "src/App.jsx": {
-    "grid": 153,
+    "grid": 152,
     "radii": 0
   },
   "src/components/AboutMePanel.jsx": {
@@ -152,7 +152,7 @@
     "radii": 0
   },
   "src/components/auth/ui.jsx": {
-    "grid": 5,
+    "grid": 4,
     "radii": 0
   },
   "src/components/finance/DebtTrajectoryTable.jsx": {

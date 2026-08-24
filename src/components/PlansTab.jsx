@@ -837,7 +837,7 @@ function PlanVoiceNotes({ user, saveUser, plan, liveSignals, ensurePortfolio, ac
         </div>
       )}
       <textarea
-        style={{ width: '100%', minHeight: 60, resize: 'vertical', background: C.s2, border: `1px solid ${listening ? C.green : C.b1}`, borderRadius: 8, padding: '8px 12px', color: C.t1, fontSize: 12.5, lineHeight: 1.55, fontFamily: C.FB, outline: 'none', boxSizing: 'border-box' }}
+        style={{ width: '100%', minHeight: 60, resize: 'vertical', background: C.s2, border: `1px solid ${listening ? C.green : C.b1}`, borderRadius: 8, padding: '8px 12px', color: C.t1, fontSize: 12.5, lineHeight: 1.55, fontFamily: C.FB, boxSizing: 'border-box' }}
         placeholder={listening ? 'Listening — speak what you want added…' : sttSupported ? 'Tap the mic and speak, or type here…' : 'Type what you want added to your plan…'}
         value={draft}
         onChange={e => setDraft(e.target.value)}
@@ -1088,7 +1088,12 @@ function TodayHero({ day, accent, onToggleTask, jumpTo, dragCtx, reducedMotion }
           background: `conic-gradient(${accent} ${pct * 3.6}deg, rgba(255,255,255,0.08) 0deg)`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <div style={{ width: 42, height: 42, borderRadius: '50%', background: C.s1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: C.t1, fontFamily: C.FM }}>
+          {/* data-fixed-height: this is the hole in the middle of the progress
+              ring, and it has to stay a circle inscribed in the 54px conic
+              gradient around it. The "3/5" inside is two glyphs that cannot
+              wrap at any spacing setting, so there is nothing here for WCAG
+              1.4.12 to clip. */}
+          <div data-fixed-height style={{ width: 42, height: 42, borderRadius: '50%', background: C.s1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: C.t1, fontFamily: C.FM }}>
             {done}/{total}
           </div>
         </div>

@@ -79,7 +79,7 @@ function PaceTrack({ index, onChange, g }) {
         if (e.key === 'Home') { e.preventDefault(); move(0); }
         if (e.key === 'End') { e.preventDefault(); move(last); }
       }}
-      style={{ position: 'relative', padding: '16px 0px 4px', cursor: 'pointer', outline: 'none' }}
+      style={{ position: 'relative', padding: '16px 0px 4px', cursor: 'pointer' }}
     >
       {/* Track */}
       <div style={{ position: 'relative', height: 6, borderRadius: 4, background: C.s3, margin: '0px 12px' }}>

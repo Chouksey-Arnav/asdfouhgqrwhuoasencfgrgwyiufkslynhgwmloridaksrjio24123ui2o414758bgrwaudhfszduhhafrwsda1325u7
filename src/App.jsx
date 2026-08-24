@@ -1154,8 +1154,22 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
             <MathText text={a.exp} style={{fontSize:13,color:C.t1,lineHeight:1.75,display:'block'}}/>
           </div>
         </div>}
-        <div style={R({flexWrap:'wrap',gap:4,marginTop:16})}>
-          {answers.map((ans,i)=><button key={i} onClick={()=>setRi(i)} style={{width:28,height:28,borderRadius:4,background:ans.ok?C.green:C.rose,border:'none',cursor:'pointer',fontSize:10,color:'#fff',fontWeight:700,fontFamily:C.FM,outline:ri===i?'2px solid white':undefined,outlineOffset:2,opacity:ri===i?1:.55,transition:'opacity .15s'}}>{i+1}</button>)}
+        {/* gap 8, not 4: on a touch screen each of these chips carries a 44px
+            hit area (see the touch-target block in index.css), and at a 4px gap
+            those areas overlap enough that a thumb aiming at question 7 lands
+            on 6. 8px is the minimum separation that keeps adjacent targets
+            distinguishable. */}
+        <div style={R({flexWrap:'wrap',gap:8,marginTop:16})}>
+          {/* The selected chip is marked with a box-shadow ring rather than an
+              `outline`, because `outline` is now the focus indicator and only
+              the focus indicator. Drawing selection with the same property put
+              two different meanings on one visual — a keyboard user tabbing
+              across this grid could not tell which chip was focused and which
+              was merely being reviewed. box-shadow sits outside the box model
+              too, so nothing shifts.
+              data-fixed-height: a square chip holding one or two digits, with
+              nothing to reflow at any spacing setting. */}
+          {answers.map((ans,i)=><button key={i} data-fixed-height onClick={()=>setRi(i)} aria-label={`Question ${i+1}, ${ans.ok?'correct':'incorrect'}`} aria-current={ri===i?'true':undefined} style={{width:28,height:28,borderRadius:4,background:ans.ok?C.green:C.rose,border:'none',cursor:'pointer',fontSize:10,color:'#fff',fontWeight:700,fontFamily:C.FM,boxShadow:ri===i?`0 0 0 2px ${C.bg}, 0 0 0 4px ${C.t1}`:undefined,opacity:ri===i?1:.55,transition:'opacity .15s'}}>{i+1}</button>)}
         </div>
       </div>
     );
@@ -1171,7 +1185,7 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
           </div>
           <Bar pct={prog} color={accent} h={3} glow/>
         </div>
-        <button onClick={onClose} title="Exit quiz" style={{...btnG({padding:'8px',marginLeft:16,width:32,height:32}),display:'inline-flex',alignItems:'center',justifyContent:'center'}}><X size={15}/></button>
+        <button onClick={onClose} aria-label="Exit quiz" title="Exit quiz" style={{...btnG({padding:'8px',marginLeft:16,width:32,height:32}),display:'inline-flex',alignItems:'center',justifyContent:'center'}}><X size={15}/></button>
       </div>
       <MathText text={q.q} style={{fontSize:m?15:17,fontWeight:600,lineHeight:1.75,marginBottom:m?18:24,color:C.t1,fontFamily:C.FB,display:'block'}}/>
       <div style={CC({gap:m?8:10})}>
@@ -1298,8 +1312,8 @@ function CardManagerModal({deckName,cards,onAdd,onUpdate,onDelete,onClose,m=fals
                       <div style={{fontSize:12,color:C.t3,lineHeight:1.5}}>{c.back}</div>
                     </div>
                     <div style={R({gap:4,flexShrink:0})}>
-                      <button style={{background:'none',border:'none',color:C.t3,cursor:'pointer',padding:4,borderRadius:4}} onClick={()=>startEdit(i)} title="Edit"><ScrollText size={13}/></button>
-                      <button style={{background:'none',border:'none',color:C.rose,cursor:'pointer',padding:4,borderRadius:4}} onClick={()=>onDelete(i)} title="Delete"><Trash2 size={13}/></button>
+                      <button style={{background:'none',border:'none',color:C.t3,cursor:'pointer',padding:4,borderRadius:4}} onClick={()=>startEdit(i)} aria-label="Edit" title="Edit"><ScrollText size={13}/></button>
+                      <button style={{background:'none',border:'none',color:C.rose,cursor:'pointer',padding:4,borderRadius:4}} onClick={()=>onDelete(i)} aria-label="Delete" title="Delete"><Trash2 size={13}/></button>
                     </div>
                   </div>
                 )}
@@ -6555,8 +6569,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 )}
                 {renamingThreadId!==t.id&&(
                   <div className="mb-thread-actions" style={{display:'flex',gap:4,flexShrink:0}}>
-                    <button onClick={e=>{e.stopPropagation();beginRenameThread(t);}} title="Rename chat" style={{width:22,height:22,borderRadius:4,border:'none',background:'transparent',color:C.t4,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}><Pencil size={11}/></button>
-                    <button onClick={e=>{e.stopPropagation();deleteChatThread(t.id);}} title="Delete chat" style={{width:22,height:22,borderRadius:4,border:'none',background:'transparent',color:C.t4,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}><Trash2 size={11}/></button>
+                    <button onClick={e=>{e.stopPropagation();beginRenameThread(t);}} aria-label="Rename chat" title="Rename chat" style={{width:22,height:22,borderRadius:4,border:'none',background:'transparent',color:C.t4,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}><Pencil size={11}/></button>
+                    <button onClick={e=>{e.stopPropagation();deleteChatThread(t.id);}} aria-label="Delete chat" title="Delete chat" style={{width:22,height:22,borderRadius:4,border:'none',background:'transparent',color:C.t4,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}><Trash2 size={11}/></button>
                   </div>
                 )}
               </div>
@@ -6655,7 +6669,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           {/* Everything that isn't the conversation lives behind this. */}
           {coachView==='chat'&&(
             <button onClick={()=>setCoachMetaOpen(o=>!o)} aria-expanded={coachMetaOpen} aria-controls="coach-meta"
-              title="Model and daily usage"
+              aria-label="Model and daily usage" title="Model and daily usage"
               style={{width:34,height:34,borderRadius:8,flexShrink:0,background:coachMetaOpen?`${accent}1e`:C.surfHi,border:`1px solid ${coachMetaOpen?accent+'40':C.b1}`,display:'grid',placeItems:'center',color:coachMetaOpen?accent:C.t3,cursor:'pointer'}}>
               <Wand2 size={15}/>
             </button>
@@ -7172,7 +7186,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   </div>
                 </div>
                 {!deck.builtin&&(
-                  <button style={{position:'absolute',top:14,right:14,background:'none',border:'none',color:C.t3,cursor:'pointer',padding:4,borderRadius:4}} onClick={e=>{e.stopPropagation();setManageDeck(deck.name);}} title="Manage cards"><ScrollText size={13}/></button>
+                  <button style={{position:'absolute',top:14,right:14,background:'none',border:'none',color:C.t3,cursor:'pointer',padding:4,borderRadius:4}} onClick={e=>{e.stopPropagation();setManageDeck(deck.name);}} aria-label="Manage cards" title="Manage cards"><ScrollText size={13}/></button>
                 )}
               </motion.div>
             );
@@ -7542,7 +7556,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                     color: user?.bookmarks?.includes(r.title) ? C.amberL : '#fff',
                     transition: CONTROL_TRANSITION
                   }}
-                  title={user?.bookmarks?.includes(r.title) ? "Unsave resource" : "Save resource"}
+                  aria-label={user?.bookmarks?.includes(r.title) ? "Unsave resource" : "Save resource"} title={user?.bookmarks?.includes(r.title) ? "Unsave resource" : "Save resource"}
                 >
                   <Star size={14} fill={user?.bookmarks?.includes(r.title) ? "currentColor" : "none"} />
                 </button>
@@ -7679,7 +7693,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                           display: 'inline-flex',
                           alignItems: 'center'
                         }}
-                        title={isSaved ? "Unsave resource" : "Save resource"}
+                        aria-label={isSaved ? "Unsave resource" : "Save resource"} title={isSaved ? "Unsave resource" : "Save resource"}
                       >
                         <Star size={14} fill={isSaved ? "currentColor" : "none"} />
                       </button>
@@ -10160,7 +10174,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             hard-coding the sidebar width. See src/components/sat/SatToolsContext.jsx. */}
         {/* tabIndex={-1} so the skip link can move focus here; without it the
             anchor scrolls but the next Tab press starts from the top again. */}
-        <main id="msp-main" tabIndex={-1} aria-label={`${NAV.find(n=>n.id===tab)?.label||'Main'} section`} data-app-content style={{flex:1,minWidth:0,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?(navItems.length<=5?84:80):0,outline:'none'}}>
+        <main id="msp-main" tabIndex={-1} aria-label={`${NAV.find(n=>n.id===tab)?.label||'Main'} section`} data-app-content style={{flex:1,minWidth:0,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?84:0}}>
           {!isMobile && <div style={{position:'sticky',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,${navColor[tab]||accent}60,transparent)`,zIndex:5,transition:'background .3s'}}/>}
           {/* 1440px used to cap this well inside a typical 1920px laptop/monitor viewport (minus
               the 236px sidebar), leaving a large, unused gutter on both sides that only grew on
@@ -10197,7 +10211,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           // gray glyphs — and "it looks like a 90s site, teenagers expect app-like nav" was
           // the exact complaint. The bar shrinks back toward the compact treatment as more
           // items unlock, by which point the student knows what each one is.
-          <nav style={{position:'fixed',bottom:0,left:0,right:0,height:navItems.length<=5?68:64,background:C.s0,borderTop:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'space-around',zIndex:300,paddingBottom:'env(safe-area-inset-bottom)'}}>
+          // 68px at every item count, not 68/64: 64 minus the label line left
+          // the icon's own touch area under 44px once seven items were showing,
+          // which is exactly when the bar is hardest to hit. The bar is also the
+          // one surface where height is cheap — it sits in the thumb arc at the
+          // bottom of the screen, which is the easiest part of a phone to reach
+          // and the part this app should be spending on navigation.
+          <nav aria-label="Main" style={{position:'fixed',bottom:0,left:0,right:0,height:68,background:C.s0,borderTop:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'space-around',gap:8,zIndex:300,paddingBottom:'env(safe-area-inset-bottom)'}}>
             {navItems.map(n=>{
               const nc=navColor[n.id]||accent;
               const badge=n.id==='prep'&&unlocks.isOpen('prep','flashcards')&&dueDeckCount>0?dueDeckCount
@@ -10209,14 +10229,20 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 // Plans made it 6.
                 <a key={n.id} href={tabHref(n.id)} aria-current={tab===n.id?'page':undefined} data-tour={`nav-${n.id}`} onClick={e=>onNavLinkClick(e,()=>setTab(n.id))} style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:tab===n.id?nc:C.t3,cursor:'pointer',flex:'1 1 0',minWidth:0,padding:'0px 4px',textDecoration:'none'}}>
                   <div style={{position:'relative',display:'flex'}}>
-                    <n.ic size={navItems.length<=5?22:19} color={tab===n.id?nc:C.t3}/>
+                    <n.ic size={navItems.length<=5?22:20} color={tab===n.id?nc:C.t3}/>
                     {badge&&<span style={{position:'absolute',top:-4,right:-9,...pill(C.amberDim,C.amberL,{fontSize:9,padding:'0px 4px'})}}>{badge}</span>}
                     {/* Medabrain: this pillar has an outstanding plan task due today — offset to
                         the opposite corner from the due-deck badge above so both can show at once
                         without overlapping. */}
                     {planDue&&<span title="A plan task is due here today" aria-label="Plan task due today" style={{position:'absolute',bottom:-2,right:-3,width:7,height:7,borderRadius:'50%',background:C.violet,boxShadow:`0 0 0 2px ${C.s0}`}}/>}
                   </div>
-                  <span style={{fontSize:navItems.length<=5?11:9.5,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'100%',display:'inline-flex',alignItems:'center',gap:4}}>
+                  {/* 11px at every count. 9.5px was the seven-item fallback, and
+                      a 9.5px label is not a label — it is a smudge under an icon,
+                      which puts the whole burden of "what is this tab" back on
+                      the glyph. If seven items genuinely cannot carry a readable
+                      label at this width, that is an argument for fewer
+                      top-level destinations, not for smaller type. */}
+                  <span style={{fontSize:11,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'100%',display:'inline-flex',alignItems:'center',gap:4}}>
                     <span>{n.label}</span>
                     {n.id==='sat' && (
                       <span className="pbeta" style={{
@@ -10249,7 +10275,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 onClick={e=>e.stopPropagation()}>
                 <div style={{display:'flex',alignItems:'center',gap:8,padding:'12px 16px',borderBottom:`1px solid ${C.b1}`}}>
                   <Search size={16} color={C.t3}/>
-                  <input autoFocus value={cmdQ} onChange={e=>setCmdQ(e.target.value)} onKeyDown={onCmdInputKeyDown} placeholder="Jump to Prep, Portfolio, Progress…" style={{flex:1,background:'none',border:'none',outline:'none',color:C.t1,fontSize:14,fontFamily:C.FB}}/>
+                  <input autoFocus value={cmdQ} onChange={e=>setCmdQ(e.target.value)} onKeyDown={onCmdInputKeyDown} placeholder="Jump to Prep, Portfolio, Progress…" style={{flex:1,background:'none',border:'none',color:C.t1,fontSize:14,fontFamily:C.FB}}/>
                   <span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM})}}>ESC</span>
                 </div>
                 <div style={{overflowY:'auto',padding:8}}>

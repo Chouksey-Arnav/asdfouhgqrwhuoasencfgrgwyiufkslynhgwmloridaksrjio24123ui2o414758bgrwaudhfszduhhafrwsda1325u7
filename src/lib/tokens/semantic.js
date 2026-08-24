@@ -207,7 +207,13 @@ export const balanced = Object.freeze({
     surfaceQuiet: SLATE['21'],    // the quieter inner panel
     surfaceRaised: SLATE['25.9'], // raised cards and hover fills
     inputBg: SLATE['15.4'],       // an input is a well
-    inputBorder: SLATE['42'],     // …with the default outline
+    // …with an outline a step ABOVE the default border. WCAG 1.4.11 asks for
+    // 3:1 on the visual boundary of a control, and `default` (SLATE 42) lands
+    // at 2.51:1 over this well — close enough to look intentional, low enough
+    // that on a phone in daylight the field stops reading as a field. 51.8
+    // measures 3.57:1. Every palette's inputBorder is checked by
+    // scripts/verifyA11y.mjs, so this cannot quietly drift back down.
+    inputBorder: SLATE['51.8'],
   }),
   // Depth without shadows: a hairline of light on the top edge, nothing else.
   //
@@ -268,7 +274,10 @@ export const dark = Object.freeze({
   hue: expandHues(DARK_HUE_STEPS, (_n, base) => wash(base)),
   translucent: Object.freeze({
     surface: WHITE_A[3], surfaceQuiet: WHITE_WASH[3], surfaceRaised: WHITE_A[6],
-    inputBg: WHITE_A[4], inputBorder: WHITE_A[10],
+    // 34%, not 10%: a 10% white hairline over this theme's near-black canvas
+    // measures 1.33:1 — a field with no visible edge. See the note on
+    // BALANCED's inputBorder. 34% measures 3.13:1.
+    inputBg: WHITE_A[4], inputBorder: WHITE_A[34],
   }),
   // ── The shadow ladder ──────────────────────────────────────────────────
   // One big soft shadow (`0 2px 12px` at 50%, which is what this was) is a
@@ -334,7 +343,8 @@ export const balancedLight = Object.freeze({
   hue: expandHues(BALANCED_LIGHT_HUE_STEPS, (n, base) => wash(base, n === 'amber' || n === 'gold' ? 0.11 : 0.10)),
   translucent: Object.freeze({
     surface: WHITE_WASH[55], surfaceQuiet: WHITE_WASH[42], surfaceRaised: WHITE_WASH[72],
-    inputBg: MIST['97.5'], inputBorder: INK_A[16],
+    // 48%, not 16% — 1.40:1 over this theme's near-white field. See BALANCED.
+    inputBg: MIST['97.5'], inputBorder: INK_A[48],
   }),
   elevation: Object.freeze({
     // Three layers, negative spread — see the note on DARK's ladder.
@@ -388,7 +398,8 @@ export const light = Object.freeze({
   hue: expandHues(LIGHT_HUE_STEPS, (n, base) => wash(base, n === 'amber' || n === 'gold' ? 0.11 : 0.10)),
   translucent: Object.freeze({
     surface: WHITE_WASH[70], surfaceQuiet: WHITE_WASH[55], surfaceRaised: WHITE_WASH[88],
-    inputBg: MIST['99.3'], inputBorder: INK_A[14],
+    // 48%, not 14% — 1.34:1 over this theme's white field. See BALANCED.
+    inputBg: MIST['99.3'], inputBorder: INK_A[48],
   }),
   elevation: Object.freeze({
     // Three layers, negative spread — see the note on DARK's ladder.
