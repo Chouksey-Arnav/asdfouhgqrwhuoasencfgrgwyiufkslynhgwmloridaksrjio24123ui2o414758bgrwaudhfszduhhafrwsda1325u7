@@ -332,7 +332,7 @@ function LogOfficialScore({ test, accent, isMobile, onCancel, onSave }) {
         gap: 12,
       }}>
         <div>
-          <label style={labelStyle} htmlFor="official-rw">Reading &amp; Writing</label>
+          <label style={labelStyle} htmlFor="official-rw">Reading &amp; writing</label>
           <input
             id="official-rw" style={field} inputMode="numeric" placeholder="200–800"
             value={rw} onChange={e => setRw(e.target.value.replace(/[^0-9]/g, ''))}

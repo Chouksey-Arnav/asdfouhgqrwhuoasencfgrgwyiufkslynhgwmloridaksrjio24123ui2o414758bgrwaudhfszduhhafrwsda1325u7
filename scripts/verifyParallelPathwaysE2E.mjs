@@ -98,7 +98,7 @@ try {
   // rather than once at boot.
   const dismissChest = async () => {
     for (let i = 0; i < 6; i += 1) {
-      const chest = page.locator('button:has-text("Open Chest"), button:has-text("Nice!")');
+      const chest = page.locator('button:has-text("Open chest"), button:has-text("Nice!")');
       if (!(await chest.count())) return;
       await chest.first().click().catch(() => {});
       await page.waitForTimeout(1500);
@@ -122,14 +122,14 @@ try {
   check((await focused()).includes('Nursing'), '⌥2 focuses the second-slot pathway');
   await page.keyboard.press('Alt+Digit3');
   await page.waitForTimeout(1000);
-  check((await focused()).includes('Public Health'), '⌥3 focuses the third');
+  check((await focused()).includes('Public health'), '⌥3 focuses the third');
   await page.keyboard.press('Alt+Digit1');
   await page.waitForTimeout(1000);
   check((await focused()).includes('Physician'), '⌥1 focuses the first');
 
   section('...but never while the student is typing');
   await dismissChest();
-  await page.locator('a:has-text("Quiz Library")').first().click();
+  await page.locator('a:has-text("Quiz library")').first().click();
   await page.waitForTimeout(1600);
   const search = page.locator('input[placeholder*="Search quizzes"]').first();
   if (await search.count()) {
@@ -172,7 +172,7 @@ try {
   await page.waitForTimeout(1500);
   check(await chips.count() === 2, `the rail is down to two chips (got ${await chips.count()})`);
   const rail = await railText();
-  check(!rail.includes('Public Health'), 'the dropped pathway is gone from the rail');
+  check(!rail.includes('Public health'), 'the dropped pathway is gone from the rail');
   check(rail.includes('Add pathway'), 'and the freed slot is offered straight back');
   await page.locator('button:has-text("Add or change pathways")').first().click().catch(() => {});
   await page.waitForTimeout(1000);

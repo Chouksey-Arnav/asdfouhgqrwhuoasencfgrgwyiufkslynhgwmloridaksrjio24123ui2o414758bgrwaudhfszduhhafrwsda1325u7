@@ -411,7 +411,7 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
                   <button style={btnSm(C.s4, { fontSize: 11 })} onClick={() => {
                     navigator.clipboard.writeText(p);
                     toast.success('Prompt copied to clipboard! Paste it in the AI Coach.');
-                  }}>Copy Prompt</button>
+                  }}>Copy prompt</button>
                 </div>
               ))}
             </div>
@@ -426,7 +426,7 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
             <SL extra={{ marginBottom: 0 }}>Score Trend History</SL>
             <div style={R({ gap: 4 })}>
               <button style={btnSm(chartView === 'composite' ? C.blueGrad : C.s4, { fontSize: 11 })} onClick={() => setChartView('composite')}>Composite</button>
-              <button style={btnSm(chartView === 'subscores' ? C.blueGrad : C.s4, { fontSize: 11 })} onClick={() => setChartView('subscores')}>Section Subscores</button>
+              <button style={btnSm(chartView === 'subscores' ? C.blueGrad : C.s4, { fontSize: 11 })} onClick={() => setChartView('subscores')}>Section subscores</button>
             </div>
           </div>
           <div style={{height:220}}>
@@ -469,18 +469,18 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
         <form onSubmit={addScore}>
           <div style={G(3,10,{},true)}>
             <div>
-              <label style={lbl()}>Test Platform</label>
+              <label style={lbl()}>Test platform</label>
               <select style={inp()} value={testType} onChange={e=>{setTestType(e.target.value);setSections({});}}>
                 <option value="SAT">SAT (400–1600)</option>
                 <option value="ACT">ACT (1–36)</option>
               </select>
             </div>
             <div>
-              <label style={lbl()}>Test Date</label>
+              <label style={lbl()}>Test date</label>
               <input type="date" style={inp()} value={testDate} onChange={e=>setTestDate(e.target.value)} />
             </div>
             <div>
-              <label style={lbl()}>Composite Score</label>
+              <label style={lbl()}>Composite score</label>
               <input type="number" style={inp()} value={composite} onChange={e=>setComposite(e.target.value)} placeholder={testType==='SAT'?'1420':'32'} />
             </div>
           </div>

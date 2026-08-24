@@ -275,8 +275,8 @@ export default function RecommendersPanel({ accent = C.blue, onChange, user = nu
           </div>
           <div style={R({ gap: 8, flexWrap: 'wrap' })}>
             <select style={inp({ width: 'auto' })} value={type} onChange={e => setType(e.target.value)}>
-              <option value="individual">Individual Letter</option>
-              <option value="committee">Pre-Health Committee Letter</option>
+              <option value="individual">Individual letter</option>
+              <option value="committee">Pre-Health committee letter</option>
             </select>
             <div>
               <span style={lbl({ marginBottom: 4 })}>Letter due</span>
@@ -291,7 +291,7 @@ export default function RecommendersPanel({ accent = C.blue, onChange, user = nu
               hours entries — that is how we attach your logged hours to the ask.
             </span>
           </div>
-          <button type="submit" style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), alignSelf: 'flex-start' }}><Plus size={14} />Add Recommender</button>
+          <button type="submit" style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), alignSelf: 'flex-start' }}><Plus size={14} />Add recommender</button>
         </form>
       </div>
 

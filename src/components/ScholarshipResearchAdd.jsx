@@ -99,7 +99,7 @@ export default function ScholarshipResearchAdd({ accent = C.blue, onTrack }) {
   if (!open) {
     return (
       <button onClick={() => setOpen(true)} style={btn(accent !== C.blue ? `linear-gradient(135deg,${accent},${C.teal})` : C.blueGrad, { padding: '12px 20px' })}>
-        <Plus size={15} />Add New Scholarship
+        <Plus size={15} />Add new scholarship
       </button>
     );
   }

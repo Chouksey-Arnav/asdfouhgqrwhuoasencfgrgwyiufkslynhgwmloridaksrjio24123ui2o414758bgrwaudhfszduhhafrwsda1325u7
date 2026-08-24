@@ -83,7 +83,7 @@ export default function RewardChest({
                   onClick={handleOpen}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '8px 24px', borderRadius: 8, border: 'none', background: `linear-gradient(135deg,${C.amber},${C.orange})`, color: '#1a1206', fontWeight: 700, fontSize: 13, fontFamily: C.FB, cursor: 'pointer', boxShadow: `0 4px 16px ${C.amber}40` }}
                 >
-                  <Sparkles size={14}/> Open Chest
+                  <Sparkles size={14}/> Open chest
                 </motion.button>
               </motion.div>
             ) : (

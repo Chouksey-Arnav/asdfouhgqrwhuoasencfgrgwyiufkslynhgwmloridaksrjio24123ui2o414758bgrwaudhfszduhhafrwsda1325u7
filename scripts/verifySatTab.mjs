@@ -64,7 +64,7 @@ await p.waitForTimeout(3000);
 // app on first load each day. Dismiss it so it does not intercept clicks.
 async function dismissOverlays() {
   for (let i = 0; i < 3; i++) {
-    const chest = p.locator('button:has-text("Open Chest")');
+    const chest = p.locator('button:has-text("Open chest")');
     if (await chest.count()) {
       await chest.first().click().catch(() => {});
       await p.waitForTimeout(1200);
@@ -73,7 +73,7 @@ async function dismissOverlays() {
     if (await close.count()) { await close.click({ force: true }).catch(() => {}); await p.waitForTimeout(400); }
     await p.keyboard.press('Escape').catch(() => {});
     await p.waitForTimeout(300);
-    if (!(await p.locator('button:has-text("Open Chest")').count())) break;
+    if (!(await p.locator('button:has-text("Open chest")').count())) break;
   }
 }
 await dismissOverlays();
@@ -97,7 +97,7 @@ const gotoSatView = async (label) => {
 };
 
 await step('SAT sub-nav renders every view', async () => {
-  for (const label of ['Overview', 'Baseline', 'Diagnostic', 'Practice', 'Full Tests', 'Review Log', 'Skill Mastery', 'Library', 'Calculator', 'Scores']) {
+  for (const label of ['Overview', 'Baseline', 'Diagnostic', 'Practice', 'Full tests', 'Review Log', 'Skill Mastery', 'Library', 'Calculator', 'Scores']) {
     if (!(await p.locator(`text="${label}"`).count())) throw new Error(`missing sub-nav item: ${label}`);
   }
 });
@@ -179,7 +179,7 @@ await step('Mastery is shown with its sample size, never bare', async () => {
 await p.screenshot({ path: 'shots/sat-skills.png', fullPage: true });
 
 await step('Full Tests panel renders the adaptive structure', async () => {
-  await gotoSatView("Full Tests");
+  await gotoSatView("Full tests");
   const t = await p.textContent('body');
   if (!/Module 1/.test(t)) throw new Error('test structure not shown');
   if (!/caps that section near 600|easier one caps/.test(t)) throw new Error('routing ceiling not explained');

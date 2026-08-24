@@ -519,17 +519,17 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
                       <div style={{padding:'0px 12px 16px',borderTop:`1px solid ${C.b1}`,marginTop:4,paddingTop:12}}>
                         <div style={G(2,10,{},true)}>
                           <div>
-                            <label style={lbl()}>EA/ED Deadline</label>
+                            <label style={lbl()}>EA/ED deadline</label>
                             <input type="date" style={inp()} value={college.ea_ed_deadline||''} onChange={e=>updateCollege(college.id,{ea_ed_deadline:e.target.value})} />
                           </div>
                           <div>
-                            <label style={lbl()}>RD Deadline</label>
+                            <label style={lbl()}>RD deadline</label>
                             <input type="date" style={inp()} value={college.rd_deadline||''} onChange={e=>updateCollege(college.id,{rd_deadline:e.target.value})} />
                           </div>
                         </div>
                         <div style={G(2,10,{marginTop:8},true)}>
                           <div>
-                            <label style={lbl()}>Financial Aid Deadline</label>
+                            <label style={lbl()}>Financial aid deadline</label>
                             <input type="date" style={inp()} value={college.financial_aid_deadline||''} onChange={e=>updateCollege(college.id,{financial_aid_deadline:e.target.value})} />
                           </div>
                           <div>

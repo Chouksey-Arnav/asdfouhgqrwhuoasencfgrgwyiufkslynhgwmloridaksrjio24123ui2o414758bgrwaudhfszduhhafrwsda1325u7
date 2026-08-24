@@ -359,7 +359,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
         <SectionTitle icon={Plus} color={accent}>Start a new essay</SectionTitle>
         <div style={R({ gap: 8, flexWrap: 'wrap' })}>
           <input style={inp({ flex: 1, minWidth: 180 })} placeholder="e.g. Common App Personal Statement" value={newTitle} onChange={e => setNewTitle(e.target.value)} onKeyDown={e => e.key === 'Enter' && addEssay()} />
-          <button style={btn(accent !== C.blue ? accent : C.blueGrad)} onClick={addEssay}><Plus size={14} />New Essay</button>
+          <button style={btn(accent !== C.blue ? accent : C.blueGrad)} onClick={addEssay}><Plus size={14} />New essay</button>
         </div>
         <div style={{ marginTop: 12 }}>
           <HelpNote>You can rename it later, and nothing here is submitted anywhere — this is your own workspace.</HelpNote>

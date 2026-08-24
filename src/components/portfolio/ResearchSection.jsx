@@ -84,7 +84,7 @@ export default function ResearchSection({ accent = C.cyan, entries = [], setEntr
           </div>
           <input style={inp()} placeholder="What did you actually do? (optional)" value={description} onChange={e => setDescription(e.target.value)} />
           <input style={inp()} placeholder="Publication / poster / abstract link (optional)" value={publicationUrl} onChange={e => setPublicationUrl(e.target.value)} />
-          <button type="submit" style={{ ...btn(accent), alignSelf: 'flex-start' }}><Plus size={14} />Add Research</button>
+          <button type="submit" style={{ ...btn(accent), alignSelf: 'flex-start' }}><Plus size={14} />Add research</button>
         </form>
       </div>
 

@@ -108,7 +108,7 @@ export default function ClinicalHoursSection({ accent = C.pink, entries = [], se
             <input type="date" style={inp({ width: 'auto' })} value={entryDate} onChange={e => setEntryDate(e.target.value)} />
           </div>
           <input style={inp()} placeholder="What did you actually do or observe? (optional)" value={notes} onChange={e => setNotes(e.target.value)} />
-          <button type="submit" style={{ ...btn(accent), alignSelf: 'flex-start' }}><Plus size={14} />Log Hours</button>
+          <button type="submit" style={{ ...btn(accent), alignSelf: 'flex-start' }}><Plus size={14} />Log hours</button>
         </form>
       </div>
 

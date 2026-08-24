@@ -99,18 +99,21 @@ export function extractSpans(text) {
 
   // The nearest enclosing `const NAME = …`, so a caller can tell an LLM prompt
   // (STYLE_TONE, DEBRIEF_INSTRUCTION) from a string a student reads.
-  const visit = (node, prop, scope) => {
+  // `element` is the nearest enclosing JSX tag, so a caller can tell the text
+  // inside a <button> — which is a label, and 90% of this app's button copy —
+  // from a paragraph of prose.
+  const visit = (node, prop, scope, element) => {
     if (!node || typeof node.type !== 'string') return;
 
     if (node.type === 'JSXText') {
       if (node.value.trim() && /[A-Za-z]{2}/.test(node.value)) {
-        spans.push({ kind: 'jsx', text: node.value, start: node.start, end: node.end, scope });
+        spans.push({ kind: 'jsx', text: node.value, start: node.start, end: node.end, scope, element });
       }
       return;
     }
     if (node.type === 'StringLiteral') {
       if (looksLikeCopy(node.value, { fromCopyProp: COPY_PROPS.has(prop) })) {
-        spans.push({ kind: 'literal', text: node.value, start: node.start + 1, end: node.end - 1, prop, scope });
+        spans.push({ kind: 'literal', text: node.value, start: node.start + 1, end: node.end - 1, prop, scope, element });
       }
       return;
     }
@@ -118,10 +121,10 @@ export function extractSpans(text) {
       for (const q of node.quasis) {
         const raw = q.value.cooked ?? q.value.raw ?? '';
         if (looksLikeCopy(raw, { fromCopyProp: COPY_PROPS.has(prop) })) {
-          spans.push({ kind: 'literal', text: raw, start: q.start, end: q.end, prop, scope });
+          spans.push({ kind: 'literal', text: raw, start: q.start, end: q.end, prop, scope, element });
         }
       }
-      for (const e of node.expressions) visit(e, prop, scope);
+      for (const e of node.expressions) visit(e, prop, scope, element);
       return;
     }
 
@@ -129,6 +132,11 @@ export function extractSpans(text) {
       if (key === 'loc' || key === 'leadingComments' || key === 'trailingComments') continue;
       let childProp = prop;
       let childScope = scope;
+      let childElement = element;
+      if (node.type === 'JSXElement' && key === 'children') {
+        const name = node.openingElement?.name;
+        childElement = name?.name ?? name?.property?.name ?? element;
+      }
       if (node.type === 'VariableDeclarator' && key === 'init') childScope = node.id?.name ?? scope;
       if (node.type === 'ObjectProperty' && key === 'value') {
         const name = node.key?.name ?? node.key?.value;
@@ -140,12 +148,12 @@ export function extractSpans(text) {
         if (DATA_KEYS.has(name)) continue;
         childProp = name;
       }
-      if (Array.isArray(value)) value.forEach((v) => visit(v, childProp, childScope));
-      else if (value && typeof value === 'object') visit(value, childProp, childScope);
+      if (Array.isArray(value)) value.forEach((v) => visit(v, childProp, childScope, childElement));
+      else if (value && typeof value === 'object') visit(value, childProp, childScope, childElement);
     }
   };
 
-  visit(ast.program, null, null);
+  visit(ast.program, null, null, null);
   spans.sort((a, b) => a.start - b.start);
   return spans;
 }

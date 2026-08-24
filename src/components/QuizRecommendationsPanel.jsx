@@ -203,7 +203,7 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
             <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
               style={{ ...btn(`linear-gradient(135deg,${accentFill(C.amber)},${accentFill(C.amberL)})`, { fontSize: 12.5, padding: '8px 20px', color: C.onAccent }), display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
               onClick={() => onStart(top.quiz)}>
-              Start Now<ChevronRight size={14} />
+              Start now<ChevronRight size={14} />
             </motion.button>
             {onAskMedabrain && (
               <button

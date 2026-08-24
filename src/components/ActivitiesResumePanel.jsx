@@ -645,7 +645,7 @@ export default function ActivitiesResumePanel({
                 </select>
               </div>
               <div>
-                <label style={lbl()}>Position / Leadership<CharCap value={draft.position} limit={CA_LIMITS.position} /></label>
+                <label style={lbl()}>Position / leadership<CharCap value={draft.position} limit={CA_LIMITS.position} /></label>
                 <input style={inp()} value={draft.position} onChange={e => setDraft({ ...draft, position: e.target.value })} placeholder="e.g. Team Captain" />
               </div>
             </div>
@@ -698,11 +698,11 @@ export default function ActivitiesResumePanel({
 
             <CoachStrip lines={draftCoaching} />
 
-            <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 12 }} onClick={addActivity}><Plus size={14} />Add Activity</button>
+            <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 12 }} onClick={addActivity}><Plus size={14} />Add activity</button>
             {draft.activity_type === 'Clinical/Shadowing' && (
               <div style={{ ...R({ gap: 4, marginTop: 8 }), fontSize: 11, color: C.t3, lineHeight: 1.5 }}>
                 <Stethoscope size={12} color={C.pink} style={{ flexShrink: 0 }} />
-                <span>Logging the shift-by-shift hours too? The <button type="button" onClick={() => setSection('clinical')} style={{ all: 'unset', cursor: 'pointer', color: C.pinkL, fontWeight: 700 }}>Clinical Hours</button> section keeps the dated, per-site record with a supervisor for verification. This entry is the one that reaches the Common App.</span>
+                <span>Logging the shift-by-shift hours too? The <button type="button" onClick={() => setSection('clinical')} style={{ all: 'unset', cursor: 'pointer', color: C.pinkL, fontWeight: 700 }}>Clinical hours</button> section keeps the dated, per-site record with a supervisor for verification. This entry is the one that reaches the Common App.</span>
               </div>
             )}
           </div>
@@ -763,7 +763,13 @@ export default function ActivitiesResumePanel({
                 <label style={lbl()}>Recognition level</label>
                 <select style={inp()} value={awardDraft.level} onChange={e => setAwardDraft({ ...awardDraft, level: e.target.value })}>
                   <option value="">Recognition level</option>
-                  <option>School</option><option>State/Regional</option><option>National</option><option>International</option>
+                  {/* Explicit values: the label is sentence case now, and the stored string
+                      must not change with it — entries saved before this read
+                      "State/Regional". */}
+                  <option value="School">School</option>
+                  <option value="State/Regional">State/regional</option>
+                  <option value="National">National</option>
+                  <option value="International">International</option>
                 </select>
               </div>
             </div>
@@ -774,10 +780,10 @@ export default function ActivitiesResumePanel({
             {awardDraft.title && !awardDraft.level && (
               <CoachStrip label="Medabrain" lines={[{ level: 'warn', text: 'Set the level of recognition. It is a required field on the form and it is most of what the honor communicates — "Science Award" and "Science Award, National" are different lines to a reader.' }]} />
             )}
-            <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 12 }} onClick={addAward}><Plus size={14} />Add Award</button>
+            <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 12 }} onClick={addAward}><Plus size={14} />Add award</button>
             <div style={{ ...R({ gap: 4, marginTop: 8 }), fontSize: 11, color: C.t3, lineHeight: 1.5 }}>
               <BadgeCheck size={12} color={C.teal} style={{ flexShrink: 0 }} />
-              <span>A certification is not an honor — CPR, EMT, lifeguard and lab-safety credentials belong in <button type="button" onClick={() => setSection('credentials')} style={{ all: 'unset', cursor: 'pointer', color: C.tealL, fontWeight: 700 }}>Skills &amp; Certs</button>, where their expiry dates get tracked. Both end up on your résumé PDF.</span>
+              <span>A certification is not an honor — CPR, EMT, lifeguard and lab-safety credentials belong in <button type="button" onClick={() => setSection('credentials')} style={{ all: 'unset', cursor: 'pointer', color: C.tealL, fontWeight: 700 }}>Skills &amp; certs</button>, where their expiry dates get tracked. Both end up on your résumé PDF.</span>
             </div>
           </div>
 
@@ -868,7 +874,7 @@ export default function ActivitiesResumePanel({
             {gpaDraft.gpa && !gpaDraft.course_rigor && (
               <CoachStrip label="Medabrain" lines={[{ level: 'tip', text: 'Add the course rigor. A 3.8 with five APs and a 3.8 with none are different applications, and rigor is the only field that tells them apart — it also gets handed to Medabrain when it reasons about your college list.' }]} />
             )}
-            <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8 }} onClick={addGpaEntry}><TrendingUp size={14} />Add GPA Entry</button>
+            <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8 }} onClick={addGpaEntry}><TrendingUp size={14} />Add GPA entry</button>
 
             {/* The reaction to the number they just entered. */}
             {gpaReaction && (

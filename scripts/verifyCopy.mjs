@@ -291,10 +291,15 @@ for (const [canonical, wrongs] of Object.entries(glossary.productNames)) {
     return candidates >= 1 && capped === candidates;
   };
 
+  // A label is either a label-ish prop, or the text inside a control. The
+  // second case is most of this app's button copy — "Open Chest" is a JSX text
+  // node with no prop anywhere near it.
+  const CONTROL_TAGS = new Set(['button', 'a', 'summary', 'option', 'label', 'th', 'h1', 'h2', 'h3', 'h4']);
   for (const s of uiCopy) {
-    if (!LABEL_PROPS.has(s.prop)) continue;
+    const isLabel = LABEL_PROPS.has(s.prop) || (s.kind === 'jsx' && CONTROL_TAGS.has(s.element));
+    if (!isLabel) continue;
     if (isTitleCase(s.text)) {
-      failures.push(`${at(s)}: "${s.text}" is Title Case. Everything is sentence case — headings, buttons, labels, nav items, table headers, empty states — because Title Case is inconsistently applied by definition: nobody agrees which words get a capital, so it drifts the moment a second person writes a screen. Proper nouns and credential names keep their capitals.`);
+      failures.push(`${at(s)}: "${s.text.trim().replace(/\s+/g, ' ')}" is Title Case. Everything is sentence case — headings, buttons, labels, nav items, table headers, empty states — because Title Case is inconsistently applied by definition: nobody agrees which words get a capital, so it drifts the moment a second person writes a screen. Proper nouns and credential names keep their capitals.`);
     }
   }
 }

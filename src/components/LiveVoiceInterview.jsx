@@ -491,7 +491,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
           style={{ width: 72, height: 72, borderRadius: '50%', margin: '0 auto 16px', display: 'grid', placeItems: 'center', background: `linear-gradient(135deg, ${accent}, ${C.violet})`, boxShadow: `0 12px 40px ${accent}55` }}>
           <Mic size={30} color="#fff" />
         </motion.div>
-        <h3 style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))', margin: 0 }}>Live Voice Interview</h3>
+        <h3 style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))', margin: 0 }}>Live voice interview</h3>
         <p style={{ fontSize: 13.5, color: C.t3, lineHeight: 1.55, maxWidth: 480, margin: '10px auto 0' }}>
           A real back-and-forth with an interviewer who talks to you out loud, listens without cutting you off, and adapts to your answers — then rates you the way an actual interviewer would, not the way a friend would. Speak your answers{sttSupported ? '' : ' (or type them — your browser doesn’t support voice input)'} or type them, whichever you prefer.
         </p>

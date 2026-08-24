@@ -567,7 +567,7 @@ function LockedState({ readiness, accent, isMobile, goSettings, onGoActivity, on
         )}
         {missingProfile.length > 0 && (
           <button style={btn(C.auroraGrad, { padding: '12px 28px', fontSize: 14 })} onClick={() => goSettings?.(missingProfile[0]?.goField || null)}>
-            Update My Profile
+            Update my profile
           </button>
         )}
       </div>
@@ -592,7 +592,7 @@ function EmptyState({ onBuild, accent, isMobile }) {
           Phases and milestones for the months ahead — and then, in real detail, <b style={{ color: C.pinkL }}>today and tomorrow</b>: the exact quizzes, lessons, drafts and hours to work on, why each one is on your plan, and when in the day it belongs. Grounded in your whole profile, your entire Portfolio, and only the lessons you can actually open right now. It rewrites itself every day around what you've actually done.
         </p>
         <button style={btn(PLAN_GRAD, { padding: '12px 28px', fontSize: 14 })} onClick={onBuild}>
-          <Sparkles size={15} />Build My Full Plan
+          <Sparkles size={15} />Build my full plan
         </button>
         <div style={{ fontSize: 11, color: C.t3 }}>Give it a minute — Medabrain's deepest model reads your whole profile and genuinely thinks this through. It's slow on purpose.</div>
       </div>
@@ -633,7 +633,7 @@ function StaleProfileBanner({ accent, onRefresh }) {
       <div style={{ flex: 1, minWidth: 200, fontSize: 12.5, color: C.t1, lineHeight: 1.5 }}>
         Your profile's changed since this roadmap was built — refresh it so your plan reflects where you are now.
       </div>
-      <button style={btnSm(accentFill(accent), { color: C.onAccent })} onClick={onRefresh}>Refresh My Plan</button>
+      <button style={btnSm(accentFill(accent), { color: C.onAccent })} onClick={onRefresh}>Refresh my plan</button>
     </div>
   );
 }
@@ -740,7 +740,7 @@ function PlanHeader({ plan, weekNumber, phase, accent, onRegenerate, onRestore, 
               </button>
             )}
             {onRestore && <PlanHistoryMenu accent={accent} onRestore={onRestore} />}
-            <button style={btnSm('rgba(255,255,255,0.06)', { color: C.t2 })} onClick={onRegenerate}><RefreshCw size={11} />Rebuild Roadmap</button>
+            <button style={btnSm('rgba(255,255,255,0.06)', { color: C.t2 })} onClick={onRegenerate}><RefreshCw size={11} />Rebuild roadmap</button>
           </div>
         </div>
         <p style={{ fontSize: 13, color: C.t2, lineHeight: 1.7, margin: '12px 0px 0px', maxWidth: 780 }}>{plan.overview}</p>

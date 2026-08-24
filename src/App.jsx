@@ -575,7 +575,7 @@ class ErrorBoundary extends React.Component {
         <p style={{color:C.t2,textAlign:'center',maxWidth:400,lineHeight: 1.55,fontSize:14}}>Try reloading — if it keeps happening, contact our support team at <a href="mailto:medschoolprepsupport@gmail.com" style={{color:C.blueL}}>medschoolprepsupport@gmail.com</a>.</p>
         <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'center'}}>
           <a href="/prep" style={{...btnG(),textDecoration:'none'}} onClick={e=>{e.preventDefault();this.setState({err:false});this.props.onEscapeToPrep?.();}}>Go to Prep</a>
-          <button style={btn()} onClick={()=>this.setState({err:false})}>Try Again</button>
+          <button style={btn()} onClick={()=>this.setState({err:false})}>Try again</button>
         </div>
       </div>
     );
@@ -1008,7 +1008,7 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
               <h3 style={{fontSize:m?20:24,fontWeight:800,color:C.t1,fontFamily:C.FD,margin:0}}>Lesson verified{pathwayEntry?.quizScore!=null?` — ${pathwayEntry.quizScore}%`:''}</h3>
               <p style={{fontSize:13,color:C.t2,lineHeight: 1.55,maxWidth:420,margin:0}}>"{lesson.title}" is locked in for good. {hasNextLesson?'Keep the momentum going with the next one.':'That was the last lesson in this unit — nice work.'}</p>
               <div style={R({gap:8,justifyContent:'center',flexWrap:'wrap'})}>
-                {hasNextLesson&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(accent===C.blue?C.blueGrad:accentGrad(accent),{padding:'12px 24px',fontSize:13}),display:'inline-flex',alignItems:'center',gap:8}} onClick={onNextLesson}>Next Lesson<ArrowRight size={14}/></motion.button>}
+                {hasNextLesson&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(accent===C.blue?C.blueGrad:accentGrad(accent),{padding:'12px 24px',fontSize:13}),display:'inline-flex',alignItems:'center',gap:8}} onClick={onNextLesson}>Next lesson<ArrowRight size={14}/></motion.button>}
                 <button style={{...btnG({padding:'12px 20px',fontSize:13}),display:'inline-flex',alignItems:'center',gap:4}} onClick={onClose}>Back to Pathway</button>
               </div>
               {/* Also offered here, not only under the article: a lesson with no in-app article
@@ -1128,7 +1128,7 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
           <div style={{fontSize:13,color:C.t2}}>{quiz.title}</div>
           {!readonly&&<div style={{fontSize:11,color:C.t3,marginTop:4,fontFamily:C.FM,display:'inline-flex',alignItems:'center',gap:4}}><Timer size={11}/>{fmtT(elapsed)} elapsed</div>}
           <div style={R({justifyContent:'center',gap:8,marginTop:20})}>
-            <button style={{...btn(accentGrad(sc)),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>onFinish(scoreRef.current,tot)}>Save & Exit<ArrowRight size={15}/></button>
+            <button style={{...btn(accentGrad(sc)),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>onFinish(scoreRef.current,tot)}>Save & exit<ArrowRight size={15}/></button>
             <button style={{...btnG(),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>exportQuizResult(quiz,answers,scoreRef.current,tot)}><FileDown size={14}/>Export PDF</button>
           </div>
         </div>
@@ -1195,7 +1195,7 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
         <MathText text={q.exp} style={{fontSize:13,color:C.t1,lineHeight:1.75,display:'block'}}/>
       </motion.div>}
       <div style={{marginTop:20,...R({justifyContent:'flex-end',gap:8})}}>
-        {!conf&&sel!==null&&<button style={{...btn(),display:'inline-flex',alignItems:'center',gap:8}} onClick={confirm}>Confirm Answer<ArrowRight size={15}/></button>}
+        {!conf&&sel!==null&&<button style={{...btn(),display:'inline-flex',alignItems:'center',gap:8}} onClick={confirm}>Confirm answer<ArrowRight size={15}/></button>}
         {conf&&<button style={{...btn(),display:'inline-flex',alignItems:'center',gap:8}} onClick={next}>{qi<tot-1?'Next Question':'View Results'}<ArrowRight size={15}/></button>}
       </div>
     </div>
@@ -1313,7 +1313,7 @@ function CardManagerModal({deckName,cards,onAdd,onUpdate,onDelete,onClose,m=fals
           <div style={CC({gap:8})}>
             <textarea style={inp({minHeight:44,resize:'vertical',fontSize:12.5})} value={newFront} onChange={e=>setNewFront(e.target.value)} placeholder="Front (question)"/>
             <textarea style={inp({minHeight:44,resize:'vertical',fontSize:12.5})} value={newBack} onChange={e=>setNewBack(e.target.value)} placeholder="Back (answer)"/>
-            <button style={{...btn(C.blueGrad,{fontSize:12,alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={addCard} disabled={!newFront.trim()||!newBack.trim()}><Plus size={14}/>Add Card</button>
+            <button style={{...btn(C.blueGrad,{fontSize:12,alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={addCard} disabled={!newFront.trim()||!newBack.trim()}><Plus size={14}/>Add card</button>
           </div>
         </div>
       </motion.div>
@@ -1331,7 +1331,7 @@ function NewDeckModal({onCreate,onClose,m=false}){
         <div style={{fontSize:15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:12}}>New Deck</div>
         <input autoFocus style={{...inp(),marginBottom:12}} placeholder="Deck name (e.g. Cell Biology Vocab)" value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&name.trim())onCreate(name.trim());}}/>
         <div style={R({gap:8})}>
-          <button style={btn(C.blueGrad,{fontSize:12.5})} onClick={()=>name.trim()&&onCreate(name.trim())} disabled={!name.trim()}>Create Deck</button>
+          <button style={btn(C.blueGrad,{fontSize:12.5})} onClick={()=>name.trim()&&onCreate(name.trim())} disabled={!name.trim()}>Create deck</button>
           <button style={btnG({fontSize:12.5})} onClick={onClose}>Cancel</button>
         </div>
       </motion.div>
@@ -1416,7 +1416,7 @@ function PathwayCard({ pathKey, p, current, enrolled=false, full=false, onSelect
               {current?<>Studying now<Check size={13}/></>
                 :enrolled?<>Switch to this<ChevronRight size={13}/></>
                 :full?<>All {MAX_ACTIVE_PATHWAYS} slots in use<Lock size={12}/></>
-                :<>Add This Pathway<Plus size={13}/></>}
+                :<>Add this pathway<Plus size={13}/></>}
             </motion.button>
           );
         })()}
@@ -5752,7 +5752,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 </div>
               </div>
             ):<div style={{fontSize:13,color:C.t2}}>Your pathway is fully complete — nice work.</div>}
-            {nextLesson&&<button onClick={()=>goPrep('pathways')} style={btn(C.blueGrad,{marginTop:12,fontSize:12,padding:'8px 16px'})}>Resume Lesson</button>}
+            {nextLesson&&<button onClick={()=>goPrep('pathways')} style={btn(C.blueGrad,{marginTop:12,fontSize:12,padding:'8px 16px'})}>Resume lesson</button>}
           </div>}
           {topPick&&<div style={{flex:1,minWidth:220,borderLeft:`1px solid ${C.b1}`,paddingLeft:16}}>
             <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom:8,display:'flex',alignItems:'center',gap:4}}><Brain size={11} color={C.violetL}/>Medabrain's #1 Pick</div>
@@ -5767,7 +5767,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 one-decision dashboard working as intended. What it doesn't do is offer the
                 whole 200-quiz library before they've finished anything; taking this pick is
                 what opens it. */}
-            {unlocks.isOpen('prep','quizzes')&&<button onClick={()=>goPrep('quizzes')} style={btnG({marginTop:12,fontSize:12,padding:'8px 16px'})}>See All Recommendations</button>}
+            {unlocks.isOpen('prep','quizzes')&&<button onClick={()=>goPrep('quizzes')} style={btnG({marginTop:12,fontSize:12,padding:'8px 16px'})}>See all recommendations</button>}
           </div>}
         </div>}
 
@@ -5919,7 +5919,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               </div>
             );})}
           </div>
-          <button onClick={()=>goPrep('pathways')} style={{...btnG({marginTop:16,width:'100%',justifyContent:'center'}),display:'inline-flex',alignItems:'center',gap:8}}>View Full Pathway<ArrowRight size={14}/></button>
+          <button onClick={()=>goPrep('pathways')} style={{...btnG({marginTop:16,width:'100%',justifyContent:'center'}),display:'inline-flex',alignItems:'center',gap:8}}>View full pathway<ArrowRight size={14}/></button>
         </div>
       </div>
     );
@@ -5933,14 +5933,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       const totalLessons=(path?.units||[]).reduce((s,u)=>s+u.lessons.length,0);
       return(
       <div style={CC({gap:20})}>
-        <div><div style={{...lbl(),color:C.cyanL}}>Pathway Diagnostic</div><h2 style={{fontSize:26, lineHeight: 'calc(1.28 * var(--msp-line-scale))',fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing: 'calc(-0.53px + var(--msp-letter-spacing))',margin:0}}>Your Match</h2></div>
+        <div><div style={{...lbl(),color:C.cyanL}}>Pathway Diagnostic</div><h2 style={{fontSize:26, lineHeight: 'calc(1.28 * var(--msp-line-scale))',fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing: 'calc(-0.53px + var(--msp-letter-spacing))',margin:0}}>Your match</h2></div>
         <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} style={{...glass({padding:40,textAlign:'center',background:path?.gradient?`linear-gradient(135deg,${path.accent}14,${path.accent2||path.accent}08)`:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.05))`,border:`1px solid ${path?.accent||C.blue}30`})}}>
           <div style={{width:80,height:80,borderRadius:'50%',background:`${path?.accent||accent}18`,border:`2px solid ${path?.accent||accent}40`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',boxShadow:`0 0 30px ${path?.glow||`${accent}30`}`}}><ResIcon size={34} color={accentText(path?.accent||accent)}/></div>
           <h2 style={{fontSize:30, lineHeight: 'calc(1.21 * var(--msp-line-scale))',fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing: 'calc(-0.67px + var(--msp-letter-spacing))',margin:'0px 0px 12px'}}>{path?.label}</h2>
           <p style={{color:C.t2,maxWidth:480,margin:'0 auto 12px',lineHeight: 1.55,fontSize:14}}>Based on your answers — how you think, what pulls you in, and what you already know about these careers — <strong style={{color:C.t1}}>{path?.label}</strong> is your closest match.</p>
           <p style={{color:C.t3,maxWidth:480,margin:'0 auto 28px',lineHeight: 1.55,fontSize:12}}>Starting this pathway loads {totalLessons} lessons across {(path?.units||[]).length} units, sequenced around the content most relevant to {path?.label}.</p>
           <div style={R({justifyContent:'center',gap:12})}>
-            <button style={{...btn(path?.gradient||C.blueGrad,{padding:'12px 32px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>{enrollPath(dRes);setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathways');}}>Accept & Start Pathway<ChevronRight size={16}/></button>
+            <button style={{...btn(path?.gradient||C.blueGrad,{padding:'12px 32px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>{enrollPath(dRes);setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathways');}}>Accept & start pathway<ChevronRight size={16}/></button>
             <button style={{...btnG({padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setDD(false);setDS(0);setDA([]);}}><RefreshCw size={13}/>Retake</button>
           </div>
         </motion.div>
@@ -6023,7 +6023,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               <div style={{fontSize:15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',fontWeight:800,color:C.t1,fontFamily:C.FD}}>Not sure which fits? Take the diagnostic.</div>
               <div style={{fontSize:12,color:C.t2,marginTop:4}}>{DIAG_QS.length} questions about how you think, what actually interests you, and what these careers look like day to day — takes about 6 minutes.</div>
             </div>
-            <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(C.oceanGrad,{fontSize:13,padding:'12px 24px',boxShadow:`0 6px 18px ${C.cyan}35,inset 0 1px 0 rgba(255,255,255,0.15)`}),display:'inline-flex',alignItems:'center',gap:8,flexShrink:0,position:'relative'}} onClick={()=>setDIntro(false)}>Start Diagnostic<ChevronRight size={15}/></motion.button>
+            <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(C.oceanGrad,{fontSize:13,padding:'12px 24px',boxShadow:`0 6px 18px ${C.cyan}35,inset 0 1px 0 rgba(255,255,255,0.15)`}),display:'inline-flex',alignItems:'center',gap:8,flexShrink:0,position:'relative'}} onClick={()=>setDIntro(false)}>Start diagnostic<ChevronRight size={15}/></motion.button>
           </motion.div>
           <div>
             <SectionTitle icon={Route} color={C.cyanL}>All Pathways — Choose Manually</SectionTitle>
@@ -6188,7 +6188,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                     <div style={{fontSize:12.5,fontWeight:700,color:C.t1}}>Pathway complete!</div>
                     <div style={{fontSize:11,color:C.t3,marginTop:4}}>Every lesson in {curPath?.label} is verified.</div>
                   </div>
-                  <button style={{...btnSm(`${C.green}22`,{color:C.greenL,border:`1px solid ${C.green}40`}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>exportPathwayCertificate(curPath?.label||'Pathway',{studentName:user?.name||'Student',totalLessons,completedLessons:curPathDoneL,avgScore,completedAt:lastCompletedAt})}><FileDown size={13}/>Download Certificate</button>
+                  <button style={{...btnSm(`${C.green}22`,{color:C.greenL,border:`1px solid ${C.green}40`}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>exportPathwayCertificate(curPath?.label||'Pathway',{studentName:user?.name||'Student',totalLessons,completedLessons:curPathDoneL,avgScore,completedAt:lastCompletedAt})}><FileDown size={13}/>Download certificate</button>
                 </div>
               </div>
             );
@@ -6421,7 +6421,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <div style={{position:'relative'}}>
               <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><ListFilter size={13}/></span>
               <select style={inp({width:'auto',paddingLeft:28})} value={qSort} onChange={e=>setQSort(e.target.value)}>
-                <option value="default">Sort: Default</option>
+                <option value="default">Sort: default</option>
                 <option value="unattempted">Sort: Unattempted first</option>
                 <option value="difficulty">Sort: Easiest first</option>
                 <option value="score">Sort: Lowest score first</option>
@@ -6475,7 +6475,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                       </motion.button>
                     ):(
                       <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(cm.grad,{flex:1,fontSize:12,boxShadow:`0 4px 14px ${cm.color}35,inset 0 1px 0 rgba(255,255,255,0.12)`}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4}} onClick={()=>{setAQ(q);play('click');}}>
-                        Start Quiz<ChevronRight size={14}/>
+                        Start quiz<ChevronRight size={14}/>
                       </motion.button>
                     )}
                   </div>
@@ -6837,7 +6837,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       const totalCount=pd.smartMix?allCards.length:cardsForDeck(pd.name,pd.builtin).length;
       return(
         <div style={CC({gap:16})}>
-          <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>setPlanDeckPending(null)}><ChevronLeft size={14}/>All Decks</button>
+          <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>setPlanDeckPending(null)}><ChevronLeft size={14}/>All decks</button>
           <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{...glass({padding:isMobile?28:40,textAlign:'center'}),border:`1px solid ${C.amber}30`}}>
             <div style={{width:60,height:60,borderRadius:16,margin:'0 auto 18px',display:'grid',placeItems:'center',background:C.sunsetGrad,boxShadow:`0 10px 30px ${C.amber}40`}}>
               {pd.smartMix?<Sparkles size={26} color="#fff"/>:<Layers3 size={26} color="#fff"/>}
@@ -6848,7 +6848,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               {pd.smartMix?`Every card in your library — all ${totalCount} of them, from all ${allDecksList.length} decks — shuffled into one fresh random order${dueCount>0?`, including the ${dueCount} due for review`:''}.`:`${dueCount>0?`${dueCount} card${dueCount===1?'':'s'} due for review`:`${totalCount} card${totalCount===1?'':'s'} in this deck`} — spaced-repetition scheduling picks up right where you left off.`}
             </div>
             <button style={{...btn(C.sunsetGrad,{fontSize:14,padding:'12px 28px'}),display:'inline-flex',alignItems:'center',gap:8,boxShadow:`0 6px 22px ${C.amber}40`}} onClick={startPlanDeck}>
-              <Play size={16}/>Start Studying
+              <Play size={16}/>Start studying
             </button>
           </motion.div>
         </div>
@@ -6860,7 +6860,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       if(!currentCard){
         return(
         <div style={CC({gap:16})}>
-          <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All Decks</button>
+          <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All decks</button>
           <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{...glass({padding:40,textAlign:'center'})}}>
             <motion.div initial={{scale:.6,rotate:-10}} animate={{scale:1,rotate:0}} transition={{type:'spring',stiffness:260,damping:14}} style={{marginBottom:16,display:'flex',justifyContent:'center'}}><PartyPopper size={44} color={C.green}/></motion.div>
             <div style={{fontSize:18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))',fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:8}}>{activeDeck.smartMix?'Smart Mix complete!':studyMode==='due'?'All due cards reviewed!':'Deck complete!'}</div>
@@ -6878,8 +6878,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               </div>
             </>)}
             <div style={R({justifyContent:'center',gap:8})}>
-              {!activeDeck.smartMix&&studyMode==='due'&&<button style={btn()} onClick={()=>setStudyMode('all')}>Browse All Cards</button>}
-              {activeDeck.smartMix&&<button style={btn(C.sunsetGrad)} onClick={startSmartMix}>Shuffle Again</button>}
+              {!activeDeck.smartMix&&studyMode==='due'&&<button style={btn()} onClick={()=>setStudyMode('all')}>Browse all cards</button>}
+              {activeDeck.smartMix&&<button style={btn(C.sunsetGrad)} onClick={startSmartMix}>Shuffle again</button>}
               {activeDeck.smartMix
                 ?<button style={btnG()} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}>Back to Decks</button>
                 :<button style={btnG()} onClick={()=>{setCIdx(0);setFlip(false);setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>Study Again</button>}
@@ -6891,7 +6891,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       return(
         <div style={CC({gap:16})}>
           <div style={R()}>
-            <button style={{...btnG({padding:'8px 16px',fontSize:12}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All Decks</button>
+            <button style={{...btnG({padding:'8px 16px',fontSize:12}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All decks</button>
             <div style={{flex:1,textAlign:'center'}}>
               <div style={R({justifyContent:'center',gap:8})}>
                 {activeDeck.smartMix&&<Sparkles size={13} color={C.amberL}/>}
@@ -6938,7 +6938,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <motion.button whileHover={{scale:1.04}} style={{...btnG({padding:'8px 20px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setCIdx(i=>Math.min(deckCards.length-1,i+1));setFlip(false);}} disabled={cIdx===deckCards.length-1}>Next<ChevronRight size={14}/></motion.button>
           </div>
           {/* Export deck */}
-          <button style={{...btnG({alignSelf:'flex-start',fontSize:11,padding:'4px 12px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>exportFlashDeck(activeDeck.name,deckCards)}><FileDown size={13}/>Export Deck PDF</button>
+          <button style={{...btnG({alignSelf:'flex-start',fontSize:11,padding:'4px 12px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>exportFlashDeck(activeDeck.name,deckCards)}><FileDown size={13}/>Export deck PDF</button>
           <AnimatePresence>
             {manageDeck&&<CardManagerModal
               deckName={manageDeck}
@@ -6988,7 +6988,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <PanelHero tourTag="prep-deep-flashcards" icon={Layers3} color={C.amber} color2={C.rose} m={isMobile}
           eyebrow="Flashcards" title="Study decks"
           sub="Scheduled with FSRS. Study what's due, or build a deck from your notes."
-          right={<button style={{...btn(C.sunsetGrad,{fontSize:12,padding:'8px 16px',boxShadow:`0 4px 14px ${C.amber}35`}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>setNewDeckOpen(true)}><Plus size={14}/>New Deck</button>}/>
+          right={<button style={{...btn(C.sunsetGrad,{fontSize:12,padding:'8px 16px',boxShadow:`0 4px 14px ${C.amber}35`}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>setNewDeckOpen(true)}><Plus size={14}/>New deck</button>}/>
 
         {/* Overview stats */}
         <div style={G(4,12,{},isMobile)}>
@@ -7042,7 +7042,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             Biology/Chemistry/Physics, etc. — instead of one flat list of every deck. */}
         <div style={CC({gap:8})}>
           <div style={R({gap:4,flexWrap:'wrap'})}>
-            <motion.button whileHover={{y:-1}} whileTap={{scale:.96}} style={btnSm(deckCategory==='all'?C.sunsetGrad:C.s4,{fontSize:11.5,fontWeight:700,color:deckCategory==='all'?'#fff':C.t2,border:`1px solid ${deckCategory==='all'?'transparent':C.b1}`,boxShadow:deckCategory==='all'?`0 4px 12px ${C.amber}30`:'none'})} onClick={()=>{setDeckCategory('all');setDeckSubcat('all');}}>All Subjects</motion.button>
+            <motion.button whileHover={{y:-1}} whileTap={{scale:.96}} style={btnSm(deckCategory==='all'?C.sunsetGrad:C.s4,{fontSize:11.5,fontWeight:700,color:deckCategory==='all'?'#fff':C.t2,border:`1px solid ${deckCategory==='all'?'transparent':C.b1}`,boxShadow:deckCategory==='all'?`0 4px 12px ${C.amber}30`:'none'})} onClick={()=>{setDeckCategory('all');setDeckSubcat('all');}}>All subjects</motion.button>
             {DECK_CATEGORY_ORDER.map(cat=>{
               const active=deckCategory===cat;
               const count=allDecksList.filter(d=>getDeckCategory(d.name,d.builtin).category===cat).length;
@@ -7417,35 +7417,35 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <div style={R({flexWrap: 'wrap', gap: 8})}>
             {/* Type filter */}
             <select style={inp({width: 'auto', padding: '4px 12px', fontSize: 11})} value={lType} onChange={e => setLType(e.target.value)}>
-              <option value="All">All Types</option>
-              <option value="YouTube">YouTube Videos</option>
-              <option value="Article">Articles & Guides</option>
+              <option value="All">All types</option>
+              <option value="YouTube">YouTube videos</option>
+              <option value="Article">Articles & guides</option>
               <option value="Book">Books</option>
               <option value="Course">Courses</option>
-              <option value="App">Apps & Tools</option>
+              <option value="App">Apps & tools</option>
               <option value="Podcast">Podcasts</option>
               <option value="Community">Communities</option>
             </select>
 
             {/* Prep Level / Difficulty filter */}
             <select style={inp({width: 'auto', padding: '4px 12px', fontSize: 11})} value={lDiff} onChange={e => setLDiff(e.target.value)}>
-              <option value="All">All Prep Levels</option>
+              <option value="All">All prep levels</option>
               <option value="Introductory">Introductory</option>
-              <option value="AP / Intermediate">AP / Intermediate</option>
-              <option value="Undergrad / Advanced">Undergrad / Advanced</option>
+              <option value="AP / Intermediate">AP / intermediate</option>
+              <option value="Undergrad / Advanced">Undergrad / advanced</option>
             </select>
 
             {/* Cost filter */}
             <select style={inp({width: 'auto', padding: '4px 12px', fontSize: 11})} value={lFreeOnly ? 'free' : 'all'} onChange={e => setLFreeOnly(e.target.value === 'free')}>
-              <option value="all">All Budgets</option>
-              <option value="free">Free Resources Only</option>
+              <option value="all">All budgets</option>
+              <option value="free">Free resources only</option>
             </select>
 
             {/* Sort order */}
             <select style={inp({width: 'auto', padding: '4px 12px', fontSize: 11})} value={lSort} onChange={e => setLSort(e.target.value)}>
-              <option value="default">Sort: Recommended</option>
-              <option value="alpha">Sort: Alphabetical (A-Z)</option>
-              <option value="alpha-desc">Sort: Alphabetical (Z-A)</option>
+              <option value="default">Sort: recommended</option>
+              <option value="alpha">Sort: alphabetical (A-Z)</option>
+              <option value="alpha-desc">Sort: alphabetical (Z-A)</option>
             </select>
           </div>
 
@@ -7462,7 +7462,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               }}
               style={btnSm('transparent', {color: C.roseL, borderColor: `${C.rose}40`, fontSize: 11})}
             >
-              Clear All Filters
+              Clear all filters
             </button>
           )}
         </div>
@@ -8335,7 +8335,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <div style={{fontSize:18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))',fontWeight:800,color:strengthColor,fontFamily:C.FD,marginTop:4}}>{strength.label}</div>
             <div style={{fontSize:11,color:C.t3,marginTop:4}}>Academic {strength.subscores.academic}% · Clinical {strength.subscores.clinical}% · Application {strength.subscores.application}% · Activities {strength.subscores.activities}%</div>
           </div>
-          <button style={btnG({fontSize:12})} onClick={()=>goPortfolio('overview')}>View Portfolio<ChevronRight size={13}/></button>
+          <button style={btnG({fontSize:12})} onClick={()=>goPortfolio('overview')}>View portfolio<ChevronRight size={13}/></button>
         </div>
 
         {/* Onboarding recap — surfaces what the ~30-screen onboarding flow actually collected
@@ -8834,12 +8834,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <div data-tour="settings-deep-profile" style={glass()}>
           <SL>Display Name</SL>
           <div style={CC({gap:4,marginBottom:12})}><input style={inp()} placeholder={user.name} value={sName} onChange={e=>setSN(e.target.value)}/></div>
-          <button style={btn(accentGrad(accent))} onClick={()=>{if(!sName.trim())return;const nextName=sName.trim();saveUser({...user,name:nextName});AuthAPI.updateMe({name:nextName}).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});setSN('');toast.success('Name updated');}}>Save Name</button>
+          <button style={btn(accentGrad(accent))} onClick={()=>{if(!sName.trim())return;const nextName=sName.trim();saveUser({...user,name:nextName});AuthAPI.updateMe({name:nextName}).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});setSN('');toast.success('Name updated');}}>Save name</button>
 
           <div style={{marginTop:16}}>
             <SL>Age</SL>
             <div style={CC({gap:4,marginBottom:12})}><input style={inp({width:'auto'})} type="number" min="5" max="120" placeholder={user.age ? String(user.age) : 'Your age'} value={sAge} onChange={e=>setSAge(e.target.value)}/></div>
-            <button style={btn(accentGrad(accent))} onClick={()=>{const age=Number(sAge);if(isNaN(age)||age<5||age>120)return;saveUser({...user,age});setSAge('');toast.success('Age updated');}}>Save Age</button>
+            <button style={btn(accentGrad(accent))} onClick={()=>{const age=Number(sAge);if(isNaN(age)||age<5||age>120)return;saveUser({...user,age});setSAge('');toast.success('Age updated');}}>Save age</button>
           </div>
         </div>
 
@@ -8944,7 +8944,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 </div>
               </div>
               <div style={R({gap:8})}>
-                <button style={btn()} onClick={()=>{saveUser({...user,goal:sGoal,obstacles:sObstacles,studyMethod:sStudyMethod,accomplish:sAccomplish,studyHours:sStudyHours});setSGoalsEditing(false);toast.success('Goals updated — Medabrain will use this right away.');}}>Save Goals</button>
+                <button style={btn()} onClick={()=>{saveUser({...user,goal:sGoal,obstacles:sObstacles,studyMethod:sStudyMethod,accomplish:sAccomplish,studyHours:sStudyHours});setSGoalsEditing(false);toast.success('Goals updated — Medabrain will use this right away.');}}>Save goals</button>
                 <button style={btnG()} onClick={()=>setSGoalsEditing(false)}>Cancel</button>
               </div>
             </div>
@@ -9170,24 +9170,24 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <div data-tour="settings-deep-backup" style={glass({padding:16})}>
           <SL>Data & Backup</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight:1.65}}>Export all your progress data as a JSON file. Useful for backup or transferring to a new device.</p>
-          <button style={{...btnG({fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{DB.exportAllData();toast.success('Export started — check your Downloads folder');}}><Package size={14}/>Export All Data</button>
+          <button style={{...btnG({fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{DB.exportAllData();toast.success('Export started — check your Downloads folder');}}><Package size={14}/>Export all data</button>
         </div>
 
         <div style={glass({padding:16})}>
           <SL>Medabrain Chat History</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight:1.65}}>Clear every saved Medabrain conversation — a scoped reset that leaves your XP, streak, quiz scores, and pathway progress untouched.</p>
-          <button style={{...btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={clearAllChats}><Trash2 size={13}/>Clear All Chats{coachThreads.length>0?` (${coachThreads.length})`:''}</button>
+          <button style={{...btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={clearAllChats}><Trash2 size={13}/>Clear all chats{coachThreads.length>0?` (${coachThreads.length})`:''}</button>
         </div>
 
         <div style={glass({padding:16})}>
           <SL>Help</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight:1.65}}>Not sure where everything lives? Replay the full guided tour — every tab, every sub-view inside Prep, Portfolio, and Progress, Settings, and the ⌘K quick-switcher.</p>
           <div style={R({gap:8,flexWrap:'wrap'})}>
-            <button style={{...btnG({fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={startTour}><Compass size={14}/>Replay App Tour</button>
+            <button style={{...btnG({fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={startTour}><Compass size={14}/>Replay app tour</button>
             {/* Dev-only: preview the first-run onboarding wizard without touching this account's
                 saved profile. Kept as a minimal inline link (not a full card) so it doesn't
                 compete for attention with real settings. Remove once onboarding is stable. */}
-            <button style={{...btnG({fontSize:12,padding:'8px 16px',opacity:0.6}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>setPreviewOnboarding(true)} title="Dev-only — doesn't touch your saved profile"><RotateCcw size={14}/>Replay Onboarding</button>
+            <button style={{...btnG({fontSize:12,padding:'8px 16px',opacity:0.6}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>setPreviewOnboarding(true)} title="Dev-only — doesn't touch your saved profile"><RotateCcw size={14}/>Replay onboarding</button>
           </div>
         </div>
         </Group>}
@@ -9298,7 +9298,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             {syncStatus.state==='error'&&<><CloudOff size={13} color={C.amber}/><span style={{fontSize:12,color:C.amber}} title={syncStatus.error||''}>Offline — your progress is safe on this device and will sync automatically when you reconnect.</span><button onClick={()=>{ProgressSync.retrySyncNow().catch(()=>{});}} style={{marginLeft:4,fontSize:11,fontWeight:700,color:C.blueL,background:'none',border:'none',cursor:'pointer',padding:0,textDecoration:'underline'}}>Retry now</button></>}
             {syncStatus.state==='idle'&&<><Cloud size={13} color={C.t3}/><span style={{fontSize:12,color:C.t3}}>Not synced yet</span></>}
           </div>
-          <button style={{...btnG({fontSize:12,padding:'8px 16px'})}} onClick={async()=>{try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();window.location.reload();}}>Sign Out</button>
+          <button style={{...btnG({fontSize:12,padding:'8px 16px'})}} onClick={async()=>{try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();window.location.reload();}}>Sign out</button>
         </div>
 
         {/* ── Your data & your rights ──────────────────────────────────────
@@ -9343,7 +9343,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <SL extra={{color:C.rose}}>Danger Zone</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:16,lineHeight:1.65}}>These actions are permanent and cannot be undone.</p>
           <div style={R({gap:8,flexWrap:'wrap'})}>
-            <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12})} onClick={()=>{if(window.confirm('Reset all quiz scores and lesson progress?')){DB.resetPathway();DB.resetQuizScores();DB.resetCatPerf();setPathway_({});setQScores_({});setQHistory([]);setCatPerf_({});toast.success('Progress reset successfully.');}}} >Reset Progress</button>
+            <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12})} onClick={()=>{if(window.confirm('Reset all quiz scores and lesson progress?')){DB.resetPathway();DB.resetQuizScores();DB.resetCatPerf();setPathway_({});setQScores_({});setQHistory([]);setCatPerf_({});toast.success('Progress reset successfully.');}}} >Reset progress</button>
             {/* Deleting the plan clears the server copy AND its version history, not just this
                 device's — otherwise the next sign-in would helpfully restore the plan the
                 student just asked to be rid of. */}
@@ -9356,9 +9356,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 // plan win on the next pull and the deletion silently undoes itself.
                 saveUser({...user,masterPlan:null});
                 toast.success('Your plan was deleted. Build a new one whenever you\'re ready.');
-              }}>Delete My Plan</button>
+              }}>Delete my plan</button>
             )}
-            <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12})} onClick={async()=>{if(window.confirm('Sign out and permanently delete all local device data? This cannot be undone.')){try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();await signOut();window.location.reload();}}}>Sign Out & Clear Local Data</button>
+            <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12})} onClick={async()=>{if(window.confirm('Sign out and permanently delete all local device data? This cannot be undone.')){try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();await signOut();window.location.reload();}}}>Sign out & clear local data</button>
           </div>
         </div>
         </Group>}
@@ -9802,7 +9802,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               <div style={{fontSize:15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',fontWeight:800,color:C.t1,fontFamily:C.FD}}>Not sure which fits? Take the diagnostic.</div>
               <div style={{fontSize:12,color:C.t2,marginTop:4}}>{DIAG_QS.length} questions about how you think, what actually interests you, and what these careers look like day to day — takes about 6 minutes.</div>
             </div>
-            <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(C.oceanGrad,{fontSize:13,padding:'12px 24px',boxShadow:`0 6px 18px ${C.cyan}35,inset 0 1px 0 rgba(255,255,255,0.15)`}),display:'inline-flex',alignItems:'center',gap:8,flexShrink:0,position:'relative'}} onClick={()=>{setDD(false);setDS(0);setDA([]);setDIntro(false);goPrep('diagnostic');}}>Start Diagnostic<ChevronRight size={15}/></motion.button>
+            <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(C.oceanGrad,{fontSize:13,padding:'12px 24px',boxShadow:`0 6px 18px ${C.cyan}35,inset 0 1px 0 rgba(255,255,255,0.15)`}),display:'inline-flex',alignItems:'center',gap:8,flexShrink:0,position:'relative'}} onClick={()=>{setDD(false);setDS(0);setDA([]);setDIntro(false);goPrep('diagnostic');}}>Start diagnostic<ChevronRight size={15}/></motion.button>
           </motion.div>
           <div>
             <SectionTitle icon={Route} color={C.cyanL}>All Pathways — Choose Manually</SectionTitle>

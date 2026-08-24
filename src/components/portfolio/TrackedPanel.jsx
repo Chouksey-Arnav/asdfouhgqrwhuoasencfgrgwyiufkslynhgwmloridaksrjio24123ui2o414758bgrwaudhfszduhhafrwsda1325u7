@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BrandLoader } from '../BrandJourney';
+import { SkeletonRows, useLoadingPhase } from '../ui/Loading';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
@@ -80,6 +80,8 @@ export default function TrackedPanel({
   // change re-ranks the board instantly instead of waiting for a refetch.
   const effective = useMemo(() => applyPatches(snapshot, patches), [snapshot, patches]);
   const items = useMemo(() => buildTrackedItems(effective || {}), [effective]);
+  // 'none' until the wait is long enough to be worth telling anyone about.
+  const loadPhase = useLoadingPhase(loading && !items.length);
   const report = useMemo(() => buildDailyReport(items), [items]);
   const counts = useMemo(() => stageCounts(items), [items]);
   const signature = useMemo(() => trackedSignature(items), [items]);
@@ -330,10 +332,16 @@ export default function TrackedPanel({
       </>)}
 
       {/* ── The board ── */}
+      {/* Under 300ms this renders nothing at all: a loader that flashes and
+          vanishes makes the wait feel longer than no loader does. Past that it
+          is a skeleton in the shape of the rows that are coming, so nothing
+          jumps when they land. See src/components/ui/Loading.jsx. */}
       {loading && !items.length ? (
-        <div style={glass({ padding: 36 })}>
-          <BrandLoader size={140} caption="Pulling in everything you're tracking…" />
-        </div>
+        loadPhase === 'none' ? null : (
+          <div style={glass({ padding: 24 })} aria-busy="true">
+            <SkeletonRows rows={4} h={64} gap={8} />
+          </div>
+        )
       ) : !items.length ? (
         <EmptyState
           icon={Compass} accent={accent} title="Nothing tracked yet"

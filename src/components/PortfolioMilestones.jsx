@@ -516,7 +516,7 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
           </p>
           {onNavigate && (
             <button onClick={() => onNavigate('settings', null)} style={btnG({ marginTop: 12, fontSize: 12, padding: '8px 16px' })}>
-              Open Settings<ArrowRight size={12} />
+              Open settings<ArrowRight size={12} />
             </button>
           )}
         </CalloutCard>
@@ -578,7 +578,7 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
           </div>
           {onNavigate && (
             <button onClick={() => onNavigate('portfolio', 'aid')} style={btnG({ marginTop: 12, fontSize: 11.5, padding: '8px 12px' })}>
-              Open Financial Aid<ArrowRight size={11} />
+              Open financial aid<ArrowRight size={11} />
             </button>
           )}
         </CalloutCard>
@@ -1215,7 +1215,7 @@ export function TimelineNextCard({ user, accent = C.blue, onNavigate, limit = 4 
         <div style={{ fontSize: 13, color: C.t2 }}>
           {gradeLabel ? 'Nothing is coming up on your timeline yet — add your colleges and deadlines and it fills in.' : 'Set your class year in Settings and your application timeline builds itself.'}
         </div>
-        {onNavigate && <button style={btnG({ fontSize: 12, padding: '8px 16px' })} onClick={() => onNavigate('portfolio', 'milestones')}>Open Milestones</button>}
+        {onNavigate && <button style={btnG({ fontSize: 12, padding: '8px 16px' })} onClick={() => onNavigate('portfolio', 'milestones')}>Open milestones</button>}
       </div>
     );
   }
