@@ -85,11 +85,11 @@ const ACCENT = C.violet;
 // chore list. See the header of RoadmapAscent.jsx.
 export const ROADMAP_SUBNAV = [
   { id: 'overview', ic: Compass, label: 'Overview', color: C.violet },
-  { id: 'year', ic: CalendarDays, label: 'Your Year', color: C.sky },
-  { id: 'climb', ic: TrendingUp, label: 'The Climb', color: C.green },
+  { id: 'year', ic: CalendarDays, label: 'Your year', color: C.sky },
+  { id: 'climb', ic: TrendingUp, label: 'The climb', color: C.green },
   { id: 'seasons', ic: Layers, label: 'Seasons', color: C.teal },
   { id: 'list', ic: ListChecks, label: 'Everything', color: C.amber },
-  { id: 'intake', ic: Target, label: 'Your Answers', color: C.fuchsia },
+  { id: 'intake', ic: Target, label: 'Your answers', color: C.fuchsia },
 ];
 
 // ── The build, as the student sees it ────────────────────────────────────────
@@ -352,7 +352,7 @@ export default function RoadmapTab({
       // the student sees an identical screen and concludes, reasonably, that the
       // button did nothing — see the header of DegradedNotice.
       setLastAttempt(next.generation?.degraded ? { at: Date.now(), outcome: 'failed' } : null);
-      toast.success(next.generation?.degraded ? 'Roadmap built — but not fully personalised.' : 'Your year is mapped.');
+      toast.success(next.generation?.degraded ? 'Roadmap built — but not fully personalized.' : 'Your year is mapped.');
     } catch (err) {
       // createRoadmap is contractually total, so reaching here means something
       // outside it broke. Say so plainly rather than leaving a dead spinner.
@@ -855,7 +855,7 @@ function BuildingScreen({ stage, accent, isMobile, reducedMotion }) {
         flexDirection: isMobile ? 'column' : 'row', textAlign: isMobile ? 'center' : 'left',
       }}>
         {/* The brand journey animation, looping — this is an open-ended wait,
-            and it already honours prefers-reduced-motion internally. */}
+            and it already honors prefers-reduced-motion internally. */}
         <div style={{ flexShrink: 0 }}><BrandJourney size={isMobile ? 104 : 148} /></div>
 
         <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
@@ -905,8 +905,8 @@ function BuildingScreen({ stage, accent, isMobile, reducedMotion }) {
 function PassRail({ pass, accent, isMobile, reducedMotion }) {
   return (
     <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start' }}>
-      {/* The rail behind the nodes: travelled up to the current pass, ahead after
-          it. Inset to the FIRST and LAST node centres rather than to the edges of
+      {/* The rail behind the nodes: traveled up to the current pass, ahead after
+          it. Inset to the FIRST and LAST node centers rather than to the edges of
           the row — the nodes sit in the middle of equal flex cells, so a rail
           drawn edge to edge overshoots both ends and the line visibly fails to
           pass through the dots it is supposed to connect. */}
@@ -1215,7 +1215,7 @@ function OverviewView({
  *
  * The card underneath is a normal <RoadmapItem>, unmodified. The frame supplies
  * the emphasis and the sentence naming why this one; the item supplies every
- * behaviour it has everywhere else, so expanding it here does exactly what
+ * behavior it has everywhere else, so expanding it here does exactly what
  * expanding it anywhere else does.
  */
 function TheOneThing({ item, accent, isMobile, expanded, onToggleExpand, itemProps }) {
@@ -1587,8 +1587,14 @@ function ListView({
           ))}
         </div>
       ) : (
-        <EmptyState icon={ListChecks} accent={accent} title="Nothing here"
-          body={showDone ? 'No items on this track.' : 'Everything on this track is finished — turn on "Show finished" to see it.'} />
+        <EmptyState
+          kind="filtered" icon={ListChecks} accent={accent}
+          title={showDone ? 'Nothing on this pathway yet' : 'Everything here is finished'}
+          body={showDone
+            ? 'This stretch of the roadmap has no items on it yet. New ones appear as your plan fills in.'
+            : 'Every item on this pathway is done. Turn on "Show finished" to see what you have already cleared.'}
+          actionLabel={showDone ? undefined : 'Show finished'}
+          onAction={showDone ? undefined : () => setShowDone(true)} />
       )}
     </>
   );

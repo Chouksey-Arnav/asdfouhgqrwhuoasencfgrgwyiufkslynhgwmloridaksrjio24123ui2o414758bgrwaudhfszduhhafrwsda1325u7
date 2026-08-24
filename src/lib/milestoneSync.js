@@ -42,7 +42,7 @@ import { alertParentRef, isAlertRow } from './milestoneUrgency.js';
 // completionEffects() — the pure half, and the half holding the rule that a recorded decision is
 // never overwritten — out of scripts/verifyHealthPortfolio.mjs, which is precisely the logic most
 // worth failing a build over. Vite bundles a dynamic import of a static specifier the same way it
-// bundles a static one, so nothing about the shipped behaviour changes.
+// bundles a static one, so nothing about the shipped behavior changes.
 const dataApi = () => import('./dataApi.js');
 
 /** Build a source_ref. The one place the format is written. */

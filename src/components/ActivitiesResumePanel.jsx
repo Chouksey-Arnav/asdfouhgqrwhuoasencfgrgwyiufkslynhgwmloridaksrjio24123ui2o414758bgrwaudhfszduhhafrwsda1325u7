@@ -31,7 +31,7 @@ import CredentialsSection, { isCertExpired, isCertExpiringSoon } from './portfol
 import SectionScroller from './portfolio/SectionScroller';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Activities & Résumé.
+// Activities & résumé.
 //
 // This is the tab that holds everything a student *did*, as opposed to where
 // they are applying (College List), what they wrote (Essays), or when it is due
@@ -85,14 +85,14 @@ const CATEGORY_COLOR = { reach: C.rose, target: C.blue, safety: C.green };
 // retired /portfolio/clinical, /portfolio/research and /portfolio/skills URLs
 // (and every in-app link that still names them) onto them.
 export const RESUME_SECTIONS = [
-  { id: 'activities',  ic: Layers,       label: 'Activities & Honors', color: C.amber, blurb: 'Your ten Common App slots, scored and read back' },
+  { id: 'activities',  ic: Layers,       label: 'Activities & honors', color: C.amber, blurb: 'Your ten Common App slots, scored and read back' },
   { id: 'academics',   ic: GraduationCap,label: 'Grades',              color: C.green, blurb: 'GPA term by term, and the colleges it matches' },
   // "Shadowing" is the word students use. The database calls this table
   // clinical_hours and the Admissions Calculator calls it clinical exposure;
   // neither is a phrase a fifteen-year-old has ever said out loud.
-  { id: 'clinical',    ic: Stethoscope,  label: 'Shadowing & Hours',   color: C.pink,  blurb: 'Shadowing, volunteering and patient-care hours, by site' },
+  { id: 'clinical',    ic: Stethoscope,  label: 'Shadowing & hours',   color: C.pink,  blurb: 'Shadowing, volunteering and patient-care hours, by site' },
   { id: 'research',    ic: FlaskConical, label: 'Research',            color: C.cyan,  blurb: 'Projects, mentors and publications' },
-  { id: 'credentials', ic: BadgeCheck,   label: 'Skills & Certs',      color: C.teal,  blurb: 'Dated credentials, with their expiry dates tracked' },
+  { id: 'credentials', ic: BadgeCheck,   label: 'Skills & certs',      color: C.teal,  blurb: 'Dated credentials, with their expiry dates tracked' },
 ];
 // The section a caller that names no section should land on, and the one the
 // unlock ladder must keep open on day one (see verifyNavUnlocks.mjs). It is NOT
@@ -539,7 +539,7 @@ export default function ActivitiesResumePanel({
   return (
     <div style={CC({ gap: 20 })}>
       <PanelHero tourTag="portfolio-deep-resume" icon={Award} color={accent} color2={C.orange} m={isMobile}
-        eyebrow="Applications" title="Activities & Résumé"
+        eyebrow="Applications" title="Activities & résumé"
         sub="Activities, GPA, hours, research and certifications — exportable to the Common App or one PDF."
         right={canExport ? (
           <div style={R({ gap: 8, flexWrap: 'wrap' })}>
@@ -550,7 +550,7 @@ export default function ActivitiesResumePanel({
 
       {/* The four-year export sits above the record rather than inside it: it is
           the thing a senior comes to this page for in October, and the one
-          artefact that only exists because they logged for four years. */}
+          artifact that only exists because they logged for four years. */}
       <FourYearExport
         accent={C.violet} user={user} snapshot={exportSnapshot} audience="student"
         gradeLabel={gradeLabel} pathwayLabel={pathwayLabel}
@@ -587,8 +587,8 @@ export default function ActivitiesResumePanel({
             render: () => (
         <>
           <SectionIntro icon={Layers} color={accent} color2={C.orange} m={isMobile}
-            title="Activities & Honors"
-            blurb="Log every extracurricular, job, leadership role and honor with real hours and impact. Each entry is scored on how much of it actually made it into the record — because three words is what a reader gets, no matter how much the activity meant."
+            title="Activities & honors"
+            blurb="Log every activity, job, leadership role and honor with real hours and impact. Each entry is scored on how much of it actually made it into the record — because three words is what a reader gets, no matter how much the activity meant."
             stats={[
               { value: `${analysis.slotsUsed}/10`, label: 'activity slots', color: accent },
               { value: `${analysis.awardCount}/${CA_LIMITS.maxHonors}`, label: 'honors slots', color: C.goldL },
@@ -818,7 +818,7 @@ export default function ActivitiesResumePanel({
             render: () => (
         <>
           <SectionIntro icon={GraduationCap} color={C.green} color2={C.blue} m={isMobile}
-            title="Academic History"
+            title="Academic history"
             blurb="The number admissions offices weight most heavily — and here it actually does something. Every term you log re-decides the college matches below it and goes straight to Medabrain, so it reasons about your list from your real transcript instead of a guess."
             stats={academics.hasData ? [
               { value: academics.latestGpa, label: academics.latestWeighted ? 'weighted' : 'unweighted', color: C.greenL },

@@ -69,7 +69,7 @@ const TEXT_TOKENS = [
   ['t4', 2.9,  'faintest metadata'],
 ];
 
-// Accents used as coloured TEXT — chip labels, stat numbers, section kickers.
+// Accents used as colored TEXT — chip labels, stat numbers, section kickers.
 // The *L variant is the app's designated "readable version of this hue".
 const ACCENT_TEXT = ['blueL', 'greenL', 'amberL', 'roseL', 'violetL', 'cyanL', 'tealL',
   'indigoL', 'pinkL', 'limeL', 'skyL', 'emeraldL', 'redL', 'goldL', 'orangeL'];

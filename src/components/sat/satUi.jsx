@@ -84,7 +84,7 @@ const NAV_GROUPS = [
 ];
 
 /**
- * The SAT sub-navigation: an underline tab rail with labelled groups.
+ * The SAT sub-navigation: an underline tab rail with labeled groups.
  * Consumes the same `items` array the old pill SubNav did (id, label, ic,
  * badge) and keeps its routing contract — `hrefFor` makes every tab a real
  * link so ⌘-click and "copy link address" behave like navigation.

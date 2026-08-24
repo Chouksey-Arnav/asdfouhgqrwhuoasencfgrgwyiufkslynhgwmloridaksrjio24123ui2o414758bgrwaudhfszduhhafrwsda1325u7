@@ -10,7 +10,7 @@ import { SERVICE_PROGRAMS, COMMITMENT_TIMING, PATHWAY_FINANCE } from '../../data
 // ── Why this is on the parent dashboard at all ──────────────────────────────
 // Every other screen in this app answers "is my child showing up, and is it
 // working". This one answers a question no school, no college website and no
-// counsellor ever puts in front of a parent, and which parents care about more
+// counselor ever puts in front of a parent, and which parents care about more
 // intensely than anything else here: what does each of these careers actually
 // cost, and how many years before they are earning.
 //

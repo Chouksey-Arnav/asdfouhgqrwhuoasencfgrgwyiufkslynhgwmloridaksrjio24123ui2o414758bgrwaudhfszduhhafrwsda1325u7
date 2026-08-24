@@ -71,7 +71,7 @@ export const SUBVIEWS = {
       recommenders: 'applying', interview: 'applying', calc: 'applying',
       // Not a retired tab — a section that needs its own shareable URL. See the
       // note beside 'combined' in PORTFOLIO_GROUP_FOR_VIEW in src/App.jsx:
-      // /portfolio/combined is the link a counsellor or a parent sends, and it
+      // /portfolio/combined is the link a counselor or a parent sends, and it
       // resolves to Applying with the combined-degree section focused.
       combined: 'applying',
       tracked: 'opportunities',

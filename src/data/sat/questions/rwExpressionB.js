@@ -24,7 +24,7 @@ export const RW_EXPRESSION_B = [
       'The commercial fishery, once employing 40,000 people, collapsed entirely.',
     ],
     stimulus: 'While researching a topic, a student has taken the following notes.',
-    q: 'The student wants to emphasise the human cost of the lake\'s decline. Which choice most effectively uses relevant information from the notes to accomplish this goal?',
+    q: 'The student wants to emphasize the human cost of the lake\'s decline. Which choice most effectively uses relevant information from the notes to accomplish this goal?',
     ch: [
       'The Aral Sea, once the world\'s fourth-largest lake, had shrunk to roughly a tenth of its area by 2007.',
       'As the lake shrank and salinity quadrupled, a fishery that had employed 40,000 people collapsed.',
@@ -105,7 +105,7 @@ export const RW_EXPRESSION_B = [
       'Monet, Degas and van Gogh all collected them.',
     ],
     stimulus: 'While researching a topic, a student has taken the following notes.',
-    q: 'The student wants to emphasise that the print was an inexpensive, everyday object in Japan. Which choice most effectively uses relevant information from the notes to accomplish this goal?',
+    q: 'The student wants to emphasize that the print was an inexpensive, everyday object in Japan. Which choice most effectively uses relevant information from the notes to accomplish this goal?',
     ch: [
       'Hokusai\'s print reached Europe as packing material and was collected by Monet, Degas and van Gogh.',
       'Printed in the thousands from woodblocks, the image sold for about the price of a bowl of noodles.',
@@ -577,7 +577,7 @@ export const RW_EXPRESSION_B = [
     q: 'Which choice completes the text with the most logical transition?',
     ch: ['Nevertheless,', 'In short,', 'Alternatively,', 'Meanwhile,'],
     ans: 1,
-    exp: 'The final sentence compresses what the previous two established. A summarising transition is what fits.',
+    exp: 'The final sentence compresses what the previous two established. A summarizing transition is what fits.',
     distractorExp: [
       'Nothing in the last sentence opposes what came before.',
       'Correct. It sums up the account just given.',

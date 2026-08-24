@@ -8,7 +8,7 @@ import { generateMaxOutPlan } from '../../../lib/planGenerator';
 
 // The four steps are named after what is actually happening, and each carries
 // its own mark so the list reads as work being done rather than as four rows of
-// grey text with a spinner on one of them.
+// gray text with a spinner on one of them.
 const LINES = [
   { icon: 'quote', text: 'Reading everything you told us' },
   { icon: 'dna', text: 'Balancing science depth with real-world steps' },

@@ -14,7 +14,7 @@ const statusColor = (status) => ({ Ongoing: C.amber, Completed: C.blue, Publishe
 export const researchTotalHours = (entries = []) => entries.reduce((s, e) => s + (e.hours || 0), 0);
 
 // Research experience — formerly the standalone Portfolio → Research tab, now a section of
-// Activities & Résumé. Research stays its own tracked resource rather than a row in the generic
+// Activities & résumé. Research stays its own tracked resource rather than a row in the generic
 // activities list (a mentored project has a PI, an institution and a publication link that the
 // activities form has nowhere to put), but it now sits beside that list and counts toward the
 // research pillar the activities section grades.
@@ -56,7 +56,7 @@ export default function ResearchSection({ accent = C.cyan, entries = [], setEntr
   return (
     <div style={CC({ gap: 16 })}>
       <SectionIntro icon={FlaskConical} color={accent} color2={C.teal} m={isMobile}
-        title="Research Experience"
+        title="Research experience"
         blurb="Track lab work, independent projects, and mentored research — link a publication or poster if you have one; it's one of the strongest signals an application can show, and the fastest way to stop looking like every other applicant with the same activities list."
         stats={entries.length > 0 ? [{ value: entries.length, label: entries.length === 1 ? 'project' : 'projects', color: accent }, { value: `${totalHours}h`, label: 'logged', color: C.tealL }] : []} />
 

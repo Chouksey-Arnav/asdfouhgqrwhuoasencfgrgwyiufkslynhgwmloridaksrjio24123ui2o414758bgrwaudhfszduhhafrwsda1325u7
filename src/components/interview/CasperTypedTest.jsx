@@ -7,7 +7,7 @@
 //    the section, not five minutes per question. That single design choice is
 //    what makes CASPer a triage test: you have to decide in the first fifteen
 //    seconds which question gets the long answer and which gets one line.
-//    Practising the questions untimed teaches the wrong skill entirely.
+//    Practicing the questions untimed teaches the wrong skill entirely.
 //  • NO GOING BACK. Once a section closes it is closed.
 //  • A QUARTILE, NOT A SCORE. Real results are reported to programs as a
 //    quartile against the applicant pool and the applicant never sees a raw

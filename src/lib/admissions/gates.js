@@ -1,10 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // LAYER 1 — hard gates. The things that multiply to zero.
 //
-// ── The modelling mistake this replaces ─────────────────────────────────────
+// ── The modeling mistake this replaces ─────────────────────────────────────
 // The old calculator gave every input a weight and added them up. Under that
 // design a requirement is just a heavy feature: an international student who is
-// categorically ineligible for UMKC's six-year programme lost some points and
+// categorically ineligible for UMKC's six-year program lost some points and
 // still got a percentage, and a student 170 hours short of Drexel's documented
 // service requirement saw a number rather than the sentence they needed to
 // read. A weighted model cannot express "no", only "less" — and admissions is
@@ -25,7 +25,7 @@
 //
 // ── Hard vs preference ──────────────────────────────────────────────────────
 // `severity: 'hard'` is a published bar and zeroes the estimate. `preference`
-// is for the honest middle case — a programme *designed for* a group without
+// is for the honest middle case — a program *designed for* a group without
 // stating a bar (CUNY and New York residency; ASU's direct-admission routes).
 // It applies a stated multiplier and is shown to the student with the
 // distinction intact, because "you are ineligible" and "this is harder for you
@@ -66,7 +66,7 @@ function orResults(results) {
 /**
  * Evaluates one requirement expression against the applicant.
  *
- * Leaf shapes are deliberately tiny and declarative so that a programme profile
+ * Leaf shapes are deliberately tiny and declarative so that a program profile
  * stays readable as data — see src/data/admissions/programProfiles.js. Adding a
  * new leaf kind means adding a case here and a line to GATE_KINDS there.
  */
@@ -191,7 +191,7 @@ function gradeAtLeast(got, min) {
 }
 
 /**
- * Runs every gate on a programme profile.
+ * Runs every gate on a program profile.
  *
  * @returns {{
  *   eligible: boolean,          // false only when a HARD gate is definitively failed

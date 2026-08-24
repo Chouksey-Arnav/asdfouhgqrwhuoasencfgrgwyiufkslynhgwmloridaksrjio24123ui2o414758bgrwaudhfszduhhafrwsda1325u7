@@ -149,7 +149,7 @@ eq('a passed deadline reads as overdue, not "behind"', overdue.state, 'overdue')
 assert('…and the headline suggests resetting rather than scolding', /reset/i.test(paceHeadline(overdue)));
 assert('…and the prompt tells the coach the same', /resetting/i.test(describePace(overdue, 'Physician')));
 
-// The number that changes behaviour: what's left, over the weeks that remain.
+// The number that changes behavior: what's left, over the weeks that remain.
 const behind = computePaceStatus({ goal: goalOf(6, 8), totalLessons: 40, doneLessons: 15, now: NOW });
 eq('the catch-up rate is remaining ÷ weeks left, rounded up', behind.neededPerWeek, 13); // 25 left / 2 weeks
 assert('a goal past its deadline never demands a negative or infinite rate',
@@ -207,11 +207,11 @@ const mk = (rating, n, category = 'Life Sciences') =>
   Array.from({ length: n }, (_, i) => ({ rating, lessonTitle: `L${i}`, category, createdAt: 1000 + i }));
 
 const stretch = summarizeLessonFeedback(mk('too_easy', 6));
-eq('a consistent "too easy" pattern is recognised', stretch.level, 'stretch');
+eq('a consistent "too easy" pattern is recognized', stretch.level, 'stretch');
 const support = summarizeLessonFeedback(mk('too_hard', 6));
-eq('a consistent "too hard" pattern is recognised', support.level, 'support');
+eq('a consistent "too hard" pattern is recognized', support.level, 'support');
 const calibrated = summarizeLessonFeedback(mk('just_right', 6));
-eq('a well-matched student is recognised', calibrated.level, 'calibrated');
+eq('a well-matched student is recognized', calibrated.level, 'calibrated');
 // The summary describes what the student REPORTED, never what they are. "slow down and build
 // up from basics" is an instruction to the model; "they are slow" would be a verdict on a
 // child, which is the thing this data must never become.
@@ -352,7 +352,7 @@ assert('opening a lesson restores its saved position', /const prog=await DB\.get
 assert('…lands on the right step', /const step=resumeStepFor\(prog,\{hasArticle,hasVideo\}\)/.test(app));
 assert('…and says why', /Picking up where you left off/.test(app));
 
-// resumeStepFor's actual behaviour, replicated from source so the rule itself is asserted.
+// resumeStepFor's actual behavior, replicated from source so the rule itself is asserted.
 const resumeSrc = app.slice(app.indexOf('function resumeStepFor('), app.indexOf('async function openLesson('));
 // eslint-disable-next-line no-new-func
 const resumeStepFor = new Function(`${resumeSrc}; return resumeStepFor;`)();
@@ -363,7 +363,7 @@ eq('THE BUG: a finished article + unwatched video resumes at the VIDEO, not the 
   resumeStepFor({ articleRead: true, videoWatched: false }, { hasArticle: true, hasVideo: true }), 'video');
 eq('both finished resumes at the quiz',
   resumeStepFor({ articleRead: true, videoWatched: true }, { hasArticle: true, hasVideo: true }), 'quiz');
-eq('a saved step is honoured when it still exists',
+eq('a saved step is honored when it still exists',
   resumeStepFor({ step: 'video', articleRead: true }, { hasArticle: true, hasVideo: true }), 'video');
 eq('a saved step that no longer exists falls back safely',
   resumeStepFor({ step: 'video', articleRead: true }, { hasArticle: true, hasVideo: false }), 'quiz');

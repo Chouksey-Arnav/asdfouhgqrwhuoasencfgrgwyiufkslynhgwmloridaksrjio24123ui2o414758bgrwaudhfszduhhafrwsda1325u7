@@ -314,7 +314,7 @@ export default function SatPracticePanel({
     <div style={CC({ gap: 20 })}>
       <SatPageHeader
         accent={accent}
-        eyebrow="SAT · Practice" title="Targeted practice"
+        eyebrow="SAT · practice" title="Targeted practice"
         sub="Modes that aim your time at the skills costing you points."
         meta={[
           { value: dueReviewIds.length, label: 'due retries' },
@@ -649,7 +649,7 @@ export default function SatPracticePanel({
 
       {weakest.length === 0 && (
         <EmptyState
-          icon={Layers} title="No question bank loaded"
+          kind="error" icon={Layers} title="No question bank loaded"
           body="The SAT question bank appears to be empty. This is a build problem, not something you did."
           accent={accent}
         />

@@ -81,37 +81,37 @@ export const TERMS_SECTIONS = [
     id: 'what-the-service-is',
     title: '4. What the Service is — and what it is not',
     body: [
-      'The Service is a study and planning tool. It offers practice questions and adaptive practice tests modelled on publicly described exam formats, lessons and quizzes about health-care and science career pathways, spaced-repetition flashcards, an AI study coach, and a set of trackers for the college application process — activities, essays, deadlines, colleges, scholarships, test scores, and similar records.',
+      'The Service is a study and planning tool. It offers practice questions and adaptive practice tests modeled on publicly described exam formats, lessons and quizzes about health-care and science career pathways, spaced-repetition flashcards, an AI study coach, and a set of trackers for the college application process — activities, essays, deadlines, colleges, scholarships, test scores, and similar records.',
       {
         heading: 'It is not educational, medical, legal, or financial advice',
       },
       {
         emphasis:
-          'All content on the Service — lessons, quizzes, career-pathway material, clinical and ethical scenarios, and anything the AI coach produces — is provided for general educational and career-exploration purposes only. It is not medical advice, medical education, clinical training, professional licensure preparation, legal advice, financial advice, or individualised counselling of any kind. Nothing on the Service creates a doctor-patient, attorney-client, advisor-client, or counsellor-student relationship. Do not make any clinical, medical, health, legal, or financial decision on the basis of anything you read here. Consult a qualified professional.',
+          'All content on the Service — lessons, quizzes, career-pathway material, clinical and ethical scenarios, and anything the AI coach produces — is provided for general educational and career-exploration purposes only. It is not medical advice, medical education, clinical training, professional licensure preparation, legal advice, financial advice, or individualized counseling of any kind. Nothing on the Service creates a doctor-patient, attorney-client, advisor-client, or counselor-student relationship. Do not make any clinical, medical, health, legal, or financial decision on the basis of anything you read here. Consult a qualified professional.',
       },
       {
-        heading: 'It is not affiliated with any testing organisation or school',
+        heading: 'It is not affiliated with any testing organization or school',
       },
-      `${LEGAL.serviceName} is an independent product. We are not affiliated with, endorsed by, sponsored by, or approved by the College Board, ACT, Inc., the Common Application, Khan Academy, Desmos Studio, any university or college, any hospital or health system, or any accrediting or licensing body. Despite its name, ${LEGAL.serviceName} is not a medical school, is not a pathway to a medical licence, and does not confer academic credit, certification, or any credential.`,
-      'Practice questions on the Service are written by us or generated for the Service. We do not reproduce copyrighted exam questions. Where we link to official practice material, that material is provided by the testing organisation on its own terms, and those terms — not ours — govern your use of it.',
+      `${LEGAL.serviceName} is an independent product. We are not affiliated with, endorsed by, sponsored by, or approved by the College Board, ACT, Inc., the Common Application, Khan Academy, Desmos Studio, any university or college, any hospital or health system, or any accrediting or licensing body. Despite its name, ${LEGAL.serviceName} is not a medical school, is not a pathway to a medical license, and does not confer academic credit, certification, or any credential.`,
+      'Practice questions on the Service are written by us or generated for the Service. We do not reproduce copyrighted exam questions. Where we link to official practice material, that material is provided by the testing organization on its own terms, and those terms — not ours — govern your use of it.',
       {
         heading: 'Score estimates are estimates',
       },
       {
         emphasis:
-          'Any score, score range, projection, percentile, readiness indicator, or admissions-likelihood figure the Service displays is an estimate produced by our own models. It is not an official score, it is not produced or validated by any testing organisation, and it is not a prediction or guarantee of your actual result. Real exam scores vary with test form, scaling, test-day conditions, and many other factors. Treat every number the Service shows you as a rough range for study planning, and nothing more.',
+          'Any score, score range, projection, percentile, readiness indicator, or admissions-likelihood figure the Service displays is an estimate produced by our own models. It is not an official score, it is not produced or validated by any testing organization, and it is not a prediction or guarantee of your actual result. Real exam scores vary with test form, scaling, test-day conditions, and many other factors. Treat every number the Service shows you as a rough range for study planning, and nothing more.',
       },
       {
         heading: 'We do not guarantee outcomes',
       },
       {
         emphasis:
-          'We do not guarantee any score improvement, admission or acceptance to any school or programme, scholarship, financial aid award, interview, placement, or any other outcome. No feature of the Service, and no statement by the AI coach, should be read as such a guarantee. Your results depend on your own work and on decisions made by third parties entirely outside our control.',
+          'We do not guarantee any score improvement, admission or acceptance to any school or program, scholarship, financial aid award, interview, placement, or any other outcome. No feature of the Service, and no statement by the AI coach, should be read as such a guarantee. Your results depend on your own work and on decisions made by third parties entirely outside our control.',
       },
       {
         heading: 'Deadlines and requirements are yours to verify',
       },
-      'The Service stores deadlines, requirements, and checklists that you or we enter. These can be wrong, incomplete, or out of date — application requirements change, and colleges change them without telling us. You are solely responsible for confirming every deadline, requirement, fee, form, and policy directly with the college, scholarship provider, testing organisation, or school counsellor concerned. We are not responsible for a missed deadline or an unmet requirement.',
+      'The Service stores deadlines, requirements, and checklists that you or we enter. These can be wrong, incomplete, or out of date — application requirements change, and colleges change them without telling us. You are solely responsible for confirming every deadline, requirement, fee, form, and policy directly with the college, scholarship provider, testing organization, or school counselor concerned. We are not responsible for a missed deadline or an unmet requirement.',
     ],
   },
 
@@ -123,7 +123,7 @@ export const TERMS_SECTIONS = [
       'Parts of the Service — including the coach ("Medabrain"), essay feedback, résumé and activity feedback, study-plan generation, practice-question generation, and the interview simulator — are powered by large language models operated by a third-party provider (currently Groq). These features are automated. There is no human reviewing their output before you see it.',
       {
         emphasis:
-          'AI output can be wrong, incomplete, outdated, biased, or entirely fabricated, and it can state a wrong answer confidently. It is not reviewed by a teacher, counsellor, admissions officer, physician, or other professional. Verify anything that matters — especially deadlines, requirements, scores, factual claims, and anything you plan to submit to a college — with an authoritative source before you rely on it.',
+          'AI output can be wrong, incomplete, outdated, biased, or entirely fabricated, and it can state a wrong answer confidently. It is not reviewed by a teacher, counselor, admissions officer, physician, or other professional. Verify anything that matters — especially deadlines, requirements, scores, factual claims, and anything you plan to submit to a college — with an authoritative source before you rely on it.',
       },
       'When you use these features, the text you enter and the relevant part of your profile are sent to our AI provider to generate a response. What that means for your data is described in the Privacy Policy. Do not enter information into the coach that you would not want processed this way — in particular, do not enter health information, government identifiers, financial account numbers, or another person\'s personal information.',
       {
@@ -137,7 +137,7 @@ export const TERMS_SECTIONS = [
       {
         heading: 'Essay feedback and academic integrity',
       },
-      'The essay tools are for feedback and revision on work you wrote. You are responsible for making sure your use of them complies with the academic-integrity and authorship rules of your school and of every college, scholarship, and programme you apply to. Many application platforms require that submitted work be substantially your own. We do not warrant that any AI-assisted text is acceptable under any particular institution\'s rules, and we are not responsible for the consequences if it is not.',
+      'The essay tools are for feedback and revision on work you wrote. You are responsible for making sure your use of them complies with the academic-integrity and authorship rules of your school and of every college, scholarship, and program you apply to. Many application platforms require that submitted work be substantially your own. We do not warrant that any AI-assisted text is acceptable under any particular institution\'s rules, and we are not responsible for the consequences if it is not.',
       'Content generated by AI features is provided to you as-is for your own use. We make no claim of ownership over it, and we cannot promise it is original or that it does not resemble output shown to another user.',
     ],
   },
@@ -152,10 +152,10 @@ export const TERMS_SECTIONS = [
         list: [
           'Use the Service for any unlawful purpose, or in violation of any applicable law or regulation.',
           'Upload, generate, or transmit content that is unlawful, harassing, defamatory, hateful, sexually explicit, or that exploits or endangers a minor.',
-          'Impersonate any person, or misrepresent your affiliation with any person or organisation.',
+          'Impersonate any person, or misrepresent your affiliation with any person or organization.',
           'Enter another person\'s personal information into the Service without that person\'s permission — including, for recommender and verifier records, the name and email of a teacher, mentor, or supervisor who has not agreed to be listed.',
-          'Attempt to gain unauthorised access to the Service, other users\' accounts, or any system or network connected to the Service.',
-          'Probe, scan, or test the vulnerability of the Service, or breach or circumvent any security or authentication measure, except under a written authorisation from us.',
+          'Attempt to gain unauthorized access to the Service, other users\' accounts, or any system or network connected to the Service.',
+          'Probe, scan, or test the vulnerability of the Service, or breach or circumvent any security or authentication measure, except under a written authorization from us.',
           'Use any robot, scraper, or automated means to access, extract, or index the Service or its content, or to bulk-download practice questions, lessons, or the resource library.',
           'Reverse engineer, decompile, or attempt to derive the source of any part of the Service not distributed to you in source form, except where that restriction is prohibited by law.',
           'Use the Service, or its AI features, to build, train, or improve a competing product or a machine-learning model.',
@@ -178,7 +178,7 @@ export const TERMS_SECTIONS = [
         emphasis:
           'Your Content is yours. We do not claim ownership of it. We do not sell it. We do not use it for advertising, and we do not use it to train AI models.',
       },
-      'You grant us a limited, worldwide, non-exclusive, royalty-free licence to host, store, copy, transmit, display, and process Your Content strictly for the purpose of operating and providing the Service to you — for example, saving an essay draft to your account so it is there on your next device, or sending the text of an essay to our AI provider because you asked for feedback on it. This licence exists only so we can run the features you are using. It ends when you delete the content or close your account, except for backup copies that age out on our ordinary backup cycle.',
+      'You grant us a limited, worldwide, non-exclusive, royalty-free license to host, store, copy, transmit, display, and process Your Content strictly for the purpose of operating and providing the Service to you — for example, saving an essay draft to your account so it is there on your next device, or sending the text of an essay to our AI provider because you asked for feedback on it. This license exists only so we can run the features you are using. It ends when you delete the content or close your account, except for backup copies that age out on our ordinary backup cycle.',
       'You represent that you have the right to submit Your Content, and that it does not infringe anyone\'s rights or violate any law.',
       'You are responsible for keeping your own copies of anything that matters to you. The Service is not a backup service. Export features are provided as a convenience, and we do not guarantee that any particular content will remain retrievable.',
     ],
@@ -187,12 +187,12 @@ export const TERMS_SECTIONS = [
   // ──────────────────────────────────────────────────────────────────────────
   {
     id: 'our-content',
-    title: '8. Our content and licence to you',
+    title: '8. Our content and license to you',
     body: [
       'The Service, and everything in it that is not Your Content or a third party\'s — the software, design, text, lessons, quiz and practice questions, curated resource library, scoring and diagnostic models, and the ' +
         LEGAL.serviceName +
         ' name and logo — is owned by us or our licensors and is protected by copyright, trademark, and other laws.',
-      'Subject to these Terms, we grant you a personal, limited, non-exclusive, non-transferable, revocable licence to access and use the Service and its content for your own, non-commercial study and application-planning purposes. Every right not expressly granted is reserved.',
+      'Subject to these Terms, we grant you a personal, limited, non-exclusive, non-transferable, revocable license to access and use the Service and its content for your own, non-commercial study and application-planning purposes. Every right not expressly granted is reserved.',
       'You may print or download material from the Service for your own study. You may not republish it, share it publicly, sell it, or incorporate it into any other product or service.',
     ],
   },
@@ -202,7 +202,7 @@ export const TERMS_SECTIONS = [
     id: 'third-parties',
     title: '9. Third-party services, links, and embedded content',
     body: [
-      'The Service embeds and links to material operated by third parties — YouTube videos, the Desmos graphing calculator, official testing-organisation pages, college and scholarship websites, and the resources in our library.',
+      'The Service embeds and links to material operated by third parties — YouTube videos, the Desmos graphing calculator, official testing-organization pages, college and scholarship websites, and the resources in our library.',
       'We do not control that material and are not responsible for it. Its availability, accuracy, and content are the third party\'s, and your use of it is governed by that third party\'s own terms and privacy policy, not ours. A link is not an endorsement. Links can break and third-party content can change or disappear without notice to us.',
       'Some third-party components require their provider\'s continued permission to work. If a provider withdraws or changes access, the affected feature may stop working, and that is not a breach of these Terms.',
     ],
@@ -216,9 +216,9 @@ export const TERMS_SECTIONS = [
       'The Service is supported in part by advertising served through Google AdSense.',
       {
         emphasis:
-          'Because our audience includes minors, we tag every ad request from this Service for child-directed treatment. That turns off personalised advertising, interest-based advertising, and remarketing for all visitors, whatever their age. We do not sell or share your personal information for cross-context behavioural advertising, and we do not use anything you put into the Service — your essays, scores, activities, GPA, colleges, or coach conversations — to target ads.',
+          'Because our audience includes minors, we tag every ad request from this Service for child-directed treatment. That turns off personalized advertising, interest-based advertising, and remarketing for all visitors, whatever their age. We do not sell or share your personal information for cross-context behavioral advertising, and we do not use anything you put into the Service — your essays, scores, activities, GPA, colleges, or coach conversations — to target ads.',
       },
-      'Ads are labelled and are not endorsements. We do not control which specific advertisers appear, and an advertiser\'s presence on the Service does not mean we vouch for it. Any dealing you have with an advertiser is between you and that advertiser.',
+      'Ads are labeled and are not endorsements. We do not control which specific advertisers appear, and an advertiser\'s presence on the Service does not mean we vouch for it. Any dealing you have with an advertiser is between you and that advertiser.',
     ],
   },
 
@@ -250,7 +250,7 @@ export const TERMS_SECTIONS = [
     body: [
       'You may stop using the Service and close your account at any time.',
       'We may suspend or close your account, or restrict your access, if we reasonably believe you have violated these Terms, if your use creates risk or legal exposure for us or another user, if your account has been inactive for an extended period, or if we discontinue the Service. Where the reason and the circumstances allow it, we will tell you why and give you an opportunity to retrieve your data.',
-      'Sections 7 (as to the licence for backups), 8, 14, 15, 16, 17, 18, and 23 survive the end of this agreement.',
+      'Sections 7 (as to the license for backups), 8, 14, 15, 16, 17, 18, and 23 survive the end of this agreement.',
     ],
   },
 
@@ -296,7 +296,7 @@ export const TERMS_SECTIONS = [
     body: [
       `To the extent permitted by law, you agree to indemnify and hold harmless ${LEGAL.operatorName} from any claim, demand, loss, or expense (including reasonable legal fees) brought by a third party and arising out of Your Content, your use of the Service, your violation of these Terms, or your violation of any law or of any third party's rights.`,
       `If the student is under ${LEGAL.minorAge}, this obligation is the agreeing parent's or legal guardian's, not the student's.`,
-      'We will notify you of any such claim and may, at our option, take over its defence at our own expense; you agree to cooperate reasonably in either case.',
+      'We will notify you of any such claim and may, at our option, take over its defense at our own expense; you agree to cooperate reasonably in either case.',
     ],
   },
 
@@ -338,7 +338,7 @@ export const TERMS_SECTIONS = [
       {
         heading: 'Minors',
       },
-      `We recognise that a person under ${LEGAL.minorAge} may not be bound by an arbitration agreement. This section binds the parent or legal guardian who agreed to these Terms, and binds a student only to the extent the law permits. If a court decides this section cannot be enforced as to a particular person or claim, it will not be enforced as to that person or claim, and the rest of this section continues to apply to everyone else.`,
+      `We recognize that a person under ${LEGAL.minorAge} may not be bound by an arbitration agreement. This section binds the parent or legal guardian who agreed to these Terms, and binds a student only to the extent the law permits. If a court decides this section cannot be enforced as to a particular person or claim, it will not be enforced as to that person or claim, and the rest of this section continues to apply to everyone else.`,
       'If the class-action waiver above is found unenforceable as to a particular claim, that claim — and only that claim — will be resolved in court under Section 18, and the remainder of this section will still apply.',
     ],
   },
@@ -360,8 +360,8 @@ export const TERMS_SECTIONS = [
     title: '19. Use by schools, districts, and educators',
     body: [
       `The Service is designed and offered as a direct-to-student and direct-to-family product. It is not currently offered as a school-official service under the Family Educational Rights and Privacy Act ("FERPA"), and it provides no administrative dashboard, roster import, or teacher-facing view of another person's records.`,
-      'A student\'s account belongs to that student and their family. A teacher, counsellor, tutor, or administrator may not create accounts on students\' behalf, direct students to enter data on the school\'s behalf, require use of the Service as part of coursework in a way that makes the data an education record, or ask students for their sign-in credentials.',
-      `If your school or district wishes to adopt the Service in a way that would involve education records, student directory information, or FERPA's school-official exception, contact us at ${LEGAL.contactEmail} first. That use requires a separate written data-privacy agreement, and without one it is not authorised under these Terms.`,
+      'A student\'s account belongs to that student and their family. A teacher, counselor, tutor, or administrator may not create accounts on students\' behalf, direct students to enter data on the school\'s behalf, require use of the Service as part of coursework in a way that makes the data an education record, or ask students for their sign-in credentials.',
+      `If your school or district wishes to adopt the Service in a way that would involve education records, student directory information, or FERPA's school-official exception, contact us at ${LEGAL.contactEmail} first. That use requires a separate written data-privacy agreement, and without one it is not authorized under these Terms.`,
       'Educators are of course welcome to recommend the Service to students and families, who can then sign up on their own.',
     ],
   },
@@ -371,7 +371,7 @@ export const TERMS_SECTIONS = [
     id: 'copyright',
     title: '20. Copyright complaints',
     body: [
-      `If you believe material on the Service infringes your copyright, email ${LEGAL.contactEmail} with: your contact details; identification of the copyrighted work; identification of the material you say is infringing and where it is on the Service; a statement that you believe in good faith that the use is not authorised by the copyright owner, its agent, or the law; a statement that the information in your notice is accurate and, under penalty of perjury, that you are authorised to act for the owner; and your physical or electronic signature.`,
+      `If you believe material on the Service infringes your copyright, email ${LEGAL.contactEmail} with: your contact details; identification of the copyrighted work; identification of the material you say is infringing and where it is on the Service; a statement that you believe in good faith that the use is not authorized by the copyright owner, its agent, or the law; a statement that the information in your notice is accurate and, under penalty of perjury, that you are authorized to act for the owner; and your physical or electronic signature.`,
       'We will respond to valid notices, remove or disable access to infringing material, and terminate the accounts of repeat infringers where appropriate. If you believe material was removed in error, you may send a counter-notice to the same address.',
     ],
   },

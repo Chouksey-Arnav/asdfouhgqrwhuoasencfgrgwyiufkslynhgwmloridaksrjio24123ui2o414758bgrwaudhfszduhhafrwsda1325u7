@@ -6,14 +6,14 @@
 // custom properties in index.css).
 //
 // ── The naming rule ─────────────────────────────────────────────────────────
-// Semantic tokens are named for what they MEAN, never for what colour they
+// Semantic tokens are named for what they MEAN, never for what color they
 // currently are. `accentFg`, not `blue400`. The failure mode this prevents is
-// specific and happens to every design system that skips it: the brand colour
+// specific and happens to every design system that skips it: the brand color
 // changes, and you are left with a token called `blue` that holds green, so
 // every reader of the codebase is now permanently misled about what a line of
 // code does. The one deliberate exception is `hue` at the bottom of each theme,
-// where the colour genuinely IS the meaning — a subject category's identity is
-// its hue, the way a data series' identity is its colour — and that map is
+// where the color genuinely IS the meaning — a subject category's identity is
+// its hue, the way a data series' identity is its color — and that map is
 // scoped and documented as such so it can't quietly become a general palette.
 //
 // ── The Radix 12-step contract ──────────────────────────────────────────────
@@ -65,7 +65,7 @@ const RAMPS = { blue: BLUE, green: GREEN, amber: AMBER, rose: ROSE, violet: VIOL
  * designates as "the readable version of this hue" and is what carries AA;
  * `subtleBg` is the Radix step-3 tinted chip background for the same hue.
  * A missing step throws rather than falling back — a silently-absent token is
- * how a theme ends up rendering the previous theme's colour.
+ * how a theme ends up rendering the previous theme's color.
  */
 const expandHues = (steps, subtleBg) => {
   const out = {};

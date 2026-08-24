@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+  "version": "0.2",
+  "language": "en-US",
+  "dictionaryDefinitions": [
+    { "name": "medschoolprep", "path": "./docs/dictionary.txt", "addWords": true }
+  ],
+  "dictionaries": ["medschoolprep", "en_us", "softwareTerms", "typescript", "node", "html", "css"],
+  "ignoreRegExpList": [
+    "/https?:\\/\\/[^\\s)]+/",
+    "/[\\w.-]+@[\\w.-]+\\.\\w+/",
+    "/\\b[A-Za-z]+\\.(cloud|com|org|net|io|app|gov|edu)\\b/"
+  ],
+  "ignorePaths": ["node_modules/**", "dist/**", "package-lock.json"]
+}

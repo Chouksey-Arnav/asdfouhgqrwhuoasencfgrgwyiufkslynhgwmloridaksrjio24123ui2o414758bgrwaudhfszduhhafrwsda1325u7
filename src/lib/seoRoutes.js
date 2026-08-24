@@ -76,7 +76,7 @@ export const FAQS = [
   },
   {
     q: 'Is it really free?',
-    a: 'Yes — no paywall, no premium tier, nothing locked behind a subscription. Every pathway, lesson, flashcard deck, portfolio tool, and AI coach response is free to use, for good. Ads are what pay for it, and because our users are students, they are never personalised: we do not build advertising profiles and nothing you put into the app is used to target them.',
+    a: 'Yes — no paywall, no premium tier, nothing locked behind a subscription. Every pathway, lesson, flashcard deck, portfolio tool, and AI coach response is free to use, for good. Ads are what pay for it, and because our users are students, they are never personalized: we do not build advertising profiles and nothing you put into the app is used to target them.',
   },
   {
     q: 'What do you do with my data?',
@@ -146,7 +146,7 @@ export const PUBLIC_ROUTES = [
             'Physician (MD) — direct patient care.',
             'Nursing (RN) — hands-on, and a faster route in.',
             'Physician Assistant (PA) — broad practice, more flexibility.',
-            'Pharmacy (Rx) — medication at the centre of care.',
+            'Pharmacy (Rx) — medication at the center of care.',
             'Dentistry (DDS) — your own practice, sooner.',
             'Biomedical & Clinical Research (PhD) — push the science forward.',
             'Physical & Occupational Therapy (PT/OT) — rebuild movement.',
@@ -179,9 +179,9 @@ export const PUBLIC_ROUTES = [
           ],
         },
         {
-          h2: 'Free, and free of personalised advertising',
+          h2: 'Free, and free of personalized advertising',
           paras: [
-            'There is no paywall, no premium tier and nothing locked behind a subscription. Advertising is what pays for the service — and because the people using it are high-school students, those ads are never personalised. The site is tagged for child-directed treatment before a single ad request is built, which disables interest-based advertising and remarketing for every visitor regardless of age.',
+            'There is no paywall, no premium tier and nothing locked behind a subscription. Advertising is what pays for the service — and because the people using it are high-school students, those ads are never personalized. The site is tagged for child-directed treatment before a single ad request is built, which disables interest-based advertising and remarketing for every visitor regardless of age.',
             'Your essays, scores, activities and coach conversations are used to run the features you are using, and for nothing else. They are never sold, never shared for advertising, and never used to train AI models. You can export or delete all of it at any time.',
           ],
         },
@@ -245,7 +245,7 @@ export const PUBLIC_ROUTES = [
         {
           h2: 'What we do with what you put in',
           paras: [
-            'Your essays, scores, activities and coach conversations are used to run the features you are using and nothing else. They are never sold, never shared for advertising, and never used to train AI models. Ads on the site are never personalised — the site is tagged for child-directed treatment before the first ad request is built, which turns off interest-based advertising and remarketing for every visitor regardless of age.',
+            'Your essays, scores, activities and coach conversations are used to run the features you are using and nothing else. They are never sold, never shared for advertising, and never used to train AI models. Ads on the site are never personalized — the site is tagged for child-directed treatment before the first ad request is built, which turns off interest-based advertising and remarketing for every visitor regardless of age.',
             'You can export everything you have put in, or delete the account and all of it, at any time and without asking us. The Privacy Policy lists every third party that touches your data, by name.',
           ],
         },
@@ -364,7 +364,7 @@ export const PUBLIC_ROUTES = [
         {
           h2: 'What it costs',
           paras: [
-            'Nothing. MedSchoolPrep is free for students and free for parents, with no paywall, no premium tier and no parent subscription. It is funded by advertising, and because the audience is high-school students those ads are never personalised — the site is tagged for child-directed treatment before the first ad request is built, which disables interest-based advertising and remarketing for every visitor regardless of age.',
+            'Nothing. MedSchoolPrep is free for students and free for parents, with no paywall, no premium tier and no parent subscription. It is funded by advertising, and because the audience is high-school students those ads are never personalized — the site is tagged for child-directed treatment before the first ad request is built, which disables interest-based advertising and remarketing for every visitor regardless of age.',
             'Nothing your student puts into the app is used to target advertising, and nothing they write is used to train AI models.',
           ],
         },
@@ -422,7 +422,7 @@ export const PUBLIC_ROUTES = [
         {
           h2: 'What it costs',
           paras: [
-            'Nothing. There is no parent tier, no subscription and no upsell. The service is funded by advertising, and because the audience is high-school students those ads are never personalised.',
+            'Nothing. There is no parent tier, no subscription and no upsell. The service is funded by advertising, and because the audience is high-school students those ads are never personalized.',
           ],
         },
       ],

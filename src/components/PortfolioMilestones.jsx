@@ -98,14 +98,14 @@ const STATUS_META = {
 // own broader categories via DEADLINE_KIND_MAP — so this list is about how the
 // student describes the date, and TIMELINE_KINDS is about how the feed groups it.
 const DEADLINE_KINDS = [
-  { id: 'common_app_open', label: 'Common App Opens' },
+  { id: 'common_app_open', label: 'Common App opens' },
   { id: 'early_action', label: 'Early Action' },
   { id: 'early_decision', label: 'Early Decision' },
   { id: 'regular_decision', label: 'Regular Decision' },
   { id: 'fafsa', label: 'FAFSA' },
-  { id: 'css_profile', label: 'CSS Profile / Aid' },
-  { id: 'ap_exam', label: 'AP Exam' },
-  { id: 'ib_exam', label: 'IB Exam' },
+  { id: 'css_profile', label: 'CSS Profile / aid' },
+  { id: 'ap_exam', label: 'AP exam' },
+  { id: 'ib_exam', label: 'IB exam' },
   { id: 'scholarship', label: 'Scholarship' },
   // Written by the Opportunities tab when a student saves a program — the
   // deadline itself plus its 60/30/7-day alerts. Selectable by hand too: a
@@ -116,10 +116,10 @@ const DEADLINE_KINDS = [
 
 const CURRENT_YEAR = new Date().getFullYear();
 export const DEFAULT_DEADLINES = [
-  { title: 'Common App Opens', due_date: `${CURRENT_YEAR}-08-01`, kind: 'common_app_open' },
-  { title: 'Early Action / Early Decision Deadline', due_date: `${CURRENT_YEAR}-11-01`, kind: 'early_action' },
-  { title: 'FAFSA Opens', due_date: `${CURRENT_YEAR}-10-01`, kind: 'fafsa' },
-  { title: 'Regular Decision Deadline', due_date: `${CURRENT_YEAR + 1}-01-01`, kind: 'regular_decision' },
+  { title: 'Common App opens', due_date: `${CURRENT_YEAR}-08-01`, kind: 'common_app_open' },
+  { title: 'Early Action / Early Decision deadline', due_date: `${CURRENT_YEAR}-11-01`, kind: 'early_action' },
+  { title: 'FAFSA opens', due_date: `${CURRENT_YEAR}-10-01`, kind: 'fafsa' },
+  { title: 'Regular Decision deadline', due_date: `${CURRENT_YEAR + 1}-01-01`, kind: 'regular_decision' },
 ];
 
 // The three lenses the feed can be read through. "Yours" is the old Deadlines
@@ -231,7 +231,7 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
   const [lens, setLens] = useState('all');
   // ── Sort order ────────────────────────────────────────────────────────────
   // Urgency by default, and that default is the point. A chronological feed answers "what is
-  // next" and quietly answers the wrong question: a summer research programme closing in ninety
+  // next" and quietly answers the wrong question: a summer research program closing in ninety
   // days that needs two months of run-up is more urgent than a form due in thirty that takes an
   // afternoon, and date order puts the form on top. See src/lib/milestoneUrgency.js. The
   // chronological view is one tap away and unchanged, because "when is it" is still a question.
@@ -877,7 +877,7 @@ function useBrainTake(askMedabrain, events) {
       .join('; ');
     // The lead-time figures are in the prompt because "prioritize the soonest" is exactly the
     // wrong advice on this feed and it is the advice a model gives when it only sees dates.
-    askMedabrain(`Here is this student's real upcoming Milestones feed: ${list}. In 2-3 concise sentences, tell them what to prioritize this week and why. Prioritise by how much SLACK is left — days until due minus the run-up the work needs — not by which date is soonest: a deadline ninety days out needing two months of preparation is more urgent than one thirty days out that takes an afternoon, and saying otherwise costs them the first one. Only reference milestones from this exact list — never invent one. If you cite a date marked "typical", say it still needs confirming on the official site.`)
+    askMedabrain(`Here is this student's real upcoming Milestones feed: ${list}. In 2-3 concise sentences, tell them what to prioritize this week and why. Prioritize by how much SLACK is left — days until due minus the run-up the work needs — not by which date is soonest: a deadline ninety days out needing two months of preparation is more urgent than one thirty days out that takes an afternoon, and saying otherwise costs them the first one. Only reference milestones from this exact list — never invent one. If you cite a date marked "typical", say it still needs confirming on the official site.`)
       .then(content => { if (!cancelled) { setCached(cacheKey, content); setSummary({ loading: false, content, error: null }); } })
       .catch(err => { if (!cancelled) { fetchedKeyRef.current = null; setSummary({ loading: false, content: null, error: err.message }); } });
     return () => { cancelled = true; };

@@ -2,7 +2,7 @@
 // The Common Application export engine.
 //
 // WHAT WAS WRONG BEFORE THIS FILE EXISTED
-// The Activities & Resume Builder had a button labelled "Copy Common App
+// The Activities & Resume Builder had a button labeled "Copy Common App
 // format" that copied this:
 //
 //     ACTIVITIES

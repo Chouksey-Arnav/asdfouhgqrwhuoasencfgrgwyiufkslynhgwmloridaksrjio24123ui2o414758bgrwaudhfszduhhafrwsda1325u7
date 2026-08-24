@@ -13,7 +13,7 @@ import { C, glass, R, accentSweep, CONTROL_TRANSITION } from '../../lib/theme';
  * '(max-width: 768px)'. Previously copy-pasted into App.jsx and
  * ScoreTrackerPanel.jsx; both now import this.
  */
-// Initialised synchronously from matchMedia rather than starting at `false` and
+// Initialized synchronously from matchMedia rather than starting at `false` and
 // correcting in the effect. The old version made every phone paint one frame of
 // the desktop layout before snapping to mobile — harmless for a grid column
 // count, very visible for anything `position: fixed` (the SAT calculator /

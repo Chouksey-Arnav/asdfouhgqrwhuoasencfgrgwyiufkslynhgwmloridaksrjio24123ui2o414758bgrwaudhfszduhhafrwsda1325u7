@@ -14,7 +14,7 @@
 // end of the story. The email is the least reliable part of this feature — the relay has a monthly
 // quota, invitations land in Promotions, and a parent who cannot find a message has no way to tell
 // that apart from the product being broken — and the only control on that screen was the one that
-// cancelled the invitation.
+// canceled the invitation.
 //
 // So a pending invitation shows its code and its link, and offers Copy, Share and Resend. The code
 // is not a credential (see migration 0010): redeeming it still requires a one-time code delivered

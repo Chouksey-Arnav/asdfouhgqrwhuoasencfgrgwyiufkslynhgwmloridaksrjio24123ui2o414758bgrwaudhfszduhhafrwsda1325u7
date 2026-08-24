@@ -40,12 +40,12 @@ const PATHWAY_LABELS = {
 // The mode list is an argument about what counts as an assessment.
 //
 // A circuit is assessed: eight to ten stations, one clock, an aggregate at the end. Everything
-// else is practice, and is labelled as practice — not out of modesty, but because a score from a
+// else is practice, and is labeled as practice — not out of modesty, but because a score from a
 // single MMI station is a weak measurement by design, and presenting one as a verdict would be a
 // lie about how the format works. The labels carry that distinction so a student never has to
 // infer it.
 const MODES = [
-  { id: 'live', label: '🎙 Live Voice Interview', color: C.rose, kind: 'practice' },
+  { id: 'live', label: '🎙 Live voice interview', color: C.rose, kind: 'practice' },
   { id: 'standard', label: 'Standard practice', color: C.blue, kind: 'practice' },
   { id: 'mmi', label: 'Single station practice', color: C.violet, kind: 'practice' },
   { id: 'circuit', label: '🏁 Full MMI circuit', color: C.violet, kind: 'assessment' },
@@ -196,7 +196,7 @@ export default function InterviewPrepPanel({
   return (
     <div style={CC({ gap: 20 })}>
       <PanelHero tourTag="portfolio-deep-interview" icon={Mic} color={accent} color2={C.rose}
-        eyebrow="Interview Prep" title="Mock Interview Practice"
+        eyebrow="Interview prep" title="Mock interview practice"
         sub={`Practice real college-admissions-style questions and get rated the way an actual interviewer would rate you — seven-point scale, no flattery — plus a library of ${MMI_STATION_LIBRARY.length} MMI stations across five formats, full timed circuits, and a typed CASPer test.`}
         stats={sessions > 0 ? [{ value: sessions, label: 'practiced this session', color: C.roseL }] : []}/>
 
@@ -246,9 +246,9 @@ export default function InterviewPrepPanel({
           </div>
         )}
 
-        {/* Station filters. Both axes are shown because both are ways a student under-practises:
-            by format (almost nobody practises the actor and collaborative stations) and by
-            archetype (almost everybody practises ethics and avoids grief). */}
+        {/* Station filters. Both axes are shown because both are ways a student under-practices:
+            by format (almost nobody practices the actor and collaborative stations) and by
+            archetype (almost everybody practices ethics and avoids grief). */}
         {mode === 'mmi' && (
           <div style={CC({ gap: 8, marginBottom: 12 })}>
             <div style={R({ gap: 4, flexWrap: 'wrap', alignItems: 'center' })}>

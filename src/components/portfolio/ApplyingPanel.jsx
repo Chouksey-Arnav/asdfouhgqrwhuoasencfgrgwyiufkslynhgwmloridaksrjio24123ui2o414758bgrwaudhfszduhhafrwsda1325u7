@@ -19,7 +19,7 @@ import SectionScroller from './SectionScroller';
 // "how far along is this application" without the student assembling the
 // answer from six places themselves.
 //
-// Same shell as Activities & Résumé (SectionScroller): a summary that says
+// Same shell as Activities & résumé (SectionScroller): a summary that says
 // what is done and what is missing, every section's actions hoisted onto it,
 // a sticky jumper, one scroll. Each section still renders the exact panel it
 // always was — nothing was rewritten to fit, and every old URL still lands on
@@ -33,15 +33,15 @@ export const APPLYING_SECTIONS = [
   // thing that would move it. Every other section here answers a piece of the
   // question it answers whole.
   { id: 'medex', ic: Activity, label: 'MedEx Score', color: C.violet, blurb: 'Where you stand against the class that gets in — one number, sealed weekly' },
-  { id: 'colleges', ic: GraduationCap, label: 'College List', color: C.sky, blurb: 'Where you are applying, and what each school wants' },
+  { id: 'colleges', ic: GraduationCap, label: 'College list', color: C.sky, blurb: 'Where you are applying, and what each school wants' },
   // Sits directly under the college list because that is what it feeds: tracking
   // a combined-degree program puts a school ON that list, with its deadline. It
   // is second rather than last because it is the only thing on this page with a
   // timeline that starts in ninth grade — a senior finding it here has already
   // lost most of what it asks for, and a freshman finding it here has not.
-  { id: 'combined', ic: Stethoscope, label: 'Combined Degrees', color: C.blue, blurb: 'BS/MD, direct-admit BSN, 0-6 PharmD and the rest — applied to from high school' },
+  { id: 'combined', ic: Stethoscope, label: 'Combined degrees', color: C.blue, blurb: 'BS/MD, direct-admit BSN, 0-6 PharmD and the rest — applied to from high school' },
   { id: 'essays', ic: ScrollText, label: 'Essays', color: C.violet, blurb: 'Drafts, prompts and word counts, per school' },
-  { id: 'aid', ic: Handshake, label: 'Financial Aid', color: C.green, blurb: 'What it will actually cost, and who pays for it' },
+  { id: 'aid', ic: Handshake, label: 'Financial aid', color: C.green, blurb: 'What it will actually cost, and who pays for it' },
   { id: 'recommenders', ic: UserCheck, label: 'Recommenders', color: C.fuchsia, blurb: 'Who is writing for you, and when you asked' },
   { id: 'interview', ic: Mic, label: 'Interviews', color: C.orange, blurb: 'MMI stations, CASPer, and a scored practice run' },
   { id: 'calc', ic: Calculator, label: 'Chances', color: C.gold, blurb: 'Your real odds at the programs on your list' },
@@ -73,7 +73,7 @@ export default function ApplyingPanel({
     else if (colleges < 4) out.push({ tone: 'info', text: `${colleges} school${colleges === 1 ? '' : 's'} on your list. A finished list is usually six to ten, spread across reach, target and likely.`, actionLabel: 'Add more', onAction: () => onSectionOpen?.('colleges') });
     if (colleges && !essays) out.push({ tone: 'warn', text: 'No essays started. Every school on your list has prompts, and the personal statement is reused across all of them — starting it early is the single highest-leverage thing on this page.', actionLabel: 'Start one', onAction: () => onSectionOpen?.('essays') });
     if (colleges && !recommenders) out.push({ tone: 'info', text: 'No recommenders logged. Teachers write these in the order they were asked, and the good ones fill up in the spring.', actionLabel: 'Add one', onAction: () => onSectionOpen?.('recommenders') });
-    if (colleges && !interviews) out.push({ tone: 'info', text: 'You have not run a practice interview. One scored MMI station tells you more than reading about them for an hour.', actionLabel: 'Practise', onAction: () => onSectionOpen?.('interview') });
+    if (colleges && !interviews) out.push({ tone: 'info', text: 'You have not run a practice interview. One scored MMI station tells you more than reading about them for an hour.', actionLabel: 'Practice', onAction: () => onSectionOpen?.('interview') });
     if (colleges >= 2) out.push({ tone: 'good', text: 'Your chances are calculated against the real admitted profiles of the schools on your list — not a generic score.', actionLabel: 'See the odds', onAction: () => onSectionOpen?.('calc') });
     // Always offered, and never gated on having a list, because this is the one
     // thing on the page whose deadlines a ninth-grader still has time to meet.
@@ -103,7 +103,7 @@ export default function ApplyingPanel({
     <div style={CC({ gap: 20 })}>
       <PanelHero tourTag="portfolio-deep-applying" icon={GraduationCap} color={accent} color2={C.violet} m={isMobile}
         eyebrow="Applications" title="Applying"
-        sub="Your school list and everything each school still needs from you — combined-degree programs, essays, aid, recommenders, interviews, and your real odds. One page, in the order you work through it." />
+        sub="Your program list and everything each program still needs from you — combined-degree programs, essays, aid, recommenders, interviews, and your real odds. One page, in the order you work through it." />
 
       <SectionScroller
         accent={accent} isMobile={isMobile}

@@ -163,7 +163,7 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain, pathw
   return (
     <div style={CC({gap:20})}>
       <PanelHero tourTag="portfolio-deep-aid" icon={Handshake} color={accent} color2={C.teal}
-        eyebrow="Paying for it" title="Financial Aid"
+        eyebrow="Paying for it" title="Financial aid"
         sub="What each health pathway costs, who pays for it in exchange for service, and every scholarship you're tracking."
         stats={scholarships.length > 0 ? [{ value: scholarships.length, label: 'tracked' }] : []}/>
 

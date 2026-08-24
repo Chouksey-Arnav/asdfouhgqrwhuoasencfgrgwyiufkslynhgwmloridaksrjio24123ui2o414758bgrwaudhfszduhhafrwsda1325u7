@@ -13,7 +13,7 @@
 // not to reach around it.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Geometry is not colour and does not vary per theme, so it does not go
+// Geometry is not color and does not vary per theme, so it does not go
 // through the semantic layer — but it is still a token set, not a literal.
 // A raw `borderRadius: 10` here would be exactly the one-off this layer exists
 // to abolish, so the fixed sets are imported and referenced by name.

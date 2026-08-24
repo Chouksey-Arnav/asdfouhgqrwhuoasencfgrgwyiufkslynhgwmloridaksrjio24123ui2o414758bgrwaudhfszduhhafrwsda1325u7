@@ -25,7 +25,7 @@ import { STREAK_LEAGUES, leagueProgress, leagueFor } from '../../lib/streak';
 import { questIcon } from '../quests/questIcons';
 
 /**
- * The compact badge — a pill with the league's name and colour.
+ * The compact badge — a pill with the league's name and color.
  * Drawn next to the flame anywhere the streak appears.
  */
 export function LeagueChip({ streak = 0, showBonus = true, size = 'md' }) {

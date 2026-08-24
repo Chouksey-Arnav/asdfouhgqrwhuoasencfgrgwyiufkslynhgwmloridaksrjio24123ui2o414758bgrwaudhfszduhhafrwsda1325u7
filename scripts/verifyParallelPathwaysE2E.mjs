@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * End-to-end proof, in a real browser against a real build, of the behaviour parallel pathways
+ * End-to-end proof, in a real browser against a real build, of the behavior parallel pathways
  * actually promises a student. scripts/verifyParallelPathways.mjs proves the model and the
  * wiring; this proves the thing they experience:
  *
  *   1. ⌥1/⌥2/⌥3 switch pathways from anywhere — and stay out of the way while they're typing.
  *   2. A pathway that ISN'T in focus can be resumed in place, without switching to it.
- *   3. A lesson opened that way is presented as ITS OWN pathway — right name, right colour —
+ *   3. A lesson opened that way is presented as ITS OWN pathway — right name, right color —
  *      rather than borrowing the identity of whichever pathway happens to be in focus. This is
  *      the failure mode most likely to reappear, and the one least likely to be noticed in
  *      review: everything renders, it's just quietly labelled wrong.
@@ -177,7 +177,7 @@ try {
   await page.locator('button:has-text("Add or change pathways")').first().click().catch(() => {});
   await page.waitForTimeout(1000);
   check(await page.locator('button:has-text("Add & study")').count() > 0,
-    'with a slot free, the catalogue offers "Add & study" again instead of "Swap one out"');
+    'with a slot free, the catalog offers "Add & study" again instead of "Swap one out"');
 } catch (err) {
   fail(`threw: ${err.message}`);
   if (process.env.E2E_DEBUG) console.error(err);

@@ -25,7 +25,7 @@
 // ── The honesty rules this file is written under ────────────────────────────
 //  1. Every number carries a `basis`: 'published' (the program states it),
 //     'derived' (computed from something published, by a stated rule), or
-//     'estimated' (our judgement). The UI shows the difference and the model
+//     'estimated' (our judgment). The UI shows the difference and the model
 //     widens its range for anything that is not 'published'. There is no fourth
 //     category, and in particular there is no "we made it up but it looks
 //     precise".
@@ -120,7 +120,7 @@ export const CATALOG_READ_ON = '2026-08-19';
  * beat sixty guessed ones: a guessed hard gate is worse than no gate, because
  * it tells a student they are disqualified when they are not. Every other U.S.
  * school in the app still gets a profile — see deriveUndergradProfile() below —
- * it just gets one that is honestly labelled as derived from score midpoints
+ * it just gets one that is honestly labeled as derived from score midpoints
  * rather than from published program rules.
  */
 export const PROGRAM_PROFILES = [
@@ -217,13 +217,13 @@ export const PROGRAM_PROFILES = [
     // ── Interview ────────────────────────────────────────────────────────────
     // See INTERVIEW_BASES in src/lib/admissions/interviewFormats.js. A format we
     // have not read off the program's own page is 'unpublished', never a guess
-    // dressed as a fact — sending a student to practise the wrong format is a
+    // dressed as a fact — sending a student to practice the wrong format is a
     // worse outcome than telling them we do not know.
     interview: {
       interviews: true,
       formats: [],
       basis: 'unpublished',
-      note: 'UMKC interviews shortlisted applicants, but we have not confirmed the format against UMKC\'s own published description. Practise the traditional stations, and run one full circuit anyway — the circuit is the harder version of every format and nothing in it is wasted on a panel.',
+      note: 'UMKC interviews shortlisted applicants, but we have not confirmed the format against UMKC\'s own published description. Practice the traditional stations, and run one full circuit anyway — the circuit is the harder version of every format and nothing in it is wasted on a panel.',
     },
     lottery: { exists: false },
   },
@@ -319,7 +319,7 @@ export const PROGRAM_PROFILES = [
       interviews: true,
       formats: [],
       basis: 'unpublished',
-      note: 'The Albany Medical College side of this track interviews candidates, and we have not confirmed whether it runs a panel or a station circuit. Practise the traditional stations first; for a physician-scientist track, the "why medicine and not research alone" question is the one to have a real answer to.',
+      note: 'The Albany Medical College side of this track interviews candidates, and we have not confirmed whether it runs a panel or a station circuit. Practice the traditional stations first; for a physician-scientist track, the "why medicine and not research alone" question is the one to have a real answer to.',
     },
     lottery: { exists: false },
   },
@@ -378,7 +378,7 @@ export const PROGRAM_PROFILES = [
         label: '200 documented service hours',
         published: 'Complete at least 200 hours of service that is documented and approved by the advisor.',
         requires: { documentedServiceHours: 200 },
-        remedy: 'Drexel requires 200 hours of service that are DOCUMENTED and advisor-approved — undocumented hours do not count toward it. Log every session with a supervisor name and contact in Activities & Résumé as you do it; reconstructing two hundred hours after the fact is the part students cannot do.',
+        remedy: 'Drexel requires 200 hours of service that are DOCUMENTED and advisor-approved — undocumented hours do not count toward it. Log every session with a supervisor name and contact in Activities & résumé as you do it; reconstructing two hundred hours after the fact is the part students cannot do.',
         fixable: 'timing',
         note: 'Drexel states this as a requirement of the program, verified through advisor approval. The calculator treats it as a gate because a student who reaches application season with 30 undocumented hours has a real problem that a weighted score would hide.',
       },
@@ -425,7 +425,7 @@ export const PROGRAM_PROFILES = [
       formats: ['mmi'],
       basis: 'published',
       published: 'A select number of applicants are invited to a virtual MMI interview.',
-      note: 'Drexel runs a Multiple Mini Interview — a circuit of short stations rather than one long conversation. It is virtual, which changes the room and not the format: the reading time, the station clock and the "next door" pacing are all still there. Practise the circuit, not the question list.',
+      note: 'Drexel runs a Multiple Mini Interview — a circuit of short stations rather than one long conversation. It is virtual, which changes the room and not the format: the reading time, the station clock and the "next door" pacing are all still there. Practice the circuit, not the question list.',
     },
     lottery: { exists: false },
   },
@@ -509,7 +509,7 @@ export const PROGRAM_PROFILES = [
       interviews: true,
       formats: [],
       basis: 'unpublished',
-      note: 'VCU interviews finalists for the Guaranteed Admission Program and we have not confirmed the format. Practise the traditional stations, and treat one full circuit as insurance — it costs an hour and covers both possibilities.',
+      note: 'VCU interviews finalists for the Guaranteed Admission Program and we have not confirmed the format. Practice the traditional stations, and treat one full circuit as insurance — it costs an hour and covers both possibilities.',
     },
     lottery: { exists: false },
   },
@@ -806,7 +806,7 @@ export function deriveUndergradProfile(school) {
     },
 
     admitRate: accept != null
-      ? { value: accept / 100, basis: 'published', note: `${accept}% overall acceptance rate. This is the whole-university rate — a pre-health or honours track inside it is usually harder, sometimes far harder.` }
+      ? { value: accept / 100, basis: 'published', note: `${accept}% overall acceptance rate. This is the whole-university rate — a pre-health or honors track inside it is usually harder, sometimes far harder.` }
       : { value: null, basis: 'unpublished', assumed: 0.4, note: 'We have no acceptance rate for this school, so the model assumes 40% and widens its range a long way. Adding the real rate would tighten this more than anything else you could tell us.' },
 
     rounds: [

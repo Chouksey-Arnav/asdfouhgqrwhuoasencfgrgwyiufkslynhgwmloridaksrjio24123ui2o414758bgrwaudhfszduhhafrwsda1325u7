@@ -329,7 +329,7 @@ export function TextLink({ children, onClick }) {
 
 // ── Answers ──────────────────────────────────────────────────────────────────
 
-/** Shared hover/press behaviour so every answer in the flow feels identical. */
+/** Shared hover/press behavior so every answer in the flow feels identical. */
 const answerMotion = (selected) => ({
   whileHover: selected ? {} : { y: -2 },
   whileTap: { scale: 0.985 },

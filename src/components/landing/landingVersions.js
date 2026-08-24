@@ -42,7 +42,7 @@ import LandingPageV2 from './v2/LandingPageV2';
  *
  * Each entry's component takes the same props — `onGetStarted`, `onLogin`,
  * `onOpenParents`, `onOpenLegal`, `themeMode`, `onThemeChange` — so they are
- * interchangeable at the call site. A version that cannot honour one of them
+ * interchangeable at the call site. A version that cannot honor one of them
  * (v2 has no theme control) accepts and ignores it rather than changing the
  * contract.
  */

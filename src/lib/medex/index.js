@@ -7,7 +7,7 @@
 //                  admitted student at your benchmark; the curve decelerates
 //                  above it because separation up there is decided by things no
 //                  model can see.
-//   benchmark.js — what it is measured against: the most selective programme on
+//   benchmark.js — what it is measured against: the most selective program on
 //                  the student's own list (the headline), plus a fixed apex
 //                  slate that does not move when they edit that list.
 //   score.js     — the projection of src/lib/admissions/ onto one number. This

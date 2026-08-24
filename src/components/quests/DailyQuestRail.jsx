@@ -2,7 +2,7 @@
 // Today's three — the daily quest rail.
 //
 // ── What this is for ────────────────────────────────────────────────────────
-// The long quests answer "what am I working towards over the next month". This
+// The long quests answer "what am I working toward over the next month". This
 // answers the only question a student actually asks at 7pm on a Tuesday: "is it
 // worth opening this right now, and what would I do first".
 //
@@ -15,7 +15,7 @@
 // Clearing all three pays more than the gold quest does. That is the mechanic
 // that gets the third card done on an evening a student would have stopped after
 // two, and it only works if it is visible from the start — a bonus you discover
-// after you have already earned it changes no behaviour at all. So the progress
+// after you have already earned it changes no behavior at all. So the progress
 // track sits above the cards, filling as they are claimed, and the bonus tile is
 // drawn from the first render rather than appearing when it is won.
 //

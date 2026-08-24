@@ -115,7 +115,7 @@ export const COMPETITIONS = [
     cost: 'entry-fee',
     format: 'virtual',
     url: 'https://www.usabo-trc.org/',
-    why: 'The most recognisable biology credential available to a high-schooler. The Open Exam is taken at your own school in February, so the only real barrier is a teacher willing to register — which is why the registration deadline matters far more than the exam date.',
+    why: 'The most recognizable biology credential available to a high-schooler. The Open Exam is taken at your own school in February, so the only real barrier is a teacher willing to register — which is why the registration deadline matters far more than the exam date.',
     prepWeeks: 14,
     requires: { strongMathScience: true, wantsCompetition: true },
     steps: [
@@ -211,7 +211,7 @@ export const COMPETITIONS = [
     url: 'https://www.congressionalappchallenge.us/',
     why: 'One winner per congressional district, which makes the real field a few dozen people rather than a few thousand — and a health-adjacent app is a genuinely distinctive thing for a pre-med applicant to have built.',
     prepWeeks: 10,
-    steps: ['Check your district is participating', 'Beginners are explicitly welcome — the judging weights the demo and the write-up', 'Winners are recognised by their representative'],
+    steps: ['Check your district is participating', 'Beginners are explicitly welcome — the judging weights the demo and the write-up', 'Winners are recognized by their representative'],
     tags: ['coding', 'app', 'district'],
   },
   {

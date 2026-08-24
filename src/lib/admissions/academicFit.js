@@ -16,15 +16,15 @@
 //
 // So this module computes the student's position against all three of the 25th,
 // 50th and 75th, returns all three, and requires the UI to show all three. The
-// centre of gravity for scoring is the MEDIAN: z = 0 means "you look like the
+// center of gravity for scoring is the MEDIAN: z = 0 means "you look like the
 // median admitted student", not "you cleared the bar".
 //
 // ── Bias #5: academics stop discriminating at the top ───────────────────────
 // This is the big one, and it is the reason a well-built model can be more
 // pessimistic than a naive one while being more accurate.
 //
-// At a programme admitting under about 15%, the applicant pool has ALREADY been
-// filtered on academics — by self-selection, by counsellors, by the students
+// At a program admitting under about 15%, the applicant pool has ALREADY been
+// filtered on academics — by self-selection, by counselors, by the students
 // who never apply. Nearly everyone in that pool clears the bar. Which means
 // GPA and test scores have almost no discriminating power left INSIDE it: they
 // separate applicants from non-applicants, not admits from rejects. A model
@@ -58,7 +58,7 @@ const IQR_Z = 0.6745;
 
 /**
  * Where one value sits in a published/derived quartile band, as a z-score
- * centred on the MEDIAN admit (not the 25th percentile).
+ * centered on the MEDIAN admit (not the 25th percentile).
  */
 export function positionInBand(value, band) {
   const v = num(value);
@@ -92,7 +92,7 @@ function describePosition(position, v, b) {
     case '25th-to-median':
       return `Your ${fmt(v)} is above their 25th percentile (${fmt(b.p25)}) but below the median admit (${fmt(b.p50)}). This is the band where most chancing tools would call you "qualified" and then show you a comfortable number. Half of admitted students are above you here.`;
     case 'median-to-75th':
-      return `Your ${fmt(v)} is above the median admitted student (${fmt(b.p50)}) and below their 75th (${fmt(b.p75)}). Genuinely strong — and at a selective programme it is close to the most academics can do for you.`;
+      return `Your ${fmt(v)} is above the median admitted student (${fmt(b.p50)}) and below their 75th (${fmt(b.p75)}). Genuinely strong — and at a selective program it is close to the most academics can do for you.`;
     default:
       return `Your ${fmt(v)} is at or above their 75th percentile (${fmt(b.p75)}). You are academically in the top quarter of people they admit. Past this point more points buy very little.`;
   }
@@ -101,7 +101,7 @@ function describePosition(position, v, b) {
 const fmt = (v) => (v == null ? '—' : (v < 10 ? v.toFixed(2) : String(Math.round(v))));
 
 /**
- * How much academic position can move the outcome at a programme of this
+ * How much academic position can move the outcome at a program of this
  * selectivity. 1 = full weight, 0 = none.
  *
  * The shape: essentially flat above ~40% admit, falling steeply through the
@@ -118,10 +118,10 @@ export function academicLeverage(admitRate) {
 
 export function leverageNote(admitRate, leverage) {
   const a = num(admitRate);
-  if (a == null) return 'We do not know this programme\'s admit rate, so we assume academics carry moderate weight and widen the range instead of pretending to know.';
+  if (a == null) return 'We do not know this program\'s admit rate, so we assume academics carry moderate weight and widen the range instead of pretending to know.';
   const pct = Math.round(a * 100);
   if (a < 0.15) {
-    return `At roughly ${pct}% admitted, this pool is already pre-filtered on academics — almost everyone applying clears the bar. Your GPA and scores are worth about ${Math.round(leverage * 100)}% of what they would be worth at a less selective programme, because inside this pool they barely separate anyone. Being stronger academically is not what decides it here.`;
+    return `At roughly ${pct}% admitted, this pool is already pre-filtered on academics — almost everyone applying clears the bar. Your GPA and scores are worth about ${Math.round(leverage * 100)}% of what they would be worth at a less selective program, because inside this pool they barely separate anyone. Being stronger academically is not what decides it here.`;
   }
   if (a < 0.35) {
     return `At roughly ${pct}% admitted, academics still separate applicants meaningfully — worth about ${Math.round(leverage * 100)}% of full weight in this model.`;
@@ -172,10 +172,10 @@ export function scoreRigor(rigor) {
 }
 
 /**
- * Resolves which test score to benchmark, honouring the programme's superscore
+ * Resolves which test score to benchmark, honouring the program's superscore
  * policy.
  *
- * Some programmes explicitly refuse superscores. Handing them a superscored
+ * Some programs explicitly refuse superscores. Handing them a superscored
  * composite is a silent overestimate of exactly the kind this rebuild exists to
  * remove — so when the policy is 'refused' and we only hold a superscore, we
  * say we cannot use it rather than using it anyway.
@@ -192,15 +192,15 @@ export function resolveTestForProgram(tests, academics) {
       const single = num(rec.bestSingleSitting);
       if (single != null) {
         out[t] = single;
-        out.notes.push(`This programme does not accept superscores, so we are using your best single ${t.toUpperCase()} sitting (${single}) rather than your superscore (${composite}).`);
+        out.notes.push(`This program does not accept superscores, so we are using your best single ${t.toUpperCase()} sitting (${single}) rather than your superscore (${composite}).`);
       } else {
-        out.notes.push(`This programme does not accept superscores and the only ${t.toUpperCase()} we hold from you is superscored. We have left it out rather than benchmark you on a number this programme will not read — tell us your best single sitting and this tightens considerably.`);
+        out.notes.push(`This program does not accept superscores and the only ${t.toUpperCase()} we hold from you is superscored. We have left it out rather than benchmark you on a number this program will not read — tell us your best single sitting and this tightens considerably.`);
         out.degraded = true;
       }
     } else {
       out[t] = composite;
       if (policy === 'accepted' && rec.superscored !== true && (rec.sittings || 0) > 1) {
-        out.notes.push(`This programme superscores, and you have more than one ${t.toUpperCase()} sitting — check whether your best sections across sittings combine higher than the composite we are using.`);
+        out.notes.push(`This program superscores, and you have more than one ${t.toUpperCase()} sitting — check whether your best sections across sittings combine higher than the composite we are using.`);
       }
     }
   }
@@ -219,8 +219,8 @@ export function scoreAcademicFit({ profile, applicant }) {
   const leverage = academicLeverage(admitRate);
   const notes = [], unknowns = [];
 
-  // ── GPA, on whichever scale this programme actually specifies ─────────────
-  // Programmes specify different scales and mixing them up is how you get a
+  // ── GPA, on whichever scale this program actually specifies ─────────────
+  // Programs specify different scales and mixing them up is how you get a
   // wrong answer. Drexel's 3.5 is weighted; VCU's 3.5 is unweighted; CUNY's 85
   // is a 100-point average. So the profile names its scale and we read the
   // matching field, converting only when we have to and saying when we did.
@@ -229,20 +229,20 @@ export function scoreAcademicFit({ profile, applicant }) {
     gpaValue = num(applicant.weightedGpa);
     if (gpaValue == null && num(applicant.unweightedGpa) != null) {
       gpaValue = num(applicant.unweightedGpa); gpaConverted = true;
-      notes.push('This programme measures GPA on a WEIGHTED scale and we only have your unweighted number, so we are using it as a floor. Your real position is at least this good and probably better — adding your weighted GPA fixes it.');
+      notes.push('This program measures GPA on a WEIGHTED scale and we only have your unweighted number, so we are using it as a floor. Your real position is at least this good and probably better — adding your weighted GPA fixes it.');
     }
   } else if (academics.gpaScale === 'hundred-point') {
     gpaValue = num(applicant.hundredPointAverage);
     if (gpaValue == null && num(applicant.unweightedGpa) != null) {
       gpaValue = num(applicant.unweightedGpa) * 25; gpaConverted = true;
-      notes.push('This programme uses a 100-point average and we only have your 4.0 GPA, so we converted it. Conversions between the two scales are approximate and school-specific — your actual 100-point average is the number that counts.');
+      notes.push('This program uses a 100-point average and we only have your 4.0 GPA, so we converted it. Conversions between the two scales are approximate and school-specific — your actual 100-point average is the number that counts.');
     }
   } else {
     gpaValue = num(applicant.unweightedGpa);
     if (gpaValue == null && num(applicant.weightedGpa) != null) {
       // Never silently pass a weighted GPA off as unweighted: it is almost
       // always higher, and the whole error would land on the optimistic side.
-      notes.push('This programme benchmarks unweighted GPA and we only have your weighted one. We have left GPA out of the academic position rather than treat a weighted number as unweighted, which would flatter you.');
+      notes.push('This program benchmarks unweighted GPA and we only have your weighted one. We have left GPA out of the academic position rather than treat a weighted number as unweighted, which would flatter you.');
       unknowns.push('unweightedGpa');
     }
   }
@@ -258,10 +258,10 @@ export function scoreAcademicFit({ profile, applicant }) {
   };
   if (bands.gpa) bands.gpa.converted = gpaConverted;
 
-  // Tests only count where the programme actually reads them.
+  // Tests only count where the program actually reads them.
   const testCounts = academics.testPolicy !== 'optional' && academics.testPolicy !== 'not-applicable';
   if (!testCounts && (resolvedTests.sat != null || resolvedTests.act != null)) {
-    notes.push('This programme is test-optional, so your SAT/ACT is carrying very little of this estimate. That is worth knowing before you spend another summer on it.');
+    notes.push('This program is test-optional, so your SAT/ACT is carrying very little of this estimate. That is worth knowing before you spend another summer on it.');
   }
 
   // Best available test position — a student compared on either test should get

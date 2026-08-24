@@ -26,7 +26,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 //
 // What to reach for:
 //   <BrandJourney/>        the mark on its own — drop into any loading state
-//   <BrandLoader/>         the mark plus a caption, centred in its container
+//   <BrandLoader/>         the mark plus a caption, centered in its container
 //   <BrandLoaderScreen/>   the full-page version, used for app boot
 //   <BrandShowcase/>       the idle interstitial (see useBrandShowcase)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -154,7 +154,7 @@ export function BrandJourney({
 }
 
 /**
- * The journey with a caption under it, centred in whatever box it is given.
+ * The journey with a caption under it, centered in whatever box it is given.
  * This is the drop-in for a panel or section that is waiting on data.
  */
 export function BrandLoader({

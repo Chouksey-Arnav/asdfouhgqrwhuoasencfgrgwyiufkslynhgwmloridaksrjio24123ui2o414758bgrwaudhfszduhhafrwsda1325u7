@@ -81,7 +81,7 @@ export function summarizeLessonFeedback(rows = []) {
     `Self-reported lesson difficulty across ${total} lesson${total === 1 ? '' : 's'}: ${counts.too_easy} "too easy", ${counts.just_right} "just right", ${counts.too_hard} "too hard".`,
   ];
   if (levelLabel) parts.push(`Overall they are ${levelLabel}.`);
-  else parts.push('Not enough responses yet to characterise their level — do not generalise from this.');
+  else parts.push('Not enough responses yet to characterise their level — do not generalize from this.');
 
   const strong = byCategory.filter((c) => c.total >= 2 && c.score >= 0.5).map((c) => c.category);
   const hard = byCategory.filter((c) => c.total >= 2 && c.score <= -0.5).map((c) => c.category);

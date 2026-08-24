@@ -11,13 +11,13 @@
 //                     others do, and `border.strong` really is the 3:1 tier in
 //                     the themes that claim it.
 //   3. ONE-OFF      — hex literals and raw rgba() in component files, held to a
-//      COLOURS        shrink-only baseline so the count can go down and never up.
+//      COLORS        shrink-only baseline so the count can go down and never up.
 //
 // ── A note on the third check ───────────────────────────────────────────────
 // The usual advice for this is "delete the default palette from the Tailwind
 // config so bg-slate-800 stops resolving and becomes a build error". This app
 // has no Tailwind — every style is an inline object composed from `C` — so the
-// equivalent lever is the literal itself: a `#` colour or an `rgba(` in a
+// equivalent lever is the literal itself: a `#` color or an `rgba(` in a
 // component file IS the one-off, and there is no config to disarm it from.
 //
 // Failing hard on all of them today would fail the build on the first run
@@ -109,11 +109,11 @@ for (const name of themeNames) {
       if (!t.hue[hue]?.[k]) failures.push(`${name}: hue "${hue}" is missing "${k}".`);
     }
   }
-  // No colour may be named for what it is rather than what it does. `hue` is
+  // No color may be named for what it is rather than what it does. `hue` is
   // the one scoped exception and is checked above by name, not by pattern.
-  const banned = /^(blue|green|red|amber|slate|gray|grey)\d*$/i;
+  const banned = /^(blue|green|red|amber|slate|gray|gray)\d*$/i;
   for (const k of Object.keys(t)) {
-    if (banned.test(k)) failures.push(`${name}: semantic token "${k}" is named for a colour, not a meaning.`);
+    if (banned.test(k)) failures.push(`${name}: semantic token "${k}" is named for a color, not a meaning.`);
   }
 }
 
@@ -157,7 +157,7 @@ for (const [name, hc] of Object.entries(HC_OVERLAYS)) {
     checked += 1;
     const norm = (v) => String(v).trim().replace(/\s+/g, '').toLowerCase();
     if (norm(value) !== norm(flat[key])) {
-      failures.push(`src/index.css: first-paint --c-${key} is ${value.trim()} but BALANCED.${key} is ${flat[key]}. They must match or the first frame is the wrong colour.`);
+      failures.push(`src/index.css: first-paint --c-${key} is ${value.trim()} but BALANCED.${key} is ${flat[key]}. They must match or the first frame is the wrong color.`);
     }
   }
   if (!checked) failures.push('src/index.css: found no --c-* first-paint defaults to check; did the :root block move?');
@@ -165,7 +165,7 @@ for (const [name, hc] of Object.entries(HC_OVERLAYS)) {
   notes.push(`src/index.css first-paint defaults match BALANCED (${checked} tokens).`);
 }
 
-// ── 3. One-off colours ───────────────────────────────────────────────────────
+// ── 3. One-off colors ───────────────────────────────────────────────────────
 const LINTED = allFiles.filter(f => {
   const r = rel(f);
   return (r.startsWith('src/components/') || r === 'src/App.jsx') && !r.endsWith('.test.js');
@@ -198,7 +198,7 @@ for (const [file, c] of Object.entries(counts)) {
     failures.push(`${file}: ${c.hex} hex literal(s) and ${c.rgba} rgba() call(s) in a file that had none. Use a semantic or component token — see src/lib/tokens/.`);
     continue;
   }
-  if (c.hex > b.hex) failures.push(`${file}: hex literals went from ${b.hex} to ${c.hex}. New one-off colours are not allowed; add a token instead.`);
+  if (c.hex > b.hex) failures.push(`${file}: hex literals went from ${b.hex} to ${c.hex}. New one-off colors are not allowed; add a token instead.`);
   if (c.rgba > b.rgba) failures.push(`${file}: rgba() calls went from ${b.rgba} to ${c.rgba}. A raw rgba() is almost always a smuggled one-off — use tint() on a token.`);
   if (c.hex < b.hex || c.rgba < b.rgba) ratcheted += 1;
 }
@@ -222,4 +222,4 @@ if (failures.length) {
   for (const f of failures) console.error(`  - ${f}`);
   process.exit(1);
 }
-console.log('\n✓ token layers, tier counts and the one-off-colour ratchet all hold.');
+console.log('\n✓ token layers, tier counts and the one-off-color ratchet all hold.');

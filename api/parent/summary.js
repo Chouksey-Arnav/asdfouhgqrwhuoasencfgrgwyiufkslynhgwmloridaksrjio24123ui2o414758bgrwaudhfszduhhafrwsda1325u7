@@ -53,7 +53,7 @@ export default async function handler(req, res) {
   //   - The STUDENT initiated it. Then the declaration was never the point. Its entire job is to
   //     let a student tell their mother apart from a stranger when an unexpected request arrives
   //     (see api/_lib/parentProfile.js) — and a student who typed the address themselves is not
-  //     being asked to recognise anyone. Here the check was blocking the one case it was never
+  //     being asked to recognize anyone. Here the check was blocking the one case it was never
   //     designed for, and it was blocking it at the worst possible moment: a parent who had just
   //     accepted their own child's invitation, landing on a dashboard that answered every request
   //     with a 403 until they filled in six fields and signed an attestation.

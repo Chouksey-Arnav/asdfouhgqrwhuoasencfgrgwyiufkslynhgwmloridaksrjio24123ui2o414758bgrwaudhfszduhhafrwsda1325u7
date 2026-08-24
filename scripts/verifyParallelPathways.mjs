@@ -151,7 +151,7 @@ eq('dropping a pathway that is not enrolled changes nothing', P.dropPathway(e3, 
 const droppedFocused = P.dropPathway({ activePathways: [K1, K2, K3], specialty: K2 }, K2, PATHS);
 eq('dropping the focused pathway hands focus to the one that takes its place', droppedFocused.focused, K3);
 const droppedTail = P.dropPathway({ activePathways: [K1, K2, K3], specialty: K3 }, K3, PATHS);
-eq('dropping the last one in the rail falls back to its neighbour', droppedTail.focused, K2);
+eq('dropping the last one in the rail falls back to its neighbor', droppedTail.focused, K2);
 const droppedOnly = P.dropPathway({ activePathways: [K1], specialty: K1 }, K1, PATHS);
 deep('dropping the only pathway leaves an empty enrollment', P.getActivePathways(droppedOnly.user, PATHS), []);
 eq('...and a null focus, the same state a new account is in', droppedOnly.user.specialty, null);

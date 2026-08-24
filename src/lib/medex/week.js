@@ -6,7 +6,7 @@
 //
 // A number that moves the instant you log two clinical hours teaches a student
 // to log hours to watch a number move. That is the mechanic behind every
-// engagement-optimised score, and it is the wrong one here for a specific
+// engagement-optimized score, and it is the wrong one here for a specific
 // reason: the underlying quantity genuinely does not change daily. Sustain,
 // depth and evidence — the three things the admissions model actually scores a
 // portfolio on — are measured in months. A daily score would be almost entirely

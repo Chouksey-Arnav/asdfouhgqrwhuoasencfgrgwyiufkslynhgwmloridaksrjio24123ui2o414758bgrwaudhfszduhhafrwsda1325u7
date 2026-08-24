@@ -2,9 +2,9 @@
 // LAYER 1 — PRIMITIVES
 //
 // Raw values with no meaning attached. A primitive says "this is the hex that
-// sits at roughly L* 72 on the blue ramp"; it does not say what that colour is
+// sits at roughly L* 72 on the blue ramp"; it does not say what that color is
 // FOR. Nothing in src/components/ may import this file — a component reaching
-// past the semantic layer to grab BLUE[55] is exactly the one-off colour this
+// past the semantic layer to grab BLUE[55] is exactly the one-off color this
 // restructure exists to delete, and scripts/verifyDesignTokens.mjs fails the
 // build on it.
 //
@@ -12,7 +12,7 @@
 // Tailwind-style 50…900 numbering is arbitrary: "blue-600" tells you nothing
 // about how blue-600 will behave against a given surface. These keys are the
 // CIELAB lightness of the swatch, rounded, so a step number IS a contrast
-// prediction. Two colours whose step numbers differ by ~40 clear 4.5:1 against
+// prediction. Two colors whose step numbers differ by ~40 clear 4.5:1 against
 // each other; that is why every dark-theme accent below lives at 72 and every
 // dark-theme surface lives under 33, and why the semantic layer can pick a step
 // by arithmetic instead of by eye.
@@ -146,7 +146,7 @@ export const GOLD = Object.freeze({
 // rather than a pure neutral on purpose: a true gray reads cheap, and holding
 // the surfaces in the same hue family as the blue accent stops the two from
 // vibrating against each other. Every step from 15.4 to 32.1 is ~4 L* from its
-// neighbour, which is perceptible as a step without striping.
+// neighbor, which is perceptible as a step without striping.
 export const SLATE = Object.freeze({
   '7.5': '#12171c', '14.6': '#1f2531', '15.4': '#22272d', '16.9': '#232a37',
   '18.2': '#272d34', '21': '#2a3341', '22.3': '#30363d', '25.9': '#383e46',

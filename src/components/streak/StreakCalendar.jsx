@@ -189,7 +189,7 @@ function DayDetail({ cell, accent, goalCredits }) {
       ) : (
         <div style={{ fontSize: 11.5, color: C.t3 }}>
           {cell.met
-            ? 'Earned before the app started itemising days — it counts.'
+            ? 'Earned before the app started itemizing days — it counts.'
             : cell.frozen
               ? 'A streak freeze covered this day, so the streak survived it.'
               : 'Nothing logged. One lesson or two quizzes would have carried it.'}

@@ -70,7 +70,7 @@ export default function MedExPanel({
       <HowItWorks id="medex-v1" color={color} m={m} title="How the MedEx Score works"
         steps={[
           { title: '850 is the median admitted student — not the 25th percentile', body: 'Every other admissions score benchmarks you against the bottom quarter of an admitted class, because it makes far more students look "qualified". Clearing a low bar quietly becomes likely, and likely is the most consequential word on the screen. 850 here means you look like the MIDDLE of the class that got in.' },
-          { title: 'It is measured against a specific, named programme', body: 'The most selective school on your own list. A score with no benchmark attached is a vanity number — the same portfolio genuinely is in a different position at a 3% programme than at a 40% one, and one number that ignores that is lying to somebody.' },
+          { title: 'It is measured against a specific, named program', body: 'The most selective school on your own list. A score with no benchmark attached is a vanity number — the same portfolio genuinely is in a different position at a 3% program than at a 40% one, and one number that ignores that is lying to somebody.' },
           { title: 'It is not a probability, and it never converts to one', body: MEDEX_COPY.notAProbability },
           { title: 'It gets harder near the top, deliberately', body: 'The scale pays about 240 points per standard deviation below the cohort median and about 40 above it. Past the median you are competing inside a pool already filtered on everything a model can see, and separation there is decided by letters, essays and readers. Paying full points into that region would be inventing precision.' },
           { title: 'It seals weekly, and logging can move it down', body: MEDEX_COPY.canGoDown },
@@ -171,7 +171,7 @@ export default function MedExPanel({
         <div style={glass({ padding: m ? 16 : 20 })}>
           <SectionTitle icon={Layers} color={C.violetL}>What the score is made of</SectionTitle>
           <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginBottom: 12 }}>
-            The weights are {headline.program.name}&rsquo;s own, not ours — this programme reads as <strong style={{ color: C.t2 }}>{headline.program.emphasis}</strong>-emphasis. A pillar can be strong and still carry very little here, and that is worth more than a generic checklist.
+            The weights are {headline.program.name}&rsquo;s own, not ours — this program reads as <strong style={{ color: C.t2 }}>{headline.program.emphasis}</strong>-emphasis. A pillar can be strong and still carry very little here, and that is worth more than a generic checklist.
           </div>
           <div style={CC({ gap: 8 })}>
             {headline.pillars.map(p => <PillarRow key={p.id} pillar={p} m={m} />)}
@@ -231,11 +231,11 @@ export default function MedExPanel({
       {/* ── 6. The apex slate ──────────────────────────────────────────── */}
       {medex.apex && (
         <Disclosure id="medex-apex" icon={Sparkles} color={C.gold} m={m}
-          title="Against the most selective programmes in the country"
+          title="Against the most selective programs in the country"
           sub={medex.apex.sentence}
           defaultOpen={false}>
           <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginBottom: 12 }}>
-            This slate is fixed. It does not change when you edit your college list, which is exactly why it is here — it is the one reference nobody can improve by removing their reach school.
+            This slate is fixed. It does not change when you edit your college list, which is exactly why it is here — it is the one reference nobody can improve by removing their reach program.
           </div>
           <ApexTable apex={medex.apex} m={m} />
         </Disclosure>
@@ -320,7 +320,7 @@ function PillarRow({ pillar, m }) {
           </span>
         </div>
 
-        {/* Position bar: centre is the admitted median, which is the only
+        {/* Position bar: center is the admitted median, which is the only
             reference point that makes a z legible to a non-statistician. */}
         {known && (
           <div style={{ marginTop: 8, position: 'relative', height: 6, borderRadius: 4, background: C.b1 }}>
@@ -334,12 +334,12 @@ function PillarRow({ pillar, m }) {
         )}
         <div style={{ fontSize: 10.5, color: C.t3, marginTop: 8, lineHeight: 1.45 }}>
           {!known
-            ? 'This programme does not weight anything in this pillar, so it is not part of your score here.'
+            ? 'This program does not weight anything in this pillar, so it is not part of your score here.'
             // "Worth 0 points against not counting it at all" is technically the
             // truth and reads as a bug. A pillar can sit slightly off the median
             // and still round to no net swing, and that is worth saying plainly.
             : pillar.swing === 0
-              ? `${pillar.atOrAboveCohort ? 'At or above' : 'Just below'} the median admitted student — close enough that at this programme's weighting it is not moving your total either way.`
+              ? `${pillar.atOrAboveCohort ? 'At or above' : 'Just below'} the median admitted student — close enough that at this program's weighting it is not moving your total either way.`
               : pillar.atOrAboveCohort
                 ? `At or above the median admitted student. Worth ${pillar.swing > 0 ? `+${pillar.swing}` : pillar.swing} points to your total.`
                 : `Below the median admitted student. ${pillar.swing < 0 ? `Costing you ${Math.abs(pillar.swing)} points` : `Worth +${pillar.swing} points`} against not counting it at all.`}
@@ -420,7 +420,7 @@ function ApexTable({ apex, m }) {
   // Ranked by score, not by the slate's own selectivity order.
   //
   // The slate is stored most-selective-first because that is what picks the
-  // "most selective programme you match". Rendered in that order, though, this
+  // "most selective program you match". Rendered in that order, though, this
   // table is twenty-nine near-identical bars in an order the student cannot see
   // the logic of — the same portfolio scores within a few points at schools of
   // similar selectivity, so it reads as a broken chart. Sorted by score it
@@ -460,7 +460,7 @@ function ApexTable({ apex, m }) {
         );
       })}
       <div style={{ fontSize: 10.5, color: C.t4, marginTop: 4, lineHeight: 1.45 }}>
-        Bars are your score as a share of 850 — the admitted median at each programme. A full bar means you look like the middle of that class.
+        Bars are your score as a share of 850 — the admitted median at each program. A full bar means you look like the middle of that class.
       </div>
     </div>
   );

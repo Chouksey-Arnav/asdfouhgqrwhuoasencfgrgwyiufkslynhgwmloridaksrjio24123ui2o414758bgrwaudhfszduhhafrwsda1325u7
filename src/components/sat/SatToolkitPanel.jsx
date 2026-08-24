@@ -57,7 +57,7 @@ export default function SatToolkitPanel({ accent = C.teal, isMobile = false }) {
     <div style={CC({ gap: 20 })}>
       <SatPageHeader
         accent={accent}
-        eyebrow="SAT · Calculator" title="Desmos, the same one the exam gives you"
+        eyebrow="SAT · calculator" title="Desmos, the same one the exam gives you"
         sub="Desmos on every Math question, on every SAT screen, work kept between questions."
         meta={[{ value: DESMOS_PLAYS.length, label: 'techniques' }]}
         m={isMobile}

@@ -238,7 +238,7 @@ export default function SatDiagnosticPanel({
     <div style={CC({ gap: 20 })}>
       <SatPageHeader
         accent={accent}
-        eyebrow="SAT · Diagnostic" title="Find out where you actually stand"
+        eyebrow="SAT · diagnostic" title="Find out where you actually stand"
         sub="~30 questions across all 28 skills — a map of where you’re losing points."
         meta={[
           { value: preview.length, label: 'questions' },

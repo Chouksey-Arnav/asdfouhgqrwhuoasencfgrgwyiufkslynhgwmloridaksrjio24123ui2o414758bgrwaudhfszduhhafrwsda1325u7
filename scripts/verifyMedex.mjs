@@ -8,13 +8,13 @@
  *
  *   1. IT NEVER DISAGREES WITH THE CALCULATOR. The score is a projection of
  *      estimateAdmission()'s own weighted composite. A stronger applicant can
- *      never score lower, and the ordering of two applicants at one programme
+ *      never score lower, and the ordering of two applicants at one program
  *      must match the ordering of their probabilities.
  *   2. AN EMPTY PORTFOLIO GETS NO SCORE. Not a low one — none. The model scores
  *      an unlogged dimension at a fixed "unknown" z, and averaging those
  *      placeholders produces a mid-500s score built purely out of our own
  *      ignorance, which then FALLS the first week the student logs something
- *      real. That is the single worst behaviour this feature could have.
+ *      real. That is the single worst behavior this feature could have.
  *   3. A FAILED HARD GATE STILL SHOWS NO NUMBER, exactly as in the Calculator.
  *   4. THE SCALE IS MONOTONE AND ITS BANDS TILE 0-1000 WITH NO GAPS.
  *   5. THE CEILING IS REACHABLE ONLY IN PRINCIPLE. A realistically excellent
@@ -22,7 +22,7 @@
  *   6. THE WEEK MATHS SURVIVES THE YEAR BOUNDARY, 53-week years and DST.
  *   7. A SEALED WEEK IS IMMUTABLE. Re-planning the same week never re-seals,
  *      including when the live score has since dropped.
- *   8. THE BENCHMARK IS THE MOST SELECTIVE PROGRAMME ON THE LIST, and an empty
+ *   8. THE BENCHMARK IS THE MOST SELECTIVE PROGRAM ON THE LIST, and an empty
  *      list falls back visibly rather than silently.
  *
  * Run: npm run verify:medex
@@ -97,7 +97,7 @@ section('1. The score never disagrees with the Calculator');
 {
   const weak = at('Harvard University', solidApplicant, thinPortfolio);
   const strong = at('Harvard University', eliteApplicant, elitePortfolio);
-  assert('a stronger applicant scores higher at the same programme',
+  assert('a stronger applicant scores higher at the same program',
     strong.score > weak.score, `weak=${weak.score} strong=${strong.score}`);
 
   const pWeak = estimateAdmission({ program: 'Harvard University', applicant: solidApplicant, portfolio: thinPortfolio, completeness: full });
@@ -126,7 +126,7 @@ section('2. An empty portfolio gets no score at all');
   assert('…for the stated reason, not as a blocked gate', none.reason === 'insufficient-evidence');
   assert('…with coverage of zero', none.coverage.ratio === 0);
   assert('…and names what would produce one', none.whatWouldChange.length > 0);
-  assert('…ordered by what THIS programme weights most',
+  assert('…ordered by what THIS program weights most',
     none.whatWouldChange[0].weight >= none.whatWouldChange[none.whatWouldChange.length - 1].weight);
 
   // The regression this gate exists to prevent: the unknown-placeholder score.
@@ -146,7 +146,7 @@ section('2. An empty portfolio gets no score at all');
 section('3. A failed hard gate still shows no number');
 
 {
-  // UMKC's six-year programme is categorically closed to international applicants.
+  // UMKC's six-year program is categorically closed to international applicants.
   const intl = buildApplicant({ derived: {}, answers: { citizenship: 'international', unweightedGpa: 3.9 }, portfolio: {} });
   const r = at('umkc-ba-md', intl, elitePortfolio);
   assert('an ineligible applicant gets no MedEx Score', r.showsScore === false);
@@ -221,7 +221,7 @@ section('6. Pillars and movers');
   const wsum = r.pillars.reduce((s, p) => s + p.weight, 0);
   assert('pillar weights sum to the weight actually applied',
     Math.abs(wsum - r.coverage.usedWeight) < 1e-9, `${wsum} vs ${r.coverage.usedWeight}`);
-  assert('pillars are ordered by what the programme weights',
+  assert('pillars are ordered by what the program weights',
     r.pillars.every((p, i) => i === 0 || p.weight <= r.pillars[i - 1].weight));
   assert('every pillar exposes its underlying model dimensions',
     r.pillars.every(p => p.dimensions.length > 0));
@@ -318,7 +318,7 @@ section('8. A sealed week is immutable');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-section('9. The benchmark is the most selective programme on the list');
+section('9. The benchmark is the most selective program on the list');
 
 {
   const b = pickBenchmark([{ name: 'Boston University' }, { name: 'Harvard University' }, { name: 'University of Michigan' }]);
@@ -361,14 +361,14 @@ section('10. The whole thing, composed');
     r.colleges.rows.every(row => row.result.showsScore || row.result.reason || row.result.gates));
 
   const apex = rankAgainstApex({ applicant: eliteApplicant, portfolio: elitePortfolio, completeness: full });
-  assert('the apex ranking names a specific programme rather than a percentile',
-    /programmes we track/.test(apex.sentence) && apex.slateSize > 0);
+  assert('the apex ranking names a specific program rather than a percentile',
+    /programs we track/.test(apex.sentence) && apex.slateSize > 0);
   assert('…and the most selective cohort match really is the most selective',
     !apex.topMatch || apex.rows.findIndex(x => x.profile.id === apex.topMatch.profile.id) ===
       apex.rows.findIndex(x => x.result.showsScore && x.result.atOrAboveCohort));
 
   const weakApex = rankAgainstApex({ applicant: solidApplicant, portfolio: thinPortfolio, completeness: full });
-  assert('a weaker applicant matches strictly fewer apex programmes',
+  assert('a weaker applicant matches strictly fewer apex programs',
     weakApex.atCohortCount <= apex.atCohortCount, `${weakApex.atCohortCount} vs ${apex.atCohortCount}`);
 }
 

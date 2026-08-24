@@ -14,7 +14,7 @@
 // "doctors make a lot" and "med school is expensive". Those two sentences are
 // both true and together they are useless. What is missing is the shape: how
 // many years of no income, how much borrowed, how much interest accrues while
-// they are still in training, and what the first real paycheque looks like
+// they are still in training, and what the first real paycheck looks like
 // against the payment.
 //
 // ── The honesty rules this file is written under ────────────────────────────
@@ -23,9 +23,9 @@
 // teenager's career.
 //
 //  1. Every figure carries a `basis`:
-//       'published'  — the named organisation states this figure
+//       'published'  — the named organization states this figure
 //       'derived'    — computed from published figures by a stated rule
-//       'estimated'  — our judgement, and labelled as ours everywhere it shows
+//       'estimated'  — our judgment, and labeled as ours everywhere it shows
 //     There is no fourth category and in particular nothing invented that
 //     looks precise.
 //  2. Every pathway carries `sources` with a label, an https URL, and the date
@@ -167,7 +167,7 @@ export const PATHWAY_FINANCE = [
       { id: 'undergrad', label: "Bachelor's degree", kind: 'undergrad', years: 4, earning: 'none', borrows: true,
         note: 'Any major, with the science prerequisites. Most programs also require patient-contact hours BEFORE you apply — commonly 1,000+ — which is why many applicants work as a CNA, EMT or scribe for a year or two first.' },
       { id: 'pa-school', label: 'PA program', kind: 'professional', years: 2.5, earning: 'none', borrows: true,
-        note: 'Roughly 24–36 months, year-round. There is no residency requirement: you are licensed and practising at the end of it.' },
+        note: 'Roughly 24–36 months, year-round. There is no residency requirement: you are licensed and practicing at the end of it.' },
     ],
     totalYearsAfterHighSchool: 6.5,
     yearsUntilFirstFullSalary: 6.5,
@@ -196,7 +196,7 @@ export const PATHWAY_FINANCE = [
     },
 
     headline: 'Most of the clinical job in roughly half the training: diagnose, treat and prescribe, six and a half years after high school.',
-    tradeoff: 'You practise medicine without the residency years, and you can change specialty later without retraining. You practise within a collaborative or supervisory relationship with a physician, and the scope of that relationship is set by state law, not by you.',
+    tradeoff: 'You practice medicine without the residency years, and you can change specialty later without retraining. You practice within a collaborative or supervisory relationship with a physician, and the scope of that relationship is set by state law, not by you.',
   },
 
   // ── Doctor of Pharmacy ────────────────────────────────────────────────────
@@ -259,7 +259,7 @@ export const PATHWAY_FINANCE = [
       { id: 'undergrad', label: "Bachelor's degree", kind: 'undergrad', years: 4, earning: 'none', borrows: true,
         note: 'Any major with the science prerequisites, plus the DAT.' },
       { id: 'dental-school', label: 'Dental school', kind: 'professional', years: 4, earning: 'none', borrows: true,
-        note: 'Four years. General dentists can practise immediately after licensure — no residency required. Specialising (orthodontics, oral surgery, paediatric dentistry) adds two to six more years, some of which you PAY for rather than being paid for.' },
+        note: 'Four years. General dentists can practice immediately after licensure — no residency required. Specializing (orthodontics, oral surgery, paediatric dentistry) adds two to six more years, some of which you PAY for rather than being paid for.' },
     ],
     totalYearsAfterHighSchool: 8,
     yearsUntilFirstFullSalary: 8,
@@ -287,8 +287,8 @@ export const PATHWAY_FINANCE = [
       sources: [S.adeaDebt],
     },
 
-    headline: 'Practising and earning at 26 with no residency — and the largest debt of any path on this page.',
-    tradeoff: 'You own your schedule and often your practice, with the earliest full earnings of any doctoral health path. You also carry the heaviest loan balance, and specialising means paying for training years rather than being paid for them.',
+    headline: 'Practicing and earning at 26 with no residency — and the largest debt of any path on this page.',
+    tradeoff: 'You own your schedule and often your practice, with the earliest full earnings of any doctoral health path. You also carry the heaviest loan balance, and specializing means paying for training years rather than being paid for them.',
   },
 
   // ── Physician ─────────────────────────────────────────────────────────────
@@ -429,12 +429,12 @@ export const SERVICE_PROGRAMS = [
     org: 'HRSA — Health Resources and Services Administration',
     timing: 'professional-school',
     pathways: ['md', 'pa'],
-    covers: 'Tuition, eligible fees, other reasonable costs and a monthly living stipend, for students in medicine, physician assistant, nurse practitioner, nurse-midwifery, dentistry and behavioural health programs.',
+    covers: 'Tuition, eligible fees, other reasonable costs and a monthly living stipend, for students in medicine, physician assistant, nurse practitioner, nurse-midwifery, dentistry and behavioral health programs.',
     commitment: 'One year of full-time clinical service for each year funded — minimum two years — at an NHSC-approved site in a designated Health Professional Shortage Area. You are placed from an approved list, in a rural or underserved urban community.',
     deadline: 'One application cycle a year, typically opening in late winter and closing in the spring.',
     decidedBy: 'While you are in professional school (or applying to it).',
     undergradImplication: 'Real, and almost never explained to teenagers: NHSC funds primary care and community-based specialties. A student who wants this route should be building genuine community-health and underserved-care experience from high school — it is what the application reads for, and it is also how you find out whether you would actually want the job.',
-    catch: 'The service years are the point, not a formality. You will practise where you are needed rather than where you would like to live, and the specialty list is primary care, not the whole of medicine.',
+    catch: 'The service years are the point, not a formality. You will practice where you are needed rather than where you would like to live, and the specialty list is primary care, not the whole of medicine.',
     url: 'https://nhsc.hrsa.gov/scholarships',
     sources: [src('HRSA — NHSC Scholarship Program', 'https://nhsc.hrsa.gov/scholarships')],
   },
@@ -464,7 +464,7 @@ export const SERVICE_PROGRAMS = [
     timing: 'undergrad',
     pathways: ['rn'],
     covers: 'Tuition, eligible fees, other reasonable costs and a monthly stipend for students in an accredited nursing program — including undergraduate BSN students, which makes it one of very few federal service scholarships an undergraduate can actually hold.',
-    commitment: 'At least two years of full-time work as a nurse at a Critical Shortage Facility — typically a public hospital, community health centre or rural facility.',
+    commitment: 'At least two years of full-time work as a nurse at a Critical Shortage Facility — typically a public hospital, community health center or rural facility.',
     deadline: 'One cycle a year, usually opening in the spring.',
     decidedBy: 'While you are an undergraduate nursing student.',
     undergradImplication: 'Directly changes which BSN program is affordable: it applies to accredited nursing programs generally, so a student can choose a stronger program knowing this exists. Worth knowing before you commit to the cheapest option by default.',
@@ -486,7 +486,7 @@ export const SERVICE_PROGRAMS = [
     deadline: 'Annual cycle, generally closing in the spring.',
     decidedBy: 'As early as undergraduate — the preparatory track funds pre-professional coursework, which almost no other federal program does.',
     undergradImplication: 'One of the only federal health scholarships available for UNDERGRADUATE pre-professional years, which means an eligible student can have their pre-med or pre-nursing years funded rather than borrowed.',
-    eligibility: 'Open to American Indian and Alaska Native students who are members of federally recognised tribes (and, for some tracks, Alaska Native corporation shareholders).',
+    eligibility: 'Open to American Indian and Alaska Native students who are members of federally recognized tribes (and, for some tracks, Alaska Native corporation shareholders).',
     catch: 'Eligibility is specific and documented — tribal membership is verified as part of the application.',
     url: 'https://www.ihs.gov/scholarship/',
     sources: [src('Indian Health Service — Scholarship Program', 'https://www.ihs.gov/scholarship/')],
@@ -499,7 +499,7 @@ export const SERVICE_PROGRAMS = [
     org: 'Your state health department or primary care office',
     timing: 'undergrad',
     pathways: ['md', 'pa', 'rn', 'pharmd', 'dds'],
-    covers: 'Varies by state. Most states run at least one loan-repayment or scholarship program for clinicians who agree to practise in a rural or designated shortage area, and many run a State Loan Repayment Program partly funded by HRSA. Several states also run rural-pipeline admissions tracks at their public professional schools that reserve seats for students from rural counties.',
+    covers: 'Varies by state. Most states run at least one loan-repayment or scholarship program for clinicians who agree to practice in a rural or designated shortage area, and many run a State Loan Repayment Program partly funded by HRSA. Several states also run rural-pipeline admissions tracks at their public professional schools that reserve seats for students from rural counties.',
     commitment: 'Typically two to four years of practice in a designated area of that state.',
     deadline: 'Set by each state, and the cycles do not line up with each other.',
     decidedBy: 'Varies — but the pipeline programs are decided at admission, which means at undergraduate.',

@@ -186,7 +186,7 @@ import WeeklyGoalsBoard from './components/portfolio/WeeklyGoalsBoard';
 import TrackedPanel from './components/portfolio/TrackedPanel';
 // Progressive disclosure + the Overview's "Start here" card. The Portfolio Overview used to open
 // with eleven equally-weighted blocks and no answer to "so what do I do"; these are what turn it
-// back into one decision up top and everything else one clearly-labelled tap down.
+// back into one decision up top and everything else one clearly-labeled tap down.
 import Disclosure, { HelpNote } from './components/ui/Disclosure';
 import NextStepsCard from './components/portfolio/NextStepsCard';
 import { buildNextSteps } from './lib/portfolioNextSteps';
@@ -295,7 +295,7 @@ const AI_MSG = 'AI features require an OpenAI API key. Set OPENAI_KEY in your Ve
 // NOTE: a scoreSchool() helper used to live here — an additive 100-point-plus-bonuses
 // score per school that produced Likely/Target/Reach/Stretch tiers. It was replaced
 // wholesale by the layered model in src/lib/admissions/, which works in probability
-// against each programme's real base rate rather than in points. See the header of
+// against each program's real base rate rather than in points. See the header of
 // src/components/portfolio/admissions/AdmissionCalculatorPanel.jsx.
 
 // Boiled down from 17 flat destinations to 4: Home + three pillars. Prep and
@@ -332,7 +332,7 @@ const SAT_SUBNAV = [
   {id:'baseline',ic:Gauge,label:'Baseline',color:C.sky},
   {id:'diagnostic',ic:Compass,label:'Diagnostic',color:C.sky},
   {id:'practice',ic:Layers,label:'Practice',color:C.sky},
-  {id:'tests',ic:ClipboardList,label:'Full Tests',color:C.sky},
+  {id:'tests',ic:ClipboardList,label:'Full tests',color:C.sky},
   {id:'review',ic:AlertTriangle,label:'Review Log',color:C.rose},
   {id:'skills',ic:TrendingUp,label:'Skill Mastery',color:C.sky},
   // The Digital SAT hands every student the Desmos graphing calculator on every
@@ -349,9 +349,9 @@ const SAT_SUBNAV = [
 const PREP_SUBNAV = [
   {id:'diagnostic',ic:Compass,label:'Diagnostic',color:C.cyan},
   {id:'pathways',ic:Route,label:'Pathways',color:C.blue},
-  {id:'quizzes',ic:Layers,label:'Quiz Library',color:C.green},
+  {id:'quizzes',ic:Layers,label:'Quiz library',color:C.green},
   {id:'flashcards',ic:Layers3,label:'Flashcards',color:C.amber},
-  {id:'coach',ic:MessageCircle,label:'AI Coach',color:C.violet},
+  {id:'coach',ic:MessageCircle,label:'AI coach',color:C.violet},
   {id:'library',ic:BookOpen,label:'E-Library',color:C.pink},
 ];
 // Five tabs. Not eleven.
@@ -415,7 +415,7 @@ const PORTFOLIO_GROUP_FOR_VIEW = {
   medex:['applying','medex'],
   // The combined-degree and direct-admit catalog. Addressable in its own right
   // (/portfolio/combined) because it is the one screen in this app a student is
-  // sent a link to by a parent or a counsellor — "look at the BS/MD list" — and
+  // sent a link to by a parent or a counselor — "look at the BS/MD list" — and
   // because its whole audience is ninth and tenth graders who will not find it
   // by working down the Applying page.
   combined:['applying','combined'],
@@ -436,13 +436,13 @@ function portfolioSectionFromPath(pathname=''){
 // component and the router can never drift apart.
 const ROADMAP_SUBNAV = [
   {id:'overview',ic:Compass,label:'Overview',color:C.violet},
-  {id:'year',ic:CalendarDays,label:'Your Year',color:C.sky},
+  {id:'year',ic:CalendarDays,label:'Your year',color:C.sky},
   // The payoff screen — see the header above ROADMAP_SUBNAV in
   // src/components/roadmap/RoadmapTab.jsx for why it sits third rather than last.
-  {id:'climb',ic:TrendingUp,label:'The Climb',color:C.green},
+  {id:'climb',ic:TrendingUp,label:'The climb',color:C.green},
   {id:'seasons',ic:Layers,label:'Seasons',color:C.teal},
   {id:'list',ic:ListChecks,label:'Everything',color:C.amber},
-  {id:'intake',ic:Target,label:'Your Answers',color:C.fuchsia},
+  {id:'intake',ic:Target,label:'Your answers',color:C.fuchsia},
 ];
 const PROGRESS_SUBNAV = [
   {id:'overview',ic:LineChart,label:'Overview',color:C.blue},
@@ -458,7 +458,7 @@ const PROGRESS_SUBNAV = [
   // them by three retrospective views would put the only two forward-facing screens
   // in this tab at opposite ends of it.
   {id:'quests',ic:Swords,label:'Quests',color:C.violet},
-  {id:'verified',ic:ShieldCheck,label:'Verified Progress',color:C.green},
+  {id:'verified',ic:ShieldCheck,label:'Verified progress',color:C.green},
   {id:'performance',ic:TrendingUp,label:'Performance',color:C.violet},
   {id:'achievements',ic:Trophy,label:'Achievements',color:C.amber},
 ];
@@ -472,12 +472,12 @@ const PROGRESS_SUBNAV = [
 // Family sits third, above the fold on every screen size, because it is the only one of these
 // that another person is waiting on.
 const SETTINGS_SUBNAV = [
-  {id:'profile',ic:UserCog,label:'Profile & Goals',color:C.amber},
-  {id:'study',ic:Route,label:'Study Setup',color:C.blue},
-  {id:'family',ic:Users,label:'Family Access',color:C.violet},
+  {id:'profile',ic:UserCog,label:'Profile & goals',color:C.amber},
+  {id:'study',ic:Route,label:'Study setup',color:C.blue},
+  {id:'family',ic:Users,label:'Family access',color:C.violet},
   {id:'appearance',ic:Accessibility,label:'Appearance',color:C.cyan},
   {id:'medabrain',ic:Brain,label:'Medabrain',color:C.fuchsia},
-  {id:'data',ic:Volume2,label:'Preferences & Data',color:C.green},
+  {id:'data',ic:Volume2,label:'Preferences & data',color:C.green},
   {id:'account',ic:ShieldCheck,label:'Account',color:C.rose},
 ];
 // Every destination's student-facing name, keyed the way featureUnlock.js keys them
@@ -500,12 +500,12 @@ const UNLOCK_LABELS = Object.fromEntries([
   ['portfolio/opportunities:tracked','What you\u2019re tracking'],
 ]);
 const QUICK_P_GROUPS = [
-  { label:'Content Help', icon:'FlaskConical', prompts:[
+  { label:'Content help', icon:'FlaskConical', prompts:[
     'Explain how to solve a system of equations simply',
     'What is photosynthesis and why does it matter?',
     'Explain supply and demand with an example',
   ]},
-  { label:'Study Strategy', icon:'Compass', prompts:[
+  { label:'Study strategy', icon:'Compass', prompts:[
     'How do I approach SAT Reading passages on test day?',
     'Most high-yield topics for SAT Math?',
     'Give me a 2-week study schedule for the ACT Science section',
@@ -1150,7 +1150,7 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
             );})}
           </div>
           <div style={{marginTop:16,background:C.blueDim,border:`1px solid rgba(45,127,255,0.2)`,borderRadius:8,padding:16}}>
-            <div style={{fontSize:10,fontWeight:700,color:C.blueL,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginBottom:8}}>EXPLANATION</div>
+            <div style={{fontSize:10,fontWeight:700,color:C.blueL,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginBottom:8}}>Explanation</div>
             <MathText text={a.exp} style={{fontSize:13,color:C.t1,lineHeight:1.75,display:'block'}}/>
           </div>
         </div>}
@@ -1191,7 +1191,7 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
         })}
       </div>
       {conf&&<motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{marginTop:16,background:C.blueDim,border:`1px solid rgba(45,127,255,0.2)`,borderRadius:8,padding:16}}>
-        <div style={{fontSize:10,fontWeight:700,color:C.blueL,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginBottom:8}}>EXPLANATION</div>
+        <div style={{fontSize:10,fontWeight:700,color:C.blueL,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginBottom:8}}>Explanation</div>
         <MathText text={q.exp} style={{fontSize:13,color:C.t1,lineHeight:1.75,display:'block'}}/>
       </motion.div>}
       <div style={{marginTop:20,...R({justifyContent:'flex-end',gap:8})}}>
@@ -1705,13 +1705,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // than one that never had a destination at all.
   const goPrep = useCallback((view)=>{ setTab('prep'); const v=resolveView('prep',view); if(v) setPrepView(v); }, []);
   const goSat = useCallback((view, params=null)=>{ setTab('sat'); if(view) setSatView(view); setSatParams(params); }, []);
-  // Which section of Activities & Résumé is open. It lives here rather than inside the panel
+  // Which section of Activities & résumé is open. It lives here rather than inside the panel
   // because the three tabs that were merged into it are still addressed by name from all over
   // the app — the Home tiles, the weekly goals, the timeline's milestone actions, the class-year
   // roadmap, and every old /portfolio/clinical URL in a student's history. Those callers should
   // not have to know the merge happened: goPortfolio('clinical') still means "open the clinical
   // hours form", it just opens it as a section instead of a tab.
-  // null is the ordinary case and the point of the merge: Activities & Résumé is ONE scrolling
+  // null is the ordinary case and the point of the merge: Activities & résumé is ONE scrolling
   // page, so the default is its summary, not one of its five parts. A value here means some
   // caller named a section and the page should jump to it.
   // { view, id, n } — the section of a merged Portfolio tab a caller named, and a nonce so
@@ -1808,7 +1808,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
    * The unlock ladder, the router and the nav keyword map all speak in ids —
    * 'plans', 'portfolio/essays', 'portfolio/resume:clinical' — so anything
    * driven by those needs a way to act on one without first taking it apart.
-   * The three-part form is the sections of Activities & Résumé, which are a
+   * The three-part form is the sections of Activities & résumé, which are a
    * level below a sub-view; goPortfolio already understands a section name and
    * resolves it to the tab that now holds it.
    */
@@ -2756,11 +2756,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const activePathways = useMemo(()=>getActivePathways(user,PATHS),[user]);
   const focusedPathway = useMemo(()=>getFocusedPathway(user,PATHS),[user]);
   const isParallel = activePathways.length>1;
-  // Whether the Pathways page's add/swap/drop catalogue is expanded. Collapsed by default so
+  // Whether the Pathways page's add/swap/drop catalog is expanded. Collapsed by default so
   // the page opens on the student's own work rather than on ten choices — the wall of options
   // this app deliberately keeps tearing down.
   const [pathwayManagerOpen,setPathwayManagerOpen]=useState(false);
-  // Expanding the catalogue is useless if it opens below the fold — the "Add pathway" affordances
+  // Expanding the catalog is useless if it opens below the fold — the "Add pathway" affordances
   // scattered around the app all route through here so the student actually lands on it.
   const openPathwayManager = useCallback(()=>{
     setPathwayManagerOpen(true);
@@ -2776,7 +2776,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     requestAnimationFrame(()=>requestAnimationFrame(land));
   },[]);
   // "Add a pathway" from anywhere in the shell: go to the Pathways view, then open and scroll to
-  // the catalogue — rather than dropping the student on the page and leaving them to find it.
+  // the catalog — rather than dropping the student on the page and leaving them to find it.
   const goManagePathways = useCallback(()=>{ goPrep('pathways'); openPathwayManager(); },[goPrep,openPathwayManager]);
   // The Overview's Opportunities card shows the SAME top picks the Opportunities tab leads with —
   // one matcher, one answer, so the card is a real preview of the tab rather than a second, quieter
@@ -2803,7 +2803,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const settingsAccent = C.amber;
   const plansAccent = C.pink;
   const satAccent = C.sky;
-  // Violet, which the Prep nav item also uses — deliberate, and the only shared nav colour in
+  // Violet, which the Prep nav item also uses — deliberate, and the only shared nav color in
   // the app. Prep is "learn the material" and Roadmap is "learn what to do with your year";
   // they are the two forward-looking pillars, and reading as a pair is closer to the truth than
   // spending the last unused hue on a tab that would then match nothing.
@@ -3026,7 +3026,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     fresh.forEach(id=>seenUnlocks.current.add(id));
     // The milestone gets a moment, not a toast. Plans is the thing the whole ladder
     // climbs toward — the generator that reads the entire student and writes back a
-    // day-by-day plan — and announcing it in the same three-second grey rectangle as
+    // day-by-day plan — and announcing it in the same three-second gray rectangle as
     // "Flashcards unlocked" is how the app's best feature stayed invisible. A modal,
     // the work that earned it named back at the student, and one button that walks
     // them into it: that is the reward loop the unlock is supposed to close.
@@ -3223,7 +3223,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       body:`You're studying ${activePathways.length} pathways at once. This stays with you on every screen — click it to switch, or press ⌥1 / ⌥2${activePathways.length>2?' / ⌥3':''}. Nothing is lost when you move between them.`,
       onEnter:()=>{setCmdOpen(false);},
     }]:[]),
-    { target:'cmdk', section:'Everywhere', color:C.blueL, title:'Quick Jump — ⌘K', body:"From anywhere, press ⌘K (Ctrl+K) to jump straight to any section. That's it — go explore.", onEnter:()=>{setTab('home');setCmdOpen(false);} },
+    { target:'cmdk', section:'Everywhere', color:C.blueL, title:'Quick jump — ⌘K', body:"From anywhere, press ⌘K (Ctrl+K) to jump straight to any section. That's it — go explore.", onEnter:()=>{setTab('home');setCmdOpen(false);} },
   ],[navItems,TOUR_COPY,activePathways]);
 
   // ── Quick-switch command palette — one searchable jump point across every ────
@@ -3263,9 +3263,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       label:'What you\u2019re tracking', group:'Portfolio', ic:RadarIcon, action:()=>goPortfolio('tracked'),
     }]:[]),
     ...(unlocks.isOpen('portfolio','resume')?[
-      { id:'port-clinical', dest:'portfolio/resume:clinical', keywords:keywordsFor('portfolio/resume:clinical'), label:'Clinical Hours', group:'Portfolio', ic:Stethoscope, action:()=>goPortfolio('clinical') },
+      { id:'port-clinical', dest:'portfolio/resume:clinical', keywords:keywordsFor('portfolio/resume:clinical'), label:'Clinical hours', group:'Portfolio', ic:Stethoscope, action:()=>goPortfolio('clinical') },
       { id:'port-research', dest:'portfolio/resume:research', keywords:keywordsFor('portfolio/resume:research'), label:'Research', group:'Portfolio', ic:FlaskConical, action:()=>goPortfolio('research') },
-      { id:'port-skills', dest:'portfolio/resume:credentials', keywords:keywordsFor('portfolio/resume:credentials'), label:'Skills & Certs', group:'Portfolio', ic:BadgeCheck, action:()=>goPortfolio('skills') },
+      { id:'port-skills', dest:'portfolio/resume:credentials', keywords:keywordsFor('portfolio/resume:credentials'), label:'Skills & certs', group:'Portfolio', ic:BadgeCheck, action:()=>goPortfolio('skills') },
     ]:[]),
     ...roadmapSubnav.map(n=>({ id:`road-${n.id}`, dest:`roadmap/${n.id}`, keywords:keywordsFor(`roadmap/${n.id}`), label:n.label, group:'Roadmap', ic:n.ic, action:()=>goRoadmap(n.id) })),
     ...progressSubnav.map(n=>({ id:`prog-${n.id}`, dest:`progress/${n.id}`, keywords:keywordsFor(`progress/${n.id}`), label:n.label, group:'Progress', ic:n.ic, action:()=>goProgress(n.id) })),
@@ -3298,7 +3298,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // put this in front of you yet", never "you may not have this". Landing on a
   // gated surface by any route — a link, a bookmark, the back button — already
   // opens it for good (see Guarantee #2 above), so a search that finds one and
-  // a tap that opens it is exactly the behaviour that already exists, reached
+  // a tap that opens it is exactly the behavior that already exists, reached
   // by the one route that was refusing to offer it.
   //
   // They are offered only when something has been typed, and they sort last, so
@@ -3418,7 +3418,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // Which pathway a lesson actually belongs to, and its key. Everything the lesson player shows
   // or records — its title strip, its accent, its "next lesson", its verification quiz, the
   // tutor's grounding — has to come from THIS, not from `curPath`: a student running three
-  // pathways can open a Nursing lesson while Physician is in focus, and labelling that lesson
+  // pathways can open a Nursing lesson while Physician is in focus, and labeling that lesson
   // "Physician (MD/DO)" in blue is simply wrong. (Lesson ids are unique across pathways, which
   // is what makes the lookup unambiguous — guarded by verifyParallelPathways.mjs.)
   const pathwayKeyOf = useCallback((lesson)=>(lesson?.id&&LESSON_PATHWAY.get(lesson.id))||eSpec,[eSpec]);
@@ -4322,7 +4322,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       const claimPromise = claimRewardXP(`quest:assigned:${quest.id}`,xp).then(async(r)=>{ await syncUserFromDb(); return r; });
       const wonCosmetic = Math.random()<0.4 ? rollCosmetic(cosmetics) : null;
       openChest({
-        title:'Quest Complete',
+        title:'Quest complete',
         eyebrow:quest.title,
         xp,
         cosmetic:wonCosmetic,
@@ -4945,7 +4945,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // remembered per lesson (DB.lessonProgress), so they land on the first thing they haven't.
   function resumeStepFor(prog,{hasArticle,hasVideo}){
     if(!prog)return 'overview';
-    // A saved step is honoured as long as it still exists for this lesson (content can change).
+    // A saved step is honored as long as it still exists for this lesson (content can change).
     const order=['overview',hasArticle&&'article',hasVideo&&'video','quiz'].filter(Boolean);
     if(prog.step&&order.includes(prog.step)&&prog.step!=='overview')return prog.step;
     if(hasArticle&&!prog.articleRead)return 'article';
@@ -5169,7 +5169,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     lessonIndexRef.current=flat;
 
     const persisted=loadViewState();
-    // The boot URL is only ever honoured once — a later pathway switch re-runs this
+    // The boot URL is only ever honored once — a later pathway switch re-runs this
     // effect, and re-opening the lesson from the original URL then would fight the
     // student instead of helping them.
     const fromUrl=(!lessonBootRef.current&&boot.overlay?.kind==='lesson')?boot.overlay:null;
@@ -5491,7 +5491,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // does. Smart Mix's job is full-library interleaving — every card, in a genuinely different
   // order each session — and both a due-filter and a stability sort work against that: the
   // due-filter shrinks the pool to a handful once a student is caught up, and the sort makes
-  // consecutive sessions replay the same ordering. Per-deck study still honours both (below),
+  // consecutive sessions replay the same ordering. Per-deck study still honors both (below),
   // so the scheduled path is intact for anyone who wants it.
   const deckCards = useMemo(()=>{
     if(!activeDeck)return[];
@@ -5814,7 +5814,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <div style={G(4,14,{},isMobile)}>
           <Stat label="Total XP" value={(user.xp||0).toLocaleString()} icon={<Zap size={16}/>} color={C.amber} sub={`${xpForNext-xpIn} to Level ${lvl+1}`} m={isMobile}/>
           <Stat label="Level" value={`${lvl} · ${levelInfo.tier}`} icon={<Trophy size={16}/>} color={C.violet} sub={`${levelInfo.pct}% to next`} m={isMobile}/>
-          <Stat label="Quizzes Done" value={qTaken} icon={<CheckCircle2 size={16}/>} color={C.green} sub={`${ALL_QUIZZES.length-qTaken} remaining`} m={isMobile}/>
+          <Stat label="Quizzes done" value={qTaken} icon={<CheckCircle2 size={16}/>} color={C.green} sub={`${ALL_QUIZZES.length-qTaken} remaining`} m={isMobile}/>
           <Stat label="Mastery" value={`${mastery}%`} icon={<TrendingUp size={16}/>} color={accent} sub={`${doneL}/${allL.length} lessons`} m={isMobile}/>
         </div>
 
@@ -5842,12 +5842,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <SL>Quick Actions</SL>
           <div style={G(3,14,{},isMobile)}>
             {[
-              {Ic:Compass,lbl:'Diagnostic',sub:'Find your track',pillar:'prep',view:'diagnostic',col:C.violet},
+              {Ic:Compass,lbl:'Diagnostic',sub:'Find your pathway',pillar:'prep',view:'diagnostic',col:C.violet},
               {Ic:Route,lbl:'Pathways',sub:`${doneL}/${allL.length} lessons`,pillar:'prep',view:'pathways',col:accent},
-              {Ic:Layers,lbl:'Quiz Library',sub:`${qTaken}/${ALL_QUIZZES.length} taken`,pillar:'prep',view:'quizzes',col:C.green},
-              {Ic:MessageCircle,lbl:'AI Coach',sub:'Medabrain tutor',pillar:'prep',view:'coach',col:C.cyan},
+              {Ic:Layers,lbl:'Quiz library',sub:`${qTaken}/${ALL_QUIZZES.length} taken`,pillar:'prep',view:'quizzes',col:C.green},
+              {Ic:MessageCircle,lbl:'AI coach',sub:'Medabrain tutor',pillar:'prep',view:'coach',col:C.cyan},
               {Ic:Layers3,lbl:'Flashcards',sub:`${dueDeckCount>0?dueDecksSub(dueDeckCount):`${Object.keys(FLASH_DECKS).length+Object.keys(cDecks).length} decks`}`,pillar:'prep',view:'flashcards',col:dueDeckCount>0?C.violet:C.orange},
-              {Ic:Building2,lbl:'Admissions',sub:'School list builder',pillar:'portfolio',view:'calc',col:C.rose},
+              {Ic:Building2,lbl:'Admissions',sub:'Program list builder',pillar:'portfolio',view:'calc',col:C.rose},
             ].filter(a=>unlocks.isOpen(a.pillar,a.view)).map((a,i)=>(
               <motion.div key={i} whileHover={{y:-3,boxShadow:`0 12px 40px rgba(0,0,0,0.5),0 0 0 1px ${a.col}30`}} whileTap={{scale:.98}}
                 onClick={()=>{if(a.pillar==='prep')goPrep(a.view);else if(a.pillar==='portfolio')goPortfolio(a.view);play('click');}}
@@ -6009,7 +6009,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       return(
         <div style={CC({gap:20})}>
           <PanelHero icon={Compass} color={C.cyan} color2={C.blue} m={isMobile}
-            eyebrow="Pathway Diagnostic" title="Find Your Pathway"
+            eyebrow="Pathway diagnostic" title="Find your pathway"
             sub={`Every pathway below sequences the same core SAT/ACT prep — math, reading/writing, and science — around the units and quizzes most relevant to a specific health career, so studying also builds toward the path you're most likely to pursue. Take the diagnostic for a recommendation, or read through the pathways yourself and pick one directly. You can always switch later.`}
             stats={[
               {value:DIAG_QS.length,label:'questions'},
@@ -6135,7 +6135,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           </div>
         )}
         {/* Keyed on the focused pathway so React remounts this whole block on a switch and
-            framer-motion plays one short cross-fade. Without it, switching swapped every colour,
+            framer-motion plays one short cross-fade. Without it, switching swapped every color,
             title and progress number in place in a single frame — correct, but it read as a
             glitch rather than as a move between two things you own. */}
         <motion.div
@@ -6307,7 +6307,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             student's pathway with no warning and no way back. Now the same ten tiles ADD to
             what you're running (up to three), state exactly what a click does, and keep every
             finished lesson when something is dropped. Collapsed by default so the page still
-            ends on the student's own pathway rather than on a catalogue. */}
+            ends on the student's own pathway rather than on a catalog. */}
         <div id="msp-pathway-manager" style={glass({padding:16})}>
           <div style={R({justifyContent:'space-between',marginBottom:pathwayManagerOpen?14:0,flexWrap:'wrap',gap:8})}>
             <SectionTitle icon={Route} color={accent} extra={{marginBottom:0}}>
@@ -6368,7 +6368,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     return(
       <div style={CC({gap:20})}>
         <PanelHero tourTag="prep-deep-quizzes" icon={Layers} color={C.green} color2={C.cyan} m={isMobile}
-          eyebrow="Quiz Library" title="Practice Quizzes"
+          eyebrow="Quiz library" title="Practice quizzes"
           sub="Exam-style questions across every subject."/>
         {/* Medabrain ranked quiz recommendations — placed first, above the stat
             tiles and filter toolbar, so it's the first thing a student sees
@@ -6484,14 +6484,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             );
           })}
         </div>
-        {fQuiz.length===0&&<EmptyState icon={Layers} accent={accent} title="No quizzes match" body="Try a different search term or clear your filters." actionLabel="Clear Filters" onAction={()=>{setQSrch('');setQC('All');setQD('All');}}/>}
+        {fQuiz.length===0&&<EmptyState kind="filtered" icon={Layers} accent={accent} title="No quizzes match those filters" body="Nothing in the bank matches what you have selected. Clearing the filters brings all of them back." actionLabel="Clear filters" onAction={()=>{setQSrch('');setQC('All');setQD('All');}}/>}
       </div>
     );
   }
 
   // ── AI COACH ─────────────────────────────────────────────────────────────────
   const COACH_ICONS = { FlaskConical, Compass, Sparkles };
-  // Builds a "For You Right Now" group from the same profile signals already
+  // Builds a "For you right now" group from the same profile signals already
   // fed into buildCoachSystemPrompt (weakest category, due cards, stated
   // goal) so the starter prompts a student actually sees are
   // grounded in their real data instead of the same three generic examples
@@ -6504,7 +6504,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const goalLabel=GOAL_OPTIONS.find(o=>o.value===user?.goal)?.label;
     if(goalLabel)personal.push(`My goal is "${goalLabel}" — what's the single highest-leverage thing I should do this week?`);
     if(!personal.length)return QUICK_P_GROUPS;
-    return [{label:'For You Right Now',icon:'Sparkles',prompts:personal.slice(0,3)},...QUICK_P_GROUPS];
+    return [{label:'For you right now',icon:'Sparkles',prompts:personal.slice(0,3)},...QUICK_P_GROUPS];
   },[secAvgs,cats3,user,dueCards]);
   function TypingDots(){
     return(
@@ -6755,7 +6755,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 </div>
               </div>
             </div>
-            {personalizedQuickPrompts().map(group=>{const GIc=COACH_ICONS[group.icon];const personal=group.label==='For You Right Now';return(
+            {personalizedQuickPrompts().map(group=>{const GIc=COACH_ICONS[group.icon];const personal=group.label==='For you right now';return(
               <div key={group.label} style={{marginBottom:16}}>
                 <div style={{...R({gap:4}),marginBottom:8}}>
                   <GIc size={12} color={personal?C.amberL:C.t3}/><span style={{...lbl({marginBottom:0}),color:personal?C.amberL:undefined}}>{group.label}</span>
@@ -6986,16 +6986,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     return(
       <div style={CC({gap:20})}>
         <PanelHero tourTag="prep-deep-flashcards" icon={Layers3} color={C.amber} color2={C.rose} m={isMobile}
-          eyebrow="Flashcards" title="Study Decks"
+          eyebrow="Flashcards" title="Study decks"
           sub="Scheduled with FSRS. Study what's due, or build a deck from your notes."
           right={<button style={{...btn(C.sunsetGrad,{fontSize:12,padding:'8px 16px',boxShadow:`0 4px 14px ${C.amber}35`}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>setNewDeckOpen(true)}><Plus size={14}/>New Deck</button>}/>
 
         {/* Overview stats */}
         <div style={G(4,12,{},isMobile)}>
-          <StatTile icon={Layers3} value={builtinCount+customCount} label="Total Decks" color={C.sky}/>
-          <StatTile icon={ScrollText} value={allCards.length} label="Total Cards" color={C.teal}/>
-          <StatTile icon={dueDeckCount>0?Clock:CheckCircle2} value={dueDeckCount} label="Decks Due" sub={dueDeckCount>0?undefined:'all caught up'} color={dueDeckCount>0?C.amber:C.green}/>
-          <StatTile icon={Brain} value={avgRetention!==null?`${avgRetention}%`:'—'} label="Avg. Retention" color={C.violet}/>
+          <StatTile icon={Layers3} value={builtinCount+customCount} label="Total decks" color={C.sky}/>
+          <StatTile icon={ScrollText} value={allCards.length} label="Total cards" color={C.teal}/>
+          <StatTile icon={dueDeckCount>0?Clock:CheckCircle2} value={dueDeckCount} label="Decks due" sub={dueDeckCount>0?undefined:'all caught up'} color={dueDeckCount>0?C.amber:C.green}/>
+          <StatTile icon={Brain} value={avgRetention!==null?`${avgRetention}%`:'—'} label="Avg. retention" color={C.violet}/>
         </div>
 
         {/* Smart Mix — one cross-category session over the ENTIRE library, reshuffled on every
@@ -7332,10 +7332,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <div style={R({borderBottom: `1px solid ${C.b1}`, paddingBottom: 8, gap: 8, flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center'})}>
           <div style={R({gap: 8, flexWrap: 'wrap'})}>
             {[
-              { id: 'all', label: 'All Resources', icon: BookOpen, color: C.blue, light: C.blueL, dim: C.blueDim },
-              { id: 'saved', label: `My Saved (${savedCount})`, icon: Bookmark, color: C.amber, light: C.amberL, dim: C.amberDim },
+              { id: 'all', label: 'All resources', icon: BookOpen, color: C.blue, light: C.blueL, dim: C.blueDim },
+              { id: 'saved', label: `My saved (${savedCount})`, icon: Bookmark, color: C.amber, light: C.amberL, dim: C.amberDim },
               { id: 'completed', label: `Completed (${completedCount})`, icon: BadgeCheck, color: C.green, light: C.greenL, dim: C.greenDim },
-              { id: 'notes', label: `My Notes (${notesCount})`, icon: ScrollText, color: C.violet, light: C.violetL, dim: C.violetDim }
+              { id: 'notes', label: `My notes (${notesCount})`, icon: ScrollText, color: C.violet, light: C.violetL, dim: C.violetDim }
             ].map(tab => {
               const Icon = tab.icon;
               const active = lSubTab === tab.id;
@@ -7504,7 +7504,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 lCat === 'Physical Sciences' ? "In Physical Sciences, problem-solving is king. After reading about laws or formulas, work through practice problems from MIT OCW or watch walkthroughs by The Organic Chemistry Tutor." :
                 lCat === 'Behavioral & Social Sciences' ? "Behavioral sciences connect biology to society. Many medical colleges seek candidates with deep cultural competence. Yale's Science of Well-Being is a fantastic, stress-busting primer." :
                 lCat === 'Research Methods' ? "Clinical and basic science research is a major pre-med differentiator. Explore Science Journal for Kids or the NIH archive to learn how real scientific hypotheses are formulated and tested." :
-                lCat === 'Admissions & Planning' ? "Medical school admissions committee members look for holistic preparation. Study the AAMC Core Competencies to see how your extracurriculars, clinical hours, and volunteering align with entering student expectations." :
+                lCat === 'Admissions & Planning' ? "Medical school admissions committee members look for holistic preparation. Study the AAMC Core Competencies to see how your activities, clinical hours, and volunteering align with entering student expectations." :
                 lCat === 'Clinical Exposure' ? "Real exposure beats reading about medicine. Use MedlinePlus and the professional-association sites here to understand a field, then turn that into shadowing, volunteering, or a CPR certification you can actually log." :
                 lCat === 'Wellness & Balance' ? "The best students protect their sleep, focus, and mental health on purpose. Try one study-skills technique (like the Pomodoro timer or spaced repetition) and one wellbeing habit this week — burnout helps no one." :
                 lCat === 'Math & Data' ? "Math rewards reps, not cramming. Pair a concept video (Khan Academy, 3Blue1Brown) with 10-15 practice problems, and lean on Desmos or Wolfram Alpha to check your reasoning — not to skip it." :
@@ -7773,18 +7773,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <EmptyState
               icon={ScrollText}
               accent={C.violet}
-              title="No Study Notes Yet"
+              title="No study notes yet"
               body="Hit 'Notes' on any resource card to start one."
-              actionLabel="Browse All Resources"
+              actionLabel="Browse all resources"
               onAction={() => setLSubTab('all')}
             />
           ) : (
             <EmptyState
               icon={BookOpen}
               accent={accent}
-              title="No resources match"
+              kind="filtered"
+              title="No resources match those filters"
               body="Try a different search term or category filter."
-              actionLabel="Clear Filters"
+              actionLabel="Clear filters"
               onAction={()=>{setLS('');setLC('All');setLType('All');setLDiff('All');setLFreeOnly(false);setLSort('default');setLSubTab('all');}}
             />
           )
@@ -7840,21 +7841,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // supposed to open. Nothing is removed — the rest is one tap away under "Show everything
     // else", and the tap is remembered, so a student who wants all twelve keeps all twelve.
     const primarySections=[
-      // Activities & Résumé is one tab with five sections; the Clinical/Research/Skills tiles are
+      // Activities & résumé is one tab with five sections; the Clinical/Research/Skills tiles are
       // doors into it, each landing on the section it names (see PORTFOLIO_GROUP_FOR_VIEW +
       // goPortfolio) — merging those tabs must not put clinical hours one extra click away.
-      {view:'resume',ic:Award,label:'Activities & Résumé',value:portActivities.length,sub:'what you’ve done',col:C.amber},
-      {view:'clinical',ic:Stethoscope,label:'Clinical Hours',value:clinicalHoursTotal,sub:'hours logged',col:C.pink},
-      {view:'colleges',ic:GraduationCap,label:'College List',value:appCounts.colleges,sub:'schools saved',col:C.sky},
+      {view:'resume',ic:Award,label:'Activities & résumé',value:portActivities.length,sub:'what you’ve done',col:C.amber},
+      {view:'clinical',ic:Stethoscope,label:'Clinical hours',value:clinicalHoursTotal,sub:'hours logged',col:C.pink},
+      {view:'colleges',ic:GraduationCap,label:'College list',value:appCounts.colleges,sub:'schools saved',col:C.sky},
       {view:'milestones',ic:Milestone,label:'Deadlines',value:appTimeline?appTimeline.stats.upcoming:(upcomingDeadlines||[]).length,sub:appTimeline?.next?`next in ${appTimeline.next.days} days`:'coming up',col:C.indigo},
       {view:'essays',ic:ScrollText,label:'Essays',value:appCounts.essays,sub:'drafts',col:C.violetL},
-      {view:'aid',ic:Handshake,label:'Financial Aid',value:scholarshipCount,sub:'scholarships',col:C.green},
+      {view:'aid',ic:Handshake,label:'Financial aid',value:scholarshipCount,sub:'scholarships',col:C.green},
     ];
     const moreSections=[
       {view:'research',ic:FlaskConical,label:'Research',value:researchCount,sub:'projects',col:C.cyan},
-      {view:'skills',ic:BadgeCheck,label:'Skills & Certs',value:skillsCount,sub:'certifications',col:C.teal},
+      {view:'skills',ic:BadgeCheck,label:'Skills & certs',value:skillsCount,sub:'certifications',col:C.teal},
       {view:'recommenders',ic:UserCheck,label:'Recommenders',value:recommendersCount,sub:'people noted',col:C.fuchsia},
-      {view:'interview',ic:Mic,label:'Interview Prep',value:interviewCount,sub:'practice sessions',col:C.orange},
+      {view:'interview',ic:Mic,label:'Interview prep',value:interviewCount,sub:'practice sessions',col:C.orange},
       {view:'tracked',ic:RadarIcon,label:'Tracked',value:trackedItems.length,sub:trackNeeds?`${trackNeeds} need you`:'all current',col:C.violet},
       {view:'opportunities',ic:Trophy,label:'Opportunities',value:opportunityPreview.matches.length,sub:'matched to you',col:C.gold},
     ];
@@ -7909,7 +7910,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     return(
       <div style={CC({gap:20})}>
         <PanelHero tourTag="portfolio-deep-overview" icon={Building2} color={C.blue} color2={C.green} m={isMobile}
-          eyebrow="Portfolio" title="Your Application"
+          eyebrow="Portfolio" title="Your application"
           sub="Everything you’re building for college. Start with the card below."
           stats={[
             {value:portActivities.length,label:'activities',color:C.blueL},
@@ -8096,7 +8097,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 (Leadership/Research/Volunteer hours used to be shown twice: as a bare number here
                 AND as a val/target progress bar, trimmed to avoid the duplication). */}
             <div style={G(2,14,{},isMobile)}>
-              <Stat label="Est. Annual Hours" value={totH} icon={<Clock size={16}/>} color={accent} m={isMobile}/>
+              <Stat label="Est. annual hours" value={totH} icon={<Clock size={16}/>} color={accent} m={isMobile}/>
               <Stat label="Current GPA" value={latestGpa!==null?latestGpa:'—'} icon={<TrendingUp size={16}/>} color={C.green} sub={ongoingCount?`${ongoingCount} ongoing activities`:'No GPA logged yet'} m={isMobile}/>
             </div>
 
@@ -8118,11 +8119,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           </div>
         </Disclosure>
 
-        {/* Activity list — a read-only recap of rows that are edited in Activities & Résumé, so it
+        {/* Activity list — a read-only recap of rows that are edited in Activities & résumé, so it
             is reference material, not a workspace. Behind a door for the same reason. */}
         {portActivities.length>0&&(
           <Disclosure id="port-overview-activities" title={`Everything you’ve logged (${portActivities.length})`}
-            sub="Edit these in Activities & Résumé." icon={Award} color={C.amber} m={isMobile}>
+            sub="Edit these in Activities & résumé." icon={Award} color={C.amber} m={isMobile}>
             <div style={CC({gap:8})}>
               <AnimatePresence>
                 {portActivities.map((act)=>{const col=actColors[act.activity_type]||C.blue;return(
@@ -8136,7 +8137,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 );})}
               </AnimatePresence>
               <button onClick={()=>goPortfolio('resume')} style={{...btnSm(tint(C.amber,0.16),{color:accentText(C.amber),fontSize:11.5,alignSelf:'flex-start'})}}>
-                Edit these in Activities & Résumé<ArrowRight size={11}/>
+                Edit these in Activities & résumé<ArrowRight size={11}/>
               </button>
             </div>
           </Disclosure>
@@ -8204,7 +8205,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       const claimPromise = claimRewardXP(`quest:${weekKey}:${q.id}`,q.xp).then(async(r)=>{ await syncUserFromDb(); return r; });
       const wonCosmetic = Math.random()<0.25 ? rollCosmetic(cosmetics) : null;
       openChest({
-        title: 'Quest Complete',
+        title: 'Quest complete',
         eyebrow: q.label,
         xp: q.xp,
         cosmetic: wonCosmetic,
@@ -8286,7 +8287,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const clinicalTrendData={
       labels:monthKeys.map(m=>new Date(m+'-01').toLocaleDateString(undefined,{month:'short',year:'2-digit'})),
       datasets:[{
-        label:'Cumulative Hours', data:monthKeys.map(m=>{running+=hoursByMonth[m];return running;}),
+        label:'Cumulative hours', data:monthKeys.map(m=>{running+=hoursByMonth[m];return running;}),
         borderColor:`${accent}e6`, backgroundColor:`${accent}14`, borderWidth:2.5, pointRadius:4, tension:0.3, fill:true,
       }],
     };
@@ -8312,7 +8313,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
     return(
       <div>
-        <PageHeader icon={LineChart} color={accent} eyebrow="Progress" title="Your Progress"
+        <PageHeader icon={LineChart} color={accent} eyebrow="Progress" title="Your progress"
           sub="Readiness, credibility, and performance across your pathway." m={isMobile}
           right={!isMobile&&(
             <div style={R({gap:8})}>
@@ -8440,8 +8441,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <div style={G(4,14,{},isMobile)}>
           <Stat label="Total XP" value={(user.xp||0).toLocaleString()} icon={<Zap size={16}/>} color={C.amber} m={isMobile}/>
           <Stat label="Level" value={`${lvl} · ${levelInfo.tier}`} icon={<Trophy size={16}/>} color={C.violet} m={isMobile}/>
-          <Stat label="Avg Score" value={`${avgSc}%`} icon={<LineChart size={16}/>} color={scCol(avgSc)} m={isMobile}/>
-          <Stat label="Study Streak" value={`${streak}d`} icon={<Flame size={16}/>} color={C.orange} m={isMobile}/>
+          <Stat label="Avg score" value={`${avgSc}%`} icon={<LineChart size={16}/>} color={scCol(avgSc)} m={isMobile}/>
+          <Stat label="Study streak" value={`${streak}d`} icon={<Flame size={16}/>} color={C.orange} m={isMobile}/>
         </div>
 
         {/* Profiling roadmap — transparent about what's NOT tracked yet */}
@@ -8664,9 +8665,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
         {/* Card review stats */}
         <div style={G(3,14,{},isMobile)}>
-          <Stat label="Cards Reviewed" value={totalReviews} icon={<Layers3 size={16}/>} color={C.violet} sub="Total all-time" m={isMobile}/>
-          <Stat label="Decks Due" value={dueDeckCount} icon={<CalendarDays size={16}/>} color={dueDeckCount>0?C.amber:C.green} sub={dueDeckCount>0?'Review these today':'All caught up!'} m={isMobile}/>
-          <Stat label="Coach Messages" value={aiChatCount} icon={<MessageCircle size={16}/>} color={C.cyan} sub="Medabrain conversations" m={isMobile}/>
+          <Stat label="Cards reviewed" value={totalReviews} icon={<Layers3 size={16}/>} color={C.violet} sub="Total all-time" m={isMobile}/>
+          <Stat label="Decks due" value={dueDeckCount} icon={<CalendarDays size={16}/>} color={dueDeckCount>0?C.amber:C.green} sub={dueDeckCount>0?'Review these today':'All caught up!'} m={isMobile}/>
+          <Stat label="Coach messages" value={aiChatCount} icon={<MessageCircle size={16}/>} color={C.cyan} sub="Medabrain conversations" m={isMobile}/>
         </div>
         </>}
 
@@ -8764,7 +8765,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             this page, and burying it under four groups of profile fields is a
             small cruelty. */}
         {settingsView==='appearance'&&<>
-        <Group icon={Accessibility} title="Appearance & Accessibility">
+        <Group icon={Accessibility} title="Appearance & accessibility">
           <AppearanceSettings settings={a11y} onChange={updateA11y} isMobile={isMobile} accent={accent}/>
         </Group>
 
@@ -8813,7 +8814,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
         {/* ── What Medabrain knows about you ─────────────────────────────────── */}
         {settingsView==='medabrain'&&
-        <Group icon={Brain} title="What Medabrain Knows About You">
+        <Group icon={Brain} title="What Medabrain knows about you">
           <div style={glass({padding:16})}>
             <SL>Your personal brief</SL>
             <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight: 1.55}}>
@@ -8829,7 +8830,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
         {/* ── Profile & Goals ─────────────────────────────────────────────────── */}
         {settingsView==='profile'&&
-        <Group icon={UserCog} title="Profile & Goals">
+        <Group icon={UserCog} title="Profile & goals">
         <div data-tour="settings-deep-profile" style={glass()}>
           <SL>Display Name</SL>
           <div style={CC({gap:4,marginBottom:12})}><input style={inp()} placeholder={user.name} value={sName} onChange={e=>setSN(e.target.value)}/></div>
@@ -8953,7 +8954,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
         {/* ── Study Setup ──────────────────────────────────────────────────────── */}
         {settingsView==='study'&&
-        <Group icon={Route} title="Study Setup">
+        <Group icon={Route} title="Study setup">
         {/* Class year. Captured once during onboarding and, until now, editable nowhere — which
             meant a student who mis-tapped it, or whose profile was rebuilt from their account on
             a new device (that path only restores name/grade from the server), had no way to fix
@@ -9120,7 +9121,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
         {/* ── Preferences & Data ───────────────────────────────────────────────── */}
         {settingsView==='data'&&
-        <Group icon={Volume2} title="Preferences & Data">
+        <Group icon={Volume2} title="Preferences & data">
         <div data-tour="settings-deep-preferences" style={glass({padding:16})}>
           <div style={R({justifyContent:'space-between'})}>
             <div>
@@ -9204,7 +9205,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             waiting on them, so it is a sub-tab with a URL (/settings/family) that the invitation
             email links to directly. */}
         {settingsView==='family'&&
-        <Group icon={Users} title="Family Access">
+        <Group icon={Users} title="Family access">
           <div style={glass({padding:16})}>
             <SL>Who can see your progress</SL>
             <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight:1.65}}>
@@ -9387,7 +9388,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <a href={`mailto:${LEGAL.contactEmail}`} style={{fontSize:13,color:C.blueL,fontWeight:600}}>Contact us</a>
           </div>
           <div style={{fontSize:11,color:C.t3,lineHeight: 1.55}}>
-            MedSchoolPrep is an independent study tool. It is not a medical school, is not affiliated with or endorsed by any testing organisation, university, or health system, and does not confer academic credit or any credential. All lessons, quizzes, career material and AI coach output are for general educational and career-exploration purposes only — they are not medical, legal, financial, or professional advice, and no clinical or health decision should be based on them. Score estimates are our own approximations, not official scores, and are not a prediction or guarantee of any result. Always confirm deadlines and requirements directly with the college, scholarship provider, or testing organisation.<br/><br/>
+            MedSchoolPrep is an independent study tool. It is not a medical school, is not affiliated with or endorsed by any testing organization, university, or health system, and does not confer academic credit or any credential. All lessons, quizzes, career material and AI coach output are for general educational and career-exploration purposes only — they are not medical, legal, financial, or professional advice, and no clinical or health decision should be based on them. Score estimates are our own approximations, not official scores, and are not a prediction or guarantee of any result. Always confirm deadlines and requirements directly with the college, scholarship provider, or testing organization.<br/><br/>
             {TRADEMARK_NOTICE.map((line,i)=><React.Fragment key={i}>{line}{i<TRADEMARK_NOTICE.length-1?' ':''}</React.Fragment>)}
           </div>
         </div>
@@ -9422,7 +9423,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // ═══ ACTIVE QUIZ FULLSCREEN ════════════════════════════════════════════════════
   if(aQuiz){
     // A verification quiz belongs to the lesson that launched it, so it wears that lesson's
-    // pathway colour — a Nursing lesson's quiz shouldn't turn Physician-blue mid-verification
+    // pathway color — a Nursing lesson's quiz shouldn't turn Physician-blue mid-verification
     // just because Physician is the pathway in focus. A plain Quiz Library quiz has no pathway
     // of its own and keeps the focused accent.
     const qAccent=verifyCtx?.lesson?accentText(pathwayOf(verifyCtx.lesson)?.accent||C.blue):accent;
@@ -9452,7 +9453,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const lessonContent=LESSON_CONTENT[lesson.id];
     // The pathway THIS lesson belongs to — see pathwayKeyOf/pathwayOf above. Everything below
     // reads from these instead of curPath/eSpec so a lesson opened from another enrolled
-    // pathway is titled, coloured, quizzed and tutored as itself.
+    // pathway is titled, colored, quizzed and tutored as itself.
     const lPathKey=pathwayKeyOf(lesson);
     const lPath=PATHS[lPathKey]||curPath;
     const lAccent=lPath?.accent||C.blue;
@@ -9605,7 +9606,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   }
   // ── Portfolio: overview + milestones/colleges/essays/aid/resume/interview/calc ──
   // Each sub-view inherits ITS OWN SubNav color as its accent so the whole
-  // Portfolio reads as a spectrum of distinct, recognisable sections (matching
+  // Portfolio reads as a spectrum of distinct, recognizable sections (matching
   // the pill it was opened from) rather than one flat green everywhere.
   const portC=Object.fromEntries(PORTFOLIO_SUBNAV.map(n=>[n.id,n.color]));
   const portfolioRenders={
@@ -9670,7 +9671,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       calc:tCalc,
       medex:tMedex,
       }}/>,
-    // Activities & Résumé reasons over the student's own academic history: it reads
+    // Activities & résumé reasons over the student's own academic history: it reads
     // gpa_entries/test_scores/colleges itself and matches U.S. schools against their real GPA,
     // score and the career they named at signup — so `user` and the grade label are load-bearing
     // here, not decoration. onCollegeAdded keeps App.jsx's counters honest when a matched school
@@ -9792,7 +9793,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       return(
         <div style={CC({gap:20})}>
           <PanelHero icon={Compass} color={C.fuchsia} color2={C.violet} m={isMobile}
-            eyebrow="Plans" title="Pick Your Pathway First"
+            eyebrow="Plans" title="Pick your pathway first"
             sub="Your pathway shapes your whole roadmap. Take the diagnostic, or pick one — you can switch later."/>
           <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} style={{...glass({padding:28,background:`linear-gradient(135deg,${C.cyanDim},${C.blueDim} 70%,transparent)`,border:`1px solid ${C.cyan}30`,position:'relative',overflow:'hidden'}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
             <div style={{position:'absolute',inset:0,background:C.oceanGrad,opacity:0.05,pointerEvents:'none'}}/>
@@ -10003,7 +10004,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               <ThemeToggle mode={a11y.themeMode} onChange={m=>updateA11y({themeMode:m})} size={32} align="right" accent={accent}/>
               {/* The two things in the header that are counting down: the streak (today ends)
                   and any live XP boost (this one ends sooner). A boost applied silently to a
-                  number the student was going to earn anyway changes no behaviour at all —
+                  number the student was going to earn anyway changes no behavior at all —
                   seeing it run is the entire mechanic. */}
               <BoostChip boosts={boosts} onClick={()=>goProgress('streak')} m />
               {streak>0&&<span onClick={()=>goProgress('streak')} style={{...pill(tint(streakLeague.color,0.14),streakLeague.color,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4,flexShrink:0,cursor:'pointer'}}><Flame size={10}/>{streak}d</span>}
@@ -10025,7 +10026,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 <AnimatedLogo size={34} variant="breathe"/>
                 <div>
                   <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>MedSchoolPrep</div>
-                  <div style={{fontSize:9,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>YOUR PATH INTO MEDICINE</div>
+                  <div style={{fontSize:9,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>Your path into medicine</div>
                 </div>
               </div>
             </div>
@@ -10193,7 +10194,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           // new student sees four items here instead of seven, and a four-item bar can afford
           // what a seven-item bar could not: 22px icons and an 11px label with room around
           // them. That is the difference between a phone-native bottom bar and a row of tiny
-          // grey glyphs — and "it looks like a 90s site, teenagers expect app-like nav" was
+          // gray glyphs — and "it looks like a 90s site, teenagers expect app-like nav" was
           // the exact complaint. The bar shrinks back toward the compact treatment as more
           // items unlock, by which point the student knows what each one is.
           <nav style={{position:'fixed',bottom:0,left:0,right:0,height:navItems.length<=5?68:64,background:C.s0,borderTop:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'space-around',zIndex:300,paddingBottom:'env(safe-area-inset-bottom)'}}>

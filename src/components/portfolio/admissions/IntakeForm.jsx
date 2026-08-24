@@ -221,7 +221,7 @@ function FieldInput({ field, value, onChange, autoValue, isMobile }) {
 
 /**
  * Section scores. Auto-filled from the Score Tracker where the student has
- * entered them there; editable here because several programmes gate on a single
+ * entered them there; editable here because several programs gate on a single
  * section and a composite cannot answer that question.
  */
 function TestSections({ value, onChange, autoValue, isMobile }) {
@@ -252,7 +252,7 @@ function TestSections({ value, onChange, autoValue, isMobile }) {
           </div>
           {test === 'act' && (
             <div style={{ marginTop: 4 }}>
-              <HelpNote>The ACT Science score is here specifically because UMKC's six-year programme requires you to have sat it at all — a composite alone cannot tell us whether you did.</HelpNote>
+              <HelpNote>The ACT Science score is here specifically because UMKC's six-year program requires you to have sat it at all — a composite alone cannot tell us whether you did.</HelpNote>
             </div>
           )}
         </div>
@@ -305,8 +305,8 @@ export function AlreadyKnown({ portfolio, applicant, onGoTo, isMobile }) {
 }
 
 /**
- * The questions. Ordered so anything a programme on the student's list actually
- * gates on comes first — a student with no New York programmes should never be
+ * The questions. Ordered so anything a program on the student's list actually
+ * gates on comes first — a student with no New York programs should never be
  * asked a New York question before a question that decides their eligibility.
  */
 export default function IntakeForm({ answers, onAnswer, derived, completeness, priorityFields = [], isMobile }) {
@@ -318,9 +318,9 @@ export default function IntakeForm({ answers, onAnswer, derived, completeness, p
   });
 
   const groups = [
-    { id: 'eligibility', label: 'Eligibility — the yes/no questions', color: C.rose, note: 'These decide whether a percentage can be shown at all. A programme you are not eligible for gets no number, only what would have to change.' },
+    { id: 'eligibility', label: 'Eligibility — the yes/no questions', color: C.rose, note: 'These decide whether a percentage can be shown at all. A program you are not eligible for gets no number, only what would have to change.' },
     { id: 'academics', label: 'Academics', color: C.blue, note: 'Benchmarked against the 25th, 50th and 75th percentile of admitted students — all three, always.' },
-    { id: 'testing', label: 'Testing', color: C.violet, note: 'Section scores and superscore policy, because several programmes gate on one and refuse the other.' },
+    { id: 'testing', label: 'Testing', color: C.violet, note: 'Section scores and superscore policy, because several programs gate on one and refuse the other.' },
     { id: 'portfolio', label: 'Portfolio', color: C.green, note: 'Only what your logged activities cannot already tell us.' },
     { id: 'context', label: 'Context', color: C.amber, note: 'The things that are in every published admit rate and in no chancing tool.' },
   ];

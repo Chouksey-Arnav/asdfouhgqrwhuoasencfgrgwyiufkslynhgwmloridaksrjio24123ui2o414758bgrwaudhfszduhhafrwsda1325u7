@@ -37,7 +37,7 @@ const ROLES = [
  *
  * /parents/signup exists so a parent never has to find the right radio button — they followed a
  * link that says "for parents" and the form should simply be the parent form. Rendered as a
- * statement of what is being created rather than a disabled control, because a greyed-out picker
+ * statement of what is being created rather than a disabled control, because a grayed-out picker
  * invites people to try to click it.
  */
 function LockedRole({ role }) {

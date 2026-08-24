@@ -90,7 +90,7 @@ function Calendar({ days }) {
   );
 }
 
-/** A change, with its direction stated in words as well as colour — see the note in Testing below. */
+/** A change, with its direction stated in words as well as color — see the note in Testing below. */
 function Delta({ value, unit = '' }) {
   if (value == null) return null;
   const flat = value === 0;

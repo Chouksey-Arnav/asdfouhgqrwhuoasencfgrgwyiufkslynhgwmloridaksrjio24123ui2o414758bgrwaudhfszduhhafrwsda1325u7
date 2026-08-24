@@ -189,7 +189,7 @@ export default function SatLibraryPanel({
     <div style={CC({ gap: 20 })}>
       <SatPageHeader
         accent={accent}
-        eyebrow="SAT · Library" title="Every question, and where the official ones live"
+        eyebrow="SAT · library" title="Every question, and where the official ones live"
         sub="The whole bank by section, domain, skill and difficulty — plus College Board’s own material."
         meta={[
           { value: counts.total, label: 'questions' },
@@ -207,7 +207,7 @@ export default function SatLibraryPanel({
         <>
           <div style={G(3, 12, {}, isMobile)}>
             <StatTile icon={Library} color={accent} value={counts.total} label="in the bank" />
-            <StatTile icon={BookOpen} color={SAT_SECTIONS.rw.color} value={counts.rw} label="Reading & Writing" onClick={() => { setSection('rw'); setSkill(null); }} />
+            <StatTile icon={BookOpen} color={SAT_SECTIONS.rw.color} value={counts.rw} label="Reading & writing" onClick={() => { setSection('rw'); setSkill(null); }} />
             <StatTile icon={Filter} color={SAT_SECTIONS.math.color} value={counts.math} label="Math" onClick={() => { setSection('math'); setSkill(null); }} />
           </div>
 

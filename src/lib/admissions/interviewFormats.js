@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// From "this program interviews like THIS" to "so practise THESE stations."
+// From "this program interviews like THIS" to "so practice THESE stations."
 //
 // The link is the point. A student applying to Drexel, which states on its own
 // admissions page that selected applicants are invited to a virtual MMI, should
@@ -37,7 +37,7 @@ export const INTERVIEW_FORMATS = {
     blurb: 'One longer conversation, one or more interviewers, follow-ups that build on your answers rather than resetting each time.',
     mode: 'mmi',
     stationFilter: { format: 'traditional' },
-    cta: 'Practise the traditional stations',
+    cta: 'Practice the traditional stations',
   },
   casper: {
     label: 'CASPer',
@@ -53,7 +53,7 @@ export const INTERVIEW_FORMATS = {
     blurb: 'You are assessed alongside other candidates on a shared task. What is being watched is what you do when someone else is wrong, or quiet, or dominating.',
     mode: 'mmi',
     stationFilter: { format: 'collaborative' },
-    cta: 'Practise the collaborative stations',
+    cta: 'Practice the collaborative stations',
   },
 };
 
@@ -126,7 +126,7 @@ export function interviewPrepFor(profile) {
 
 /**
  * Across a student's whole program list: which formats are actually in play, and therefore what
- * they should be practising first. Ordered by how many of their programs need it, because a
+ * they should be practicing first. Ordered by how many of their programs need it, because a
  * student applying to four MMI programs and one panel should not be shown them as equals.
  */
 export function interviewFormatsAcross(programIds) {

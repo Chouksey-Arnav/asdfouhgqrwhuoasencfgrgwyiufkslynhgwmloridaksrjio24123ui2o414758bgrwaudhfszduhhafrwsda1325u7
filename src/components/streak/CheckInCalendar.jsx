@@ -20,7 +20,7 @@
 //      one on purpose (see GRACE_DAYS in lib/dailyCheckin.js); it is the
 //      mechanic that gets a lapsed student back, and a mechanic that punishes
 //      the lapse cannot do that job.
-//   2. Pretend to be the streak. It carries its own colour (sky, not amber),
+//   2. Pretend to be the streak. It carries its own color (sky, not amber),
 //      its own icon and its own copy, and the panel it sits in says in one line
 //      that this measures turning up while the streak measures work.
 // ─────────────────────────────────────────────────────────────────────────────

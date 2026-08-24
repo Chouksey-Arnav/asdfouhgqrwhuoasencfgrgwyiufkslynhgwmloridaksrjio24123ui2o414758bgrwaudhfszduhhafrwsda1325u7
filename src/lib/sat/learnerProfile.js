@@ -384,7 +384,7 @@ export function profileFingerprint(profile) {
  * Which skills a generated set should target, and why.
  *
  * The generator needs more than a list of skill ids — it needs a per-skill
- * instruction (difficulty, what to emphasise, which trap to build in) so the
+ * instruction (difficulty, what to emphasize, which trap to build in) so the
  * items it writes are aimed at this student rather than generically on-topic.
  * Kept here rather than in aiPractice.js because it is pure profile reasoning
  * with no network involved, which makes it testable on its own.

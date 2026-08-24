@@ -17,7 +17,7 @@
 //
 // THE FRAMEWORK. The AAMC premed competencies, restricted to the ten that a spoken interview can
 // actually assess. The science-knowledge, quantitative-reasoning, written-communication and
-// human-behaviour-coursework competencies are deliberately absent: a voice interview cannot measure
+// human-behavior-coursework competencies are deliberately absent: a voice interview cannot measure
 // them, and pretending otherwise is how a rubric becomes decoration.
 //
 // THE GRADER'S TRAP. Evaluative signal lives in specific committed actions, not in topic or
@@ -32,7 +32,7 @@ export const SCALE_MAX = 7;
 export const SCALE_ANCHORS = [
   { score: 1, label: 'Unsatisfactory', blurb: 'Did not engage the question, or engaged it in a way that would concern a committee.' },
   { score: 2, label: 'Poor', blurb: 'Engaged the question but missed most of what it was asking for.' },
-  { score: 3, label: 'Borderline', blurb: 'Recognisable attempt with a real gap in reasoning, specificity, or action.' },
+  { score: 3, label: 'Borderline', blurb: 'Recognizable attempt with a real gap in reasoning, specificity, or action.' },
   { score: 4, label: 'Below the pool median', blurb: 'Fluent but incomplete. Repeated across a full MMI circuit this is very likely a rejection.' },
   { score: 5, label: 'Satisfactory — the most common score', blurb: 'Competent, clear, defensible, and completely forgettable. This is where most real candidates land.' },
   { score: 6, label: 'Above the interviewed pool', blurb: 'Roughly the top fifth of people who got as far as an interview.' },
@@ -70,7 +70,7 @@ export const COMPETENCY_KEYS = Object.keys(COMPETENCIES);
 // Verbs that move a candidate TOWARD a person or a problem.
 const APPROACH_VERBS = [
   'ask', 'tell', 'talk to', 'speak to', 'speak with', 'sit (?:down )?with', 'sit next to', 'stay',
-  'listen', 'check in', 'check on', 'call', 'reach out', 'go(?: over)? to', 'move toward', 'move towards',
+  'listen', 'check in', 'check on', 'call', 'reach out', 'go(?: over)? to', 'move toward', 'move toward',
   'offer', 'apologi[sz]e', 'acknowledge', 'explain', 'clarify', 'ask for', 'invite', 'include',
   'escalate', 'report', 'raise (?:it|this|the issue)', 'flag', 'document', 'notify', 'bring (?:it|this) to',
   'follow up', 'arrange', 'set up', 'schedule', 'volunteer', 'help', 'support', 'stay with',
@@ -271,7 +271,7 @@ export const WEAK_REASONS = {
   sidePickedAndNeverRevisited: 'You picked a side in your first sentence and never came back to it. A rater is listening for whether you considered the other position at all — committing early and never revisiting reads as not having thought about it.',
   restatesPrompt: 'A large part of your opening was the prompt read back. Raters hear that as a stall; start with the tension in the case instead.',
   answersNearbyQuestion: 'This answers a question near the one you were asked, not the one you were asked. Name the specific thing the station put in front of you before you start reasoning.',
-  moralizes: 'This is moralising rather than analysing — it states what is right without ever getting to what you would do. Raters score the action, not the sentiment.',
+  moralizes: 'This is moralizing rather than analyzing — it states what is right without ever getting to what you would do. Raters score the action, not the sentiment.',
   ruleWithoutAction: 'You stated a rule but never said what you would actually do under it. "That would breach confidentiality" is the start of an answer, not the answer.',
   fakedLegalConfidence: 'You made a confident claim about law or policy without hedging it. "I don\'t know the exact rule — here is how I\'d find out" scores higher than a wrong certainty, every time.',
   talkedOverDisclosure: 'You spoke over the actor while they were disclosing something. In an empathy station that single moment can decide the score.',

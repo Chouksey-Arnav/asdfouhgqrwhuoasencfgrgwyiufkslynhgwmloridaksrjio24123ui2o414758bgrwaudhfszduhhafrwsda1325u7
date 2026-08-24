@@ -21,7 +21,7 @@ import { buildVersionArc, diffWords } from '../../lib/essayVersions';
 // earlier draft back is a student who will not risk a bold rewrite, and the
 // bold rewrite is usually the one that works.
 //
-// The colour language is deliberately not red/green. Removing words from an
+// The color language is deliberately not red/green. Removing words from an
 // application essay is normally the good move, and marking every cut in red
 // teaches exactly the wrong instinct.
 // ─────────────────────────────────────────────────────────────────────────────

@@ -110,7 +110,7 @@ export default function DesmosCalculator({
     resetCalculator(calcRef.current, mode);
   }, [mode]);
 
-  // A seed arriving while the window is minimised should pop it back open —
+  // A seed arriving while the window is minimized should pop it back open —
   // the student pressed "graph this question" and expects to see a graph.
   useEffect(() => { if (seed?.token) setMinimised(false); }, [seed?.token]);
 
@@ -196,7 +196,7 @@ export default function DesmosCalculator({
             <IconBtn title="Clear the graph" onClick={handleReset}><Trash2 size={13} /></IconBtn>
             {!isMobile && (
               <>
-                <IconBtn title={minimised ? 'Expand' : 'Minimise'} onClick={() => { setMinimised(v => !v); setMaximised(false); }}>
+                <IconBtn title={minimised ? 'Expand' : 'Minimize'} onClick={() => { setMinimised(v => !v); setMaximised(false); }}>
                   <Minus size={13} />
                 </IconBtn>
                 <IconBtn title={maximised ? 'Restore' : 'Full screen'} onClick={() => { setMaximised(v => !v); setMinimised(false); }}>
@@ -204,7 +204,7 @@ export default function DesmosCalculator({
                 </IconBtn>
               </>
             )}
-            <IconBtn title="Close (Esc)" onClick={onClose}><X size={14} /></IconBtn>
+            <IconBtn title="Close (esc)" onClick={onClose}><X size={14} /></IconBtn>
           </div>
         </div>
 

@@ -283,7 +283,7 @@ export const CALCULATOR_FACTS = [
   'Desmos is built into the Digital SAT and available on every question in the Math section — both modules, start to finish.',
   'There is no calculator on Reading & Writing, and no question there needs one.',
   'You may also bring your own approved handheld calculator as a backup. Most students who practice with Desmos stop reaching for it.',
-  'The reference sheet stays on screen for the whole Math section. Nothing on it is worth memorising; everything not on it is.',
+  'The reference sheet stays on screen for the whole Math section. Nothing on it is worth memorizing; everything not on it is.',
 ];
 
 export const REFERENCE_DISCLAIMER =

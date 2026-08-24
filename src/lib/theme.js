@@ -2,7 +2,7 @@
 // The app-wide theme engine, and the flat token view every component reads.
 //
 // ── The three layers ────────────────────────────────────────────────────────
-// Colour lives in src/lib/tokens/, in three strictly separated layers:
+// Color lives in src/lib/tokens/, in three strictly separated layers:
 //
 //   primitives.js  raw values, no meaning, never touched by a component
 //   semantic.js    the ONLY layer that varies per theme; named by meaning
@@ -61,7 +61,7 @@ import { eyebrow } from './tokens/type.js';
 import { RADIUS } from './tokens/space.js';
 import { DUR, EASE, tr } from './tokens/motion.js';
 
-// The non-colour token layers are re-exported from here so a component has one
+// The non-color token layers are re-exported from here so a component has one
 // import for "the design system" rather than four. They are separate FILES
 // because they are separate concerns with separate lints; they are one import
 // because nobody should have to remember which file `SP.lg` lives in.
@@ -127,7 +127,7 @@ export function flatten(sem) {
   flat.blueD = sem.accent.deep;
 
   // Multi-hue gradients, composed from the flattened hues so they follow the
-  // theme instead of being a second place a colour is written down.
+  // theme instead of being a second place a color is written down.
   flat.blueGrad = `linear-gradient(135deg,${flat.blue} 0%,${flat.blueD} 100%)`;
   flat.auroraGrad = `linear-gradient(120deg,${flat.blue} 0%,${flat.violet} 45%,${flat.pink} 100%)`;
   flat.oceanGrad = `linear-gradient(135deg,${flat.cyan} 0%,${flat.blue} 60%,${flat.indigo} 100%)`;
@@ -523,7 +523,7 @@ export const accentText = (color, surface = null, min = 4.5) => {
 export const onTint = (accent, min = 4.5) => (isLight() ? accentText(accent, C.s1, min) : (C.onTintFg || C.t1 || '#ffffff'));
 
 /**
- * The label colour for text on an arbitrary SOLID fill.
+ * The label color for text on an arbitrary SOLID fill.
  *
  * `C.onAccent` is right whenever the fill really is an accent, which is the
  * overwhelming majority of call sites. It is wrong when a "button" is filled

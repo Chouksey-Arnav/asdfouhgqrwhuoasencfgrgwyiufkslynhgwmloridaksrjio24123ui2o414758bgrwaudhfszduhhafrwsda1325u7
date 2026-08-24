@@ -155,7 +155,7 @@ export const RW_INFO_IDEAS_D = [
       'Emperor penguin huddles share exposure by rotating their members.',
       'Emperor penguins form the largest bird colonies found in Antarctica.',
       'The Antarctic winter is too cold for a single penguin to survive alone.',
-      'Penguins at the centre of a huddle stay warmer than those at the edge.',
+      'Penguins at the center of a huddle stay warmer than those at the edge.',
     ],
     ans: 0,
     exp: 'The passage describes the shuffle and states its consequence: nobody stays exposed for long, and the huddle rotates.',

@@ -23,7 +23,7 @@
 // Slack going negative is the moment a deadline stops being a future problem,
 // and it is usually weeks or months before the date itself. That is the number
 // the BANDS are cut from — overdue, start now, start within two weeks, time in
-// hand — and it is what the feed colours by.
+// hand — and it is what the feed colors by.
 //
 // Slack alone is not enough to ORDER within a band, though, and the reason is
 // worth stating because it is where a naive implementation gets the original
@@ -106,7 +106,7 @@ export const URGENCY_BANDS = {
  *
  * `slack` is the whole answer; the band and the sentence are renderings of it.
  * The sentence is written to be said to a student — "this closes in 95 days and
- * needs about two months of run-up" is actionable in a way that a coloured dot
+ * needs about two months of run-up" is actionable in a way that a colored dot
  * is not.
  */
 export function urgencyOf(event) {

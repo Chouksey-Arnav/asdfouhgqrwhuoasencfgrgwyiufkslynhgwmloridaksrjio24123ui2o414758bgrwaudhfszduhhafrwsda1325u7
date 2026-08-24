@@ -94,7 +94,7 @@ export default function SatBetaCover({ children, isMobile = false }) {
 
           <span style={pill(tint(C.sky, 0.16), C.sky, { fontSize: 10, letterSpacing: 0.6 })}>
             <Sparkles size={11} style={{ marginRight: 4, verticalAlign: -1 }} />
-            BETA — NOT YET AVAILABLE
+            BETA — Not yet available
           </span>
 
           <h2 style={{ fontSize: isMobile ? 19 : 22, fontWeight: 800, color: C.t1, margin: '12px 0px 8px', fontFamily: C.FD }}>
@@ -102,7 +102,7 @@ export default function SatBetaCover({ children, isMobile = false }) {
           </h2>
 
           <p style={{ fontSize: 13, color: C.t2, lineHeight: 1.55, margin: 0 }}>
-            The full SAT centre — baseline, diagnostic, adaptive practice, full-length
+            The full SAT center — baseline, diagnostic, adaptive practice, full-length
             tests, the review log and skill mastery — is built and sitting right behind
             this screen. It is closed for version one while we finish checking the
             question bank and the score scales.

@@ -13,7 +13,7 @@ import * as DB from '../lib/db';
 import { normalizeStoredScore, SCALE_MAX, anchorFor } from '../lib/interviewScore';
 
 const MODE_META = {
-  live: { label: 'Live Voice', color: C.rose, Icon: Mic },
+  live: { label: 'Live voice', color: C.rose, Icon: Mic },
   standard: { label: 'Standard', color: C.blue, Icon: MessageSquare },
   mmi: { label: 'MMI', color: C.violet, Icon: Layers },
   casper: { label: 'CASPer', color: C.cyan, Icon: Layers },

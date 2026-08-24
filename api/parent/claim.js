@@ -86,7 +86,7 @@ const isMissingSchema = (err) => !!err
 /**
  * `priya.shah@gmail.com` → `p•••••••h@gmail.com`.
  *
- * Enough for the recipient to recognise their own address and spot that the invitation went to
+ * Enough for the recipient to recognize their own address and spot that the invitation went to
  * their work account rather than their personal one — which is the single most common reason a
  * code "never arrives". Not enough to be worth harvesting from the preview.
  */
@@ -206,7 +206,7 @@ export default async function handler(req, res) {
         gradeLevel: inviter?.grade_level || null,
       },
       relationship: link.relationship || null,
-      // Masked, never whole: the recipient needs to recognise the address, and nobody else needs
+      // Masked, never whole: the recipient needs to recognize the address, and nobody else needs
       // to be able to read it off a screen they guessed their way onto.
       emailHint: maskEmail(inviteEmail),
       expiresAt: link.invite_expires_at,

@@ -48,7 +48,7 @@ const SPLIT_STIMULUS_CHARS = 240;
 // needing its own scroll, instead of one that reads cleanly.
 const SPLIT_MIN_WIDTH = 1080;
 
-/** Normalise a grid-in answer for comparison: "1/2", "0.5", ".5" all match. */
+/** Normalize a grid-in answer for comparison: "1/2", "0.5", ".5" all match. */
 function sprMatches(input, accept) {
   if (!input || !accept?.values?.length) return false;
   const raw = String(input).trim();
@@ -720,7 +720,7 @@ export default function SatQuestionPlayer({
             <ToolButton
               icon={Calculator} label="Calculator" color={C.teal}
               active={tools.calculatorOpen} onClick={tools.toggleCalculator}
-              title="Desmos — Alt+C"
+              title="Desmos — alt+C"
             />
             <ToolButton
               icon={BookOpen} label="Formulas" color={C.emerald}

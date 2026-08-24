@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// One programme's result.
+// One program's result.
 //
 // The layout is an argument about what a student should read first, in order:
 //
@@ -11,9 +11,9 @@
 //      because showing only the 25th is how "qualified" becomes "likely".
 //   4. WHAT WOULD MOVE IT MOST, three or four things, ranked by how much they
 //      would actually change the estimate under this model.
-//   5. WHAT THIS PROGRAMME WEIGHTS, and which of the student's own activities
+//   5. WHAT THIS PROGRAM WEIGHTS, and which of the student's own activities
 //      match it.
-//   6. WHY WE ARE NOT SURE — itemised, so the confidence label is auditable.
+//   6. WHY WE ARE NOT SURE — itemized, so the confidence label is auditable.
 //   7. The lottery, where one genuinely exists.
 // ─────────────────────────────────────────────────────────────────────────────
 import React from 'react';
@@ -40,9 +40,9 @@ const EMPHASIS_ICON = { research: Microscope, clinical: Stethoscope, service: He
  * without reading a word.
  */
 function RangeBar({ probability, color }) {
-  // Scaled to the model's own ceiling for this programme rather than to 100%,
-  // so a 3–13% range at an ultra-selective programme is legible instead of
-  // being four invisible pixels at the left edge. The ceiling is labelled.
+  // Scaled to the model's own ceiling for this program rather than to 100%,
+  // so a 3–13% range at an ultra-selective program is legible instead of
+  // being four invisible pixels at the left edge. The ceiling is labeled.
   const max = Math.max(probability.ceiling, probability.high * 1.15, 0.05);
   const x = (v) => `${Math.min(100, (v / max) * 100)}%`;
 
@@ -258,8 +258,8 @@ export default function ProgramResultCard({ result, portfolio, onRoundChange, ro
         </>
       )}
 
-      {/* ── What this programme actually weights ──────────────────────────── */}
-      <SectionTitle icon={EmphasisIcon} color={C.violet}>What this programme weights</SectionTitle>
+      {/* ── What this program actually weights ──────────────────────────── */}
+      <SectionTitle icon={EmphasisIcon} color={C.violet}>What this program weights</SectionTitle>
       <div style={{ ...glass2({ padding: 12 }), marginBottom: 8 }}>
         <div style={R({ gap: 8, marginBottom: 8, flexWrap: 'wrap' })}>
           <span style={pill(tint(C.violet, 0.16), accentText(C.violet), { fontSize: 10.5 })}>{layers.weighting.emphasis}-leaning</span>
@@ -317,9 +317,9 @@ export default function ProgramResultCard({ result, portfolio, onRoundChange, ro
         )}
       </div>
 
-      {/* ── How this programme interviews ─────────────────────────────────── */}
+      {/* ── How this program interviews ─────────────────────────────────── */}
       {/* Sits directly under the round, because the round and the interview are
-          the two things about this programme that are on a calendar rather than
+          the two things about this program that are on a calendar rather than
           in a portfolio. The point of the block is the link: a student applying
           somewhere that runs an MMI should not have to work out for themselves
           that the MMI circuit in Interview Prep is the thing to run. */}
@@ -356,9 +356,9 @@ export default function ProgramResultCard({ result, portfolio, onRoundChange, ro
 }
 
 /**
- * What this programme's interview format means for the student, and where to go and practise it.
+ * What this program's interview format means for the student, and where to go and practice it.
  *
- * The three states are deliberately distinct on screen. A published format gets the programme's
+ * The three states are deliberately distinct on screen. A published format gets the program's
  * own words and a specific destination. An unconfirmed one says so plainly and still recommends
  * the circuit, because the circuit is the harder version of every format and an hour on it is
  * never wasted whichever room turns up. Nothing here guesses a format: sending someone to rehearse
@@ -384,14 +384,14 @@ function InterviewBlock({ program, onGoTo }) {
 
   return (
     <>
-      <SectionTitle icon={Mic} color={color}>How this programme interviews</SectionTitle>
+      <SectionTitle icon={Mic} color={color}>How this program interviews</SectionTitle>
       <div style={{ ...glass2({ padding: 12 }), marginBottom: 8 }}>
         <div style={R({ gap: 8, flexWrap: 'wrap', marginBottom: 8 })}>
           {known
             ? <span style={pill(tint(color, 0.16), accentText(color), { fontSize: 10.5 })}>{primary.label}</span>
             : <span style={pill(C.s3, C.t3, { fontSize: 10.5 })}>Format not confirmed</span>}
           <span style={pill(C.s3, C.t3, { fontSize: 9.5 })}>
-            {prep.basis === 'published' ? 'stated by the programme' : 'not published — see below'}
+            {prep.basis === 'published' ? 'stated by the program' : 'not published — see below'}
           </span>
         </div>
 

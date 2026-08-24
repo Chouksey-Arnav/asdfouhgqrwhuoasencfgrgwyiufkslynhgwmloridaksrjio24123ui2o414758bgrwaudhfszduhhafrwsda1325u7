@@ -1,6 +1,6 @@
 // The clock, and the fact that it does not stop.
 //
-// Reading time is the part of the MMI students skip when they practise, and it is the part that
+// Reading time is the part of the MMI students skip when they practice, and it is the part that
 // decides how the first ninety seconds inside the room go. Two minutes outside a door with nothing
 // but the scenario is a genuinely different exercise from reading the scenario and then thinking
 // about it for as long as you like, and the difference is the whole reason this component exists

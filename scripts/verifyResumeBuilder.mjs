@@ -17,7 +17,7 @@
 //      content for a student, which is the integrity line the whole product is built around.
 //   3. THE ACADEMIC ENGINE COMPARES ON THE RIGHT SCALE. SCHOOL_DATA's admitted-student GPAs are
 //      unweighted. A weighted 4.6 must be converted before it is compared, or every recommendation
-//      is confidently wrong in the student's favour — the single most dangerous failure here.
+//      is confidently wrong in the student's favor — the single most dangerous failure here.
 //   4. THE STRICTER AXIS WINS. A school that is a target on GPA and a reach on score is a reach.
 //      Admissions offices do not average two axes into a comfortable middle, and a matcher that
 //      does builds a college list with no real safeties in it.
@@ -257,7 +257,7 @@ assert('a strong entry and a thin entry get different reactions',
   reactToActivity(strongActivity) !== reactToActivity(thinActivity));
 assert('an undescribed activity is told so immediately',
   /description/i.test(reactToActivity({ ...thinActivity, description: '' })));
-assert('a national award is recognised as one',
+assert('a national award is recognized as one',
   /national/i.test(reactToAward({ title: 'X', level: 'National' })));
 assert('an award with no level is told to set one',
   /level of recognition/i.test(reactToAward({ title: 'X' })));

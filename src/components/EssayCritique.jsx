@@ -7,7 +7,7 @@ import { scoreBand } from '../lib/essayCritique';
 // Shared renderer for a Medabrain essay critique — used by both the Essay
 // Workspace editor (a tracked draft) and the supplemental trainer (a practice
 // answer), so a student cannot get a softer read by choosing one surface over
-// the other. The scoring badge is deliberately not colour-flattering: a 5-6
+// the other. The scoring badge is deliberately not color-flattering: a 5-6
 // renders amber, not green, because "clear but forgettable" is not a pass on the
 // one document a student gets a single shot at.
 const TONE_COLORS = {

@@ -47,7 +47,7 @@ export function DoorCard({ station, accent = C.violet }) {
       <div style={{ fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', fontWeight: 700, color: C.t1, fontFamily: C.FD, marginBottom: 8 }}>{station.title}</div>
       <div style={{ fontSize: 14, color: C.t1, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{station.door}</div>
       <div style={{ fontSize: 11, color: C.t3, marginTop: 12, lineHeight: 1.55 }}>
-        You do not see the question until the door opens. Use this time to decide your first sentence — that is what reading time is for, and it is the part almost nobody practises.
+        You do not see the question until the door opens. Use this time to decide your first sentence — that is what reading time is for, and it is the part almost nobody practices.
       </div>
     </div>
   );

@@ -10,7 +10,7 @@
 //
 // The MedEx Score is not a progress bar. It is a POSITION — where the student
 // currently sits relative to the median admitted student at one specific,
-// named programme. That is why it needs a benchmark (benchmark.js), why it is
+// named program. That is why it needs a benchmark (benchmark.js), why it is
 // built on the admissions model's own standardized dimensions rather than on
 // raw hour counts (score.js), and why moving it gets harder near the top rather
 // than easier.
@@ -18,7 +18,7 @@
 // ── Why 0-1000 and not 0-100 ────────────────────────────────────────────────
 // Three reasons, all practical:
 //   • A 0-100 invites a percentage reading, and this is not a probability.
-//     The probability lives in the Admissions Calculator, per programme, as a
+//     The probability lives in the Admissions Calculator, per program, as a
 //     range — see src/lib/admissions/. Anyone who reads "742" as "74% chance"
 //     is making an error a 0-100 scale actively encourages.
 //   • A week's real work is a visible number of points. Twelve clinical hours
@@ -28,7 +28,7 @@
 //     points becoming unreachable rounding.
 //
 // ── The anchor that makes it interpretable ──────────────────────────────────
-// 850 is the median admitted student at your benchmark programme. Not the 25th
+// 850 is the median admitted student at your benchmark program. Not the 25th
 // percentile — the median. This is the same fight the admissions model picks in
 // academicFit.js: benchmark against the 25th and "cleared a low bar" quietly
 // becomes "qualified", which quietly becomes "likely". A student at 850 looks
@@ -46,7 +46,7 @@ export const MEDEX_COHORT_MEDIAN = 850;
  * The z → score curve, as interpolation anchors.
  *
  * `z` is the applicant's weighted standardized position against the benchmark
- * programme's admitted cohort — the same z the admissions model composes on
+ * program's admitted cohort — the same z the admissions model composes on
  * (model.js), so the two features can never disagree about who is stronger.
  *
  * The curve DECELERATES: 240 points per z below the median, 110 just above it,
@@ -101,12 +101,12 @@ export const BANDS = [
   {
     id: 'cohort', min: 800, label: 'Cohort Match', short: 'Cohort',
     tone: 'green',
-    blurb: 'You look like the admitted cohort at your benchmark programme. That is what this scale is anchored to, and it is a genuinely strong place to stand.',
+    blurb: 'You look like the admitted cohort at your benchmark program. That is what this scale is anchored to, and it is a genuinely strong place to stand.',
   },
   {
     id: 'apex', min: 890, label: 'Apex', short: 'Apex',
     tone: 'gold',
-    blurb: 'Above the median admit at one of the most selective programmes in the country. Read this as "nothing in your control is holding you back" — not as a probability, which at these programmes stays low for everyone.',
+    blurb: 'Above the median admit at one of the most selective programs in the country. Read this as "nothing in your control is holding you back" — not as a probability, which at these programs stays low for everyone.',
   },
 ];
 
@@ -182,7 +182,7 @@ export const MEDEX_COPY = {
   name: 'MedEx Score',
   short: 'MedEx',
   tagline: 'Where you stand against the class that gets in.',
-  scaleNote: `0–1000. ${MEDEX_COHORT_MEDIAN} is the median admitted student at your benchmark programme.`,
+  scaleNote: `0–1000. ${MEDEX_COHORT_MEDIAN} is the median admitted student at your benchmark program.`,
   // Logging can move the number DOWN, and the app has to say so before it
   // happens rather than after. A dimension nobody has logged is scored as
   // unknown, and a genuinely thin dimension scores below unknown — so a student
@@ -192,7 +192,7 @@ export const MEDEX_COPY = {
   canGoDown:
     'Logging something can move this down as well as up. An activity you have never logged is counted as unknown, and a thin one is counted as thin — so the first honest entry sometimes costs points. It is still the right move: every point after that one is real, and a score built on blanks was never yours.',
   notAProbability:
-    'This is a position, not a probability. It says how you compare to the students who get admitted at your benchmark — not how likely you are to be one of them. The odds live in the Admissions Calculator, per programme, as a range, because that is the only honest shape for them.',
+    'This is a position, not a probability. It says how you compare to the students who get admitted at your benchmark — not how likely you are to be one of them. The odds live in the Admissions Calculator, per program, as a range, because that is the only honest shape for them.',
 };
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));

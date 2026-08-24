@@ -3,7 +3,7 @@
 //
 // The compact form for places that are already a row of status pills — the Home
 // hero's identity row beside the streak and level, and the Portfolio overview's
-// header. It carries the score, the band's colour, and the week's movement, and
+// header. It carries the score, the band's color, and the week's movement, and
 // nothing else: a chip that tried to also explain the benchmark would be a card.
 //
 // Renders NOTHING when there is no score. A chip reading "—" in a row of live

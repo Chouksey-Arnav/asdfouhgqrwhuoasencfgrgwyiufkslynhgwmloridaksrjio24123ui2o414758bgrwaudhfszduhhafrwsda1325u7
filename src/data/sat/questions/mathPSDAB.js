@@ -336,7 +336,7 @@ export const MATH_PSDA_B = [
   {
     id: 'sat-m-inf-0105', section: 'math', domain: 'psda', skill: 'inference_margin_error',
     difficulty: 'H', format: 'mcq', trap: 'correlation_cause', targetSeconds: 80,
-    q: 'A hospital randomly assigns 600 patients to either a new physiotherapy program or the standard one, and finds significantly better recovery in the new program. To which group can this result be generalised?',
+    q: 'A hospital randomly assigns 600 patients to either a new physiotherapy program or the standard one, and finds significantly better recovery in the new program. To which group can this result be generalized?',
     ch: [
       'All patients everywhere with the same condition, since assignment was random.',
       'Only patients similar to those in this hospital\'s patient population.',
@@ -355,7 +355,7 @@ export const MATH_PSDA_B = [
   {
     id: 'sat-m-inf-0103', section: 'math', domain: 'psda', skill: 'inference_margin_error',
     difficulty: 'M', format: 'mcq', trap: 'correlation_cause', targetSeconds: 70,
-    q: 'A magazine asks its readers to complete an online poll about media habits, and 8,000 readers respond. Why should the results not be generalised to the country as a whole?',
+    q: 'A magazine asks its readers to complete an online poll about media habits, and 8,000 readers respond. Why should the results not be generalized to the country as a whole?',
     ch: [
       'The sample size of 8,000 is too small for a national conclusion.',
       'Respondents selected themselves and all read the same magazine.',

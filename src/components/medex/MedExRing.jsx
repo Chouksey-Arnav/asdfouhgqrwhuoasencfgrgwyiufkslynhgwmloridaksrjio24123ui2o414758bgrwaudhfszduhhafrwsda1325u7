@@ -7,7 +7,7 @@
 //
 //   1. The score.
 //   2. WHERE 850 IS. The whole scale is anchored to the median admitted student
-//      at the benchmark programme, and a dial without that mark is just a
+//      at the benchmark program, and a dial without that mark is just a
 //      progress bar with a nice font. It is a hard notch across the track, and
 //      it does not move — so a student can see the gap they are actually
 //      closing rather than a bar that always looks nearly full. It carries no
@@ -48,7 +48,7 @@ export const bandColor = (band) => {
   return byTone[band?.tone] || C.blue;
 };
 
-/** Degrees swept by the arc, centred on 12 o'clock. 270° leaves a readable foot. */
+/** Degrees swept by the arc, centered on 12 o'clock. 270° leaves a readable foot. */
 const SWEEP = 270;
 const A0 = -SWEEP / 2;
 const A1 = SWEEP / 2;
@@ -99,7 +99,7 @@ export default function MedExRing({
   // structural reason rather than a cosmetic one: the value arc is painted on
   // top of it, so the low→score half of the range is hidden and only the
   // score→high half survives. What the student sees is a stub of a different
-  // colour hanging off the end of their score, which reads as a rendering bug,
+  // color hanging off the end of their score, which reads as a rendering bug,
   // not as "we are not certain". On its own rail the whole low→high span is
   // visible at once and the score sits inside it, which is the actual claim.
   const railR = r + stroke / 2 + 5;
@@ -110,7 +110,7 @@ export default function MedExRing({
   }, [range, cx, cy, railR]);
 
   // Unique per instance: two dials on one screen sharing a gradient id would
-  // both render the first one's colours.
+  // both render the first one's colors.
   const gradId = `${idPrefix}-grad`;
 
   const cohortAngle = angleFor(MEDEX_COHORT_MEDIAN);
@@ -171,7 +171,7 @@ export default function MedExRing({
         )}
       </svg>
 
-      {/* Centre readout */}
+      {/* Center readout */}
       <div style={{
         position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', padding: stroke,

@@ -22,7 +22,7 @@ import { ItemDate, TrackChip, UrgencyChip, trackColor, fmtMonth, TRACK_ICON, URG
 // · The line never breaks. Each row draws its own segment of it, so the
 //   connection survives any content height, any wrap, any font size — there is
 //   no measured height anywhere in here that could be wrong by a pixel.
-// · The line is TRAVELLED behind today and AHEAD in front of it, with a real
+// · The line is TRAVELED behind today and AHEAD in front of it, with a real
 //   node where today falls. A student should be able to see, without reading a
 //   word, how much of their year is behind them.
 // · Undated items are not dropped and are not invented into a position. They

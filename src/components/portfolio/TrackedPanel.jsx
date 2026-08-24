@@ -341,13 +341,12 @@ export default function TrackedPanel({
           actionLabel="Find opportunities" onAction={() => onOpen?.('opportunities')}
         />
       ) : !filtered.length ? (
-        <div style={{ ...glass2({ padding: 20, textAlign: 'center' }) }}>
-          <div style={{ fontSize: 12.5, color: C.t2 }}>Nothing here right now.</div>
-          <button onClick={() => { setStage('all'); setKind('all'); setQuery(''); }}
-            style={{ ...btnSm(tint(accent, 0.16), { color: onTint(accent), fontSize: 11.5, marginTop: 8 }) }}>
-            Show everything again
-          </button>
-        </div>
+        <EmptyState
+          kind="filtered" icon={Compass}
+          title="Nothing matches those filters"
+          body="You are tracking things — none of them match what you have selected right now."
+          actionLabel="Clear filters" onAction={() => { setStage('all'); setKind('all'); setQuery(''); }}
+        />
       ) : (
         <div style={CC({ gap: 8 })}>
           <AnimatePresence initial={false}>

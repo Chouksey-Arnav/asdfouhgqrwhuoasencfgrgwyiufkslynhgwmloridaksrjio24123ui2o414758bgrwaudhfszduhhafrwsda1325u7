@@ -28,7 +28,7 @@ const effortColor = (effort) => ({ Elite: C.rose, Competitive: C.amber, Open: C.
 // the whole curated catalog, in ScholarshipDatabase.jsx's pattern (Fuse.js fuzzy
 // search as the primary control, type pills and facet chips secondary), plus an
 // honest "not in our database" path that asks Meta Brain from general knowledge
-// and can save the answer as a clearly-labelled custom activity.
+// and can save the answer as a clearly-labeled custom activity.
 //
 // It used to carry its own "Recommended for you" block too. That moved — and got
 // substantially smarter — when Opportunities became its own tab: personalization

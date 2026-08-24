@@ -34,10 +34,10 @@ export function SplashStep({ onNext }) {
 // The four pillars, as the flow's own marks rather than borrowed ones — so the
 // first screen of the app already speaks the icon language every question will.
 const FEATURES = [
-  { icon: 'stethoscope', label: 'Pathway Diagnostic', hues: ['teal', 'emerald'] },
-  { icon: 'brain', label: 'AI Coach', hues: ['violet', 'indigo'] },
-  { icon: 'clipboard-plus', label: 'Application Portfolio', hues: ['rose', 'pink'] },
-  { icon: 'trend-up', label: 'Built-in Test Prep', hues: ['sky', 'cyan'] },
+  { icon: 'stethoscope', label: 'Pathway diagnostic', hues: ['teal', 'emerald'] },
+  { icon: 'brain', label: 'AI coach', hues: ['violet', 'indigo'] },
+  { icon: 'clipboard-plus', label: 'Application portfolio', hues: ['rose', 'pink'] },
+  { icon: 'trend-up', label: 'Built-in test prep', hues: ['sky', 'cyan'] },
 ];
 
 // What the flow promises, in three lines. Shown next to the pitch on a wide

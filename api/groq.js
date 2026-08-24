@@ -217,7 +217,7 @@ const SHARED_KEYS = [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2, proce
 //   3. IT IS STABLE ACROSS RETRIES. A student who retries lands on the same account, so a retry
 //      does not spend a second account's budget on work the first one already partly did.
 //
-// The result is exactly the alternating behaviour intended — with two keys, hashing user ids
+// The result is exactly the alternating behavior intended — with two keys, hashing user ids
 // splits the student body ~50/50 — while surviving the fact that these are stateless functions.
 // Failover to the other key on a 429/5xx is unchanged (see callGroqWithFailover), so a student
 // pinned to a capped account still gets served rather than failing.
@@ -399,7 +399,7 @@ function minuteLimitRetryMs(ip, purpose) {
 // measured skill profile (weak skills with sample sizes, their triaged error
 // mix, the specific traps they keep falling for) plus a per-skill blueprint for
 // every item being asked for. That is the whole point of the feature — a
-// generator that only sees "make 6 Boundaries questions" cannot personalise
+// generator that only sees "make 6 Boundaries questions" cannot personalize
 // anything — and it does not fit in a chat-sized 2500-char budget.
 // 'essay' carries a full draft (a 650-word personal statement is ~4000 chars on its own, and a
 // student may paste one well over the limit precisely because they want it cut down) plus the
@@ -412,7 +412,7 @@ function minuteLimitRetryMs(ip, purpose) {
 // buildProfileFactsText in src/lib/masterPlanGenerator.js). At 9,000 that digest was silently
 // truncated from the end, which for a day-chunk request cut off the list of days to generate:
 // the model would return a short plan and nobody would know why. The client enforces its own
-// prioritised budget under this ceiling, so this is a backstop, not the working limit.
+// prioritized budget under this ceiling, so this is a backstop, not the working limit.
 // 'roadmap' is the largest input budget in the app, and it is spent on things that are all
 // load-bearing: a shortlist of up to 48 real catalog entries (each with its dates, eligibility and
 // lead time), the student's thirteen intake answers including a free-text box they were invited to
@@ -434,7 +434,7 @@ function minuteLimitRetryMs(ip, purpose) {
 //
 // 90,000 chars (~22k tokens) leaves Oracle five times that in headroom for its
 // reasoning and its 32k of output, and still stops a broken loop from posting a
-// megabyte. The client does its own prioritised budgeting well under this
+// megabyte. The client does its own prioritized budgeting well under this
 // ceiling (src/lib/roadmap/promptBudget.js), so this stays what it always should
 // have been: a backstop, not the working limit.
 const MAX_INPUT_CHARS_BY_PURPOSE = { prep: 8000, masterplan: 20000, sat: 9000, essay: 14000, roadmap: 90000 };
@@ -663,7 +663,7 @@ export default async function handler(req, res) {
   // ── Per-minute rate limiting ───────────────────────────────────────────────
   // `retryAfterMs` travels in the body as well as the standard Retry-After header, because the
   // one caller that genuinely needs to wait and retry (plan generation) is a fetch() in the
-  // browser reading JSON, not an HTTP client that honours headers on its own.
+  // browser reading JSON, not an HTTP client that honors headers on its own.
   //
   // The two 429s below are different animals and the `code` says which. A minute
   // limit clears on its own inside a minute and waiting is the correct response;

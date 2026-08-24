@@ -318,7 +318,7 @@ function Intro({ history, gateOpen, waitLabel, accent, isMobile, onStart, user, 
         <SatCard title="Where you stand" icon={BarChart3} iconColor={accent} m={isMobile}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 12 }}>
             <StatTile icon={Target} value={`${last.low}–${last.high}`} label="Composite range" sub={`midpoint ${last.mid}`} color={accent} />
-            <StatTile icon={Sparkles} value={last.sections?.rw?.scaled ?? '—'} label="Reading & Writing" color={C.blue} />
+            <StatTile icon={Sparkles} value={last.sections?.rw?.scaled ?? '—'} label="Reading & writing" color={C.blue} />
             <StatTile icon={Zap} value={last.sections?.math?.scaled ?? '—'} label="Math" color={C.violet} />
           </div>
           {delta && (

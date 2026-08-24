@@ -12,7 +12,7 @@ import { celebrateAchievement } from '../lib/celebrate';
 // — you glance at it and carry on. It is the wrong weight for the one gate the
 // ladder actually builds toward. Plans is the app's most expensive feature: it
 // reads the whole student and writes back a day-by-day schedule, and it was
-// arriving as a fifth line of grey text in the corner of the screen, three
+// arriving as a fifth line of gray text in the corner of the screen, three
 // seconds long, easy to miss entirely.
 //
 // A reward loop needs a moment. This is the moment: the work that earned it

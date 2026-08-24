@@ -477,8 +477,8 @@ eq('shiftDays crosses a month', shiftDays('2026-10-15', -28), '2026-09-17');
   eq('the summer-program closing sits in February',
     MILESTONES.find(m => m.id === 'hp_summer_window_close').monthDay.slice(0, 2), '02');
 
-  // Certification enrolment windows, HOSA, and the science competitions.
-  assert('certification enrolment is offered to a freshman', idsFor('freshman').has('hp_cert_fall_enrollment'));
+  // Certification enrollment windows, HOSA, and the science competitions.
+  assert('certification enrollment is offered to a freshman', idsFor('freshman').has('hp_cert_fall_enrollment'));
   assert('HOSA membership closes in the autumn', MILESTONES.find(m => m.id === 'hp_hosa_join').monthDay.slice(0, 2) === '09');
   assert('the HOSA ILC is in June', MILESTONES.find(m => m.id === 'hp_hosa_ilc').monthDay.slice(0, 2) === '06');
   assert('HOSA qualifying reaches every class year', GRADE_KEYS.filter(g => g !== 'gap').every(g => idsFor(g).has('hp_hosa_regionals')));

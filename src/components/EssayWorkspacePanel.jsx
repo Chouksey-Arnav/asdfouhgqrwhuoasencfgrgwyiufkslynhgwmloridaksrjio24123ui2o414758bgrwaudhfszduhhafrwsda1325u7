@@ -35,7 +35,7 @@ import EssayVersionHistory, { VersionLabelFields } from './portfolio/EssayVersio
 // gap a general tool cannot close because it does not know what the student is
 // applying to:
 //
-//  1. THE ESSAY THAT ACTUALLY DECIDES THESE ADMISSIONS was not modelled at all.
+//  1. THE ESSAY THAT ACTUALLY DECIDES THESE ADMISSIONS was not modeled at all.
 //     "Why this pathway" is not written in senior year; it is assembled over
 //     four years out of moments a student cannot articulate at the time and
 //     cannot reconstruct afterwards. It is now a persistent working document
@@ -49,7 +49,7 @@ import EssayVersionHistory, { VersionLabelFields } from './portfolio/EssayVersio
 //  3. NINTH AND TENTH GRADERS were handed an application-essay task list they
 //     cannot act on for two or three years. The tracker is still visible and
 //     still clickable for them — hiding it would mean arriving at junior year
-//     never having seen it — but it is labelled as junior-year work and it is
+//     never having seen it — but it is labeled as junior-year work and it is
 //     out of their working set. Their surface is the journal.
 //
 // And the AI policy is enforced where the writing happens rather than in the
@@ -58,7 +58,7 @@ import EssayVersionHistory, { VersionLabelFields } from './portfolio/EssayVersio
 // ─────────────────────────────────────────────────────────────────────────────
 
 const STATUSES = [
-  { id: 'not_started', label: 'Not Started', color: C.t3 },
+  { id: 'not_started', label: 'Not started', color: C.t3 },
   { id: 'outlining', label: 'Outlining', color: C.violetL },
   { id: 'drafting', label: 'Drafting', color: C.blueL },
   { id: 'revising', label: 'Revising', color: C.amberL },
@@ -576,7 +576,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
         <>
           {/* ── Ninth and tenth grade ──────────────────────────────────────────
               Journal first, working document second, tracker last and clearly
-              labelled. The tracker is one tap away and never taken from them —
+              labeled. The tracker is one tap away and never taken from them —
               a student who has never seen it arrives at junior year blind — but
               it is not in their working set, so nothing about it can read as
               something they are behind on. */}

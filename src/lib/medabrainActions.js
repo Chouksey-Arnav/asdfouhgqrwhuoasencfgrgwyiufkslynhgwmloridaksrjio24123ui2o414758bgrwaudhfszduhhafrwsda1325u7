@@ -37,22 +37,22 @@ export const ACTION_RESOURCES = {
     summarize: (it) => `${it.name || 'Untitled'}${it.amount ? ` — $${Number(it.amount).toLocaleString()}` : ''}`,
   },
   activities: {
-    label: 'Activities & Résumé', destination: 'portfolio/resume',
+    label: 'Activities & résumé', destination: 'portfolio/resume',
     fields: ['activity_type', 'position', 'organization', 'description', 'impact', 'hours_per_week', 'weeks_per_year', 'grade_levels', 'leadership_role'],
     summarize: (it) => `${it.position || 'Untitled'}${it.organization ? ` at ${it.organization}` : ''}`,
   },
   awards: {
-    label: 'Activities & Résumé', destination: 'portfolio/resume',
+    label: 'Activities & résumé', destination: 'portfolio/resume',
     fields: ['title', 'grade_level', 'level', 'issuing_organization', 'category'],
     summarize: (it) => it.title || 'Untitled award',
   },
   research_experience: {
-    label: 'Activities & Résumé', destination: 'portfolio/resume:research',
+    label: 'Activities & résumé', destination: 'portfolio/resume:research',
     fields: ['title', 'mentor_name', 'institution', 'description', 'hours'],
     summarize: (it) => it.title || 'Untitled research',
   },
   clinical_hours: {
-    label: 'Activities & Résumé', destination: 'portfolio/resume:clinical',
+    label: 'Activities & résumé', destination: 'portfolio/resume:clinical',
     fields: ['site_name', 'site_type', 'supervisor_name', 'hours', 'entry_date', 'notes'],
     summarize: (it) => `${it.site_name || 'Untitled site'}${it.hours ? ` — ${it.hours}h` : ''}`,
   },
@@ -151,7 +151,7 @@ export function labelForDestination(destId) {
     plans: 'Plans', progress: 'Progress', settings: 'Settings',
     'portfolio/tracked': 'Tracked Opportunities', 'portfolio/opportunities': 'Opportunities',
     'portfolio/milestones': 'Milestones', 'portfolio/colleges': 'College List',
-    'portfolio/essays': 'Essays', 'portfolio/aid': 'Financial Aid', 'portfolio/resume': 'Activities & Résumé',
+    'portfolio/essays': 'Essays', 'portfolio/aid': 'Financial Aid', 'portfolio/resume': 'Activities & résumé',
     'portfolio/recommenders': 'Recommenders', 'portfolio/interview': 'Mock Interview', 'portfolio/calc': 'Admissions Calculator',
   };
   if (LABELS[destId]) return LABELS[destId];

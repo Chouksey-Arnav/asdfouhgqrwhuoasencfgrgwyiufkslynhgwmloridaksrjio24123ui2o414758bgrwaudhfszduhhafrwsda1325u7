@@ -24,10 +24,10 @@ const CATEGORIES = [
 ];
 const STATUSES = [
   { id: 'researching', label: 'Researching' },
-  { id: 'application_started', label: 'Application Started' },
-  { id: 'essays_in_progress', label: 'Essays In Progress' },
+  { id: 'application_started', label: 'Application started' },
+  { id: 'essays_in_progress', label: 'Essays in progress' },
   { id: 'submitted', label: 'Submitted' },
-  { id: 'decision_received', label: 'Decision Received' },
+  { id: 'decision_received', label: 'Decision received' },
   { id: 'enrolled', label: 'Enrolled' },
   { id: 'declined', label: 'Declined' },
 ];
@@ -278,7 +278,7 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
   return (
     <div style={CC({gap: 20})}>
       <PanelHero tourTag="portfolio-deep-colleges" icon={GraduationCap} color={accent} color2={C.blue} m={isMobile}
-        eyebrow="College List" title="Where you're going to apply"
+        eyebrow="College list" title="Where you're going to apply"
         sub="Every school you’re considering, with its deadlines and checklist."
         stats={colleges.length > 0
           ? [{ value: colleges.length, label: colleges.length === 1 ? 'school' : 'schools' }, { value: submitted, label: 'submitted', color: C.violetL }]
@@ -286,7 +286,7 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
 
       {/* The three-step shape of this tab, said once. Reach/target/safety is the single idea
           this whole panel runs on and it was never explained anywhere — a student who doesn't
-          already know the vocabulary can't tell what the coloured pills are claiming. */}
+          already know the vocabulary can't tell what the colored pills are claiming. */}
       <HowItWorks
         id="colleges" color={accent} m={isMobile}
         steps={[
@@ -352,7 +352,7 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
         {!scores.hasScore ? (
           <div style={{fontSize:12.5,color:C.t3,lineHeight: 1.55}}>
             No test score on file. Add a GPA term in Activities &amp; Résumé and we'll compare your grades against
-            all {SCHOOL_DATA.length} U.S. schools we track, then suggest a mix of reach, target and safety schools right here.
+            all {SCHOOL_DATA.length} U.S. schools we track, then suggest a mix of reach, target and safety programs right here.
           </div>
         ) : (
           <>

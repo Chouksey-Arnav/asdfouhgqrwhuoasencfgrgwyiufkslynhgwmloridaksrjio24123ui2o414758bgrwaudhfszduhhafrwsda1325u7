@@ -144,7 +144,7 @@ export function fitsGrade(entry, gradeStage, yearOffset = 0) {
  *
  * A gate whose answer is UNKNOWN passes. This is deliberate and it is the safer
  * failure: a student who has not answered "do you want to do research" should
- * see research programmes and be able to dismiss them, not have them silently
+ * see research programs and be able to dismiss them, not have them silently
  * deleted from their year. Withholding an opportunity is a worse error than
  * showing an irrelevant one, because only one of the two is visible.
  */
@@ -160,7 +160,7 @@ export function passesGates(entry, answers = {}) {
 // The shortlist handed to the model is ranked, not arbitrary, because the
 // prompt cannot carry the whole catalog and whatever gets truncated is
 // effectively deleted from the student's year. The weights below are the
-// judgement calls; they are all here, in one place, rather than smeared across
+// judgment calls; they are all here, in one place, rather than smeared across
 // the generator.
 
 const SELECTIVITY_PENALTY = { open: 0, selective: 2, 'highly-selective': 5, lottery: 9 };
@@ -211,7 +211,7 @@ export function scoreEntry(entry, ctx) {
   if (load > capacity) score -= (load - capacity) * 6;
 
   // Cost. Only ever a bonus for free/funded things, never a penalty for paid
-  // ones — a paid programme is still worth SHOWING to a family that can afford
+  // ones — a paid program is still worth SHOWING to a family that can afford
   // it, and the intake's budget answer already gates the ones that cannot.
   if (entry.cost === 'free' || entry.cost === 'free-plus-stipend') score += 5;
 

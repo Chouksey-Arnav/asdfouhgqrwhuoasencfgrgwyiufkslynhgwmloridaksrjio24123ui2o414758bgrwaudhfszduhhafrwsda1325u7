@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Personalised practice generation.
+// Personalized practice generation.
 //
 // The static bank in src/data/sat/questions/ is finite and the same for every
 // student. This module writes questions FOR ONE STUDENT: aimed at the skills
@@ -17,7 +17,7 @@
 //    question WITHOUT the key and asked to solve it. Items where the two
 //    disagree, or where the verifier reports the item as flawed, are discarded.
 //    A six-question set that is right beats a ten-question set that is nearly
-//    right, and the UI is built to show a short set without apologising.
+//    right, and the UI is built to show a short set without apologizing.
 //
 // 2. MODEL CHOICE IS PART OF THE DESIGN, NOT A DEFAULT.
 //      author   → Oracle (openai/gpt-oss-120b) with reasoning_effort 'high' and
@@ -213,7 +213,7 @@ const FORBIDDEN = /college\s*board|\bbluebook\b|khan\s*academy|official\s+sat|re
  * Structural validation. Anything that fails is dropped silently — a short set
  * is a fine outcome, a malformed or unrenderable one is not.
  *
- * @returns {object|null} normalised question, or null with a reason logged
+ * @returns {object|null} normalized question, or null with a reason logged
  */
 function validateItem(raw, { skill, difficulty }) {
   if (!raw || typeof raw !== 'object') return null;
@@ -441,7 +441,7 @@ async function verifyItems(items, { signal } = {}) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Generate a personalised practice set.
+ * Generate a personalized practice set.
  *
  * Always resolves. Never throws at the caller: on any failure it returns an
  * empty `questions` array plus a `reason`, and the Practice panel falls back to

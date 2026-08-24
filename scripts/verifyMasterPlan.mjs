@@ -505,7 +505,7 @@ eq('a lesson task naming a LOCKED lesson is re-pointed at an open one', namedLoc
 const namedDone = MP.resolveTaskResource({ type: 'lesson', resourceName: 'Intro to Medicine', title: 'Study' }, lockedIndexBase, { seedKey: 'k' });
 eq('a lesson task naming an already-finished lesson is re-pointed too', namedDone.resourceId, 'open1');
 const namedOpen = MP.resolveTaskResource({ type: 'lesson', resourceName: 'Cells and Systems', title: 'Study' }, lockedIndexBase, { seedKey: 'k' });
-eq('an open lesson named exactly is still honoured', namedOpen.resourceId, 'open1');
+eq('an open lesson named exactly is still honored', namedOpen.resourceId, 'open1');
 
 // The catalog the model reads must say so too — telling it not to pick locked lessons is cheaper
 // and more reliable than catching every bad pick afterwards.

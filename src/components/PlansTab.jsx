@@ -45,7 +45,7 @@ const PORTFOLIO_RESOURCE_MAP = {
   // The Admissions Calculator's intake — citizenship, residency, weighted/unweighted GPA, course
   // rigor, section scores, documented service hours. The planner reads it because an unanswered
   // eligibility question is a real, scheduleable task ("answer the four intake fields that decide
-  // whether you are even eligible for the two combined-degree programmes on your list") and
+  // whether you are even eligible for the two combined-degree programs on your list") and
   // because a student who has told us they are 170 documented service hours short of a published
   // requirement should see that in their plan, not only in the calculator.
   admission_intake: 'admissionIntake',
@@ -105,7 +105,7 @@ const PILLAR_META = {
   prep: { color: C.violet, label: 'Prep' },
   portfolio: { color: C.green, label: 'Portfolio' },
   progress: { color: C.cyan, label: 'Progress' },
-  rest: { color: C.amber, label: 'Rest & Reflect' },
+  rest: { color: C.amber, label: 'Rest & reflect' },
 };
 const TYPE_ICON = {
   lesson: BookOpen, quiz: Layers, flashcards: Layers3, reading: BookOpen, coach: MessageCircle,
@@ -431,7 +431,7 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
       <PlanVoiceNotes user={user} saveUser={saveUser} plan={plan} liveSignals={liveSignals} ensurePortfolio={ensurePortfolio} accent={accent} />
 
       <div style={{ display: 'flex', gap: 4 }}>
-        {[{ id: 'week', label: 'Today & Tomorrow', icon: CalendarClock }, { id: 'roadmap', label: 'Full Roadmap', icon: MapIcon }].map(v => {
+        {[{ id: 'week', label: 'Today & tomorrow', icon: CalendarClock }, { id: 'roadmap', label: 'Full roadmap', icon: MapIcon }].map(v => {
           const active = view === v.id;
           return (
             <button key={v.id} onClick={() => setView(v.id)} style={{

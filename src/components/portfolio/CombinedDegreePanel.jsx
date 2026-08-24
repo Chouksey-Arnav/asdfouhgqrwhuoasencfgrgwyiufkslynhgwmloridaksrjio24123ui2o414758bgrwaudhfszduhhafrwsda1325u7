@@ -88,7 +88,7 @@ function BasisChip({ basis, compact = false }) {
 }
 
 /**
- * The staleness warning. Deliberately not a subtle grey footnote: a student
+ * The staleness warning. Deliberately not a subtle gray footnote: a student
  * planning a testing calendar around a score floor that moved last spring loses
  * that calendar, and the cost of over-warning is nil next to that.
  */
@@ -510,7 +510,7 @@ export default function CombinedDegreePanel({
           Almost no combined-degree program publishes an acceptance rate. Nearly every percentage you will find online was
           produced by dividing a known class size by a <em>guessed</em> applicant count, and then repeated until it looked like a fact.
           So every number on this page carries a label — <BasisChip basis="official" /> means the program says it itself,{' '}
-          <BasisChip basis="estimated" /> means it is a judgement, and <BasisChip basis="unpublished" /> means nobody
+          <BasisChip basis="estimated" /> means it is a judgment, and <BasisChip basis="unpublished" /> means nobody
           outside the admissions office knows and anyone quoting you a precise figure made it up.
           Anything we have not re-checked in {Math.round(STALE_AFTER_DAYS / 30)} months carries a warning on the card, because a
           requirement that moved between cycles is worse than no requirement at all.
@@ -654,7 +654,7 @@ export default function CombinedDegreePanel({
       </section>
 
       {/* ── The discovery roster ─────────────────────────────────────────────
-          Deliberately a different kind of object, and labelled as one. These
+          Deliberately a different kind of object, and labeled as one. These
           carry the institution, the degree, the length and the state and NOT
           ONE requirement claim, because we have not read those off the
           program's own page. Half-knowing a score floor is worse than not

@@ -24,7 +24,7 @@
 // `componentWillUnmount` — so the logic below is the design's logic verbatim,
 // with `renderVals()` feeding the template instead of a `render()`.
 //
-// The point of doing it that way: every colour, every spacing value and every
+// The point of doing it that way: every color, every spacing value and every
 // line of copy on this page is the string the design shipped, not a
 // re-interpretation of it. If the design is revised, re-port it the same way
 // rather than hand-patching the JSX.
@@ -90,21 +90,21 @@ const V2_STYLES = `
 const PILLARS = [
   { id: 'home', label: 'Home', color: '#1a5fcc', title: 'Home' },
   { id: 'prep', label: 'Prep', color: '#6d31d4', title: 'Prep \u00b7 Physician pathway' },
-  { id: 'portfolio', label: 'Portfolio', color: '#067156', title: 'Portfolio \u00b7 Overview' },
-  { id: 'roadmap', label: 'Roadmap', color: '#a422b8', title: 'Roadmap \u00b7 Your Year' },
+  { id: 'portfolio', label: 'Portfolio', color: '#067156', title: 'Portfolio \u00b7 overview' },
+  { id: 'roadmap', label: 'Roadmap', color: '#a422b8', title: 'Roadmap \u00b7 your year' },
   { id: 'plans', label: 'Plans', color: '#905808', title: 'Plans \u00b7 This week' },
 ];
 
 const PATHWAYS = {
   physician: { label: 'Physician (MD/DO)', color: '#1a5fcc', blurb: 'Maximum scope of practice, and the longest training. Anatomy, lab interpretation and diagnostic reasoning start here.' },
   nursing: { label: 'Nursing', color: '#067156', blurb: 'Hands-on patient contact soonest, on a team rather than carrying sole diagnostic responsibility.' },
-  physicianAssistant: { label: 'Physician Assistant', color: '#0b7166', blurb: 'You diagnose and treat, faster to practice, inside a physician-led team.' },
+  physicianAssistant: { label: 'Physician assistant', color: '#0b7166', blurb: 'You diagnose and treat, faster to practice, inside a physician-led team.' },
   pharmacy: { label: 'Pharmacy', color: '#6d31d4', blurb: 'Deep specialism in one drug or therapy area, and the go-to expert on it.' },
-  physicalOccupTherapy: { label: 'Physical & Occupational Therapy', color: '#026b97', blurb: 'Movement, rehabilitation and the long arc of someone getting their life back.' },
-  biomedResearch: { label: 'Biomedical Research', color: '#4640c9', blurb: 'The bench work behind treatment guidelines — PCR, cell culture, publication.' },
+  physicalOccupTherapy: { label: 'Physical & occupational therapy', color: '#026b97', blurb: 'Movement, rehabilitation and the long arc of someone getting their life back.' },
+  biomedResearch: { label: 'Biomedical research', color: '#4640c9', blurb: 'The bench work behind treatment guidelines — PCR, cell culture, publication.' },
   dentistry: { label: 'Dentistry', color: '#0a6c84', blurb: 'The most hands-on path in medicine, and the one most likely to end in your own practice.' },
-  publicHealth: { label: 'Public Health', color: '#905808', blurb: 'Population-level medicine: outbreaks, screening, prevention at scale.' },
-  healthAdmin: { label: 'Health Administration', color: '#a422b8', blurb: 'The operations and economics of care — staffing, budget, how a clinic actually runs.' },
+  publicHealth: { label: 'Public health', color: '#905808', blurb: 'Population-level medicine: outbreaks, screening, prevention at scale.' },
+  healthAdmin: { label: 'Health administration', color: '#a422b8', blurb: 'The operations and economics of care — staffing, budget, how a clinic actually runs.' },
 };
 
 const DIAG = [
@@ -183,9 +183,9 @@ const COACH = [
 ];
 
 const STEPS = [
-  { id: 's1', label: 'Log your shadowing hours', why: 'Nine weeks of clinical exposure are sitting unlogged \u2014 they count for nothing until they are on the record.', cta: 'Open Clinical Hours', color: '#c21a3e' },
-  { id: 's2', label: 'Write the impact line on your HOSA entry', why: 'It is the strongest thing on your r\u00e9sum\u00e9 and currently reads as a job title.', cta: 'Open Activities', color: '#026b97' },
-  { id: 's3', label: 'Add two more colleges to your list', why: 'Financial Aid needs a comparison, and aid is a comparison between schools rather than a single number.', cta: 'Open College List', color: '#6d31d4' },
+  { id: 's1', label: 'Log your shadowing hours', why: 'Nine weeks of clinical exposure are sitting unlogged \u2014 they count for nothing until they are on the record.', cta: 'Open clinical hours', color: '#c21a3e' },
+  { id: 's2', label: 'Write the impact line on your HOSA entry', why: 'It is the strongest thing on your r\u00e9sum\u00e9 and currently reads as a job title.', cta: 'Open activities', color: '#026b97' },
+  { id: 's3', label: 'Add two more colleges to your list', why: 'Financial Aid needs a comparison, and aid is a comparison between schools rather than a single number.', cta: 'Open college list', color: '#6d31d4' },
 ];
 
 const ACT_PARTS = [
@@ -205,7 +205,7 @@ const OPP_FILTERS = [
 
 const OPPS = [
   { id: 'hosa', track: 'competition', name: 'HOSA competitive events season', org: 'HOSA \u2013 Future Health Professionals', why: 'Over a hundred events from Medical Terminology to Emergency Preparedness \u2014 placing at state is a line a general student cannot match.', chips: [{ label: 'Competition', color: '#a422b8' }, { label: 'Selective', color: '#905808' }, { label: '10 weeks prep', color: '#5d6b85' }] },
-  { id: 'usabo', track: 'competition', name: 'USA Biology Olympiad', org: 'Center for Excellence in Education', why: 'The most recognisable biology credential open to a high-schooler. The real barrier is a teacher willing to register in September.', chips: [{ label: 'Competition', color: '#a422b8' }, { label: 'Very selective', color: '#c21a3e' }, { label: 'Free exam', color: '#067156' }] },
+  { id: 'usabo', track: 'competition', name: 'USA Biology Olympiad', org: 'Center for Excellence in Education', why: 'The most recognizable biology credential open to a high-schooler. The real barrier is a teacher willing to register in September.', chips: [{ label: 'Competition', color: '#a422b8' }, { label: 'Very selective', color: '#c21a3e' }, { label: 'Free exam', color: '#067156' }] },
   { id: 'brainbee', track: 'competition', name: 'Brain Bee \u2014 local chapter round', org: 'International Brain Bee', why: 'A published study text and a small enough field that a motivated freshman can win a local round in one winter.', chips: [{ label: 'Competition', color: '#a422b8' }, { label: 'Free', color: '#067156' }, { label: 'Find the date', color: '#6d31d4' }] },
   { id: 'isef', track: 'program', name: 'Regional science fair \u2014 ISEF qualifying round', org: 'Society for Science affiliated fairs', why: 'The path to the largest pre-college science competition runs entirely through your regional fair, which closes in mid-winter.', chips: [{ label: 'Program', color: '#4640c9' }, { label: 'Immersive', color: '#c21a3e' }, { label: '24 weeks prep', color: '#5d6b85' }] },
   { id: 'volunteer', track: 'experience', name: 'Hospital volunteer intake', org: 'Your nearest teaching hospital', why: 'Intakes run once or twice a year and close early. Miss the autumn window and clinical hours wait until spring.', chips: [{ label: 'Experience', color: '#0b7166' }, { label: 'Open to you', color: '#067156' }, { label: 'Find the date', color: '#6d31d4' }] },
@@ -256,11 +256,11 @@ const PLAN_DAYS = [
   { short: 'Mon', label: 'Monday', meta: '70 minutes \u00b7 light day before your shift', note: 'Short on purpose \u2014 you volunteer Monday evenings, and a plan that ignores your calendar is a plan you abandon.',
     rows: [ { id: 'm1', label: 'Physician \u00b7 Lesson 4: Reading a CBC and a metabolic panel', meta: '25m', color: '#1a5fcc' }, { id: 'm2', label: 'Flashcards \u2014 12 due, lab values weighted', meta: '15m', color: '#6d31d4' }, { id: 'm3', label: 'Log Monday shadowing hours before you forget them', meta: '5m', color: '#0b7166' }, { id: 'm4', label: 'HOSA event study block \u2014 Medical Terminology', meta: '25m', color: '#905808' } ] },
   { short: 'Tue', label: 'Tuesday', meta: '85 minutes \u00b7 your heaviest study day', note: 'Tuesday carries the quiz because your accuracy is measurably higher on days you have not been on your feet for six hours.',
-    rows: [ { id: 't1', label: 'Physician \u00b7 Lesson 5: Pre-test probability', meta: '30m', color: '#1a5fcc' }, { id: 't2', label: 'Quiz: Lab Values & Diagnostic Testing', meta: '20m', color: '#067156' }, { id: 't3', label: 'Review the two you missed with Medabrain', meta: '10m', color: '#a422b8' }, { id: 't4', label: 'Draft the impact line on your HOSA activity', meta: '25m', color: '#026b97' } ] },
+    rows: [ { id: 't1', label: 'Physician \u00b7 Lesson 5: Pre-test probability', meta: '30m', color: '#1a5fcc' }, { id: 't2', label: 'Quiz: lab values & diagnostic testing', meta: '20m', color: '#067156' }, { id: 't3', label: 'Review the two you missed with Medabrain', meta: '10m', color: '#a422b8' }, { id: 't4', label: 'Draft the impact line on your HOSA activity', meta: '25m', color: '#026b97' } ] },
   { short: 'Wed', label: 'Wednesday', meta: '60 minutes \u00b7 application block', note: 'Wednesdays are for the Portfolio. Study alone does not get you in, and a r\u00e9sum\u00e9 you touch twice a year rots.',
     rows: [ { id: 'w1', label: 'Flashcards \u2014 9 due', meta: '10m', color: '#6d31d4' }, { id: 'w2', label: 'Add two colleges to your list', meta: '20m', color: '#026b97' }, { id: 'w3', label: 'Ask Dr. Alvarez for a letter \u2014 draft the message', meta: '15m', color: '#067156' }, { id: 'w4', label: 'Science Olympiad event study \u2014 Anatomy', meta: '15m', color: '#a422b8' } ] },
   { short: 'Thu', label: 'Thursday', meta: '75 minutes \u00b7 back to the pathway', note: 'Medabrain rewrote Thursday after you logged two clinical shifts \u2014 the r\u00e9sum\u00e9 block moved and the flashcard load dropped.',
-    rows: [ { id: 'h1', label: 'Physician \u00b7 Lesson 6: Diagnostic reasoning traps', meta: '30m', color: '#1a5fcc' }, { id: 'h2', label: 'Flashcards \u2014 14 due', meta: '15m', color: '#6d31d4' }, { id: 'h3', label: 'Quiz: Psych & Soc \u2014 Mental Health', meta: '20m', color: '#067156' }, { id: 'h4', label: 'USABO registration \u2014 email your bio teacher', meta: '10m', color: '#4640c9' } ] },
+    rows: [ { id: 'h1', label: 'Physician \u00b7 Lesson 6: Diagnostic reasoning traps', meta: '30m', color: '#1a5fcc' }, { id: 'h2', label: 'Flashcards \u2014 14 due', meta: '15m', color: '#6d31d4' }, { id: 'h3', label: 'Quiz: Psych & Soc \u2014 mental health', meta: '20m', color: '#067156' }, { id: 'h4', label: 'USABO registration \u2014 email your bio teacher', meta: '10m', color: '#4640c9' } ] },
   { short: 'Fri', label: 'Friday', meta: '45 minutes \u00b7 clear the week', note: 'Friday is deliberately small. A plan with no slack breaks the first week something goes wrong.',
     rows: [ { id: 'f1', label: 'Flashcards \u2014 whatever is due', meta: '15m', color: '#6d31d4' }, { id: 'f2', label: 'Verify Lesson 4 \u2014 prove you kept it', meta: '15m', color: '#067156' }, { id: 'f3', label: 'Interview Prep \u2014 one MMI station', meta: '15m', color: '#c21a3e' } ] },
   { short: 'Sat', label: 'Saturday', meta: '90 minutes \u00b7 the long block', note: 'The only slot in your week long enough for research and essay work, so that is what it holds.',
@@ -279,7 +279,7 @@ const FAQS = [
 
 const FEATURES = [
   { pillar: 'Prep', color: '#6d31d4', items: ['Pathway diagnostic', 'Ten full curricula', 'Quiz Library', 'Flashcards on FSRS', 'E-Library', 'Lesson audio', 'Notes & highlights', 'Verified mastery'] },
-  { pillar: 'Portfolio', color: '#067156', items: ['Overview', 'Opportunities', 'Activities & R\u00e9sum\u00e9', 'Academics', 'Clinical Hours', 'Research', 'Skills & Certs', 'Interview Prep', 'Recommenders', 'Essays', 'College List', 'Admissions Calc', 'Financial Aid', 'Scholarships', 'Common App export', 'Milestones'] },
+  { pillar: 'Portfolio', color: '#067156', items: ['Overview', 'Opportunities', 'Activities & r\u00e9sum\u00e9', 'Academics', 'Clinical hours', 'Research', 'Skills & certs', 'Interview prep', 'Recommenders', 'Essays', 'College list', 'Admissions calc', 'Financial aid', 'Scholarships', 'Common App export', 'Milestones'] },
   { pillar: 'Roadmap', color: '#a422b8', items: ['Overview', 'Your Year', 'Seasons', 'Everything', 'Your Answers', 'Deadline catalog', 'Prep-time scheduling'] },
   { pillar: 'Plans & Progress', color: '#905808', items: ['Day-by-day plan', 'Pace goals', 'Daily quests', 'Streaks', 'Achievements', 'Performance breakdown', 'Family Access', 'Appearance & accessibility'] },
 ];
@@ -415,8 +415,8 @@ class LandingPageV2Class extends React.Component {
     const tabs = [
       { id: 'overview', label: 'Overview', color: '#067156' },
       { id: 'opportunities', label: 'Opportunities', color: '#0b7166' },
-      { id: 'resume', label: 'Activities & R\u00e9sum\u00e9', color: '#026b97' },
-      { id: 'interview', label: 'Interview Prep', color: '#c21a3e' },
+      { id: 'resume', label: 'Activities & r\u00e9sum\u00e9', color: '#026b97' },
+      { id: 'interview', label: 'Interview prep', color: '#c21a3e' },
     ];
     const stepsDoneCount = STEPS.filter((st) => s.stepsDone[st.id]).length;
     const strength = 41 + stepsDoneCount * 16;
@@ -706,8 +706,8 @@ class LandingPageV2Class extends React.Component {
       prepIsQuiz: s.prepTab === 'quizzes',
       prepIsCoach: s.prepTab === 'coach',
       prepTabs: [
-        { id: 'diagnostic', label: 'Diagnostic Pathways', color: '#6d31d4' },
-        { id: 'quizzes', label: 'Quiz Library', color: '#067156' },
+        { id: 'diagnostic', label: 'Diagnostic pathways', color: '#6d31d4' },
+        { id: 'quizzes', label: 'Quiz library', color: '#067156' },
         { id: 'coach', label: 'Medabrain', color: '#a422b8' },
       ].map((t) => {
         const on = t.id === s.prepTab;
@@ -830,14 +830,14 @@ class LandingPageV2Class extends React.Component {
       heroPlanRows: [
         { label: 'Physician \u00b7 Lesson 5: Pre-test probability', mins: '25m', color: '#1a5fcc' },
         { label: 'Flashcards \u2014 12 due, lab values weighted', mins: '15m', color: '#6d31d4' },
-        { label: 'Quiz: Lab Values & Diagnostic Testing', mins: '20m', color: '#067156' },
+        { label: 'Quiz: lab values & diagnostic testing', mins: '20m', color: '#067156' },
         { label: 'HOSA event study block', mins: '15m', color: '#905808' },
       ].map((r) => ({ label: r.label, mins: r.mins, dot: `width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${r.color};` })),
       marquee: (() => {
         const items = [
           ['10 health pathways', '#1a5fcc'], ['Pathway diagnostic', '#6d31d4'], ['Quiz Library', '#067156'],
           ['Medabrain coach', '#a422b8'], ['Flashcards with FSRS', '#4640c9'], ['E-Library', '#0a6c84'],
-          ['Opportunities database', '#0b7166'], ['Activities & R\u00e9sum\u00e9', '#026b97'], ['Interview Prep', '#c21a3e'],
+          ['Opportunities database', '#0b7166'], ['Activities & r\u00e9sum\u00e9', '#026b97'], ['Interview prep', '#c21a3e'],
           ['Twelve-month Roadmap', '#905808'], ['Day-by-day Plans', '#865d05'], ['Common App export', '#1a5fcc'],
           ['Scholarships', '#067156'], ['Family access', '#6d31d4'],
         ];

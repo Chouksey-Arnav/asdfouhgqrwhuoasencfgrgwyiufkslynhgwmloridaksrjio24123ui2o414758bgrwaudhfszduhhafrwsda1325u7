@@ -8,7 +8,7 @@ import { listItems, createItem, deleteItem } from '../lib/dataApi';
 import PanelHero from './ui/PanelHero';
 
 const SAT_SECTIONS = [
-  { key: 'rw', label: 'Reading & Writing', max: 800, placeholder: 'e.g. 680' },
+  { key: 'rw', label: 'Reading & writing', max: 800, placeholder: 'e.g. 680' },
   { key: 'math', label: 'Math', max: 800, placeholder: 'e.g. 740' }
 ];
 
@@ -237,7 +237,7 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
       return {
         labels,
         datasets: [{
-          label: 'Composite Score',
+          label: 'Composite score',
           data: filteredActual.map(s => s.composite),
           borderColor: accent,
           backgroundColor: `${accent}16`,
@@ -254,7 +254,7 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
           labels,
           datasets: [
             {
-              label: 'Reading & Writing',
+              label: 'Reading & writing',
               data: filteredActual.map(s => s.section_scores?.rw || null),
               borderColor: C.blue,
               backgroundColor: 'transparent',
@@ -319,7 +319,7 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
   return (
     <div style={CC({gap:20})}>
       <PanelHero tourTag="portfolio-deep-scores" icon={TrendingUp} color={accent} color2={C.green} m={isMobile}
-        eyebrow="Test Prep" title="SAT / ACT Score Tracker"
+        eyebrow="Test prep" title="SAT / ACT score tracker"
         sub="Every attempt and your target. Feeds Home and the Admissions Calculator."
         right={
           <div style={R({ gap: 4 })}>

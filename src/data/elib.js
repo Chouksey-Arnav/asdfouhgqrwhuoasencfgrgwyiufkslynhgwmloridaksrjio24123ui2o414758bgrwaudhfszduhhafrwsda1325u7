@@ -1451,7 +1451,7 @@ const ELIB_ALL = [...ELIB_CORE, ...ELIB_EXTRA, ...ELIB_EXPANSION_A, ...ELIB_EXPA
 //
 // 'Test Prep' is a hundred-odd curated SAT/ACT resources — genuinely good links,
 // and exactly the promise this release is not making (see src/lib/betaFlags.js).
-// A student who cannot practise for the SAT anywhere in this app should not find
+// A student who cannot practice for the SAT anywhere in this app should not find
 // a shelf of SAT material in the E-Library either.
 //
 // The rows are FILTERED, not deleted: they are hand-curated, they cost nothing to

@@ -53,21 +53,21 @@ export const INTAKE_FIELDS = [
   {
     id: 'unweightedGpa', group: 'academics', type: 'number', step: 0.01, min: 0, max: 4.5,
     label: 'Unweighted GPA',
-    why: 'Most programmes state their GPA floor as unweighted, and a weighted number read as unweighted flatters you by roughly half a point.',
+    why: 'Most programs state their GPA floor as unweighted, and a weighted number read as unweighted flatters you by roughly half a point.',
     changes: 'Without it we cannot check unweighted GPA floors (VCU\'s 3.5, UMKC\'s 3.0) at all, and GPA drops out of your academic position entirely.',
     weight: 3,
   },
   {
     id: 'weightedGpa', group: 'academics', type: 'number', step: 0.01, min: 0, max: 6,
     label: 'Weighted GPA',
-    why: 'Some programmes specify weighted instead — Drexel\'s 3.5 minimum is on the weighted scale — and mixing the two up is how you get a wrong answer in either direction.',
+    why: 'Some programs specify weighted instead — Drexel\'s 3.5 minimum is on the weighted scale — and mixing the two up is how you get a wrong answer in either direction.',
     changes: 'Without it, weighted-scale requirements are checked against your unweighted number as a floor, which understates you.',
     weight: 2,
   },
   {
     id: 'hundredPointAverage', group: 'academics', type: 'number', step: 0.1, min: 0, max: 105,
     label: 'Average on the 100-point scale',
-    why: 'New York programmes (CUNY\'s 85 minimum) use it, and converting from a 4.0 is school-specific and lossy.',
+    why: 'New York programs (CUNY\'s 85 minimum) use it, and converting from a 4.0 is school-specific and lossy.',
     changes: 'Without it we convert from your 4.0 GPA and say we did — approximate, and it is the number CUNY actually reads.',
     optional: true, weight: 1,
   },
@@ -82,13 +82,13 @@ export const INTAKE_FIELDS = [
   {
     id: 'classRankPercentile', group: 'academics', type: 'number', min: 1, max: 100,
     label: 'Your rank, as a top percentage (e.g. 8 for top 8%)',
-    why: 'Several programmes have an explicit rank route into direct admission.',
+    why: 'Several programs have an explicit rank route into direct admission.',
     changes: 'Without it we cannot use the rank route even where it is the easiest one for you to satisfy.',
     dependsOn: { classRankReported: 'yes' }, weight: 2,
   },
   {
     id: 'rigorCounts', group: 'academics', type: 'rigor',
-    label: 'AP, IB, honours and dual-enrolment courses taken',
+    label: 'AP, IB, honors and dual-enrollment courses taken',
     why: 'Course rigor is read as a count of real courses, not as a vibe, and each kind is weighted differently.',
     changes: 'Without it, rigor is left out of your academic position rather than assumed — the old calculator assumed two and never told anyone.',
     weight: 3,
@@ -103,7 +103,7 @@ export const INTAKE_FIELDS = [
   {
     id: 'testSections', group: 'testing', type: 'test-sections',
     label: 'Section scores for each sitting',
-    why: 'Several programmes gate on a specific section — UMKC requires the ACT Science section to be present at all — and a composite cannot answer that.',
+    why: 'Several programs gate on a specific section — UMKC requires the ACT Science section to be present at all — and a composite cannot answer that.',
     changes: 'Without them, section requirements stay unevaluable and we cannot tell you whether you already meet one.',
     weight: 3,
   },
@@ -114,7 +114,7 @@ export const INTAKE_FIELDS = [
       { value: 'superscored', label: 'My best score combines sections from different sittings' },
     ],
     label: 'Is your best score single-sitting or superscored?',
-    why: 'Some programmes explicitly refuse superscores, so benchmarking you on one would overstate your position at exactly those programmes.',
+    why: 'Some programs explicitly refuse superscores, so benchmarking you on one would overstate your position at exactly those programs.',
     changes: 'Without it we treat your score as single-sitting, which is the conservative reading, and note that we did.',
     weight: 2,
   },
@@ -127,14 +127,14 @@ export const INTAKE_FIELDS = [
       { value: 'prefer-not', label: 'Prefer not to say' },
     ],
     label: 'Citizenship or permanent residency',
-    why: 'Several combined-degree programmes are categorically closed to international applicants, and that is a yes/no we should not discover for you in November.',
+    why: 'Several combined-degree programs are categorically closed to international applicants, and that is a yes/no we should not discover for you in November.',
     changes: 'Without it we cannot evaluate citizenship gates, so eligibility at UMKC, RPI and Drexel stays genuinely unknown.',
     weight: 3,
   },
   {
     id: 'stateResidency', group: 'eligibility', type: 'state',
     label: 'State of residence',
-    why: 'Public programmes and mission-based ones weight residency heavily, and in-state status changes the answer more than most of your activities do.',
+    why: 'Public programs and mission-based ones weight residency heavily, and in-state status changes the answer more than most of your activities do.',
     changes: 'Without it, residency preferences and in-state advantages are left out entirely.',
     weight: 2,
   },
@@ -149,7 +149,7 @@ export const INTAKE_FIELDS = [
   {
     id: 'requiredCourses', group: 'eligibility', type: 'courses',
     label: 'Biology, chemistry, lab physics, pre-calculus — taken, and the grade',
-    why: 'Several programmes require specific courses, sometimes at a minimum grade, and lab physics is the one applicants most often turn out to be missing.',
+    why: 'Several programs require specific courses, sometimes at a minimum grade, and lab physics is the one applicants most often turn out to be missing.',
     changes: 'Without it, course requirements stay unevaluable — and a missing physics year discovered in senior autumn cannot be fixed.',
     weight: 3,
   },
@@ -157,7 +157,7 @@ export const INTAKE_FIELDS = [
     id: 'documentedServiceHours', group: 'portfolio', type: 'number', min: 0,
     label: 'Documented, verifiable service hours',
     why: 'Drexel requires 200 hours that are documented and advisor-approved — undocumented hours do not count toward it, so this is a different number from your total.',
-    changes: 'Without it we use your logged service total, which may overstate the documented figure a programme will actually accept.',
+    changes: 'Without it we use your logged service total, which may overstate the documented figure a program will actually accept.',
     weight: 2,
   },
   {
@@ -208,7 +208,7 @@ function verifiedShare(rows, hoursKey = 'hours') {
 }
 
 /**
- * Turns the raw Portfolio snapshot into the normalised signal object layer 3
+ * Turns the raw Portfolio snapshot into the normalized signal object layer 3
  * scores. Every number here is traceable to rows the student entered
  * themselves — nothing is invented, and where a split has to be estimated
  * (shadowing out of clinical) the estimate is flagged so the intake can ask.
@@ -260,7 +260,7 @@ export function derivePortfolioSignals(snapshot = {}) {
     clinical: {
       hours: clinicalHours, entries: clinicalRows.length + activities.filter(a => CLINICAL_TYPES.includes(a.activity_type)).length,
       ...clinicalSpan, verifiedShare: verifiedShare(handsOnRows),
-      source: clinicalLoggedHours >= clinicalActivityHours ? 'clinical_hours log' : 'Activities & Résumé',
+      source: clinicalLoggedHours >= clinicalActivityHours ? 'clinical_hours log' : 'Activities & résumé',
     },
     shadowing: {
       hours: shadowLoggedHours, entries: shadowRows.length, ...shadowSpan,
@@ -273,7 +273,7 @@ export function derivePortfolioSignals(snapshot = {}) {
       spanMonths: research.length ? Math.max(...research.map(() => 12)) : null,
       verifiedShare: null,
       hasPublication: research.some(r => !!r.publication_url),
-      source: researchLoggedHours >= researchActivityHours ? 'Research entries' : 'Activities & Résumé',
+      source: researchLoggedHours >= researchActivityHours ? 'Research entries' : 'Activities & résumé',
     },
     service: {
       hours: serviceHours, entries: serviceActivities.length,
@@ -283,19 +283,19 @@ export function derivePortfolioSignals(snapshot = {}) {
         const v = serviceActivities.filter(a => a.verification_status === 'verified').length;
         return v / serviceActivities.length;
       })(),
-      source: 'Activities & Résumé',
+      source: 'Activities & résumé',
     },
     leadership, competitions, certifications,
 
     // Provenance the panel shows next to each auto-filled row, so a student can
     // see where a number came from and go and fix it at the source.
     provenance: {
-      clinical: 'Clinical Hours + Activities & Résumé',
+      clinical: 'Clinical Hours + Activities & résumé',
       shadowing: splitIsExplicit ? 'Clinical Hours (marked as shadowing)' : 'estimated — none of your clinical entries are marked shadowing yet',
-      research: 'Research entries + Activities & Résumé',
-      service: 'Activities & Résumé (Volunteering)',
-      leadership: 'Activities & Résumé (Leadership, and anything flagged as a leadership role)',
-      competitions: 'Awards & Honours',
+      research: 'Research entries + Activities & résumé',
+      service: 'Activities & résumé (Volunteering)',
+      leadership: 'Activities & résumé (Leadership, and anything flagged as a leadership role)',
+      competitions: 'Awards & Honors',
       certifications: 'Skills & Certifications',
     },
   };
@@ -328,7 +328,7 @@ export function deriveApplicantFromPortfolio({ snapshot = {}, user = null } = {}
     const best = rows.reduce((b, r) => (b == null || num(r.composite) > num(b.composite) ? r : b), null);
     const sections = normaliseSections(type, best.section_scores);
     // A per-section best across sittings — what a superscore would be. Held
-    // separately from `composite` so the model can honour a programme that
+    // separately from `composite` so the model can honor a program that
     // refuses superscores instead of quietly using the flattering one.
     const superscore = computeSuperscore(type, rows);
     tests[type.toLowerCase()] = {
@@ -507,8 +507,8 @@ export function assessCompleteness({ applicant = {}, answers = {} } = {}) {
 
 /**
  * Fields worth asking about right now, hardest-hitting first, filtered to what
- * the programmes on the student's list actually gate on — so a student with no
- * New York programmes is never asked a New York question.
+ * the programs on the student's list actually gate on — so a student with no
+ * New York programs is never asked a New York question.
  */
 export function nextQuestions({ applicant, answers, profiles = [], limit = 5 }) {
   const gatedFields = new Set();

@@ -1,10 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPE TOKENS — size, tracking, leading.
 //
-// Colour has three layers and a lint. Type had a font stack and 3,474 loose
+// Color has three layers and a lint. Type had a font stack and 3,474 loose
 // `fontSize:` numbers, which is why headings in this app read as body copy
 // scaled up rather than as a display face: at 40px the browser default tracking
-// is roughly a third of a millimetre too wide per letter, and the 1.6 body
+// is roughly a third of a millimeter too wide per letter, and the 1.6 body
 // line-height inherited from <body> leaves a display line floating in a band of
 // air twice as tall as the letterforms.
 //
@@ -202,8 +202,8 @@ export function type(px, opt = {}) {
  * The eyebrow label: the small line that names a section above its heading.
  *
  * Sentence case, letterspaced, never uppercase — see the header note. Callers
- * pass the colour and the font stack from `C`, because this module knows
- * nothing about colour.
+ * pass the color and the font stack from `C`, because this module knows
+ * nothing about color.
  */
 export function eyebrow(px = SIZE.small) {
   return {

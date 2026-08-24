@@ -32,7 +32,7 @@
 // and it stays clean.
 //
 // framer-motion height/width reveals (the `height: 0 → auto` accordion) are on
-// a SHRINK-ONLY BASELINE instead, the same mechanism the colour lint uses.
+// a SHRINK-ONLY BASELINE instead, the same mechanism the color lint uses.
 // There are ~100 of them, an auto-height reveal genuinely has no one-line
 // transform equivalent, and a rule that fails the build on day one is a rule
 // somebody deletes on day two. New ones cannot be added; every file someone

@@ -13,8 +13,8 @@ export const SITE_TYPES = [
 ];
 // Site types each get a color so the per-site hour tiles and entry rows read
 // as distinct kinds of clinical exposure at a glance.
-// What KIND of exposure an entry was. Programmes weight observation and hands-on patient contact
-// very differently — a physician-scientist track and a six-year clinical programme read the same
+// What KIND of exposure an entry was. Programs weight observation and hands-on patient contact
+// very differently — a physician-scientist track and a six-year clinical program read the same
 // 200 hours completely differently depending on which they are — and the Admissions Calculator
 // used to have to guess the split, which meant a guess was silently deciding part of a student's
 // estimate. Asked here, at the point of logging, where the student actually knows the answer.
@@ -34,7 +34,7 @@ const SITE_COLORS = {
 export const clinicalTotalHours = (entries = []) => entries.reduce((s, e) => s + (e.hours || 0), 0);
 
 // Clinical & shadowing hours — formerly the standalone Portfolio → Clinical Hours tab, now a
-// section of Activities & Résumé. Same Supabase resource (see
+// section of Activities & résumé. Same Supabase resource (see
 // supabase/migrations/0001_portfolio_credibility_expansion.sql) and the same verification
 // story; the rows just live next to the activities they are the evidence for, and their hours
 // now count toward the clinical pillar the activities list grades itself on.
@@ -79,7 +79,7 @@ export default function ClinicalHoursSection({ accent = C.pink, entries = [], se
   return (
     <div style={CC({ gap: 16 })}>
       <SectionIntro icon={Stethoscope} color={accent} color2={C.rose} m={isMobile}
-        title="Clinical & Shadowing Hours"
+        title="Clinical & shadowing hours"
         blurb="Log every shadowing day, volunteer shift, or clinical hour — most health-career applications ask for this exact history, and it feeds your readiness score. Add a supervisor's contact so an entry can eventually be marked verified instead of self-reported. Everything logged here counts toward the clinical pillar on your Activities section."
         stats={[
           { value: totalHours.toLocaleString(), label: 'total hours', color: accent },

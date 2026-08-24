@@ -74,7 +74,7 @@ section('1. The roles are the ones a health-pathway student actually has');
 const REQUIRED_ROLES = ['shadowing-physician', 'research-mentor', 'volunteer-coordinator', 'clinical-supervisor'];
 for (const id of REQUIRED_ROLES) {
   const role = R.ROLE_BY_ID[id];
-  assert(`the ${id} role exists — the four the old teacher/counsellor/coach list missed`, !!role);
+  assert(`the ${id} role exists — the four the old teacher/counselor/coach list missed`, !!role);
   if (!role) continue;
   assert(`${id} says what only that person can say`, String(role.whatTheyCanSay).length > 60);
   assert(`${id} says who counts`, String(role.whoCounts).length > 60);
@@ -90,7 +90,7 @@ eq('a legacy "Physician/Health Professional Shadowed" row maps to the shadowing 
 eq('a legacy "Research Mentor" row maps to the research role',
   R.roleFromRelationship('Research Mentor').id, 'research-mentor');
 eq('an unrecognised relationship falls back to Other rather than throwing',
-  R.roleFromRelationship('Neighbour who is a vet').id, 'other');
+  R.roleFromRelationship('Neighbor who is a vet').id, 'other');
 
 // ─────────────────────────────────────────────────────────────────────────────
 section('2. Lead time, at the exact boundary');
@@ -227,7 +227,7 @@ section('6. The emails');
   assert('the ask is signed by the student', ask.body.includes('Maya Chen'));
   assert('the ask leaves the personal specific as a blank — the one thing software must not write',
     /\[One or two sentences/.test(ask.body));
-  assert('a comfortable deadline does not apologise for the timing', !/short notice/i.test(ask.body));
+  assert('a comfortable deadline does not apologize for the timing', !/short notice/i.test(ask.body));
 
   const rushedAsk = rushed.find(t => t.id === 'ask');
   assert('a short-notice ask says so up front', /short notice/i.test(rushedAsk.body));
@@ -240,7 +240,7 @@ section('6. The emails');
   const followUp = normal.find(t => t.id === 'follow-up');
   assert('the follow-up gives them permission to say no', /no hard feelings/i.test(followUp.body));
 
-  // Nothing may be sent with an unresolved template artefact in it.
+  // Nothing may be sent with an unresolved template artifact in it.
   for (const t of normal) {
     assert(`${t.id}: no undefined leaked into the draft`, !/undefined|null|NaN/.test(t.body), t.body.slice(0, 160));
   }

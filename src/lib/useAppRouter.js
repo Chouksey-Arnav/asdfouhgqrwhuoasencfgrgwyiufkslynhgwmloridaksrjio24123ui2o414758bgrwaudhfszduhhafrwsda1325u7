@@ -184,7 +184,7 @@ export default function useAppRouter({ route, onNavigate, enabled = true }) {
 
     if (replace) {
       // Rewrites the current entry in place: the URL was a path we couldn't
-      // honour verbatim (a bare /sat, a typo, an overlay we can't reopen), or
+      // honor verbatim (a bare /sat, a typo, an overlay we can't reopen), or
       // the state moved for a reason the student didn't ask for. Either way it
       // must not cost a history entry.
       const k = state?.msp?.k || nextKey();

@@ -16,7 +16,7 @@
 // first run, and a check that has never once passed is a check somebody deletes
 // rather than fixes.
 //
-// So it is a SHRINK-ONLY BASELINE, the same mechanism the colour lint uses and
+// So it is a SHRINK-ONLY BASELINE, the same mechanism the color lint uses and
 // for the same reason: new code cannot add an off-grid value to a clean file,
 // a file that already has them can only ever have fewer, and the number in the
 // baseline is a public count of the debt rather than a vague feeling that the

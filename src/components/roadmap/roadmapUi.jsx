@@ -8,7 +8,7 @@ import { C, tint, pill } from '../../lib/theme';
 import { TRACK_BY_ID, displaysExactDate, dateCaption } from '../../data/roadmap/index.js';
 import { linkableUrl } from '../../lib/roadmap/model';
 
-// Shared presentation for the Roadmap tab: the vocabulary of colour, icon and
+// Shared presentation for the Roadmap tab: the vocabulary of color, icon and
 // wording that every roadmap surface uses, in one place so the tab reads as one
 // system rather than six screens that happen to be adjacent.
 //
@@ -21,7 +21,7 @@ import { linkableUrl } from '../../lib/roadmap/model';
 // `{item.due}` away from failing silently. scripts/verifyRoadmap.mjs greps this
 // folder for raw date interpolation and fails the build if it finds any.
 
-/** Track id → the palette colour it is drawn in. Keys match TRACK_BY_ID's colorKey. */
+/** Track id → the palette color it is drawn in. Keys match TRACK_BY_ID's colorKey. */
 export const trackColor = (trackId) => {
   const key = TRACK_BY_ID[trackId]?.colorKey;
   return C[key] || C.blue;
@@ -164,7 +164,7 @@ export function Chip({ children, color = C.t3, icon: Icon, title, size = 10.5 })
   );
 }
 
-/** The track's own chip, with its icon and colour. */
+/** The track's own chip, with its icon and color. */
 export function TrackChip({ track, size = 10.5 }) {
   const color = trackColor(track);
   const Icon = TRACK_ICON[track];

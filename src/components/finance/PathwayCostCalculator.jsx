@@ -141,7 +141,7 @@ export default function PathwayCostCalculator({ accent = C.green, defaultPathway
         <Big label={`Monthly payment (${LOAN_ASSUMPTIONS.repaymentYears}-year standard plan)`}
           value={`${money(result.monthlyPayment)}/mo`} color={C.t1}
           sub={`${money(result.totalRepaid)} repaid in total`} />
-        <Big label="Share of a median paycheque"
+        <Big label="Share of a median paycheck"
           value={result.paymentShareOfMedianIncome != null ? `${result.paymentShareOfMedianIncome}%` : '—'}
           color={result.paymentShareOfMedianIncome > 25 ? C.roseL : C.greenL}
           sub={`of ${money(result.medianEarnings)}/yr — the whole-occupation median, so your first job pays less than this`} />

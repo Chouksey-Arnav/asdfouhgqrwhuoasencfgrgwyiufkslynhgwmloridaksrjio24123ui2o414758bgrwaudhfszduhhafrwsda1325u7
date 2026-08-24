@@ -48,7 +48,7 @@ if (table && layers.length === 0) {
   errors.push('BrandJourney.jsx: the LAYERS table parsed as empty.');
 }
 
-// 2. PNG dimensions and colour type come straight out of the IHDR chunk; no
+// 2. PNG dimensions and color type come straight out of the IHDR chunk; no
 //    decoder needed, and no dependency to keep current.
 function pngHeader(path) {
   const buf = readFileSync(resolve(ROOT, path));
@@ -69,7 +69,7 @@ for (const [name, cls] of layers) {
     errors.push(`${file} is ${hdr.width}x${hdr.height}; layers must be square to stay in register.`);
   }
   if (hdr.colorType !== 6) {
-    errors.push(`${file} has no alpha channel (colour type ${hdr.colorType}) — it would paint a black tile over the layers beneath it.`);
+    errors.push(`${file} has no alpha channel (color type ${hdr.colorType}) — it would paint a black tile over the layers beneath it.`);
   }
   if (expected === null) expected = hdr.width;
   else if (hdr.width !== expected) {

@@ -95,7 +95,7 @@ function Bar({ pct, color = C.blue, h = 4 }) {
 }
 
 // ── THE HERO REPLICA — a live, clickable miniature of the real app shell ───
-// Browser chrome → 236px-style sidebar (brand, ⌘K, user card, labelled nav)
+// Browser chrome → 236px-style sidebar (brand, ⌘K, user card, labeled nav)
 // → dashboard main, which actually switches between Home/Prep/Portfolio
 // content when you click the sidebar — not a static screenshot.
 
@@ -511,7 +511,7 @@ const ANSWER_BANK = [
   { kw: ['photosynth'], a: 'Picture the plant as a solar-powered kitchen: chloroplasts catch light, split water for electrons, then the Calvin cycle spends that energy turning CO₂ into glucose. Light makes the fuel; the cycle builds the sugar.' },
   { kw: ['biology', 'bio', 'cell'], a: 'Two weeks: days 1\u20134 cell structure and transport, 5\u20138 genetics, 9\u201312 metabolism, last two on whatever your quiz scores say you actually missed. I can add this to your schedule.' },
   { kw: ['shadow', 'shadowing'], a: 'Start with people already one step from you: your own physician, a parent\u2019s colleague, a hospital volunteer office. Ask for four hours, not a summer. Want me to draft the email?' },
-  { kw: ['clinical', 'hours', 'shadow'], a: "Open Portfolio → Activities & Résumé and pick Clinical Hours, tap Log Hours, and add the date, site, and a one-line reflection. Add a supervisor's contact and the entry can be marked verified instead of self-reported." },
+  { kw: ['clinical', 'hours', 'shadow'], a: "Open Portfolio → Activities & résumé and pick Clinical Hours, tap Log Hours, and add the date, site, and a one-line reflection. Add a supervisor's contact and the entry can be marked verified instead of self-reported." },
   { kw: ['tonight', 'study', 'today'], a: "With your 12-day streak going, I'd do 15 minutes of due flashcards first, then one Organic Chemistry lesson and its verification quiz. That keeps your pathway mastery climbing without burning you out." },
   { kw: ['plan', 'schedule', 'week'], a: "Here's a simple frame: pick the one subject that's costing you the most points, block 30 minutes a day on it for two weeks, and end each week with a quiz to check. Want me to build it around a specific class?" },
   { kw: ['nursing', 'pathway', 'career', 'fit'], a: 'Take the pathway diagnostic first — it scores you across all ten health careers in about six minutes. Nursing, PA, and pharmacy are common strong matches for students who love patient contact but want a faster route than MD.' },
@@ -722,29 +722,29 @@ function CollegeListMock() {
 const pathways = () => [
   { color: C.blue,   lite: C.blueL,   tag: 'MD',  title: 'Physician',            desc: 'Direct patient care.' },
   { color: C.green,  lite: C.greenL,  tag: 'RN',  title: 'Nursing',              desc: 'Hands-on, faster route in.' },
-  { color: C.violet, lite: C.violetL, tag: 'PA',  title: 'Physician Assistant',  desc: 'Broad practice, more flexibility.' },
+  { color: C.violet, lite: C.violetL, tag: 'PA',  title: 'Physician assistant',  desc: 'Broad practice, more flexibility.' },
   { color: C.cyan,   lite: C.cyanL,   tag: 'Rx',  title: 'Pharmacy',             desc: 'Medication at the center.' },
   { color: C.amber,  lite: C.amberL,  tag: 'DDS', title: 'Dentistry',            desc: 'Your own practice, sooner.' },
-  { color: C.rose,   lite: C.roseL,   tag: 'PhD', title: 'Biomedical Research',  desc: 'Push the science forward.' },
-  { color: C.sky,    lite: C.skyL,    tag: 'PT',  title: 'Physical & Occupational Therapy', desc: 'Rebuild movement.' },
-  { color: C.indigo, lite: C.indigoL, tag: 'MPH', title: 'Public Health',        desc: 'Prevention at scale.' },
-  { color: C.pink,   lite: C.pinkL,   tag: 'MHA', title: 'Health Administration', desc: 'Run the systems.' },
+  { color: C.rose,   lite: C.roseL,   tag: 'PhD', title: 'Biomedical research',  desc: 'Push the science forward.' },
+  { color: C.sky,    lite: C.skyL,    tag: 'PT',  title: 'Physical & occupational therapy', desc: 'Rebuild movement.' },
+  { color: C.indigo, lite: C.indigoL, tag: 'MPH', title: 'Public health',        desc: 'Prevention at scale.' },
+  { color: C.pink,   lite: C.pinkL,   tag: 'MHA', title: 'Health administration', desc: 'Run the systems.' },
   { color: C.t3,     lite: C.t2,      tag: '?',   title: 'Exploring',            desc: 'No pathway required.' },
 ];
 
 const portfolioTools = () => [
-  { color: C.sky,    lite: C.skyL,    icon: GraduationCap, title: 'College List',   desc: 'Tiered against your stats' },
+  { color: C.sky,    lite: C.skyL,    icon: GraduationCap, title: 'College list',   desc: 'Tiered against your stats' },
   { color: C.violet, lite: C.violetL, icon: FileText,      title: 'Essays',         desc: 'Draft to final, per school' },
   { color: C.rose,   lite: C.roseL,   icon: Calendar,      title: 'Milestones',     desc: 'Every deadline, counted down' },
-  { color: C.green,  lite: C.greenL,  icon: ShieldCheck,   title: 'Financial Aid',  desc: 'What each school really costs' },
-  { color: C.amber,  lite: C.amberL,  icon: ClipboardList, title: 'Activities & Resume', desc: 'Four years, application-ready' },
+  { color: C.green,  lite: C.greenL,  icon: ShieldCheck,   title: 'Financial aid',  desc: 'What each school really costs' },
+  { color: C.amber,  lite: C.amberL,  icon: ClipboardList, title: 'Activities & resume', desc: 'Four years, application-ready' },
   { color: C.cyan,   lite: C.cyanL,   icon: Search,        title: 'Research',       desc: 'Logged the way they read it' },
-  { color: C.blue,   lite: C.blueL,   icon: Layers,        title: 'Skills & Certifications', desc: 'Tracked and ready to cite' },
-  { color: C.green,  lite: C.greenL,  icon: Zap,           title: 'Clinical Hours', desc: 'Shadowing, logged as you go' },
+  { color: C.blue,   lite: C.blueL,   icon: Layers,        title: 'Skills & certifications', desc: 'Tracked and ready to cite' },
+  { color: C.green,  lite: C.greenL,  icon: Zap,           title: 'Clinical hours', desc: 'Shadowing, logged as you go' },
   { color: C.indigo, lite: C.indigoL, icon: MessageCircle, title: 'Recommenders',   desc: "Who's writing, and when it's due" },
-  { color: C.pink,   lite: C.pinkL,   icon: Sparkles,      title: 'Interview Prep', desc: 'Real MMI and CASPer scenarios' },
-  { color: C.amber,  lite: C.amberL,  icon: TrendingUp,    title: 'Test Scores',    desc: 'Every attempt, plotted' },
-  { color: C.cyan,   lite: C.cyanL,   icon: LineChart,     title: 'Admissions Calculator', desc: 'Where you stand, live' },
+  { color: C.pink,   lite: C.pinkL,   icon: Sparkles,      title: 'Interview prep', desc: 'Real MMI and CASPer scenarios' },
+  { color: C.amber,  lite: C.amberL,  icon: TrendingUp,    title: 'Test scores',    desc: 'Every attempt, plotted' },
+  { color: C.cyan,   lite: C.cyanL,   icon: LineChart,     title: 'Admissions calculator', desc: 'Where you stand, live' },
 ];
 
 // FAQS moved to src/lib/seoRoutes.js (imported above).
@@ -989,7 +989,7 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenParents, onOp
                     <ShieldCheck size={11} />
                     100% free
                   </span>
-                  No paywall · No personalised ads · Built for high schoolers
+                  No paywall · No personalized ads · Built for high schoolers
                 </span>
               </div>
 
@@ -1300,7 +1300,7 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenParents, onOp
             </div>
             <div style={{ marginTop: 32, paddingTop: 20, borderTop: `1px solid ${C.b1}`, fontSize: 11.5, lineHeight: 1.55, color: C.t4 || C.t3 }}>
               <p style={{ margin: '0px 0px 8px' }}>
-                MedSchoolPrep is an independent study tool. It is not a medical school, is not affiliated with or endorsed by any testing organisation, university, or health system, and does not confer academic credit or any credential. All lessons, quizzes, and career material — including anything the AI coach produces — are for general educational and career-exploration purposes only and are not medical, legal, financial, or professional advice. Score estimates are our own approximations, not official scores, and are not a prediction or guarantee of any result.
+                MedSchoolPrep is an independent study tool. It is not a medical school, is not affiliated with or endorsed by any testing organization, university, or health system, and does not confer academic credit or any credential. All lessons, quizzes, and career material — including anything the AI coach produces — are for general educational and career-exploration purposes only and are not medical, legal, financial, or professional advice. Score estimates are our own approximations, not official scores, and are not a prediction or guarantee of any result.
               </p>
               <p style={{ margin: 0 }}>{TRADEMARK_NOTICE[0]} {TRADEMARK_NOTICE[1]} {TRADEMARK_NOTICE[TRADEMARK_NOTICE.length - 1]}</p>
             </div>
@@ -1308,7 +1308,7 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenParents, onOp
               <span>© 2026 MedSchoolPrep. Free forever.</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.green, boxShadow: `0 0 8px ${C.green}` }} />
-                No paywall · No personalised ads · Built for high schoolers
+                No paywall · No personalized ads · Built for high schoolers
               </span>
             </div>
           </div>

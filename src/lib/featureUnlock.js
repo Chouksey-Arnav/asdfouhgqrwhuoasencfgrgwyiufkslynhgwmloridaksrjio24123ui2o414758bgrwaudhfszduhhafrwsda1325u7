@@ -45,7 +45,7 @@
 export const key = (tab, view) => (view ? `${tab}/${view}` : tab);
 
 /**
- * A section *inside* a sub-view — the five parts of Activities & Résumé, which
+ * A section *inside* a sub-view — the five parts of Activities & résumé, which
  * are destinations in every sense that matters (they have their own URLs, their
  * own forms, their own empty states) but are not sub-tabs. Written with a colon
  * so a section id still parses as a sub-view id up to the separator, which is
@@ -167,14 +167,14 @@ export const UNLOCK_RULES = [
     label: 'Roadmap',
     // ── Gated much more lightly than Plans, on purpose ──────────────────────
     // Plans is gated hard (onboarding + a lesson + the generator's own readiness bar) because a
-    // day-by-day plan is only meaningful once there is measured behaviour to plan around. The
+    // day-by-day plan is only meaningful once there is measured behavior to plan around. The
     // Roadmap is the opposite kind of artifact: it is built from a student's CIRCUMSTANCES —
     // their grade, their target schools, their money, their transport — every one of which is
     // true on day one and none of which improves by waiting.
     //
     // And the cost of waiting is not symmetric. A freshman who does not see this until March has
     // already missed the hospital volunteer intake, the science-fair registration and the summer
-    // programme deadlines for that year — a whole year of opportunities gone, silently, because a
+    // program deadlines for that year — a whole year of opportunities gone, silently, because a
     // gate was protecting them from a feature that was ready for them the entire time. There is
     // no equivalent harm in the other direction: the worst case for showing it early is a
     // student who looks at their year and closes the tab.
@@ -202,13 +202,13 @@ export const UNLOCK_RULES = [
   // study" and "study it", which is the entire day-one job of this pillar.
   {
     id: 'prep/quizzes',
-    label: 'Quiz Library',
+    label: 'Quiz library',
     hint: 'Take the pathway diagnostic or finish a lesson to open the quiz library.',
     at: (s) => s.lessons >= 1 || s.quizzes >= 1,
   },
   {
     id: 'prep/coach',
-    label: 'AI Coach',
+    label: 'AI coach',
     hint: 'Finish one lesson or quiz — then the coach has something to coach on.',
     at: (s) => studyActions(s) >= 1,
   },
@@ -269,7 +269,7 @@ export const UNLOCK_RULES = [
   },
   {
     id: 'portfolio/applying:aid',
-    label: 'Financial Aid',
+    label: 'Financial aid',
     hint: 'Add 2 colleges — aid is a comparison between schools, not a single number.',
     at: (s) => s.colleges >= 2,
     progress: (s) => [Math.min(s.colleges, 2), 2],
@@ -291,7 +291,7 @@ export const UNLOCK_RULES = [
     progress: (s) => [Math.min(s.activities, 2), 2],
   },
 
-  // ── Inside Activities & Résumé ───────────────────────────────────────────
+  // ── Inside Activities & résumé ───────────────────────────────────────────
   // The four Portfolio tabs that were merged into one tab's five sections
   // (Activities, Academics, Clinical Hours, Research, Skills & Certs) stopped
   // being four doors on the nav and became five tiles on one screen — which
@@ -314,7 +314,7 @@ export const UNLOCK_RULES = [
   },
   {
     id: 'portfolio/resume:clinical',
-    label: 'Shadowing & Hours',
+    label: 'Shadowing & hours',
     // The example the review gave, and the clearest case in the app: the
     // pathway's first lesson is what tells a student what shadowing IS and why
     // hours are counted. Handing them the log first is handing them a form for
@@ -331,7 +331,7 @@ export const UNLOCK_RULES = [
   },
   {
     id: 'portfolio/resume:credentials',
-    label: 'Skills & Certs',
+    label: 'Skills & certs',
     hint: 'Log 3 activities — certifications are the last layer of a résumé, not the first.',
     at: (s) => s.activities >= 3 || s.applicationUrgent,
     progress: (s) => [Math.min(s.activities, 3), 3],
@@ -347,7 +347,7 @@ export const UNLOCK_RULES = [
   },
   {
     id: 'progress/verified',
-    label: 'Verified Progress',
+    label: 'Verified progress',
     hint: 'Verify one lesson to start your verified mastery record.',
     at: (s) => s.lessons >= 1,
   },

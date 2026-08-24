@@ -6,10 +6,10 @@
 //   1. gates.js        — pass/fail requirements. A failure means NO percentage.
 //   2. academicFit.js  — position against the 25th, 50th AND 75th percentile,
 //                        with academics' discriminating power decayed by the
-//                        programme's selectivity.
+//                        program's selectivity.
 //   3. portfolioFit.js — everything else, scored on depth, sustain and evidence
 //                        quality rather than on totals.
-//   4. model.js        — per-programme weighting (the research-vs-clinical
+//   4. model.js        — per-program weighting (the research-vs-clinical
 //                        axis), composed on the log-odds scale against a
 //                        hook-corrected base rate, bounded by a selectivity
 //                        ceiling.

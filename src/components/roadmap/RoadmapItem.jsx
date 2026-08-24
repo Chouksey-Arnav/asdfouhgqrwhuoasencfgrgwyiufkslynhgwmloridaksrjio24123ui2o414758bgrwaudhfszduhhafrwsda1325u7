@@ -96,7 +96,7 @@ export default function RoadmapItem({
           {/* The date line. Always via <ItemDate>, never a raw interpolation —
               see the header of roadmapUi.jsx. When the work should START is
               printed alongside, because that is the number that changes
-              behaviour. */}
+              behavior. */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginTop: 8 }}>
             <ItemDate item={item} onFindDate={awaitingDate(item) ? openDateEntry : null} />
             {!done && item.startBy && displaysExactDate(item) && item.startBy !== effectiveDue(item) && (

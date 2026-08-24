@@ -26,7 +26,7 @@ import { healthScholarshipsFor, scholarshipCounts } from '../../lib/scholarshipF
 // ── Why "not yet" entries are shown rather than hidden ──────────────────────
 // The FNSNA nursing scholarship rejects high school students explicitly, and
 // ambitious seniors apply to it every year and lose the evening. Showing it,
-// greyed, under "once you're enrolled" is worth more than hiding it: the lesson
+// grayed, under "once you're enrolled" is worth more than hiding it: the lesson
 // is that the profession-specific money starts the moment they matriculate, so
 // they should stop hunting for it now.
 // ─────────────────────────────────────────────────────────────────────────────

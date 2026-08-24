@@ -9,7 +9,7 @@
 // theme they were given should never have to go looking for the setting.
 //
 // It renders as an icon button (the current mode's glyph) that opens a short
-// labelled menu. Icon-only at rest is deliberate — this sits in the densest
+// labeled menu. Icon-only at rest is deliberate — this sits in the densest
 // part of the chrome, and a fifth word up there is exactly the kind of text
 // this app has too much of.
 // ─────────────────────────────────────────────────────────────────────────────

@@ -18,11 +18,11 @@ import { satGrad, satWash } from './satUi';
 //
 // The second tab is the one that actually matters. The sheet the exam gives you
 // is short and mostly geometry; the formulas it withholds are where students
-// lose points, so they are shown side by side and labelled honestly.
+// lose points, so they are shown side by side and labeled honestly.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const TABS = [
-  { id: 'memorize', label: 'Memorise these', icon: Brain, blurb: 'NOT given on test day. This is the list that costs points.' },
+  { id: 'memorize', label: 'Memorize these', icon: Brain, blurb: 'NOT given on test day. This is the list that costs points.' },
   { id: 'given', label: 'Given on the test', icon: ClipboardCheck, blurb: 'On screen for the whole Math section. Do not spend memory here.' },
 ];
 

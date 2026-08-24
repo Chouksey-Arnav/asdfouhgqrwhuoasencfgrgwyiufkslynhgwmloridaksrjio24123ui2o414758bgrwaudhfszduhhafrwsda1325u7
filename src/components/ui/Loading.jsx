@@ -25,7 +25,7 @@ import { C, glass, CC, R, RADIUS, LOADING } from '../../lib/theme';
 //                  catches, and they only have to catch it once.
 //
 // And never more than five skeleton rows: past five it stops reading as "your
-// content is on its way" and starts reading as a screen made of grey bars.
+// content is on its way" and starts reading as a screen made of gray bars.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**

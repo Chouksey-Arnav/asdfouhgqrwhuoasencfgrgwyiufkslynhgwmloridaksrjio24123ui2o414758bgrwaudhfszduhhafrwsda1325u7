@@ -71,7 +71,7 @@ const ids = CAT.ROADMAP_CATALOG.map((e) => e.id);
 eq('every catalog id is unique', new Set(ids).size, ids.length);
 
 // Every track must have real entries. A track that has emptied still renders its filter chip and
-// its colour, so the failure is invisible from the UI.
+// its color, so the failure is invisible from the UI.
 const counts = CAT.trackCounts();
 for (const [track, n] of Object.entries(counts)) {
   assert(`track "${track}" has entries`, n >= 1, `has ${n}`);
@@ -289,7 +289,7 @@ for (const grade of GRADES) {
   const answers = { weeklyHours: 'moderate' };
   const fb = GEN.heuristicRoadmap({ slate: slates[grade], seasons, answers, gradeStage: grade });
   assert(`${grade}: the deterministic fallback is a real roadmap`, fb.picks.length >= 6, `${fb.picks.length} picks`);
-  assert(`${grade}: the fallback names its own degradation`, /not personalised/i.test(fb.risks[0]?.title || ''));
+  assert(`${grade}: the fallback names its own degradation`, /not personalized/i.test(fb.risks[0]?.title || ''));
 
   const rm = assemble(fb.picks);
   const violations = MODEL.assertTraceable(rm);

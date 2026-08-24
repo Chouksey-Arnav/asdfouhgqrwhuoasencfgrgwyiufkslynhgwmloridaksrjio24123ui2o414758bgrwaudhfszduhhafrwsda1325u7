@@ -16,10 +16,10 @@
 //
 // It states the limits as prominently as the features on purpose. "You will not see their essays
 // or their coach conversations" is not fine print here; it is the product, and it is also the
-// sentence that gets a sceptical sixteen-year-old to accept the request.
+// sentence that gets a skeptical sixteen-year-old to accept the request.
 //
 // ── The layout, and why it is not one column ────────────────────────────────
-// This page used to render inside a 880px column, centred, on every screen. On the laptop it is
+// This page used to render inside a 880px column, centered, on every screen. On the laptop it is
 // actually read on that left about a third of the window painted in flat background on each side,
 // and — worse than the waste — it pushed the one thing most visitors came here to do (redeem an
 // invitation) about two and a half screens down, under three sections of explanation aimed at

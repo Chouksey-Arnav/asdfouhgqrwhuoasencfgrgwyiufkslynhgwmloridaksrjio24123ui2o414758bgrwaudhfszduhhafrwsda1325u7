@@ -39,7 +39,7 @@ import { exportPortfolioDossier } from '../../lib/exportPDF';
 // without noticing.
 //
 // Reflections are fetched ONLY when an archive export is actually requested,
-// so a parent or counsellor viewing this panel never causes that content to be
+// so a parent or counselor viewing this panel never causes that content to be
 // read at all.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -166,7 +166,7 @@ export default function FourYearExport({
               busy={busy === 'archive'}
               done={done === 'archive'}
               onGenerate={() => generate('archive')}
-              privacyLine="Your reflection journal and working document go in this version and nowhere else. A parent or counsellor account cannot generate it, and it is not what you send to anyone."
+              privacyLine="Your reflection journal and working document go in this version and nowhere else. A parent or counselor account cannot generate it, and it is not what you send to anyone."
             />
           ) : (
             <div style={{

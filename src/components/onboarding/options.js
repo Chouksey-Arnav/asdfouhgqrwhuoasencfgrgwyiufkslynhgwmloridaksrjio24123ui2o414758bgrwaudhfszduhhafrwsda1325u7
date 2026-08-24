@@ -77,9 +77,9 @@ export const WHY_MEDICINE_OPTIONS = [
 ];
 
 export const DREAM_ROLE_OPTIONS = [
-  { value: 'physician', icon: 'stethoscope', short: 'Physician', label: 'Physician / Surgeon', sublabel: 'Diagnosing, treating, operating' },
-  { value: 'nurse', icon: 'syringe', short: 'Nurse', label: 'Nurse / Nurse Practitioner', sublabel: 'Frontline patient care' },
-  { value: 'pa', icon: 'clipboard-plus', short: 'PA', label: 'Physician Assistant', sublabel: 'Medicine with flexibility' },
+  { value: 'physician', icon: 'stethoscope', short: 'Physician', label: 'Physician / surgeon', sublabel: 'Diagnosing, treating, operating' },
+  { value: 'nurse', icon: 'syringe', short: 'Nurse', label: 'Nurse / nurse practitioner', sublabel: 'Frontline patient care' },
+  { value: 'pa', icon: 'clipboard-plus', short: 'PA', label: 'Physician assistant', sublabel: 'Medicine with flexibility' },
   { value: 'mental_health', icon: 'brain', short: 'Mental health', label: 'Psychiatry / Mental health', sublabel: 'Caring for the mind' },
   { value: 'research', icon: 'atom', short: 'Research', label: 'Medical research / Biotech', sublabel: 'Discovering the next cure' },
   { value: 'other_health', icon: 'capsule', short: 'Health career', label: 'Another health career', sublabel: 'Pharmacy, PT, public health…' },
@@ -105,9 +105,9 @@ export const SCIENCE_OPTIONS = [
   { value: 'biology', icon: 'dna', short: 'Biology', label: 'Biology' },
   { value: 'chemistry', icon: 'flask', short: 'Chemistry', label: 'Chemistry' },
   { value: 'physics', icon: 'magnet', short: 'Physics', label: 'Physics' },
-  { value: 'ap_bio', icon: 'petri', short: 'AP Bio', label: 'AP / IB Biology' },
-  { value: 'ap_chem', icon: 'test-tubes', short: 'AP Chem', label: 'AP / IB Chemistry' },
-  { value: 'anatomy', icon: 'organ-heart', short: 'Anatomy', label: 'Anatomy / Physiology' },
+  { value: 'ap_bio', icon: 'petri', short: 'AP Bio', label: 'AP / IB biology' },
+  { value: 'ap_chem', icon: 'test-tubes', short: 'AP Chem', label: 'AP / IB chemistry' },
+  { value: 'anatomy', icon: 'organ-heart', short: 'Anatomy', label: 'Anatomy / physiology' },
   { value: 'none_yet', icon: 'sprout', short: 'None yet', label: 'None of these yet' },
 ];
 

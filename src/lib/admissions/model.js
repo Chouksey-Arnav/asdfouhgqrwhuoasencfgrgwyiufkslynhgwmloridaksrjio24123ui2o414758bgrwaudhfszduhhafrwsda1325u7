@@ -13,7 +13,7 @@
 //      "Likely". Likely at a school admitting 4% of applicants meant nothing,
 //      and it was the most consequential word on the screen.
 //
-// So this model works in log-odds against the programme's actual base rate.
+// So this model works in log-odds against the program's actual base rate.
 // Every dimension is a SHIFT relative to the median admitted student, not a
 // pile of points; a shift on the log-odds scale automatically has diminishing
 // returns in probability, which is the correct shape and does not need to be
@@ -23,8 +23,8 @@
 // The composition is bounded by four things, and every one of them exists to
 // stop a specific way this kind of tool lies:
 //
-//   • THE CEILING. At a programme admitting 3%, no combination of inputs may
-//     produce 60%. A perfect applicant at a 3% programme is not a favourite —
+//   • THE CEILING. At a program admitting 3%, no combination of inputs may
+//     produce 60%. A perfect applicant at a 3% program is not a favorite —
 //     the pool is full of them and there are not enough seats. `probabilityCeiling`
 //     makes that structural rather than a thing we hope the weights achieve.
 //   • ACADEMIC LEVERAGE DECAY. Below ~15% admit, GPA and scores barely
@@ -55,7 +55,7 @@ const sigmoid = (x) => 1 / (1 + Math.exp(-x));
 // ─────────────────────────────────────────────────────────────────────────────
 // The ceiling.
 //
-// The most a well-prepared applicant can reach at a programme with base rate b.
+// The most a well-prepared applicant can reach at a program with base rate b.
 // Deliberately expressed as "you can claim this share of the seats you are not
 // already given by the base rate", because that framing makes the number at low
 // base rates obviously right rather than surprisingly harsh:
@@ -63,7 +63,7 @@ const sigmoid = (x) => 1 / (1 + Math.exp(-x));
 //     b = 3%   → ceiling ≈ 13%     b = 10%  → ceiling ≈ 24%
 //     b = 35%  → ceiling ≈ 58%     b = 60%  → ceiling ≈ 82%
 //
-// Thirteen percent at a 3% programme is a very strong applicant being told the
+// Thirteen percent at a 3% program is a very strong applicant being told the
 // truth: they are four times more likely than the average applicant and still
 // far more likely to be rejected than admitted. Every tool that shows that
 // student 55% is not being generous, it is being wrong.
@@ -82,8 +82,8 @@ export function probabilityFloor(base) {
 /**
  * How much of the outcome any model can explain at this selectivity.
  *
- * At a 60% programme, an application is largely a function of the applicant. At
- * a 3% programme it is substantially a function of who else applied, which
+ * At a 60% program, an application is largely a function of the applicant. At
+ * a 3% program it is substantially a function of who else applied, which
  * reader picked it up, what the institution needed that year, and a dozen
  * things no model has access to. Shrinking the total signal budget as the base
  * rate falls is how that gets said in arithmetic rather than in a footnote.
@@ -98,7 +98,7 @@ export function signalBudget(base) {
  *
  * Published rate p over the whole pool. If a share `h` of the SEATS goes to
  * hooked applicants who make up a much smaller share of the POOL, the rate for
- * everyone else is lower than the headline. Modelled with hooked applicants
+ * everyone else is lower than the headline. Modeled with hooked applicants
  * occupying `h` of the class from roughly a quarter of that share of the pool,
  * which is the conservative end of the usual estimates.
  */
@@ -113,7 +113,7 @@ export function unhookedBaseRate(base, hookShare, studentHooks) {
   const hooked = !!(studentHooks && (studentHooks.recruitedAthlete || studentHooks.legacy || studentHooks.development || studentHooks.faculty));
   if (hooked) {
     // Hooked applicants are admitted from a small pool into a large share of
-    // the class. Not modelled precisely — nobody publishes it — but ignoring it
+    // the class. Not modeled precisely — nobody publishes it — but ignoring it
     // entirely would mean telling a recruited athlete the unhooked number.
     const hookedRate = clamp((b * h) / Math.max(1e-6, poolShare), b, 0.9);
     return {
@@ -128,12 +128,12 @@ export function unhookedBaseRate(base, hookShare, studentHooks) {
 }
 
 /**
- * Layer 4 — the per-programme weighting, with academics' decayed weight
+ * Layer 4 — the per-program weighting, with academics' decayed weight
  * redistributed rather than discarded.
  *
  * This is the step that makes "research school vs clinical school" a real
- * difference rather than a label. The weights come from the programme profile,
- * which comes from what the programme publishes.
+ * difference rather than a label. The weights come from the program profile,
+ * which comes from what the program publishes.
  */
 export function applyWeighting({ weights, academicLeverageValue }) {
   const w = { ...weights };
@@ -153,9 +153,9 @@ export function applyWeighting({ weights, academicLeverageValue }) {
  * THE MODEL.
  *
  * @param {Object} opts
- * @param {Object|string} opts.program   a programme profile, or an id/name to resolve
+ * @param {Object|string} opts.program   a program profile, or an id/name to resolve
  * @param {Object} opts.applicant        the intake object (see intake.js)
- * @param {Object} opts.portfolio        normalised portfolio signals (see intake.js)
+ * @param {Object} opts.portfolio        normalized portfolio signals (see intake.js)
  * @param {Object} opts.completeness     output of assessCompleteness(), for uncertainty
  * @param {string} opts.roundId          which round they intend to apply in
  */
@@ -176,7 +176,7 @@ export function estimateAdmission({ program, applicant = {}, portfolio = {}, com
       headline: gates.blocked.length === 1
         ? `You do not currently meet one published requirement for ${profile.name}, so we are not showing a percentage.`
         : `You do not currently meet ${gates.blocked.length} published requirements for ${profile.name}, so we are not showing a percentage.`,
-      explanation: 'A requirement is not a heavily-weighted feature — it is a yes or a no. Showing you an eight percent chance at a programme you are not eligible for would be worse than showing you nothing, so here is what would have to change instead.',
+      explanation: 'A requirement is not a heavily-weighted feature — it is a yes or a no. Showing you an eight percent chance at a program you are not eligible for would be worse than showing you nothing, so here is what would have to change instead.',
       whatWouldChange: gates.blocked.map(g => ({
         label: g.label, remedy: g.remedy, fixable: g.fixable, published: g.published,
       })),
@@ -235,7 +235,7 @@ export function estimateAdmission({ program, applicant = {}, portfolio = {}, com
   // ── The lottery ──────────────────────────────────────────────────────────
   // Where selection is explicitly random, blend the estimate back toward the
   // base rate by the share that is genuinely a draw. This is the one place the
-  // model deliberately refuses to reward preparation, because the programme has
+  // model deliberately refuses to reward preparation, because the program has
   // said in its own words that preparation does not decide it.
   let lotteryApplied = null;
   if (profile.lottery?.exists) {
@@ -264,13 +264,13 @@ export function estimateAdmission({ program, applicant = {}, portfolio = {}, com
     showsProbability: true,
 
     probability: { point: p, low: lo, high: hi, ceiling, floor, hitCeiling },
-    // Never render `point` on its own. It exists so the range has a centre and
+    // Never render `point` on its own. It exists so the range has a center and
     // so the driver deltas have something to be relative to.
     display: {
       range: `${fmtPct(lo)}–${fmtPct(hi)}`,
       centre: fmtPct(p),
       ceilingNote: hitCeiling
-        ? `This is the highest this model will go at a programme admitting about ${fmtPct(base)} of applicants. Past this point the deciding factors are things no model can see, and a bigger number would be a lie about precision rather than a reward for your work.`
+        ? `This is the highest this model will go at a program admitting about ${fmtPct(base)} of applicants. Past this point the deciding factors are things no model can see, and a bigger number would be a lie about precision rather than a reward for your work.`
         : null,
     },
 
@@ -312,7 +312,7 @@ const fmtPct = (v) => `${v < 0.1 ? (v * 100).toFixed(1) : Math.round(v * 100)}%`
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Uncertainty. The width of the band is the honest part of the product, so it
-// is assembled from named, itemised causes the panel can list — not from a
+// is assembled from named, itemized causes the panel can list — not from a
 // constant that makes the bar look appropriately humble.
 // ─────────────────────────────────────────────────────────────────────────────
 function computeUncertainty({ profile, rateIsEstimate, academic, gates, completeness, round, portfolioUnknowns }) {
@@ -325,11 +325,11 @@ function computeUncertainty({ profile, rateIsEstimate, academic, gates, complete
   const bandBases = [profile.academics?.gpa?.basis, profile.academics?.sat?.basis].filter(Boolean);
   if (bandBases.some(b => b === 'derived' || b === 'estimated')) {
     sigma += 0.18;
-    reasons.push({ id: 'academic-bands', sigma: 0.18, label: 'The admitted-student percentile bands for this programme are derived from a midpoint rather than published, so your position within them is approximate.', fixable: false });
+    reasons.push({ id: 'academic-bands', sigma: 0.18, label: 'The admitted-student percentile bands for this program are derived from a midpoint rather than published, so your position within them is approximate.', fixable: false });
   }
 
-  if (profile.confidence === 'low') { sigma += 0.20; reasons.push({ id: 'profile-confidence', sigma: 0.20, label: 'We hold little published information about this programme specifically.', fixable: false }); }
-  else if (profile.confidence === 'medium') { sigma += 0.10; reasons.push({ id: 'profile-confidence', sigma: 0.10, label: 'We hold partial published information about this programme.', fixable: false }); }
+  if (profile.confidence === 'low') { sigma += 0.20; reasons.push({ id: 'profile-confidence', sigma: 0.20, label: 'We hold little published information about this program specifically.', fixable: false }); }
+  else if (profile.confidence === 'medium') { sigma += 0.10; reasons.push({ id: 'profile-confidence', sigma: 0.10, label: 'We hold partial published information about this program.', fixable: false }); }
 
   if (gates.uncheckable?.length) {
     const add = Math.min(0.35, 0.14 * gates.uncheckable.length);
@@ -337,7 +337,7 @@ function computeUncertainty({ profile, rateIsEstimate, academic, gates, complete
     reasons.push({ id: 'uncheckable-gates', sigma: add, fixable: true, label: `${gates.uncheckable.length} published requirement${gates.uncheckable.length === 1 ? '' : 's'} we cannot check yet because you have not answered ${[...new Set(gates.uncheckable.flatMap(g => g.missing))].join(', ')}. Until then we genuinely do not know whether you are eligible.` });
   }
 
-  if (academic.degraded) { sigma += 0.12; reasons.push({ id: 'superscore-policy', sigma: 0.12, fixable: true, label: 'This programme refuses superscores and we only hold a superscored result from you.' }); }
+  if (academic.degraded) { sigma += 0.12; reasons.push({ id: 'superscore-policy', sigma: 0.12, fixable: true, label: 'This program refuses superscores and we only hold a superscored result from you.' }); }
 
   const missing = completeness?.missing || [];
   if (missing.length) {
@@ -364,9 +364,9 @@ function computeUncertainty({ profile, rateIsEstimate, academic, gates, complete
   sigma = clamp(sigma, 0.25, 1.6);
 
   const confidence =
-    sigma <= 0.55 ? { level: 'high',     label: 'Confident',            note: 'We have this programme\'s published criteria and enough of your record to place you against them.' } :
+    sigma <= 0.55 ? { level: 'high',     label: 'Confident',            note: 'We have this program\'s published criteria and enough of your record to place you against them.' } :
     sigma <= 0.85 ? { level: 'moderate', label: 'Moderately confident', note: 'Enough to plan around, not enough to bet on. The list below is what would tighten it.' } :
-    sigma <= 1.2  ? { level: 'low',      label: 'Low confidence',        note: 'Treat this as a rough orientation. Too much is either unpublished by the programme or unanswered by you.' } :
+    sigma <= 1.2  ? { level: 'low',      label: 'Low confidence',        note: 'Treat this as a rough orientation. Too much is either unpublished by the program or unanswered by you.' } :
                     { level: 'very-low', label: 'Very low confidence',   note: 'This is barely more than the base rate. Do not make decisions on it until the gaps below are filled.' };
 
   return { sigma, reasons: reasons.sort((a, b) => b.sigma - a.sigma), confidence };
@@ -378,7 +378,7 @@ function computeUncertainty({ profile, rateIsEstimate, academic, gates, complete
 // Computed by re-running the composition with one thing changed, so a driver is
 // a real counterfactual under this model rather than a hand-written tip. That
 // also means a driver automatically disappears when it stops mattering: at a
-// programme where academics have almost no leverage left, "raise your SAT"
+// program where academics have almost no leverage left, "raise your SAT"
 // falls off the list by itself instead of sitting at the top of it forever.
 // ─────────────────────────────────────────────────────────────────────────────
 function computeDrivers({ profile, base, hookRate, beta, signal, weights, academic, dimensions, round, gates, ceiling, floor, p, portfolio }) {
@@ -445,7 +445,7 @@ function computeDrivers({ profile, base, hookRate, beta, signal, weights, academ
     }
   }
 
-  // Round, where the programme actually has one.
+  // Round, where the program actually has one.
   if (round.applicable) {
     const bestEarly = (round.available || []).filter(r => (r.multiplier ?? 1) > (round.chosen?.multiplier ?? 1))
       .sort((a, b) => (b.multiplier ?? 1) - (a.multiplier ?? 1))[0];
@@ -479,7 +479,7 @@ function computeDrivers({ profile, base, hookRate, beta, signal, weights, academ
 /**
  * Exported because the MedEx Score lists the same actions on a different filter.
  * `computeDrivers` below drops anything worth less than 0.15 percentage points of
- * admission probability, which at a 3% programme silently discards moves that are
+ * admission probability, which at a 3% program silently discards moves that are
  * genuinely worth several points on the 0-1000 scale — so src/lib/medex/score.js
  * re-filters by points and needs the labels for the items this file dropped.
  * Without sharing them it invents its own, and the two surfaces start describing
@@ -499,7 +499,7 @@ function driverDetail(key, dim, profile) {
   const ref = dim.ref || {};
   const weightNote = profile.weightNotes?.[key];
   const base = dim.hours != null
-    ? `You have about ${Math.round(dim.hours)} hours; the strong band for this kind of programme is around ${ref.p75}. ${dim.sustain?.known ? dim.sustain.note : ''}`
+    ? `You have about ${Math.round(dim.hours)} hours; the strong band for this kind of program is around ${ref.p75}. ${dim.sustain?.known ? dim.sustain.note : ''}`
     : `You have ${dim.count ?? 0} logged; the strong band is around ${ref.p75} ${ref.unit || ''}.`;
   return weightNote ? `${base} ${weightNote}` : base.trim();
 }

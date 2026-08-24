@@ -556,7 +556,7 @@ export const MILESTONES = [
   {
     id: 'sr_midyear', title: 'Mid-year report sent by your counselor', kind: 'application', weight: P.important,
     grades: ['senior', 'gap'], year: 'senior', monthDay: '01-20',
-    detail: 'Your counselor sends first-semester senior grades to every school. Make sure they have your final school list, including anything you added in December.',
+    detail: 'Your counselor sends first-semester senior grades to every school. Make sure they have your final program list, including anything you added in December.',
     why: () => 'It is automatic only if your counselor has the right list.',
   },
   {
@@ -655,7 +655,7 @@ export const MILESTONES = [
   //
   // `leadDays` on these entries is what stops the feed from burying them: a
   // February program deadline with a sixty-day run-up outranks a thirty-day
-  // form, which is exactly the judgement a student cannot make for themselves
+  // form, which is exactly the judgment a student cannot make for themselves
   // about programs they have never applied to. See src/lib/milestoneUrgency.js.
   {
     id: 'hp_summer_window', title: 'Summer program applications are open NOW — for next summer', kind: 'experience', weight: P.critical,
@@ -672,7 +672,7 @@ export const MILESTONES = [
     why: () => 'Being told in February that the window is closing is useful. Being told in May is a post-mortem.',
   },
   {
-    id: 'hp_cert_fall_enrollment', title: 'Certification course enrolment — autumn term', kind: 'experience', weight: P.important,
+    id: 'hp_cert_fall_enrollment', title: 'Certification course enrollment — autumn term', kind: 'experience', weight: P.important,
     grades: ALL_YEARS, year: 'current', monthDay: '08-20', leadDays: 21,
     detail: 'CPR/BLS and first aid run year-round, but the ones with real weight — CNA, EMT-Basic, pharmacy tech, medical assisting — run on a school or community-college term and close registration before the term starts. A course you enrol in this month is a credential you hold by winter.',
     action: { tab: 'portfolio', view: 'skills', label: 'Log a certification' },
@@ -681,9 +681,9 @@ export const MILESTONES = [
       : 'Most hospital volunteer roles need a current CPR/BLS card before they will take you, and the term-based credentials behind it enrol on a calendar nobody publishes to students.',
   },
   {
-    id: 'hp_cert_spring_enrollment', title: 'Certification course enrolment — spring term', kind: 'experience', weight: P.important,
+    id: 'hp_cert_spring_enrollment', title: 'Certification course enrollment — spring term', kind: 'experience', weight: P.important,
     grades: ['sophomore', 'junior', 'senior', 'gap'], year: 'current', monthDay: '12-05', leadDays: 21,
-    detail: 'Spring-term dual-enrolment CNA and EMT-Basic courses register in December, before the winter break. State minimum ages vary — often 16 to start the course — so check yours before you plan around it.',
+    detail: 'Spring-term dual-enrollment CNA and EMT-Basic courses register in December, before the winter break. State minimum ages vary — often 16 to start the course — so check yours before you plan around it.',
     action: { tab: 'portfolio', view: 'skills', label: 'Open skills & certs' },
     why: () => 'The registration closes weeks before the class starts, and over the break there is nobody to ask.',
   },
@@ -951,7 +951,7 @@ function roadmapEvents(ctx, roadmap) {
       detail: item.howThisHelps || item.why || '',
       // Roadmap tracks and timeline kinds are two vocabularies for the same
       // idea; the ones that do not line up fall back to 'planning', which is
-      // exactly what an un-categorised forward-looking commitment is.
+      // exactly what an un-categorized forward-looking commitment is.
       kind: ROADMAP_TRACK_KIND[item.track] || 'planning',
       weight,
       source: 'roadmap',

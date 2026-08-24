@@ -72,7 +72,7 @@ export default function MedabrainRead({
     }
     // args is intentionally read at call time rather than tracked: a read is a
     // snapshot of the record at the moment the student asked for it, and
-    // re-running because a keystroke changed one field is the behaviour this
+    // re-running because a keystroke changed one field is the behavior this
     // feature specifically does not want.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kind, disabled, args]);

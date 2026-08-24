@@ -7,7 +7,7 @@ import { C, glass, btn, btnSm, tint, onTint, RADIUS, SP, type, SIZE } from '../.
 // An empty state is this app's highest-attention onboarding surface, and that
 // is not a figure of speech: the student is looking directly at it and there is
 // nothing else on the screen to look at. A panel that says "No items" in 12px
-// grey has spent the one moment it had someone's undivided attention saying
+// gray has spent the one moment it had someone's undivided attention saying
 // nothing.
 //
 // So every empty state here is four things and no more:
@@ -48,7 +48,7 @@ const KIND = {
  * @param body         one sentence on why it matters
  * @param actionLabel  the single primary action
  * @param onAction     what it does
- * @param accent       the panel's identity colour, used only by kind="new"
+ * @param accent       the panel's identity color, used only by kind="new"
  */
 export default function EmptyState({
   icon: Icon, title, body, actionLabel, onAction, accent = C.blue, kind = 'new',

@@ -3,7 +3,7 @@
  * The build guard for everything the August 2026 site audit found, so that none
  * of it can come back silently.
  *
- * It checks the three artefacts that have to agree — public/sitemap.xml,
+ * It checks the three artifacts that have to agree — public/sitemap.xml,
  * public/robots.txt, and the prerendered HTML in dist/ — against the one route
  * table they are all generated from (src/lib/seoRoutes.js), and fails the build
  * when they don't. The specific failures it exists to prevent, each of which was

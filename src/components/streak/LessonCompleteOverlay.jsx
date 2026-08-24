@@ -187,7 +187,7 @@ function XpPage({ lessonTitle, unitTitle, pathwayLabel, quizScore, xpAwarded, xp
 
   // When the award crosses a level the bar has to run to 100% FIRST and only then
   // restart at the new level's real position. Animating straight from (say) 88% to
-  // 12% shows the bar travelling backwards at the exact moment the student gained
+  // 12% shows the bar traveling backwards at the exact moment the student gained
   // a level, which reads as losing progress. Three phases: where they were, full,
   // where they are now. Without a level-up it is just the first two.
   const [phase, setPhase] = useState(0);

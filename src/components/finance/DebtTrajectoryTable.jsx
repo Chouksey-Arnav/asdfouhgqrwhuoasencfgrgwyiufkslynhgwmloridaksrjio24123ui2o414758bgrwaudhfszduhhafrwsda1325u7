@@ -9,7 +9,7 @@ import { DEFAULT_COMPARISON } from '../../data/pathwayFinance';
 //
 // ── Why one component serves both the student and the parent ────────────────
 // The parent dashboard needs exactly this comparison — parents care about it
-// intensely and no school, no counsellor and no college website ever puts it in
+// intensely and no school, no counselor and no college website ever puts it in
 // front of them — and it must be the SAME numbers the student is looking at.
 // Two implementations would drift, and a parent and a seventeen-year-old
 // arguing from two different debt figures is worse than either one alone.
@@ -211,7 +211,7 @@ export default function DebtTrajectoryTable({
           Debt figures are medians for graduates <b>who borrowed</b> — a quarter of medical students
           and a fifth of pharmacy students finish owing nothing. Pay figures are medians for the
           whole occupation, not starting salaries, and not adjusted for specialty. Both move every
-          year. Open a pathway to see exactly which organisation published each number and when we
+          year. Open a pathway to see exactly which organization published each number and when we
           read it.
         </span>
       </div>

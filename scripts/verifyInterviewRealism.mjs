@@ -166,7 +166,7 @@ const finished = [
   'That is what I would do first and I would tell her why',
 ];
 for (const t of finished) {
-  check(`a finished thought is recognised: "${t}"`, isSemanticallyComplete(t), true);
+  check(`a finished thought is recognized: "${t}"`, isSemanticallyComplete(t), true);
   check(`a finished thought gets the short wait: "${t}"`, endpointDelayMs(t), 800);
 }
 assert('a gentler persona can buy more patience', endpointDelayMs('I would probably, um', { patienceMultiplier: 1.5 }) > 1200);
@@ -212,8 +212,8 @@ const CORPUS = [
   { band: 'average', text: "The competing values are honesty and friendship. From my classmate's perspective she is scared, and from the perspective of the rest of the class this affects their ranking, so there are two sides here. That said, I would not be comfortable staying silent. I would tell her that I think she needs to tell the teacher, and that I would rather she did it than me. My position is that the result has to be corrected, but that she should be the one to correct it. I would say all of that to her directly rather than avoiding the conversation, because I think she deserves to know where I stand before anything happens." },
 
   // -- strong: 6-7 --
-  { band: 'strong', text: "The tension is between what I owe my classmate, who trusted me, and what the rest of the class is owed once a ranking is wrong. The strongest case for keeping it quiet is genuinely strong: he came to me rather than anyone else, he is a minor under real pressure, and reporting him could end his year for a single decision. I take that seriously. But the students below him did not agree to be ranked against a false result, and the teacher is the only person who can correct that. So, first: I would talk to him today, not in a week, and I would tell him plainly that I cannot hold this and that I would rather he told Ms. Alvarez himself. I'd offer to sit with him while he does it. If he had not gone to her within a day, I would go to Ms. Alvarez myself and tell him beforehand that I was going to. I don't know whether the school treats a self-report differently from a third-party report, and that matters a lot here, so I would ask the counsellor about that before I pushed him toward one route. What would change my mind is if I found out I had the facts wrong. That is where I would start." },
-  { band: 'strong', text: "There are three people here: my classmate, Ms. Reyes who set the exam, and the students whose ranking moved. The best argument for silence is that he trusted me and that a single mistake should not define him, and I can see the case for that. What I keep coming back to is that the other students cannot advocate for themselves because they do not know. First step, the same afternoon: I would tell him I am not going to keep it, and I would give him until tomorrow to go to Ms. Reyes himself. I'd escalate to my advisor if he did not. I'm not sure whether the honour code has a self-disclosure clause — I would look that up before the conversation, because it changes what I am asking him to do. And I would say to him that I am not doing this to punish him. That is my answer." },
+  { band: 'strong', text: "The tension is between what I owe my classmate, who trusted me, and what the rest of the class is owed once a ranking is wrong. The strongest case for keeping it quiet is genuinely strong: he came to me rather than anyone else, he is a minor under real pressure, and reporting him could end his year for a single decision. I take that seriously. But the students below him did not agree to be ranked against a false result, and the teacher is the only person who can correct that. So, first: I would talk to him today, not in a week, and I would tell him plainly that I cannot hold this and that I would rather he told Ms. Alvarez himself. I'd offer to sit with him while he does it. If he had not gone to her within a day, I would go to Ms. Alvarez myself and tell him beforehand that I was going to. I don't know whether the school treats a self-report differently from a third-party report, and that matters a lot here, so I would ask the counselor about that before I pushed him toward one route. What would change my mind is if I found out I had the facts wrong. That is where I would start." },
+  { band: 'strong', text: "There are three people here: my classmate, Ms. Reyes who set the exam, and the students whose ranking moved. The best argument for silence is that he trusted me and that a single mistake should not define him, and I can see the case for that. What I keep coming back to is that the other students cannot advocate for themselves because they do not know. First step, the same afternoon: I would tell him I am not going to keep it, and I would give him until tomorrow to go to Ms. Reyes himself. I'd escalate to my advisor if he did not. I'm not sure whether the honor code has a self-disclosure clause — I would look that up before the conversation, because it changes what I am asking him to do. And I would say to him that I am not doing this to punish him. That is my answer." },
 ];
 
 const scored = CORPUS.map(c => ({ ...c, result: scoreStation(c.text, CASE) }));
@@ -282,7 +282,7 @@ check('the prompt is never read back to the student',
 
 // Real interviewer turns, in each panellist's register. Every one must come through byte-identical.
 const REAL_TURNS = [
-  "That's a good place to start, and volunteering across a few organisations says something. I'd like to slow down on one of them. Which experience left the deepest mark?",
+  "That's a good place to start, and volunteering across a few organizations says something. I'd like to slow down on one of them. Which experience left the deepest mark?",
   'You mentioned the food bank. Walk me through the first hour of a Saturday shift.',
   "I hear you. Let's stay with the hard part — what did you actually do when the other volunteer walked out?",
   'Thank you for that. I want to ask about something different now. Tell me about a time you got something wrong.',
@@ -559,7 +559,7 @@ const rushed = scoreCasperAttempt(Array(12).fill(null).map(() => casperSection(5
 check('unanswered questions are counted', rushed.unanswered, 24);
 assert('and surfaced as a triage finding, not a knowledge one', rushed.findings.some(f => /triage|fifteen seconds/i.test(f)));
 
-// ── 16. Programme tracker → station library ────────────────────────────────
+// ── 16. Program tracker → station library ────────────────────────────────
 // The link the whole thing is for: a student applying somewhere that runs an MMI gets pointed at
 // MMI stations specifically.
 
@@ -567,7 +567,7 @@ const drexel = PROGRAM_PROFILES.find(p => p.id === 'drexel-ba-bs-md');
 const drexelPrep = interviewPrepFor(drexel);
 check('Drexel is known to run an MMI', drexelPrep.status, 'known');
 check('and the claim is published rather than inferred', drexelPrep.basis, 'published');
-assert('and it carries the programme\'s own words', /MMI/.test(drexelPrep.published));
+assert('and it carries the program\'s own words', /MMI/.test(drexelPrep.published));
 check('so the student is sent to the circuit', drexelPrep.recommendation.mode, 'circuit');
 assert('and the station count is counted rather than asserted', drexelPrep.recommendation.stationCount === stationsForFormat('mmi').length);
 assert('Drexel carries sources, which is what lets it claim published', drexel.sources.length > 0);
@@ -580,7 +580,7 @@ for (const p of PROGRAM_PROFILES) {
   assert(`${p.id}: interview basis is published or unpublished`, ['published', 'unpublished'].includes(p.interview.basis));
   if (p.interview.basis === 'published') {
     assert(`${p.id}: a published interview format must name a format`, p.interview.formats.length > 0);
-    assert(`${p.id}: a published interview format must quote the programme`, !!p.interview.published);
+    assert(`${p.id}: a published interview format must quote the program`, !!p.interview.published);
     assert(`${p.id}: a published claim needs a source on the profile`, (p.sources || []).length > 0);
   } else {
     check(`${p.id}: an unpublished format claims no format`, p.interview.formats.length, 0);

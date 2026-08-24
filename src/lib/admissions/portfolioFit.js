@@ -83,7 +83,7 @@ export function depthZ(value, ref) {
  * Continuity — what share of the elapsed span had any activity in it — refines
  * that, but only where there is enough of a log to read it from. A student with
  * three entries across ten months is very often someone who logs in batches,
- * not someone who showed up three times, and penalising them for their logging
+ * not someone who showed up three times, and penalizing them for their logging
  * habit would be measuring the wrong thing. So continuity is only applied once
  * there are enough entries (ENTRIES_FOR_CONTINUITY) for the gaps to mean
  * something; below that, span alone decides.
@@ -163,7 +163,7 @@ const LABELS = {
 function describeHours(key, hours, ref, z) {
   const label = LABELS[key] || key;
   if (z == null) return `${Math.round(hours)} hours of ${label} logged.`;
-  if (z >= IQR_Z) return `${Math.round(hours)} hours of ${label} — above the level we would expect from a typical admitted student at this kind of programme (~${ref.p75} hours is the strong band). More hours here is close to wasted effort; the leverage is elsewhere.`;
+  if (z >= IQR_Z) return `${Math.round(hours)} hours of ${label} — above the level we would expect from a typical admitted student at this kind of program (~${ref.p75} hours is the strong band). More hours here is close to wasted effort; the leverage is elsewhere.`;
   if (z >= 0) return `${Math.round(hours)} hours of ${label} — around the level of a typical admitted student (~${ref.p50}).`;
   if (z >= -IQR_Z) return `${Math.round(hours)} hours of ${label} — below the typical admitted student (~${ref.p50}), but within reach of it.`;
   return `${Math.round(hours)} hours of ${label} — well short of the ~${ref.p50} hours a typical admitted student has. This is one of the real gaps in the application.`;
@@ -194,8 +194,8 @@ function scoreCountDimension(key, items, ref) {
 /**
  * LAYER 3 entry point.
  *
- * @param portfolio normalised portfolio (see intake.js — derivePortfolioSignals)
- * @param profile   the programme profile, for its reference levels
+ * @param portfolio normalized portfolio (see intake.js — derivePortfolioSignals)
+ * @param profile   the program profile, for its reference levels
  * @returns {{dimensions: Object, unknowns: string[]}} one entry per dimension in
  *          PORTFOLIO_DIMENSIONS except `academics`, which is layer 2's job.
  */

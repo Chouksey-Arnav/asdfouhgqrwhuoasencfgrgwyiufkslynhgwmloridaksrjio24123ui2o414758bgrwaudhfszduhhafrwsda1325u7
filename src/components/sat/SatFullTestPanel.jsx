@@ -423,7 +423,7 @@ export default function SatFullTestPanel({
                     </span>
                     {/* Which test produced this number. Attempts recorded before
                         the catalog existed have no testId and say so, rather
-                        than being labelled as a form they were never sat on. */}
+                        than being labeled as a form they were never sat on. */}
                     <span style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM }}>
                       · {a.meta?.official?.label || testLabel(a.meta?.testId)}
                     </span>

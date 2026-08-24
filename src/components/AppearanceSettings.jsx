@@ -192,9 +192,9 @@ function ThemePreview({ palette }) {
 const THEME_CHOICES = [
   { value: 'dark', label: 'Dark', icon: Moon, palette: DARK,
     note: 'Deepest. Easier at night and in dim rooms.' },
-  { value: 'balanced', label: 'Balanced Dark', icon: MoonStar, palette: BALANCED, badge: 'Default',
+  { value: 'balanced', label: 'Balanced dark', icon: MoonStar, palette: BALANCED, badge: 'Default',
     note: 'A dusk slate — dark without the glare of a black screen. Best for long evening sessions.' },
-  { value: 'balancedLight', label: 'Balanced Light', icon: CloudSun, palette: BALANCED_LIGHT,
+  { value: 'balancedLight', label: 'Balanced light', icon: CloudSun, palette: BALANCED_LIGHT,
     note: 'A light interface with the brightness taken off — no white panels. Best for long daytime sessions.' },
   { value: 'light', label: 'Light', icon: Sun, palette: LIGHT,
     note: 'Brightest. Best in daylight and direct sun.' },

@@ -16,12 +16,12 @@ import { hue, R, meta, numeral, GLIDE, POP, lit } from '../design';
 // The chapter hue still owns the header and the button, so the screen stays
 // anchored to where the student is in the journey.
 const FEATURES = [
-  { icon: 'stethoscope', hues: ['teal', 'emerald'], title: 'Pathway Diagnostic', desc: 'Find your fit in medicine — specialty by specialty, honestly scored' },
-  { icon: 'brain', hues: ['violet', 'indigo'], title: 'AI Coach', desc: 'A mentor that knows your goals, your gaps, and your week' },
+  { icon: 'stethoscope', hues: ['teal', 'emerald'], title: 'Pathway diagnostic', desc: 'Find your fit in medicine — specialty by specialty, honestly scored' },
+  { icon: 'brain', hues: ['violet', 'indigo'], title: 'AI coach', desc: 'A mentor that knows your goals, your gaps, and your week' },
   { icon: 'books', hues: ['sky', 'cyan'], title: 'Medical E-Library', desc: 'Structured lessons across the sciences medicine is built on' },
-  { icon: 'compass', hues: ['amber', 'orange'], title: 'Opportunities & Scholarships', desc: 'Real programs, internships, and funding — matched to you' },
-  { icon: 'clipboard-plus', hues: ['rose', 'pink'], title: 'Application Portfolio', desc: 'Essays, activities, college list — your story, built as you go' },
-  { icon: 'petri', hues: ['emerald', 'lime'], title: 'Quizzes & Flashcards', desc: 'Spaced repetition across the sciences, scheduled into your week' },
+  { icon: 'compass', hues: ['amber', 'orange'], title: 'Opportunities & scholarships', desc: 'Real programs, internships, and funding — matched to you' },
+  { icon: 'clipboard-plus', hues: ['rose', 'pink'], title: 'Application portfolio', desc: 'Essays, activities, college list — your story, built as you go' },
+  { icon: 'petri', hues: ['emerald', 'lime'], title: 'Quizzes & flashcards', desc: 'Spaced repetition across the sciences, scheduled into your week' },
 ];
 
 export function FeatureShowcaseStep({ onNext }) {

@@ -249,7 +249,7 @@ export function estimatePathwayCost(pathwayId, inputs = {}) {
     // How much of that accrual is actually paid is the assumption that decides
     // whether this row is honest. A resident on an income-driven plan makes
     // real payments — typically covering some but not all of the interest —
-    // so modelling zero payments produces a scare number, and modelling full
+    // so modeling zero payments produces a scare number, and modeling full
     // payments produces the fiction that residency is financially neutral.
     // `residencyInterestPaidShare` sits between the two, defaults to half, is
     // stated in `assumptions`, and is shown on screen beside the result.

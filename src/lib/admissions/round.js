@@ -43,7 +43,7 @@ export const ROUND_LABELS = {
 };
 
 /**
- * @param profile   programme profile (supplies `rounds` and `hookSensitivity`)
+ * @param profile   program profile (supplies `rounds` and `hookSensitivity`)
  * @param roundId   the round the student intends to apply in, or null
  * @param hooks     { recruitedAthlete, legacy, development, faculty } or null
  */
@@ -51,7 +51,7 @@ export function scoreRound({ profile, roundId, hooks }) {
   const rounds = profile?.rounds || [];
   const available = rounds.map(r => ({ ...r, label: r.label || ROUND_LABELS[r.id] || r.id }));
 
-  // A programme with one deadline has no round lever at all, and saying so is
+  // A program with one deadline has no round lever at all, and saying so is
   // more useful than showing a control that cannot change anything. RPI is the
   // clean example: there is no Early Decision option, full stop.
   if (available.length <= 1) {
@@ -61,7 +61,7 @@ export function scoreRound({ profile, roundId, hooks }) {
       chosen: only,
       multiplier: 1,
       headlineMultiplier: 1,
-      note: only?.note || 'This programme has a single application deadline, so there is no early-versus-regular decision to make here.',
+      note: only?.note || 'This program has a single application deadline, so there is no early-versus-regular decision to make here.',
       unknown: false,
     };
   }
@@ -97,7 +97,7 @@ export function scoreRound({ profile, roundId, hooks }) {
     } else {
       multiplier = 1 + (headline - 1) * (1 - hookShare * 0.8);
       const lostPct = Math.round((1 - (multiplier - 1) / Math.max(1e-6, headline - 1)) * 100);
-      note += ` The headline early-round advantage at a programme like this is about ${Math.round((headline - 1) * 100)}%, but roughly ${lostPct}% of it is recruited athletes, legacies and development admits being told to apply early — not the round itself. As an unhooked applicant you get the rest: about ${Math.round((multiplier - 1) * 100)}%. Every tool that quotes you the headline number is quoting you somebody else's odds.`;
+      note += ` The headline early-round advantage at a program like this is about ${Math.round((headline - 1) * 100)}%, but roughly ${lostPct}% of it is recruited athletes, legacies and development admits being told to apply early — not the round itself. As an unhooked applicant you get the rest: about ${Math.round((multiplier - 1) * 100)}%. Every tool that quotes you the headline number is quoting you somebody else's odds.`;
     }
   } else if (headline < 1) {
     note += ` Applying in this round costs you: you are competing for whatever is left rather than for the cohort.`;

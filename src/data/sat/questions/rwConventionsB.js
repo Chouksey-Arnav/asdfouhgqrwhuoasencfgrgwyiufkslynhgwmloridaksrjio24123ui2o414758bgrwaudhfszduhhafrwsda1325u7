@@ -194,7 +194,7 @@ export const RW_CONVENTIONS_B = [
   {
     id: 'sat-rw-bnd-0113', section: 'rw', domain: 'conventions', skill: 'boundaries',
     difficulty: 'E', format: 'mcq', trap: 'run_on', targetSeconds: 40,
-    stimulus: 'After the flood receded, the archive\'s staff faced a choice no training had prepared them for ______ freeze the wet documents immediately or watch mould take them within days.',
+    stimulus: 'After the flood receded, the archive\'s staff faced a choice no training had prepared them for ______ freeze the wet documents immediately or watch mold take them within days.',
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: [': ', ', ', ' ', '; '],
     ans: 0,
@@ -224,7 +224,7 @@ export const RW_CONVENTIONS_B = [
   {
     id: 'sat-rw-bnd-0115', section: 'rw', domain: 'conventions', skill: 'boundaries',
     difficulty: 'M', format: 'mcq', trap: 'fragment', targetSeconds: 45,
-    stimulus: 'The instrument the observatory installed in 2019 ______ a spectrograph sensitive enough to detect a planet\'s atmosphere ______ has since confirmed water vapour on four separate worlds.',
+    stimulus: 'The instrument the observatory installed in 2019 ______ a spectrograph sensitive enough to detect a planet\'s atmosphere ______ has since confirmed water vapor on four separate worlds.',
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: [' — … — ', ' — … , ', ', … ', ' … — '],
     ans: 0,

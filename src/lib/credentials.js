@@ -190,7 +190,7 @@ export function searchCredentials(query, { limit = 14, stateCode = null, types =
     else if ((item.issuers || []).some(i => norm(i).includes(q))) score = 20;
 
     if (!score) continue;
-    // A tie between a credential and a skill goes to the credential: the field is labelled
+    // A tie between a credential and a skill goes to the credential: the field is labeled
     // "Skill or certification" and the certifications are the ones with a wrong-name problem.
     if (item.type === 'skill') score -= 4;
     scored.push({ item, score });

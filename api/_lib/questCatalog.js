@@ -14,7 +14,7 @@
 // to decide what gets written and what gets paid.
 //
 // Only the fields that must be authoritative are mirrored. Copy — titles aside — blurbs,
-// rationales, icons and colours stay in src/data/questCatalog.js alone, because they change often
+// rationales, icons and colors stay in src/data/questCatalog.js alone, because they change often
 // and none of them can cost anybody anything.
 
 /** XP per tier. Mirrors QUEST_TIERS in src/data/questCatalog.js. */

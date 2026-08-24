@@ -25,7 +25,7 @@ import { serviceProgramsFor } from '../../lib/pathwayCost';
 //
 // ── Why the catch is not in small print ─────────────────────────────────────
 // These are contracts, not scholarships. Four of them commit a teenager to
-// years of their adult life in a place or an organisation they do not choose.
+// years of their adult life in a place or an organization they do not choose.
 // Every card states that in the same size type as the money.
 // ─────────────────────────────────────────────────────────────────────────────
 

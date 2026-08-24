@@ -2,10 +2,10 @@
 // The MedEx Score itself.
 //
 // ── This file computes nothing about admissions ─────────────────────────────
-// That is the most important thing to know before editing it. Every judgement
-// about how a student compares to an admitted cohort — what a programme
+// That is the most important thing to know before editing it. Every judgment
+// about how a student compares to an admitted cohort — what a program
 // weights, how much 200 clinical hours is worth there, how far academics can
-// carry you at a 3% programme, which requirements are gates rather than points
+// carry you at a 3% program, which requirements are gates rather than points
 // — already lives in src/lib/admissions/ and was built to be right rather than
 // encouraging. This module is a PROJECTION of that model onto one number.
 //
@@ -17,7 +17,7 @@
 // is the one they believe, and it is the wrong one.
 //
 // So: estimateAdmission() runs, and this module reads its `contributions` —
-// the per-dimension standardized position and per-programme weight the model
+// the per-dimension standardized position and per-program weight the model
 // already composed on — and collapses them to a single weighted z, which
 // scale.js maps to 0-1000.
 //
@@ -37,7 +37,7 @@ import { apexSlate, effectiveAdmitRate, resolveCollegeList, pickBenchmark } from
 const P75_Z = 0.6745;
 
 /**
- * How much of what a programme weights has to actually be on the record before
+ * How much of what a program weights has to actually be on the record before
  * a score is shown at all.
  *
  * ── Why this gate exists ────────────────────────────────────────────────────
@@ -59,7 +59,7 @@ const P75_Z = 0.6745;
  * instead is the shortest list of things that would produce one.
  *
  * 0.25 is the line because it is roughly one substantial dimension at a typical
- * programme's weighting: enough that the number is anchored to something the
+ * program's weighting: enough that the number is anchored to something the
  * student actually did, while not making the score unreachable for a ninth
  * grader who has done exactly one thing so far.
  */
@@ -69,7 +69,7 @@ export const MIN_COVERAGE = 0.25;
  * The five pillars the eight model dimensions are shown as.
  *
  * The model scores eight dimensions because that is the resolution the
- * programme data supports. Five is the resolution a person can hold in their
+ * program data supports. Five is the resolution a person can hold in their
  * head on a dashboard card, and shadowing-vs-clinical-contact is a distinction
  * that matters enormously to the model and not at all to a student deciding
  * what to do on Saturday. The pairs are grouped, never averaged away: the
@@ -79,15 +79,15 @@ export const MIN_COVERAGE = 0.25;
 export const PILLARS = [
   {
     id: 'academics', label: 'Academics', dimensions: ['academics'],
-    blurb: 'GPA, rigor and scores, positioned against the admitted band — and worth progressively less the more selective the programme, because there the pool has already been filtered on it.',
+    blurb: 'GPA, rigor and scores, positioned against the admitted band — and worth progressively less the more selective the program, because there the pool has already been filtered on it.',
   },
   {
     id: 'clinical', label: 'Clinical Exposure', dimensions: ['clinical', 'shadowing'],
-    blurb: 'Patient-contact hours and observation hours, which the model counts separately because programmes weight them very differently.',
+    blurb: 'Patient-contact hours and shadowing hours, which the model counts separately because programs weight them very differently.',
   },
   {
     id: 'research', label: 'Research', dimensions: ['research'],
-    blurb: 'Lab or field work, posters and publications. Decisive at physician-scientist tracks, close to irrelevant at six-year clinical programmes.',
+    blurb: 'Lab or field work, posters and publications. Decisive at physician-scientist tracks, close to irrelevant at six-year clinical programs.',
   },
   {
     id: 'impact', label: 'Service & Leadership', dimensions: ['service', 'leadership'],
@@ -103,7 +103,7 @@ const PILLAR_OF = new Map();
 for (const p of PILLARS) for (const d of p.dimensions) PILLAR_OF.set(d, p.id);
 
 /**
- * Score one programme.
+ * Score one program.
  *
  * Returns `{ eligible: false }` with the gate detail rather than a low number
  * when a published requirement is not met. This mirrors the Calculator's
@@ -145,11 +145,11 @@ export function scoreProgram({ program, applicant = {}, portfolio = {}, complete
   const z = usedWeight > 0 ? signal / usedWeight : 0;
 
   // ── The evidence gate ────────────────────────────────────────────────────
-  // See MIN_COVERAGE. `coverage` is the share of this programme's weight that
+  // See MIN_COVERAGE. `coverage` is the share of this program's weight that
   // rests on something the student actually logged, rather than on the model's
-  // unknown-placeholder — so it is programme-specific, exactly like the weights
+  // unknown-placeholder — so it is program-specific, exactly like the weights
   // are. Missing research matters far more at a physician-scientist track than
-  // at a six-year clinical programme, and this number knows that.
+  // at a six-year clinical program, and this number knows that.
   const coverage = assessCoverage({ contributions, usedWeight, layers: est.layers });
   if (coverage.ratio < MIN_COVERAGE) {
     return {
@@ -169,7 +169,7 @@ export function scoreProgram({ program, applicant = {}, portfolio = {}, complete
   const score = scoreFromZ(z);
 
   // ── The band ─────────────────────────────────────────────────────────────
-  // The model's uncertainty is a sigma in log-odds. Dividing by the programme's
+  // The model's uncertainty is a sigma in log-odds. Dividing by the program's
   // signal budget converts it back into the z units this scale lives in, which
   // keeps the two features telling one story: a wide range in the Calculator is
   // a wide range here, for the same named reasons, rather than each surface
@@ -225,13 +225,13 @@ const COVERAGE_ASKS = {
 };
 
 /**
- * The share of this programme's weight that rests on real logged evidence.
+ * The share of this program's weight that rests on real logged evidence.
  *
  * A dimension counts as covered when the model marks it `available` — i.e. the
  * student logged something — and not when it is sitting on the unknown
- * placeholder. `missing` is ordered by weight AT THIS PROGRAMME, so the first
+ * placeholder. `missing` is ordered by weight AT THIS PROGRAM, so the first
  * thing we ask a physician-scientist applicant for is research and the first
- * thing we ask a six-year-programme applicant for is clinical hours.
+ * thing we ask a six-year-program applicant for is clinical hours.
  */
 function assessCoverage({ contributions, usedWeight, layers }) {
   const dims = layers?.portfolio || {};
@@ -265,11 +265,11 @@ function assessCoverage({ contributions, usedWeight, layers }) {
  * dimensions attached.
  *
  * `share` is the fraction of the composite z this pillar is responsible for at
- * THIS programme — which is the number that actually answers "what should I
- * work on", because it already accounts for the programme's own weighting. A
+ * THIS program — which is the number that actually answers "what should I
+ * work on", because it already accounts for the program's own weighting. A
  * pillar can be strong and carry almost no share (research at a six-year
- * clinical programme), and the card has to be able to say that instead of
- * telling a student to do more of something the programme has never mentioned.
+ * clinical program), and the card has to be able to say that instead of
+ * telling a student to do more of something the program has never mentioned.
  */
 function buildPillars({ contributions, usedWeight, z, layers }) {
   const byKey = new Map(contributions.map(c => [c.key, c]));
@@ -333,7 +333,7 @@ function buildMovers({ est, contributions, usedWeight, z, score, completeness })
     const points = rescore(c.weight * (P75_Z - c.z)) - score;
     if (points < 1) continue;                         // sub-point moves are noise
     // The model's own driver list is filtered by probability gain, which at a
-    // selective programme discards moves worth real points here — so this list is
+    // selective program discards moves worth real points here — so this list is
     // strictly longer than that one, and the labels for the extras come from the
     // same shared table rather than being invented. See DRIVER_LABELS.
     const driver = labelled.get(c.key);
@@ -417,7 +417,7 @@ export function scoreCollegeList({ colleges = [], applicant = {}, portfolio = {}
  * Position against the fixed apex slate.
  *
  * Answers the question the student actually asked — "how do I stack up against
- * the Ivies and the top programmes" — with a count and a named programme rather
+ * the Ivies and the top programs" — with a count and a named program rather
  * than a percentile, because "83rd percentile against top schools" is a number
  * with no referent and "you are at the admitted median at four of the
  * twenty-nine, the most selective being X" is a fact.
@@ -454,12 +454,12 @@ export function rankAgainstApex({ applicant = {}, portfolio = {}, completeness =
     sentence: !scored.length
       ? 'We could not score you against the apex slate yet.'
       : atCohort.length === 0
-        ? `Across the ${scored.length} most selective programmes we track, you are not yet at the admitted median at any of them. Your strongest position is ${best.profile.name}.`
+        ? `Across the ${scored.length} most selective programs we track, you are not yet at the admitted median at any of them. Your strongest position is ${best.profile.name}.`
         // At a count of one, "the most selective being X" is true and reads as a
         // boast about a slate of one. Name it plainly instead.
         : atCohort.length === 1
-          ? `You are at or above the admitted median at 1 of the ${scored.length} most selective programmes we track: ${topMatch.profile.name}.`
-          : `You are at or above the admitted median at ${atCohort.length} of the ${scored.length} most selective programmes we track — the most selective being ${topMatch.profile.name}.`,
+          ? `You are at or above the admitted median at 1 of the ${scored.length} most selective programs we track: ${topMatch.profile.name}.`
+          : `You are at or above the admitted median at ${atCohort.length} of the ${scored.length} most selective programs we track — the most selective being ${topMatch.profile.name}.`,
   };
 }
 

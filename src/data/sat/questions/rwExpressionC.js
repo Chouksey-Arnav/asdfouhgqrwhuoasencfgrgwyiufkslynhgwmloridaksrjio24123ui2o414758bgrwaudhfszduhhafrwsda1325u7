@@ -17,7 +17,7 @@ export const RW_EXPRESSION_C = [
       'Tens of thousands are kept in laboratories worldwide.',
     ],
     stimulus: 'While researching a topic, a student has taken the following notes.',
-    q: 'The student wants to emphasise the contrast between the axolotl’s status in the wild and in laboratories. Which choice most effectively uses relevant information from the notes to accomplish this goal?',
+    q: 'The student wants to emphasize the contrast between the axolotl’s status in the wild and in laboratories. Which choice most effectively uses relevant information from the notes to accomplish this goal?',
     ch: [
       'The axolotl, a salamander from lakes near Mexico City, keeps its larval features throughout its life.',
       'Although fewer than 100 axolotls remain in the wild, tens of thousands are in laboratories.',
@@ -68,7 +68,7 @@ export const RW_EXPRESSION_C = [
       'Zora Neale Hurston trained as an anthropologist under Franz Boas.',
       'She collected folklore across Florida, Alabama and Haiti in the 1920s and 1930s.',
       '"Mules and Men" (1935) presented that folklore with its tellers and settings intact.',
-      'Contemporary reviewers criticised the book for lacking scholarly distance.',
+      'Contemporary reviewers criticized the book for lacking scholarly distance.',
       'It is now standard reading in both anthropology and literature courses.',
     ],
     stimulus: 'While researching a topic, a student has taken the following notes.',
@@ -76,7 +76,7 @@ export const RW_EXPRESSION_C = [
     ch: [
       'Trained under Franz Boas, Zora Neale Hurston collected folklore in Florida, Alabama and Haiti.',
       '"Mules and Men" is now standard reading in both anthropology and literature courses.',
-      'Contemporary reviewers criticised "Mules and Men" for its lack of scholarly distance.',
+      'Contemporary reviewers criticized "Mules and Men" for its lack of scholarly distance.',
       'Hurston presented folklore with its tellers and settings intact rather than stripping them out.',
     ],
     ans: 0,
@@ -300,7 +300,7 @@ export const RW_EXPRESSION_C = [
     distractorExp: [
       '"Granted" would introduce the concession, and the concession has already been made in the previous sentence.',
       'Correct. Accepts the point just made and explains why it is not decisive.',
-      'The third sentence introduces a new comparison rather than summarising.',
+      'The third sentence introduces a new comparison rather than summarizing.',
       'The new comparison does not follow as a consequence of the advocates’ point.',
     ],
   },

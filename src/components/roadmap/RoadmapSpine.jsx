@@ -34,7 +34,7 @@ import useDragScroll from './useDragScroll';
 // One rail runs unbroken from the first day to the last. It does not restart at
 // a season, it does not break at a month boundary, and it does not stop at the
 // edge of the viewport — it continues, and you move along it. The part of it
-// the student has already lived is drawn as travelled; the part ahead is drawn
+// the student has already lived is drawn as traveled; the part ahead is drawn
 // as ahead; every marker hangs off it by a stem, so nothing on this screen is
 // ever floating free of the year it belongs to. That connectedness is the
 // argument the drawing is making: these are not fourteen separate things, they
@@ -282,7 +282,7 @@ export default function RoadmapSpine({
   const canRight = view.left < view.scrollWidth - view.width - 2;
 
   // What is on screen right now, named — so the timeline never loses its "where
-  // am I" while it is being dragged. A RANGE rather than the centre month:
+  // am I" while it is being dragged. A RANGE rather than the center month:
   // "Dec 2026" over a frame whose left edge reads August is a label that argues
   // with the drawing underneath it.
   const visibleRange = (() => {
@@ -410,7 +410,7 @@ export default function RoadmapSpine({
                 );
               })}
 
-              {/* THE LINE. One rail, unbroken, end to end — travelled behind
+              {/* THE LINE. One rail, unbroken, end to end — traveled behind
                   today, ahead in front of it. */}
               <rect x={PAD_X} y={railY - 2} width={Math.max(0, width - PAD_X * 2)} height={4} rx={2} fill="url(#rm-rail-ahead)" />
               {todayX != null && (
@@ -503,7 +503,7 @@ export default function RoadmapSpine({
               </button>
             ))}
 
-            {/* Markers. Real buttons: focusable, labelled, and big enough for a
+            {/* Markers. Real buttons: focusable, labeled, and big enough for a
                 thumb even though the dot they draw is small. */}
             {markers.map((mk, i) => {
               const isShown = shown?.id === mk.id;
@@ -538,7 +538,7 @@ export default function RoadmapSpine({
                     height: isShown ? geo.dot + 10 : geo.dot + (mk.done ? -1 : 1),
                     borderRadius: '50%',
                     // Selected always fills solid: the icon inside is drawn in the
-                    // page colour, and on a hollow "approximate" marker that would
+                    // page color, and on a hollow "approximate" marker that would
                     // otherwise be an invisible icon on its own background.
                     background: isShown ? ringColor : mk.done ? tint(C.green, 0.85) : mk.exact ? ringColor : C.bg,
                     border: `${isShown || mk.exact || mk.done ? 0 : 1.8}px ${mk.exact ? 'solid' : 'dashed'} ${ringColor}`,
@@ -659,7 +659,7 @@ function Scrubber({ markers, width, view, todayX, onScrub, isMobile }) {
     if (!el || !width) return;
     const rect = el.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / Math.max(1, rect.width)));
-    // The grabbed point becomes the CENTRE of the frame, which is what "throw me
+    // The grabbed point becomes the CENTER of the frame, which is what "throw me
     // to March" means when someone stabs at March.
     onScrub(ratio * width - view.width / 2);
   }, [onScrub, width, view.width]);
@@ -767,5 +767,5 @@ function LegendDot({ filled = false, label }) {
   );
 }
 
-/** The urgency colour key, re-exported so callers can tint a spine row to match a list. */
+/** The urgency color key, re-exported so callers can tint a spine row to match a list. */
 export { URGENCY_META, CalendarSearch, Flag };

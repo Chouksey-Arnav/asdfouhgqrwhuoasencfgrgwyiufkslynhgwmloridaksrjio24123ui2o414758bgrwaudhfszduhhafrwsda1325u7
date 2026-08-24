@@ -356,7 +356,7 @@ export default function CredentialsSection({
   return (
     <div style={CC({ gap: 16 })}>
       <SectionIntro icon={BadgeCheck} color={accent} color2={C.cyan} m={isMobile}
-        title="Skills & Certifications"
+        title="Skills & certifications"
         blurb={`Built on a real credential database of ${CREDENTIALS.length} entries, not a free-text box. Pick from the menu and we fill in the issuing body, the renewal cycle, the age rules, and — where it matters — your own state's name for the credential.`}
         stats={entries.length > 0 ? [
           { value: activeCount, label: 'active', color: C.greenL },

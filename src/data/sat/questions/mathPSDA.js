@@ -168,7 +168,7 @@ export const MATH_PSDA_QUESTIONS = [
   {
     id: 'sat-m-inm-0002', section: 'math', domain: 'psda', skill: 'inference_margin_error',
     difficulty: 'H', format: 'mcq', trap: 'correlation_cause', targetSeconds: 75,
-    q: 'A study found that students who ate breakfast scored higher on a standardised test than students who did not. The students were not assigned to groups; they reported their own habits. Which conclusion is most appropriate?',
+    q: 'A study found that students who ate breakfast scored higher on a standardized test than students who did not. The students were not assigned to groups; they reported their own habits. Which conclusion is most appropriate?',
     ch: [
       'Eating breakfast causes test scores to increase in the students studied.',
       'Breakfast is associated with higher scores, but causation is not established.',

@@ -6,7 +6,7 @@
 // other two doing?" Everything here exists to answer those in one glance and
 // make the move between them cost one click (or one keystroke).
 //
-// Four surfaces, one shared vocabulary of colour + progress ring, so switching
+// Four surfaces, one shared vocabulary of color + progress ring, so switching
 // feels like the same gesture wherever you do it:
 //
 //   PathwayRail          the primary switcher — a segmented control with a
@@ -16,11 +16,11 @@
 //   ParallelPathwayBoard the at-a-glance board — every enrolled pathway's real
 //                        progress and its exact next lesson, resumable in place
 //                        without switching focus at all.
-//   PathwayManager       add / swap / drop, over the full catalogue of ten.
+//   PathwayManager       add / swap / drop, over the full catalog of ten.
 //
 // Design rules held in common across all four:
 //   · The pathway's own accent is its identity everywhere. Never a generic
-//     "selected blue" — a student learns the colour, then stops reading labels.
+//     "selected blue" — a student learns the color, then stops reading labels.
 //   · Progress is always shown, never on hover. The reason to look at the
 //     switcher is usually to compare, not to navigate.
 //   · Motion is a single shared `layoutId` indicator that slides between chips,
@@ -584,7 +584,7 @@ export function ParallelPathwayBoard({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PathwayManager — add / swap / drop across the full catalogue
+// PathwayManager — add / swap / drop across the full catalog
 // ─────────────────────────────────────────────────────────────────────────────
 /**
  * Replaces the old "Switch Study Track" grid, whose every tile silently replaced

@@ -27,7 +27,7 @@
 // ── The honesty rule this module inherits ───────────────────────────────────
 // Half the catalog's programs carry `prompts: []` with a note saying the
 // prompts are not published outside the applicant portal. That is a fact worth
-// showing, and it is emphatically not a licence to generate plausible prompts
+// showing, and it is emphatically not a license to generate plausible prompts
 // for that program — a fabricated BS/MD prompt is worse than no prompt, because
 // the student drafts against it. So a program with no published prompts renders
 // its note and its official URL and nothing else. Only text the catalog
@@ -37,7 +37,7 @@
 import { PROGRAMS as COMBINED_PROGRAMS } from '../data/combinedDegreePrograms.js';
 import { programLabel, nextDeadline } from './combinedDegree.js';
 
-/** Normalised for matching: case, punctuation and dash style all vary by entry path. */
+/** Normalized for matching: case, punctuation and dash style all vary by entry path. */
 const norm = (s) => String(s || '').toLowerCase().replace(/[—–-]/g, '-').replace(/\s+/g, ' ').trim();
 
 /**

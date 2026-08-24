@@ -144,7 +144,7 @@ export const SUBPROCESSORS = [
   {
     name: 'Google AdSense',
     role: 'Advertising',
-    data: 'Ad requests from this site are tagged as child-directed, which turns off personalised and interest-based advertising and remarketing for every visitor. Google still receives the IP address and page context inherent in serving any ad.',
+    data: 'Ad requests from this site are tagged as child-directed, which turns off personalized and interest-based advertising and remarketing for every visitor. Google still receives the IP address and page context inherent in serving any ad.',
     location: 'United States',
     link: 'https://policies.google.com/technologies/partner-sites',
   },
@@ -182,5 +182,5 @@ export const TRADEMARK_NOTICE = [
   'Common App® is a registered trademark of The Common Application, Inc.',
   'Desmos® is a registered trademark of Desmos Studio PBC.',
   'YouTube™ and Google® are trademarks of Google LLC.',
-  'All other trademarks, service marks, and trade names referenced in this service are the property of their respective owners. Reference to them is nominative — it identifies the exam, organisation, or tool being discussed — and does not imply any affiliation, sponsorship, or endorsement.',
+  'All other trademarks, service marks, and trade names referenced in this service are the property of their respective owners. Reference to them is nominative — it identifies the exam, organization, or tool being discussed — and does not imply any affiliation, sponsorship, or endorsement.',
 ];

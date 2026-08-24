@@ -6,7 +6,7 @@
 // copy of the breakdown panel — it carries only what changes a decision:
 //
 //   1. The score, and what it is measured against. A number without the
-//      programme name attached is not interpretable, so the benchmark is on the
+//      program name attached is not interpretable, so the benchmark is on the
 //      card, never one tap away.
 //   2. What moved since last week's seal, which is the only comparison that
 //      exists (the score does not change daily, by design).

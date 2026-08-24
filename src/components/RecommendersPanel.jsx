@@ -32,7 +32,7 @@ import { programLabel } from '../lib/combinedDegree';
 //
 //   1. THE ROLES ARE THE ONES THIS STUDENT ACTUALLY HAS. A shadowing physician,
 //      a research mentor, a volunteer coordinator, a clinical supervisor — not
-//      just teacher/counsellor/coach, which is the list for a general college
+//      just teacher/counselor/coach, which is the list for a general college
 //      application and misses everyone who has watched them do the thing they
 //      are applying to do.
 //   2. THE EMAIL IS ALREADY WRITTEN, with their own logged hours inside it.
@@ -306,8 +306,8 @@ export default function RecommendersPanel({ accent = C.blue, onChange, user = nu
         </div>
       )}
 
-      {committee.length > 0 && <Section title="Committee Letter" items={committee} {...rowProps} />}
-      {individuals.length > 0 && <Section title={`Individual Letters (${individuals.length})`} items={individuals} {...rowProps} />}
+      {committee.length > 0 && <Section title="Committee letter" items={committee} {...rowProps} />}
+      {individuals.length > 0 && <Section title={`Individual letters (${individuals.length})`} items={individuals} {...rowProps} />}
     </div>
   );
 }

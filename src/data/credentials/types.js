@@ -36,7 +36,7 @@
 //        'issuer-published' — the issuing body states it, and `sources` has
 //                             the URL it was read from.
 //        'state-varies'     — there is no national answer; the number shown is
-//                             a range across states and is labelled as one.
+//                             a range across states and is labeled as one.
 //        'typical'          — our estimate from the common case. Shown with
 //                             "typically", never as a fact.
 //   2. `registry.ctid` is the Credential Engine Credential Registry identifier

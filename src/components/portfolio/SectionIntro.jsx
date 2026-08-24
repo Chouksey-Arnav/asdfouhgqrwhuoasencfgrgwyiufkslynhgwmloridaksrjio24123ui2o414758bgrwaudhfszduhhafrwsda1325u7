@@ -1,7 +1,7 @@
 import React from 'react';
 import { C, glass, pill, tint, R } from '../../lib/theme';
 
-// The header band each section inside Activities & Résumé opens with.
+// The header band each section inside Activities & résumé opens with.
 //
 // Clinical Hours, Research and Skills & Certifications used to be four separate
 // Portfolio tabs, each with its own full-width PanelHero. Merged into one tab

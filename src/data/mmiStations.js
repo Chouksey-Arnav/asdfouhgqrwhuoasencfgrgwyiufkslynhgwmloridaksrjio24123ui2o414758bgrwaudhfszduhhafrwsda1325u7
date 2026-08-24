@@ -8,8 +8,8 @@
 // inside a room where something specific happens: an interviewer with a
 // scripted set of probes, an actor playing a person who is upset with you, a
 // partner you have to complete a task with, or a policy question you are
-// expected to reason through out loud. A student who practises the questions
-// and never practises the format arrives on the day having prepared for the
+// expected to reason through out loud. A student who practices the questions
+// and never practices the format arrives on the day having prepared for the
 // wrong thing, and the format is genuinely the harder half.
 //
 // So every entry here is a station: a door card, a room, a clock, and a rater.
@@ -19,7 +19,7 @@
 //                 classic ethical-dilemma station.
 //   actor         Someone is playing a character and will not break character.
 //                 You are talking to THEM, not describing what you would say.
-//                 This is the format students find hardest and practise least.
+//                 This is the format students find hardest and practice least.
 //   collaborative A task with a partner who holds information you do not. The
 //                 only station where communication is tested as a channel
 //                 rather than as polish.
@@ -119,7 +119,7 @@ export const ARCHETYPES = {
 };
 
 // Standard reading time, in seconds. Two minutes outside the door is what almost every real
-// circuit uses, and practising without it removes the part of the format that is actually hard:
+// circuit uses, and practicing without it removes the part of the format that is actually hard:
 // deciding what your first sentence is before the clock starts.
 export const READING_SECONDS = 120;
 
@@ -143,7 +143,7 @@ export const MMI_STATION_LIBRARY = [
     format: 'actor',
     archetype: 'grief',
     stationType: 'empathy',
-    door: 'Your closest friend on the team lost their father three weeks ago. They came back to practice today for the first time. Practice ended twenty minutes ago and everyone else has gone home. You have just walked out and found them sitting on the kerb by the locker room, still in kit, not crying, not doing anything. Inside the room, they are playing your friend.',
+    door: 'Your closest friend on the team lost their father three weeks ago. They came back to practice today for the first time. Practice ended twenty minutes ago and everyone else has gone home. You have just walked out and found them sitting on the curb by the locker room, still in kit, not crying, not doing anything. Inside the room, they are playing your friend.',
     prompt: 'Hey. I was just about to head out and I saw you sitting here.',
     followUps: [
       'What is it you actually want them to feel by the end of this conversation?',
@@ -210,7 +210,7 @@ export const MMI_STATION_LIBRARY = [
     ],
     raterLooksFor: [
       'Do they actually produce words, or describe the kind of words they would use?',
-      'Do they hold both halves of the room, or optimise for one?',
+      'Do they hold both halves of the room, or optimize for one?',
       'Do they leave a route for people who do not want to be in the room?',
       'Do they make it about themselves as president?',
     ],
@@ -272,7 +272,7 @@ export const MMI_STATION_LIBRARY = [
       'Do they ask anything about the friend rather than explaining themselves?',
       'Do they leave with anything concrete between them?',
     ],
-    commonFailure: 'Apologising for having succeeded. It reads as generous and lands as condescending, and the station is built so the candidate finds that out.',
+    commonFailure: 'Apologizing for having succeeded. It reads as generous and lands as condescending, and the station is built so the candidate finds that out.',
     competencies: ['empathy', 'selfAwareness', 'interpersonalSkills', 'understandingOthers'],
   }),
   station({
@@ -352,7 +352,7 @@ export const MMI_STATION_LIBRARY = [
     format: 'policy',
     archetype: 'grief',
     stationType: 'policy',
-    door: 'Schools increasingly provide "grief protocols" — scripted announcements, designated rooms, counsellors on site — when a student or staff member dies. Some people argue this makes the response consistent and fair. Others argue it makes it institutional and cold, and that scripted sympathy is worse than awkward sympathy.',
+    door: 'Schools increasingly provide "grief protocols" — scripted announcements, designated rooms, counselors on site — when a student or staff member dies. Some people argue this makes the response consistent and fair. Others argue it makes it institutional and cold, and that scripted sympathy is worse than awkward sympathy.',
     prompt: 'Where do you come down on scripted grief protocols in schools, and what would you keep from each side?',
     followUps: [
       'Who is a protocol protecting — the students, or the institution?',
@@ -402,7 +402,7 @@ export const MMI_STATION_LIBRARY = [
     format: 'interviewer',
     archetype: 'inadequacy',
     stationType: 'ethical',
-    door: 'You have a summer position in a university lab. You were asked to label and freeze a set of samples. Two weeks later you realise you almost certainly mislabelled a batch — you cannot be certain which batch, and the data from it has already gone into a graduate student\'s analysis. Nobody has noticed. Nobody would ever necessarily notice.',
+    door: 'You have a summer position in a university lab. You were asked to label and freeze a set of samples. Two weeks later you realize you almost certainly mislabelled a batch — you cannot be certain which batch, and the data from it has already gone into a graduate student\'s analysis. Nobody has noticed. Nobody would ever necessarily notice.',
     prompt: 'Tell me what you do, starting with the first thing and when you do it.',
     followUps: [
       'You are not certain you made a mistake. How does the uncertainty change what you say to your supervisor?',
@@ -424,7 +424,7 @@ export const MMI_STATION_LIBRARY = [
     format: 'actor',
     archetype: 'inadequacy',
     stationType: 'communication',
-    door: 'You tutor a younger student in chemistry, paid, arranged through a neighbour. Three sessions in, it is clear the material they need help with is beyond you — you are getting it wrong and they are getting more confused. Their exam is in five weeks. Inside the room, the student is played by an actor.',
+    door: 'You tutor a younger student in chemistry, paid, arranged through a neighbor. Three sessions in, it is clear the material they need help with is beyond you — you are getting it wrong and they are getting more confused. Their exam is in five weeks. Inside the room, the student is played by an actor.',
     prompt: 'So I did the homework the way you showed me and I got them all wrong.',
     followUps: [
       'You are being paid for this. How did that factor into what you said?',
@@ -461,7 +461,7 @@ export const MMI_STATION_LIBRARY = [
     ],
     raterLooksFor: [
       'Do they accept the feedback without collapsing under it?',
-      'Do they convert it into a specific behavioural change rather than a resolution to "be more mindful"?',
+      'Do they convert it into a specific behavioral change rather than a resolution to "be more mindful"?',
       'Do they build any way of finding out whether it worked?',
       'Do they retain the right to disagree, without using that right to dismiss it?',
     ],
@@ -495,7 +495,7 @@ export const MMI_STATION_LIBRARY = [
     format: 'interviewer',
     archetype: 'inadequacy',
     stationType: 'ethical',
-    door: 'You wrote on a scholarship application that you "led" a volunteering project. You did organise most of it, but there were two of you and the other person did at least as much. You have been shortlisted. The interview is next week and the project is listed as the main reason you were shortlisted.',
+    door: 'You wrote on a scholarship application that you "led" a volunteering project. You did organize most of it, but there were two of you and the other person did at least as much. You have been shortlisted. The interview is next week and the project is listed as the main reason you were shortlisted.',
     prompt: 'Tell me what you do before that interview.',
     followUps: [
       'Is there a version of "led" that is honest here, and what is it?',
@@ -508,7 +508,7 @@ export const MMI_STATION_LIBRARY = [
       'Do they accept the cost of correcting it rather than finding a reading of "led" that gets them off?',
       'Do they distinguish between what they wrote and what they will now say out loud?',
     ],
-    commonFailure: 'Lawyering the word. A candidate who spends four minutes establishing that "led" can reasonably describe co-organising has told the rater exactly what they would do in a harder version of this.',
+    commonFailure: 'Lawyering the word. A candidate who spends four minutes establishing that "led" can reasonably describe co-organizing has told the rater exactly what they would do in a harder version of this.',
     competencies: ['ethicalResponsibility', 'selfAwareness', 'criticalThinking', 'commitmentToLearning'],
   }),
   station({
@@ -520,8 +520,8 @@ export const MMI_STATION_LIBRARY = [
     door: 'Inside this room there is a diagram you can see and your partner cannot. Your partner has a pen and paper. In eight minutes they have to draw the diagram from your description alone. You may not draw, gesture, or look at their paper. They may ask you anything.',
     prompt: 'You can start whenever you are ready. Eight minutes.',
     followUps: [
-      'At what point did you realise your description was not working?',
-      'What did you change once you realised it, and why that?',
+      'At what point did you realize your description was not working?',
+      'What did you change once you realized it, and why that?',
       'If you ran it again with a new partner, what is the first sentence out of your mouth?',
     ],
     task: {
@@ -585,7 +585,7 @@ export const MMI_STATION_LIBRARY = [
       'Do they get anywhere concrete about next time?',
       'Do they stay in the room emotionally when someone is angry at them?',
     ],
-    commonFailure: 'Over-apologising. The actor is scripted to escalate against total capitulation precisely because agreeing with everything is not accountability, it is conflict avoidance wearing accountability\'s clothes.',
+    commonFailure: 'Over-apologizing. The actor is scripted to escalate against total capitulation precisely because agreeing with everything is not accountability, it is conflict avoidance wearing accountability\'s clothes.',
     competencies: ['selfAwareness', 'teamwork', 'interpersonalSkills', 'resilience', 'oralCommunication'],
   }),
   station({
@@ -615,7 +615,7 @@ export const MMI_STATION_LIBRARY = [
     format: 'interviewer',
     archetype: 'inadequacy',
     stationType: 'standard',
-    door: 'Medicine requires a set of things nobody is uniformly good at: memorising, staying calm, being wrong in public, sitting with distress, working when tired, and asking for help.',
+    door: 'Medicine requires a set of things nobody is uniformly good at: memorizing, staying calm, being wrong in public, sitting with distress, working when tired, and asking for help.',
     prompt: 'Pick the one on that list you are worst at, and convince me you know how bad you are at it.',
     followUps: [
       'What has it cost you so far, concretely?',
@@ -701,7 +701,7 @@ export const MMI_STATION_LIBRARY = [
       'Do they have a plan for the actual moment at the till, which is where this gets decided?',
       'Do they escalate anywhere, and to whom?',
     ],
-    commonFailure: 'Heroism with no cost. "I would refuse and explain why it is wrong" with no acknowledgement that they might be fired, and no thought about the customer\'s experience of being at the centre of a scene.',
+    commonFailure: 'Heroism with no cost. "I would refuse and explain why it is wrong" with no acknowledgement that they might be fired, and no thought about the customer\'s experience of being at the center of a scene.',
     competencies: ['ethicalResponsibility', 'criticalThinking', 'understandingOthers', 'resilience'],
   }),
   station({
@@ -713,7 +713,7 @@ export const MMI_STATION_LIBRARY = [
     door: 'Transplant programs sometimes require a period of documented abstinence before a patient with alcohol-related liver disease can be listed. Supporters argue it predicts survival and protects a scarce organ. Critics argue it punishes a disease, and that the sickest patients cannot survive the waiting period.',
     prompt: 'Should abstinence periods be a condition of listing for a transplant?',
     followUps: [
-      'What are you actually optimising for — survival of the organ, fairness between patients, or something else?',
+      'What are you actually optimizing for — survival of the organ, fairness between patients, or something else?',
       'Does it matter whether the public thinks the rule is fair?',
       'Give me the best version of the argument against your answer.',
     ],
@@ -722,7 +722,7 @@ export const MMI_STATION_LIBRARY = [
       'Do they distinguish between predicting outcomes and assigning blame?',
       'Do they say what they do not know?',
     ],
-    commonFailure: 'Moralising in either direction. This station is famous for producing confident speeches about personal responsibility, and confident speeches score badly here because the question is about allocation under scarcity.',
+    commonFailure: 'Moralizing in either direction. This station is famous for producing confident speeches about personal responsibility, and confident speeches score badly here because the question is about allocation under scarcity.',
     competencies: ['criticalThinking', 'ethicalResponsibility', 'understandingOthers', 'oralCommunication'],
   }),
   station({
@@ -976,7 +976,7 @@ export const MMI_STATION_LIBRARY = [
     prompt: 'One plan, eight minutes, out loud at the end.',
     followUps: [
       'When did you work out that your briefs were different?',
-      'What did you do once you realised it, and what was the alternative?',
+      'What did you do once you realized it, and what was the alternative?',
     ],
     task: {
       goal: 'A single stated plan both of you endorse.',
@@ -1129,7 +1129,7 @@ export const MMI_STATION_LIBRARY = [
     format: 'interviewer',
     archetype: 'other',
     stationType: 'motivation',
-    door: 'This station is run by a community member on the admissions panel — not a clinician, not an academic. They run a community organisation.',
+    door: 'This station is run by a community member on the admissions panel — not a clinician, not an academic. They run a community organization.',
     prompt: 'Tell me about someone specific, by name, whose life is different because of something you did.',
     followUps: [
       'What did they actually need, as opposed to what you offered?',
@@ -1141,7 +1141,7 @@ export const MMI_STATION_LIBRARY = [
       'Do they distinguish what was needed from what was convenient to give?',
       'Do they admit their own benefit without embarrassment?',
     ],
-    commonFailure: 'Talking about a programme rather than a person. This panellist is specifically listening for whether the candidate cares about anyone in particular or has memorised a story about caring.',
+    commonFailure: 'Talking about a program rather than a person. This panellist is specifically listening for whether the candidate cares about anyone in particular or has memorized a story about caring.',
     competencies: ['empathy', 'understandingOthers', 'selfAwareness', 'oralCommunication'],
   }),
   station({

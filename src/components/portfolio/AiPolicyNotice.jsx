@@ -10,7 +10,7 @@ import { AI_POLICY, HARD_RULES, hasAcknowledgedPolicy, acknowledgePolicy } from 
 //
 //   • It is NOT a Disclosure. Every other secondary thing in Portfolio sits
 //     behind a door the student can close and never open again, which is right
-//     for a filter panel and wrong for the one rule they can be penalised for
+//     for a filter panel and wrong for the one rule they can be penalized for
 //     breaking. The three hard rules are always on screen in the essay
 //     workspace; only the elaboration folds away.
 //   • It is NOT a modal, and it does not block. A consent gate in front of a
@@ -21,7 +21,7 @@ import { AI_POLICY, HARD_RULES, hasAcknowledgedPolicy, acknowledgePolicy } from 
 // The acknowledgement is a display detail, not a permission: an unacknowledged
 // policy opens expanded once, an acknowledged one opens collapsed. Nothing in
 // the workspace is gated on it, because the policy binds whether or not the
-// student taps a button, and pretending otherwise would be theatre.
+// student taps a button, and pretending otherwise would be theater.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function AiPolicyNotice({ compact = false, isMobile = false }) {

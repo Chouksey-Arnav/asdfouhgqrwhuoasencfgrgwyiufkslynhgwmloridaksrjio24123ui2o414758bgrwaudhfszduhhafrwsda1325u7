@@ -3,7 +3,7 @@
 //
 // The real exam embeds Desmos inside Bluebook and lets a student open it on
 // every Math question, for as long as they want. Practicing with a different
-// calculator (or none) trains a workflow the test day will not honour, so this
+// calculator (or none) trains a workflow the test day will not honor, so this
 // module loads the genuine Desmos API and the SAT tab hosts it everywhere.
 //
 // THREE THINGS THIS FILE OWNS:
@@ -89,7 +89,7 @@ export function loadDesmos() {
         resolve(window.Desmos);
       } else {
         loadState = 'error';
-        reject(new Error('The Desmos script loaded but did not initialise.'));
+        reject(new Error('The Desmos script loaded but did not initialize.'));
       }
     };
     const settleErr = (message) => {

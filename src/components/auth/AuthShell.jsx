@@ -14,7 +14,7 @@ import ThemeToggle from '../ThemeToggle';
 const HIGHLIGHTS = [
   { icon: GraduationCap, hue: () => C.blue,   title: '10 health careers', desc: 'Matched to you, not assumed.' },
   { icon: Sparkles,      hue: () => C.violet, title: 'Your whole application', desc: 'Colleges, essays, deadlines, scores.' },
-  { icon: ShieldCheck,   hue: () => C.green,  title: 'Free — nothing paywalled', desc: 'Ads keep it free, never personalised.' },
+  { icon: ShieldCheck,   hue: () => C.green,  title: 'Free — nothing paywalled', desc: 'Ads keep it free, never personalized.' },
 ];
 
 function BrandPanel() {

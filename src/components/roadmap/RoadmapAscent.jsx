@@ -33,7 +33,7 @@ import { fmtMonth } from './roadmapUi';
 //
 // The dream schools are drawn at the SUMMIT, at the end of the line, as the
 // thing the year is pointed at. Deliberately not as altitude thresholds: a
-// horizontal line labelled "Duke: 82" would be a fabrication with a ruler on
+// horizontal line labeled "Duke: 82" would be a fabrication with a ruler on
 // it, and it would be believed.
 //
 // ── Why it moves, and what each movement means ─────────────────────────────
@@ -67,12 +67,12 @@ const PADS = {
 // The cost of that honesty is that a student starting near zero gets a curve
 // pinned to the bottom of a mostly empty frame, and an empty frame reads as
 // "there is nothing here" rather than as "there is a long way to go". So the
-// space above the line is LABELLED: the four bands computeApplicationStrength
+// space above the line is LABELED: the four bands computeApplicationStrength
 // already names, drawn as rungs, so the emptiness is legible as the room left
 // to climb and the student can see which rung this year lands them on.
 const BANDS = [
   { at: 80, label: 'Strong' },
-  { at: 60, label: 'On Track' },
+  { at: 60, label: 'On track' },
   { at: 35, label: 'Building' },
 ];
 
@@ -154,7 +154,7 @@ function ClimbHeadline({ climb, schools, isMobile, compact }) {
         <div style={{ fontSize: 9, color: C.t4, whiteSpace: 'nowrap' }}>if you finish it</div>
       </div>
 
-      <Score value={projected.score} band={projected.band} label="next August" color={C.green} isMobile={isMobile} strong />
+      <Score value={projected.score} band={projected.band} label="next august" color={C.green} isMobile={isMobile} strong />
 
       {!compact && !!schools.length && (
         <div style={{ flex: 1, minWidth: 180 }}>
@@ -417,7 +417,7 @@ function ClimbChart({ climb, schools, isMobile, reducedMotion, compact }) {
             fontSize: 9.5, fontWeight: 800, color: C.green, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
           }}>
-            {schools.length ? schools[0] + (schools.length > 1 ? ` +${schools.length - 1}` : '') : 'Your target schools'}
+            {schools.length ? schools[0] + (schools.length > 1 ? ` +${schools.length - 1}` : '') : 'Your target programs'}
           </span>
         </div>
       </div>

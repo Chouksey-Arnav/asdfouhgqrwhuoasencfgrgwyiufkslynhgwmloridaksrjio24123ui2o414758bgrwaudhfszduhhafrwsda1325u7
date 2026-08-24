@@ -11,7 +11,7 @@
 //
 //  • THE CLOCK DOES NOT PAUSE. Reading time ends whether or not you have decided
 //    what to say, and the station ends whether or not you have finished. That is
-//    unpleasant and it is the point — a student who has only practised untimed
+//    unpleasant and it is the point — a student who has only practiced untimed
 //    will discover on the day that the format is mostly a time problem.
 //  • YOU CANNOT GO BACK. Real circuits move you to the next door. Allowing a
 //    student to revisit station three after seeing station seven would produce a
@@ -140,7 +140,7 @@ export default function MmiCircuitRunner({ accent = C.violet, onSessionComplete 
             Eight to ten stations back to back, each with two minutes of reading time outside the door and five to eight minutes inside. The clock does not pause, you cannot go back, and no feedback appears until the whole circuit is done — the same three constraints the real format uses, and the reason it measures anything.
           </div>
           <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, marginTop: 12 }}>
-            <strong style={{ color: C.t1 }}>This is the only mode that produces an aggregate score.</strong> A single station is a weak measurement by design — the reliability comes from averaging eight or more raters who never speak to each other. Practising one station at a time is useful, and it is practice.
+            <strong style={{ color: C.t1 }}>This is the only mode that produces an aggregate score.</strong> A single station is a weak measurement by design — the reliability comes from averaging eight or more raters who never speak to each other. Practicing one station at a time is useful, and it is practice.
           </div>
         </div>
 

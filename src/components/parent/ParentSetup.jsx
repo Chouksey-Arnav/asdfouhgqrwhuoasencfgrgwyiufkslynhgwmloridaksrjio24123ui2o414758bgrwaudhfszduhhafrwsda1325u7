@@ -253,7 +253,7 @@ export default function ParentSetup({ user, onDone, onSkip }) {
               who happened to learn their email address.
             </p>
             <Field label="Your full name" error={errors.fullName}
-              hint="The name your student would recognise — this is what appears on the request.">
+              hint="The name your student would recognize — this is what appears on the request.">
               <input value={form.fullName} onChange={(e) => set({ fullName: e.target.value })}
                 placeholder="e.g. Priya Shah" autoComplete="name" maxLength={120} style={inp()} />
             </Field>

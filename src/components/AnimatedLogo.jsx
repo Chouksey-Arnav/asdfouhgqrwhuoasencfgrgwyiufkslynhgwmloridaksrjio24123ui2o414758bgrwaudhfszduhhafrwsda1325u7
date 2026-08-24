@@ -27,7 +27,7 @@ function Crest({ idPrefix, animate = true }) {
   return (
     <img
       src="/logo.png"
-      alt="Medschoolprep Logo"
+      alt="MedSchoolPrep logo"
       style={{
         display: 'block',
         width: '100%',

@@ -10,7 +10,7 @@
 //     the header strip (chapter mark, name, segmented progress, and the
 //     recorded answers as chips).
 //
-// ── The colour system, and why it lives here ─────────────────────────────────
+// ── The color system, and why it lives here ─────────────────────────────────
 // A chapter owns a HUE PAIR (see design.js). The shell resolves it once per
 // render and publishes it to every primitive on the screen, so the ambient
 // wash, the progress fill, the chapter mark, every selected answer, the focus

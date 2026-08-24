@@ -68,7 +68,7 @@ function Bullets({ items, icon: Icon, hue, title }) {
 function Frame({ children }) {
   return (
     // flex:1 so this actually fills the flex row #root creates (src/index.css) rather than
-    // collapsing to the card's own width and centring itself inside a 530px sliver.
+    // collapsing to the card's own width and centering itself inside a 530px sliver.
     <div style={{ flex: 1, minWidth: 0, height: 'var(--msp-vh)', overflowY: 'auto', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ width: '100%', maxWidth: 480, ...CC({ gap: 12 }) }}>
         <div style={{ ...R({ gap: 8 }), justifyContent: 'center' }}>
@@ -182,7 +182,7 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
 
   /** Signed in and connected — the one exit both redemption paths share. */
   function finish(res) {
-    // Signed in either way. If the accept itself did not go through — the student cancelled the
+    // Signed in either way. If the accept itself did not go through — the student canceled the
     // invitation while this was happening, another tab already used it — the account and session
     // are real and the dashboard explains itself, which beats stranding somebody who did
     // everything right on an error page with nothing to click.
@@ -445,7 +445,7 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
           performed by a server — it is performed here, by the one person who knows whether they
           have a mother called Priya. Everything the parent had to fill in before they could send
           anything (see ParentSetup.jsx and migration 0009) exists so that this box has something
-          in it. A student who reads a name they do not recognise, or their own name spelled as
+          in it. A student who reads a name they do not recognize, or their own name spelled as
           somebody else's, closes the tab and nothing has happened.
         */}
         {(invite.claimedByName || invite.claimedStudentName) && (
@@ -464,7 +464,7 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
               {invite.claimedStudentName && (
                 <>They named the student as <strong style={{ color: C.t1 }}>{invite.claimedStudentName}</strong>.{' '}</>
               )}
-              If that is not you, or you don't recognise this person, don't accept — close this
+              If that is not you, or you don't recognize this person, don't accept — close this
               page and nothing is shared.
             </div>
           </div>

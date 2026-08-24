@@ -47,7 +47,7 @@ export const STATUSES = ['Planning to ask', 'Asked', 'Confirmed', 'Submitted'];
 /**
  * Who actually writes letters for a health-pathway student.
  *
- * The original list was a school list — teacher, counsellor, coach — which is
+ * The original list was a school list — teacher, counselor, coach — which is
  * the right list for a general college application and misses everyone who has
  * seen this particular student do the thing they are applying to do. A physics
  * teacher can say they are bright. The volunteer coordinator who watched them
@@ -75,9 +75,9 @@ export const RECOMMENDER_ROLES = [
     short: 'Counselor',
     evidenceFrom: null,
     whatTheyCanSay: 'Your record in context — how hard your course load was for your school, what you did with what was available to you.',
-    whoCounts: 'Your assigned counsellor. Most applications require this one and you do not choose it.',
+    whoCounts: 'Your assigned counselor. Most applications require this one and you do not choose it.',
     leadDaysAdvice: 'Follow your school\'s process and its deadline, which is usually earlier than the college\'s.',
-    commonMistake: 'Assuming they know you. Most counsellors carry hundreds of students — send them your activities list and hours totals whether they ask for it or not.',
+    commonMistake: 'Assuming they know you. Most counselors carry hundreds of students — send them your activities list and hours totals whether they ask for it or not.',
   },
   {
     id: 'shadowing-physician',
@@ -85,7 +85,7 @@ export const RECOMMENDER_ROLES = [
     short: 'Shadowing physician',
     evidenceFrom: 'shadowing',
     whatTheyCanSay: 'That you have actually seen the job — not the idea of it — and did not flinch. A clinician saying "this student watched a full clinic day and asked good questions afterwards" is worth more than any essay claiming the same thing.',
-    whoCounts: 'A physician, dentist, PA, NP or pharmacist you shadowed for enough hours that they would recognise you. Below about ten hours across at least two visits, most will decline, and they are right to.',
+    whoCounts: 'A physician, dentist, PA, NP or pharmacist you shadowed for enough hours that they would recognize you. Below about ten hours across at least two visits, most will decline, and they are right to.',
     leadDaysAdvice: 'Six weeks minimum. Clinicians are the busiest people who will ever write for you and they do not check email between patients.',
     commonMistake: 'Asking after a single afternoon. Shadow, then keep in touch — a short "here is what I took away from the day" email the week after is what makes the ask possible six months later.',
   },
@@ -418,7 +418,7 @@ export function buildMentorSummary(entry, snapshot = {}, { studentName = null } 
   }
 
   if (!link.entries.length && !link.research.length && !link.activities.length) {
-    lines.push(`We could not find any logged hours under this name, so there is nothing to summarise yet.`);
+    lines.push(`We could not find any logged hours under this name, so there is nothing to summarize yet.`);
     lines.push(`If you did work with ${entry?.name || 'them'}, check that the supervisor name on those entries in your hours log matches the name here — the match is by name.`);
     lines.push('');
   }
@@ -438,7 +438,7 @@ export function buildMentorSummary(entry, snapshot = {}, { studentName = null } 
  * ── Why these are written out in full rather than as fill-in-the-blank ──────
  * A template with five bracketed blanks is a form, and a form is a blank page
  * with extra steps. What a frightened sixteen-year-old needs is to read a real
- * email, recognise that it is polite and ordinary and not presumptuous at all,
+ * email, recognize that it is polite and ordinary and not presumptuous at all,
  * change two sentences to sound like themselves, and press send. Anything they
  * cannot send as-is, they will not send.
  *

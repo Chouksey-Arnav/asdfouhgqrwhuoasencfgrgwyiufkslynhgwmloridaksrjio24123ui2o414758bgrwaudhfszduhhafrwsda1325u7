@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Data-integrity and behaviour assertions for the combined-degree layer:
+// Data-integrity and behavior assertions for the combined-degree layer:
 // src/data/combinedDegreePrograms.js + src/lib/combinedDegree.js.
 //
 // There is no test runner in this repo, so this script IS the test suite for
@@ -176,8 +176,8 @@ section('3. Verification is mandatory, real, and actually warns');
   const fresh = verificationStatus(sample, new Date(Date.parse(`${sample.verified}T00:00:00`) + 5 * DAY));
   assert('a fresh entry warns about nothing', fresh.stale === false && fresh.warning === null);
 
-  const ageing = verificationStatus(sample, new Date(Date.parse(`${sample.verified}T00:00:00`) + 300 * DAY));
-  assert('an entry approaching a year warns before it is stale', ageing.stale === false && !!ageing.warning);
+  const aging = verificationStatus(sample, new Date(Date.parse(`${sample.verified}T00:00:00`) + 300 * DAY));
+  assert('an entry approaching a year warns before it is stale', aging.stale === false && !!aging.warning);
 
   assert('a program with no verified date fails loudly rather than quietly',
     verificationStatus({ institution: 'X' }).stale === true);

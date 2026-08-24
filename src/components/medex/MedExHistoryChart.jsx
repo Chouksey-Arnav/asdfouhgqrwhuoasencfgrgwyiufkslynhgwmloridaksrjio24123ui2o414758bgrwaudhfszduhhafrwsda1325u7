@@ -5,7 +5,7 @@
 // The MedEx Score's whole claim is that it measures a position that moves
 // slowly. A single number cannot demonstrate that — only a series can, and the
 // series is the thing a student is actually trying to change. Two seals eight
-// weeks apart is the most motivating artefact this feature produces, and it is
+// weeks apart is the most motivating artifact this feature produces, and it is
 // the one thing the score literally cannot be recomputed into (see the
 // migration: the portfolio each seal was taken from no longer exists).
 //

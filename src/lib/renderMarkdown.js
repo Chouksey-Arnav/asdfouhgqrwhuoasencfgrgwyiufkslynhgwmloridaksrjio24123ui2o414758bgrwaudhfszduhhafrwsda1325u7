@@ -16,7 +16,7 @@
 //
 // That is exactly how this file shipped, and the result was the app's worst
 // accessibility bug: `<strong>` was hard-coded to #eef2ff — the DARK palette's
-// t1 — so every term Medabrain emphasised rendered near-white. On the dark
+// t1 — so every term Medabrain emphasized rendered near-white. On the dark
 // themes it was the brightest text on screen; in light mode it was white on a
 // white card, which reads as the bolded word having been deleted. Paragraphs,
 // list items, headings, inline code and blockquotes all had the same problem to

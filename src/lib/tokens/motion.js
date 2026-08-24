@@ -59,7 +59,7 @@ export const EASE = Object.freeze({
   enter: 'cubic-bezier(0.16, 1, 0.3, 1)',
   // Accelerating: things leaving. Nothing to watch, so it gets out of the way.
   exit:  'cubic-bezier(0.4, 0, 1, 1)',
-  // Symmetric: state changes that neither arrive nor leave (hover, colour).
+  // Symmetric: state changes that neither arrive nor leave (hover, color).
   state: 'cubic-bezier(0.4, 0, 0.2, 1)',
 });
 
@@ -69,7 +69,7 @@ export const EASE = Object.freeze({
  *   transition: tr(['opacity', 'transform'], DUR.hover)
  *
  * @param {string[]} props   must be transform/opacity, or a paint-only
- *                           property (colour, background, border, shadow) —
+ *                           property (color, background, border, shadow) —
  *                           those don't trigger layout and are allowed.
  * @param {number}   ms
  * @param {string}   ease
@@ -138,7 +138,7 @@ export const MOTION = Object.freeze({
 //                    the user catches.
 //
 // And never more than five skeleton rows: past that it stops reading as "your
-// content is coming" and starts reading as a screen made of grey bars.
+// content is coming" and starts reading as a screen made of gray bars.
 export const LOADING = Object.freeze({
   showNothingBelow: 300,
   determinateAbove: 1000,

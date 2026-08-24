@@ -45,7 +45,7 @@ function Rung({ row, chainColor, onTake, busyId, isLast, m }) {
   return (
     <div style={{ display: 'flex', gap: m ? 10 : 12, alignItems: 'stretch' }}>
       {/* The rail: node + connector. This is what makes it read as a road rather
-          than a list — and the connector is coloured only up to where the
+          than a list — and the connector is colored only up to where the
           student has actually got to. */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: 26 }}>
         <div style={{

@@ -21,7 +21,7 @@
 //   3. NAME THE NUMBER IT IS READING. Every line points at something visible elsewhere on the page,
 //      so a parent can check the claim rather than trust it.
 
-/** Tone drives the accent colour of the card; it is deliberately never worse than 'steady'. */
+/** Tone drives the accent color of the card; it is deliberately never worse than 'steady'. */
 const TONE = { strong: 'strong', steady: 'steady', quiet: 'quiet', new: 'new' };
 
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;

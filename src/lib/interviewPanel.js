@@ -95,7 +95,7 @@ export const PANEL = [
     notePauseMs: [500, 1000],
     turnGapMs: 330,
     prefer: [/^tom\b/i, /^alex\b/i, /^aaron\b/i, /^nathan\b/i, /\bguy\b/i, /^mark\b/i, /^david\b/i, /^evan\b/i, /^matthew\b/i],
-    toneInstruction: 'You are a community member on the admissions panel — not a clinician, not an academic. You run a community organisation and you are here because patients are people from places like yours. You speak plainly, you never use jargon, and if they use jargon you ask them what it means. What you are listening for is whether they actually care about anyone specific, or whether they have memorised a story about caring.',
+    toneInstruction: 'You are a community member on the admissions panel — not a clinician, not an academic. You run a community organization and you are here because patients are people from places like yours. You speak plainly, you never use jargon, and if they use jargon you ask them what it means. What you are listening for is whether they actually care about anyone specific, or whether they have memorized a story about caring.',
   },
   {
     id: 'student',
@@ -246,7 +246,7 @@ export const ACTOR_PERSONAS = [
     allowFilledPauses: true,
     turnGapMs: 300,
     prefer: [/^samantha\b/i, /^ava\b/i, /^allison\b/i, /jenny/i],
-    toneInstruction: 'You are playing a character who is upset and not thinking clearly. Hesitate, trail off, repeat yourself. Do not summarise your own feelings neatly — a real person in distress does not do that. Never break character to coach the student.',
+    toneInstruction: 'You are playing a character who is upset and not thinking clearly. Hesitate, trail off, repeat yourself. Do not summarize your own feelings neatly — a real person in distress does not do that. Never break character to coach the student.',
   },
   {
     id: 'actor-defensive',

@@ -127,7 +127,7 @@ export function getInterviewerVoices(voices) {
  * Who speaks when the student hasn't chosen.
  *
  * A first-timer gets the medical student: closest to their age, least formal, the gentlest room to
- * be in for someone who has never done this before. Anyone who has practised before gets the
+ * be in for someone who has never done this before. Anyone who has practiced before gets the
  * mid-career faculty member, which is the realistic default. A saved explicit pick always wins.
  */
 export function pickInterviewerVoice(voices, { firstTimer = false } = {}) {
@@ -278,7 +278,7 @@ export function isSTTSupported() {
  * Whether this browser's recogniser ships the student's audio off-device. Chrome and Edge stream to
  * a cloud service; Safari does it on-device on recent versions. We cannot detect this reliably, so
  * we assume the privacy-worst case for any Chromium browser and tell the student so plainly rather
- * than guessing in our own favour. See docs/INTERVIEW_VOICE_PRIVACY.md.
+ * than guessing in our own favor. See docs/INTERVIEW_VOICE_PRIVACY.md.
  */
 export function recognitionSendsAudioOffDevice() {
   if (typeof navigator === 'undefined') return true;

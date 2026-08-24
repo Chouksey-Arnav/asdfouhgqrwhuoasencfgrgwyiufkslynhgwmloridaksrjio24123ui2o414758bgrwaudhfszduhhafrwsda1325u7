@@ -289,7 +289,7 @@ export function countWords(text) {
  * outcome: a list of application tasks that are not theirs yet, generating a
  * background hum of being behind on something that has not started.
  *
- * So: visible, openable, clearly labelled as junior-year work, and out of the
+ * So: visible, openable, clearly labeled as junior-year work, and out of the
  * task list. The reflection journal is their working surface, and it is the one
  * that will actually be worth something to them in three years.
  */

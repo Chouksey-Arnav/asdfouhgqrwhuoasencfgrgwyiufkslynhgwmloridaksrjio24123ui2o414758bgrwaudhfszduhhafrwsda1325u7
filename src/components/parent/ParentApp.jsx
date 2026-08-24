@@ -23,7 +23,7 @@
 // ── Why every family's dashboard looks different ────────────────────────────
 // A dashboard that renders identically for everyone reads as a report someone else generated.
 // The header greets the parent by the name they attested to, the tabs adapt to how many students
-// they actually have, and each student carries a stable accent colour derived from their id (see
+// they actually have, and each student carries a stable accent color derived from their id (see
 // hueFor) that follows them across every tab — so in a two-child household the two are never
 // confusable at a glance, which is the failure mode that matters when the numbers are similar.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -70,11 +70,11 @@ const NAV = [
 ];
 
 /**
- * A stable colour per student, derived from their id.
+ * A stable color per student, derived from their id.
  *
  * Not decoration: in a household with two children the two dashboards carry near-identical
  * layouts and often similar numbers, and the thing that stops a parent reading the wrong one is
- * a colour that never moves. Derived rather than assigned so it survives a reload, a new device,
+ * a color that never moves. Derived rather than assigned so it survives a reload, a new device,
  * and a student being disconnected and reconnected.
  */
 const STUDENT_HUES = [C.violet, C.blue, C.green, C.orange, C.cyan, C.fuchsia];
@@ -126,7 +126,7 @@ function SectionTitle({ children, sub }) {
 /**
  * The shape of the answer, while the answer is loading.
  *
- * A centred spinner tells a parent that something is happening; it does not tell them what is
+ * A centered spinner tells a parent that something is happening; it does not tell them what is
  * about to appear, and on a slow phone connection it reads as a page that might be broken. These
  * blocks occupy the same footprint the student cards will, so the layout does not jump when the
  * data lands and the wait feels like the page arriving rather than the page stalling.
@@ -182,7 +182,7 @@ function Freshness({ at, refreshing, onRefresh }) {
 
 /**
  * The alarm half of the same idea, carried on every tab rather than only the one with the Refresh
- * button on it. `role="status"` so a screen reader is told too — the visual cue is a colour and a
+ * button on it. `role="status"` so a screen reader is told too — the visual cue is a color and a
  * small icon, which is precisely the kind of signal that reaches nobody who is not looking at it.
  */
 function StaleBanner({ at, onRetry, refreshing }) {
@@ -257,7 +257,7 @@ function Empty({ icon: Icon, title, body, children }) {
 }
 
 /**
- * One student, compressed to the four facts a parent opens this app for, under their own colour.
+ * One student, compressed to the four facts a parent opens this app for, under their own color.
  * The whole card is the link to their page — a card that shows a summary and makes you hunt for
  * the way into the detail is two clicks pretending to be one.
  */
@@ -322,7 +322,7 @@ function StudentCard({ entry, onOpen, href }) {
   );
 }
 
-/** Eight weeks of study days for one student, in their colour. */
+/** Eight weeks of study days for one student, in their color. */
 function ActivityStrip({ days, hue }) {
   if (!days?.length) return null;
   const weeks = [];
@@ -499,7 +499,7 @@ function Guide({ user, onGo }) {
           few hours behind is normal; a few days usually means they have not opened it.
         </Line>
         <Line term="You have two children">
-          Each gets their own page and their own colour, which follows them across every tab. Invite
+          Each gets their own page and their own color, which follows them across every tab. Invite
           the second from Connections.
         </Line>
       </Block>
@@ -797,7 +797,7 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
             </nav>
             {/* Only when there is genuinely something past the edge. Painted unconditionally it is
                 a visible lighter block sitting over the last tab on any screen wide enough to fit
-                all seven — C.surf is a translucent white, so "fade to the header colour" fades to
+                all seven — C.surf is a translucent white, so "fade to the header color" fades to
                 something lighter than the header rather than into it. */}
             {navOverflows && (
               <div aria-hidden="true" style={{
@@ -946,7 +946,7 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
             <div style={R({ justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' })}>
               <SectionTitle sub={students.length === 1
                 ? 'Effort and results, updated as they study. Coach chats, notes and essays stay private to them.'
-                : `${students.length} students. Each keeps their own colour across every tab.`}>
+                : `${students.length} students. Each keeps their own color across every tab.`}>
                 {greetingName ? `Good to see you, ${greetingName}` : 'Your family'}
               </SectionTitle>
               <Freshness at={loadedAt} refreshing={refreshing} onRefresh={() => load()} />

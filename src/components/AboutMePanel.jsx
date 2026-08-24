@@ -178,7 +178,7 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
   const depthMeta = {
     empty:   { label: 'Nothing yet',      pct: 0,   color: C.t4,    note: 'Medabrain is running on your onboarding answers alone right now.' },
     started: { label: 'Getting started',  pct: 25,  color: C.amber, note: 'A good start. Another minute of talking makes a noticeable difference.' },
-    good:    { label: 'Solid',            pct: 62,  color: C.blue,  note: 'Medabrain has enough to personalise most of what it says to you.' },
+    good:    { label: 'Solid',            pct: 62,  color: C.blue,  note: 'Medabrain has enough to personalize most of what it says to you.' },
     rich:    { label: 'Medabrain knows you', pct: 100, color: C.green, note: 'Every answer across the app is now shaped by what you have told it here.' },
   }[stats.depth];
 
@@ -207,7 +207,7 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
                 Tell Medabrain about yourself
               </h2>
               <p style={{ fontSize: isMobile ? 12.5 : 13.5, color: C.t2, lineHeight: 1.55, marginTop: 4 }}>
-                Talk to it like you would to a counsellor who actually has time for you. Your family, your school,
+                Talk to it like you would to a counselor who actually has time for you. Your family, your school,
                 what you are scared of, where you want to end up — anything. Say as much as you want, come back and
                 add more whenever you want.
               </p>
