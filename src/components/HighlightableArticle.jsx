@@ -114,7 +114,12 @@ export default function HighlightableArticle({ sections, highlights = [], onAdd,
   }
 
   return (
-    <div ref={containerRef} style={{ position: 'relative' }}>
+    // .msp-prose caps the measure at ~66 characters (see the reading-measure
+    // block in index.css). Uncapped, a lesson on a laptop ran the full content
+    // column — around 130 characters a line, which is roughly double the point
+    // where the eye stops reliably finding the start of the next line. That
+    // return sweep is the part of reading that costs a dyslexic reader most.
+    <div ref={containerRef} className="msp-prose" style={{ position: 'relative' }}>
       {sections.map((sec, i) => {
         const segs = buildSegments(sec.body, byLine[i] || []);
         const speaking = activeSectionIdx === i;
@@ -131,8 +136,20 @@ export default function HighlightableArticle({ sections, highlights = [], onAdd,
               borderRadius: speaking ? 8 : 0,
               transition: 'background-color 200ms cubic-bezier(.4,0,.2,1), border-color 200ms cubic-bezier(.4,0,.2,1)',
             }}>
-            <h3 style={{ fontSize: m ? 15 : 17, fontWeight: 700, color: speaking ? accent : C.t1, fontFamily: C.FD, marginBottom: 8, transition: 'color .25s' }}>{sec.heading}</h3>
-            <p data-section-idx={i} style={{ fontSize: m ? 13.5 : 14.5, color: C.t2, lineHeight: 1.55, margin: 0, userSelect: 'text', WebkitUserSelect: 'text' }}>
+            <h3 style={{ fontSize: m ? 17 : 19, fontWeight: 700, color: speaking ? accent : C.t1, fontFamily: C.FD, marginBottom: 8, lineHeight: 'calc(1.45 * var(--msp-line-scale))', letterSpacing: `calc(${m ? -0.13 : -0.28}px + var(--msp-letter-spacing))`, transition: 'color .25s' }}>{sec.heading}</h3>
+            {/* The lesson body is the longest continuous read in the app, so it
+                is set as prose rather than as UI text: 17/18px (was 13.5/14.5 —
+                below the point where a teenager on a phone will stay with a
+                five-section article), 1.6 leading, and C.t1 rather than the
+                muted C.t2, because dropping body copy a tone to look calm is
+                the same decision as setting it small. The measure is capped on
+                the wrapper below.
+
+                15/16 here rather than 17/18 because the whole app is scaled by
+                --msp-font-scale (1.15 by default — see DEFAULTS in lib/a11y.js),
+                which lands these at 17.3/18.4 on screen. Writing 17/18 here
+                would compound with it and give a 20px lesson body. */}
+            <p data-section-idx={i} style={{ fontSize: m ? 15 : 16, color: C.t1, lineHeight: 'calc(1.6 * var(--msp-line-scale))', margin: 0, textAlign: 'left', textWrap: 'pretty', userSelect: 'text', WebkitUserSelect: 'text' }}>
               {segs.map((s, j) => s.highlight ? (
                 <mark key={j} onClick={(e) => clickExistingHighlight(e, s.highlight)}
                   style={{ background: COLORS[s.highlight.color]?.bg || COLORS.yellow.bg, color: 'inherit', borderRadius: 4, padding: '0px 4px', cursor: 'pointer' }}>

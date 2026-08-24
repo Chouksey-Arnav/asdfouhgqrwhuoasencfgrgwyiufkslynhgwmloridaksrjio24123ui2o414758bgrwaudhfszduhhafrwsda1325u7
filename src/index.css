@@ -18,7 +18,7 @@
   --c-blue: #72b5f8; --c-blueL: #9dcaff; --c-blueDim: #31465f;
   --c-violet: #c99fed; --c-rose: #fd90a4; --c-green: #77c087; --c-amber: #d9a84f;
   --c-surf: #30363d; --c-surfHi: #383e46;
-  --c-inputBg: #22272d; --c-inputBorder: #5d646c;
+  --c-inputBg: #22272d; --c-inputBorder: #767c84;
   --c-scrim: rgba(18,23,28,0.62);
   --c-noiseOpacity: 0.012;
   --c-pageGlow: none;
@@ -26,7 +26,11 @@
   --c-FB: 'Onest', -apple-system, BlinkMacSystemFont, sans-serif;
   --c-FM: 'JetBrains Mono', 'SF Mono', monospace;
 
-  /* Accessibility knobs — written by applyA11y() in src/lib/a11y.js. */
+  /* Accessibility knobs — written by applyA11y() in src/lib/a11y.js.
+     --msp-font-scale defaults to 1.15 there, not 1: it is the app's body-size
+     floor, and #root's `zoom` is what applies it (see the note below). The
+     value here is 1 on purpose — this is the pre-JS first paint, and zooming
+     the boot screen only to un-zoom it a frame later is a visible jump. */
   --msp-font-scale: 1;
   --msp-line-scale: 1;
   --msp-letter-spacing: 0em;
@@ -100,13 +104,94 @@ body.msp-landing-active #root { display: block; height: auto; min-height: var(--
 ::-webkit-scrollbar-thumb { background: var(--c-s4); border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--c-b3); }
 ::selection { background: var(--c-blueDim); color: var(--c-t1); }
-/* 3px, not 2px: the old ring was the bare WCAG minimum and disappeared against
-   a same-hue border. offset keeps it clear of the control's own edge. */
-*:focus-visible { outline: 3px solid var(--c-blue); outline-offset: 2px; border-radius: 6px; }
+
+/* ── The focus ring ────────────────────────────────────────────────────────
+   Four decisions, each of which was previously wrong somewhere:
+
+   1. `:focus-visible`, never `:focus`. A mouse user who clicks a button has
+      not asked to see a ring; a keyboard user who tabs to it has. The one
+      place `:focus` is still honoured is the student's own "always show
+      focus" setting further down, which exists for head/eye trackers and
+      switch access — input the browser reports as pointer.
+
+   2. INK, not brand blue. The old ring was `var(--c-blue)`, and that is the
+      failure everyone ships: it is invisible on the blue primary button, the
+      violet Medabrain launcher, and the blue-tinted cards those sit on —
+      exactly the controls a student uses most. The ring is now near-white on
+      the dark families and near-black on the light ones, so it clears 3:1
+      against every accent this app can paint AND against the surface the
+      offset gap exposes. Brand identity moves to the inner glow below, where
+      it costs nothing if it washes out.
+
+   3. `outline`, never `border`. An outline is painted outside the box model,
+      so a control does not move, resize, or reflow its row when focused.
+
+   4. `!important`, which is not laziness. This app styles almost everything
+      through inline style objects, and an inline `outline: 'none'` beats any
+      normal stylesheet rule — which is how `inp()` in lib/theme.js managed to
+      strip the ring from every text field in the product while this rule sat
+      here looking correct. `!important` is the only declaration that outranks
+      an inline style, so it is what makes "the ring cannot be removed" true
+      rather than aspirational. scripts/verifyA11y.mjs keeps the inline
+      `outline: 'none'`s from coming back regardless.
+
+   2px at 2px offset: the ring reads as its own object separated from the
+   control rather than as a thick border grown out of it, and 2/2 is what
+   WCAG 2.4.13's minimum-area maths is written around. */
+:root {
+  --msp-focus-ring: #ffffff;
+  --msp-focus-glow: var(--c-blueDim);
+}
+:root[data-theme-family="light"] {
+  --msp-focus-ring: #0b1017;
+}
+*:focus-visible {
+  outline: 2px solid var(--msp-focus-ring) !important;
+  outline-offset: 2px !important;
+}
+/* ── WCAG 2.4.11 Focus Not Obscured ───────────────────────────────────────
+   New in 2.2, and the one that sticky headers break in every app that has
+   one. Tab down a long page and the browser scrolls the newly focused control
+   just barely into view — which puts it directly underneath the sticky header
+   that is painted on top of that exact strip. The control has focus, the ring
+   is drawn, and the student cannot see either. Keyboard users lose their place
+   and are usually blamed for it.
+
+   `scroll-padding` is the fix, and it is one line: it tells the scroll
+   container that the first N pixels are spoken for, so focus scrolling, hash
+   navigation and scrollIntoView() all stop short of them. Declared on every
+   scroll container the app owns rather than on the focusable elements, so a
+   new panel inherits it without knowing this rule exists.
+
+   Top: the SAT question header (sticky, ~56px) is the tallest of them.
+   Bottom: the mobile tab bar plus the SAT action bar, plus the home
+   indicator's safe area — measured, not guessed, in App.jsx's nav. */
+:root {
+  --msp-sticky-top: 72px;
+  --msp-sticky-bottom: 24px;
+}
+html,
+[data-app-content],
+.sat-scroll-x,
+.msp-auth-form-col,
+.roadmap-rail {
+  scroll-padding-top: var(--msp-sticky-top);
+  scroll-padding-bottom: var(--msp-sticky-bottom);
+}
+/* On a phone the bottom tab bar is fixed over the content, so the last row of
+   a list is obscured on focus in exactly the way the header obscures the
+   first. 68px bar + 8px of air + the home indicator. */
+@media (max-width: 768px) {
+  :root { --msp-sticky-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+}
+
 input, select, textarea { font-family: var(--c-FB); }
-input:focus, select:focus, textarea:focus {
+/* The brand half of the ring, and the part that says "type here". Scoped to
+   fields because a box-shadow on `*` would flatten every card's elevation the
+   moment it took focus. */
+input:focus-visible, select:focus-visible, textarea:focus-visible {
   border-color: var(--c-blue) !important;
-  box-shadow: 0 0 0 3px var(--c-blueDim) !important;
+  box-shadow: 0 0 0 3px var(--msp-focus-glow) !important;
 }
 body::before {
   content: '';
@@ -601,7 +686,11 @@ body::before {
 @media (hover: hover) and (pointer: fine) {
   .sat-nav-tab:hover { color: var(--c-t1) !important; }
 }
-.sat-nav-tab:focus-visible { outline: 2px solid var(--c-blue); outline-offset: -2px; border-radius: 6px; }
+/* Inset by 2px rather than outset: this rail is a horizontally scrolling strip
+   whose items sit flush against its edges, so an outset ring on the first or
+   last tab would be clipped by the scroll container. Same 2px weight, same ink
+   colour as the global ring. */
+.sat-nav-tab:focus-visible { outline: 2px solid var(--msp-focus-ring) !important; outline-offset: -2px !important; border-radius: 6px; }
 
 /* Segmented control segments. Same restraint as the tabs: hover only lifts the
    label color, the selected fill does the rest. */
@@ -609,7 +698,10 @@ body::before {
 @media (hover: hover) and (pointer: fine) {
   .sat-seg:not([aria-pressed="true"]):hover { color: var(--c-t1); background: var(--c-surf); }
 }
-.sat-seg:focus-visible { outline: 2px solid var(--c-blue); outline-offset: 1px; }
+/* 1px, not the global 2px: segments sit inside a track with only a couple of
+   pixels of padding around them, and a 2px gap would put the ring under the
+   track's own border. */
+.sat-seg:focus-visible { outline: 2px solid var(--msp-focus-ring) !important; outline-offset: 1px !important; }
 
 @media (prefers-reduced-motion: reduce) {
   .sat-nav-tab, .sat-seg { transition: none; }
@@ -722,13 +814,41 @@ body::before {
    Honours the OS setting AND the in-app override, which matters because a
    student on a school Chromebook often can't change the OS setting.
    Framer Motion animations are driven from JS, so App.jsx also reads
-   motionReduced() and passes a zero transition; this handles CSS. */
+   motionReduced() and passes a zero transition; this handles CSS.
+
+   ── What "reduce" means here ─────────────────────────────────────────────
+   Reduce, not remove. The spec's own wording is that a reduced-motion user
+   still wants to be told what happened — and the common `* { transition: none
+   }` reset takes that away, so a toggle flips with no acknowledgement, a
+   button press produces nothing, and the interface starts feeling broken in a
+   different way. The rule below is the distinction drawn in CSS:
+
+     GOES     transform, translate/rotate/scale, width/height/top/left, and
+              anything else that MOVES a thing across the screen or resizes
+              it. That is the vestibular trigger: parallax, slide-ins,
+              zoom-and-drift, large decorative reveals.
+
+     STAYS    opacity, colour, background, border, fill/stroke — at 120ms,
+              which is a cross-fade. A pressed button still darkens, a checked
+              box still fills, a saved field still flashes green. None of it
+              moves.
+
+   `transition-property` is what makes that selective: restating the property
+   list drops every transform/layout transition an author declared while
+   keeping the colour ones, which a blanket `transition-duration` override
+   cannot do.
+
+   Skeletons and spinners are exempt further down: a loading state with no
+   motion at all reads as a frozen app, which sends the student to the reload
+   button — a worse outcome than the pulse they asked not to see. */
 :root[data-reduce-motion] *,
 :root[data-reduce-motion] *::before,
 :root[data-reduce-motion] *::after {
   animation-duration: .001ms !important;
   animation-iteration-count: 1 !important;
-  transition-duration: .001ms !important;
+  transition-property: opacity, color, background-color, border-color, fill, stroke, box-shadow !important;
+  transition-duration: 120ms !important;
+  transition-timing-function: ease !important;
   scroll-behavior: auto !important;
 }
 :root[data-reduce-motion] .msp-aurora,
@@ -737,11 +857,46 @@ body::before {
 /* The spinner is the one exception worth keeping — with no animation at all a
    loading state looks like a frozen app. Slowed and de-emphasised instead. */
 :root[data-reduce-motion] .spin { animation: spin 2.4s linear infinite !important; opacity: .6; }
+/* Skeletons stay too, and for the same reason. They pulse on opacity only —
+   nothing travels, nothing shimmers across — so there is no vestibular cost to
+   removing, just the information that content is on its way. Slowed to a
+   breath rather than left at the default cadence. */
+:root[data-reduce-motion] .msp-shimmer { animation: mspShimmer 2.6s ease-in-out infinite !important; }
+:root[data-reduce-motion] .rm-shimmer  { animation: rm-shimmer 2.6s ease-in-out infinite !important; }
 /* Same exception for the brand journey. The collapse rule above lands every one
    of its layers on its resting state, which is the finished mark — exactly the
    right still frame — so only the progress hairline needs to keep moving to say
    the app is still working. */
 :root[data-reduce-motion] .msp-j-fill { animation: mspJFill 2.4s linear infinite !important; }
+
+/* The same collapse, driven by the media query rather than the attribute.
+   `data-reduce-motion` is written by applyA11y() — which means it does not
+   exist until React has mounted and run an effect. Everything before that
+   point (the landing page, the auth screens, the boot loader, and every
+   prerendered SEO page in dist/) was animating at full strength for a student
+   who had explicitly asked the OS not to. This is the same rule, applied from
+   the first stylesheet byte.
+
+   `:not([data-motion-allowed])` is the escape hatch: a student whose OS says
+   "reduce" but who has set this app's own toggle to "off" gets their
+   animations, because the in-app override has to be able to win in both
+   directions. applyA11y() writes that attribute. */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion-allowed]) *,
+  :root:not([data-motion-allowed]) *::before,
+  :root:not([data-motion-allowed]) *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-property: opacity, color, background-color, border-color, fill, stroke, box-shadow !important;
+    transition-duration: 120ms !important;
+    transition-timing-function: ease !important;
+    scroll-behavior: auto !important;
+  }
+  :root:not([data-motion-allowed]) .spin { animation: spin 2.4s linear infinite !important; opacity: .6; }
+  :root:not([data-motion-allowed]) .msp-shimmer { animation: mspShimmer 2.6s ease-in-out infinite !important; }
+  :root:not([data-motion-allowed]) .rm-shimmer { animation: rm-shimmer 2.6s ease-in-out infinite !important; }
+  :root:not([data-motion-allowed]) .msp-j-fill { animation: mspJFill 2.4s linear infinite !important; }
+}
 
 /* ── Reduced transparency ─────────────────────────────────────────────────
    Backdrop blur over a busy gradient is the single worst thing in this UI for
@@ -761,10 +916,72 @@ body::before {
 :root[data-hide-decorative] body { background-image: none !important; }
 :root[data-hide-decorative] body::before { display: none !important; }
 
-/* ── Larger tap targets ───────────────────────────────────────────────────
-   44px is the Apple HIG floor and close to Google's 48dp. Applied with
-   inline-flex centring so a small icon button grows around its icon instead
-   of the icon drifting to a corner. */
+/* ── Touch targets ────────────────────────────────────────────────────────
+   44×44 on every touch device, for everyone, without anyone turning anything
+   on. This used to live entirely behind the `largeTargets` setting, which got
+   the defaults exactly backwards: the student who most needs a bigger target
+   is a fourteen-year-old standing on a moving bus, and that student is never
+   going to open Settings → Accessibility to ask for one.
+
+   44, not WCAG 2.2's 24. 2.5.8 Target Size (Minimum) is a floor written to be
+   passable by dense existing UI, not a size anybody should aim for; Apple and
+   Google independently landed on 44pt/48dp from actual fingertip data. On a
+   phone the difference between 24 and 44 is the difference between "tap it"
+   and "tap it twice".
+
+   ── Why a pseudo-element and not min-height ──────────────────────────────
+   Growing the box would reflow the app: this UI is full of 20px pills, 12px
+   chips and icon buttons sitting in tight rows, and a `min-height: 44px` on
+   all of them turns every toolbar into a ladder. A centered, transparent
+   ::after is a hit area — it enlarges what the finger can hit while the
+   drawn control stays exactly the size the layout was designed around. The
+   overlay is a child of the control, so a tap on it IS a tap on the control;
+   no JS, no wrapper elements, nothing for a component to remember to do.
+
+   Scoped to `(pointer: coarse)` so a mouse never gets a 44px invisible
+   rectangle it can catch on the edge of.
+
+   `:where()` keeps the whole thing at zero specificity, so any component rule
+   — and any inline style — still wins. Anything that must opt out (an element
+   that already owns its ::after, or one deliberately packed tighter than
+   44px, like a heatmap cell) sets `data-no-hit`. */
+@media (pointer: coarse) {
+  :where(
+    button, summary, select,
+    [role="button"], [role="tab"], [role="switch"], [role="menuitem"], [role="option"],
+    a[role="button"], nav a, input[type="checkbox"], input[type="radio"]
+  ):not([data-no-hit]):not(.mb-launcher) {
+    position: relative;
+  }
+  :where(
+    button, summary, select,
+    [role="button"], [role="tab"], [role="switch"], [role="menuitem"], [role="option"],
+    a[role="button"], nav a, input[type="checkbox"], input[type="radio"]
+  ):not([data-no-hit]):not(.mb-launcher)::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 100%; height: 100%;
+    min-width: 44px; min-height: 44px;
+    transform: translate(-50%, -50%);
+    /* Purely a hit area. It must never paint, and it must never sit above
+       something that paints — a badge pinned to a button's corner stays
+       clickable and visible. */
+    background: none;
+    z-index: 0;
+  }
+}
+
+/* Adjacent targets need 8px of clear space between them, or the 44px hit areas
+   above start overlapping and the wrong one wins. Rows of controls built by
+   this app declare themselves with `data-tap-row` and get the floor enforced
+   here rather than each call site remembering a number. */
+[data-tap-row] { display: flex; flex-wrap: wrap; gap: max(8px, var(--msp-tap-gap, 8px)); }
+
+/* The student's own setting still exists, and now means "bigger than the
+   default 44" — it grows the drawn control, not just the hit area, which is
+   what someone with a tremor or limited fine motor control is actually asking
+   for when they turn it on. */
 :root[data-large-targets] button,
 :root[data-large-targets] a[role="button"],
 :root[data-large-targets] [role="tab"],
@@ -780,7 +997,7 @@ body::before {
    particularly those using head/eye trackers or switch access, which the
    browser reports as pointer input — need it always. */
 :root[data-always-show-focus] *:focus {
-  outline: 3px solid var(--c-blue) !important;
+  outline: 2px solid var(--msp-focus-ring) !important;
   outline-offset: 2px !important;
 }
 
@@ -817,14 +1034,86 @@ body::before {
 /* Word spacing does as much for dyslexic reading as the letterforms do. */
 :root[data-readable-font] { word-spacing: 0.08em; }
 
-/* ── Comfortable reading measure ──────────────────────────────────────────
+/* ── Reading measure and prose defaults ───────────────────────────────────
    Long prose only. Applied to article/markdown containers rather than
-   globally, so it can't squeeze a dashboard grid into a column. */
+   globally, so it can't squeeze a dashboard grid into a column.
+
+   These are DEFAULTS, not a setting. What makes a page readable for a dyslexic
+   reader is almost entirely spacing and structure — measure, leading, word
+   spacing, ragged right — and none of it costs a fluent reader anything, so
+   there is no version of this worth hiding behind a toggle. (The thing that
+   genuinely does not help is a "dyslexia font": in controlled comparisons
+   OpenDyslexic and its relatives do not beat a well-set standard sans, which
+   is why this app ships the spacing and offers Atkinson Hyperlegible as an
+   option rather than dressing a font choice up as the fix.)
+
+     66ch      inside the 60–70 character band. Below ~45 the eye re-sweeps too
+               often; above ~75 it starts losing the line it came from on the
+               return, and that return sweep is the expensive part.
+     LEFT      never `justify`. Justified text pays for its straight right edge
+               with uneven word gaps, and on a phone — narrow measure, few
+               words per line — those gaps open into "rivers" of white running
+               down the paragraph, which is a documented tracking problem for
+               dyslexic readers and simply ugly for everyone else.
+     1.6       WCAG 1.4.12 asks that 1.5 be SURVIVABLE; setting it as the
+               default is the cheaper way to be sure, and it reads better.
+     pretty    stops the last line of a paragraph landing as one orphan word.
+
+   The `data-reading-width` setting still narrows it further for a student who
+   wants that; this is the floor underneath it. */
+.msp-prose,
+.msp-md {
+  max-width: 66ch;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+  line-height: calc(1.6 * var(--msp-line-scale));
+  text-wrap: pretty;
+}
 :root[data-reading-width] .msp-prose,
 :root[data-reading-width] .msp-md {
   max-width: var(--msp-reading-width);
-  margin-left: auto;
-  margin-right: auto;
+}
+
+/* Emphasis is a weight change, not a slant. Italic disturbs letter shapes in
+   exactly the way that costs a dyslexic reader recognition speed, and it is the
+   weaker signal anyway — bold is visible in peripheral vision and italic is
+   not. Scoped to prose so a citation or a genus name elsewhere keeps its
+   convention. */
+.msp-prose em, .msp-prose i,
+.msp-md em, .msp-md i {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--c-t1);
+}
+
+/* ── WCAG 1.4.12 Text spacing ─────────────────────────────────────────────
+   The criterion: the student can push line height to 1.5×, paragraph spacing
+   to 2×, letter spacing to 0.12em and word spacing to 0.16em, and nothing is
+   lost or cut off. This app hands them exactly those knobs in Settings →
+   Accessibility, so its worst case is reachable in-product rather than
+   theoretical — and the way it fails is always the same one: a card given a
+   fixed `height` so a row of cards lines up. The text reflows one line taller,
+   the box does not, and the last line is sliced in half.
+
+   There is no global CSS fix for that in this codebase, and it is worth being
+   precise about why rather than leaving a rule here that looks like one: every
+   such height is an INLINE style, inline beats the stylesheet, and the
+   `!important` needed to win would also flatten the several hundred elements
+   whose fixed height is the whole point (progress bars, the conic rings, the
+   avatar frames). A blanket override would trade a clipping bug for a
+   layout-wide one.
+
+   So this is handled at the two ends instead: `.msp-text-fit` is the opt-in
+   for a text box that must be allowed to grow, and scripts/verifyA11y.mjs
+   fails the build on the specific static signature of the bug — an inline
+   `height` on an element that also sets a `fontSize`, i.e. a box holding text
+   at a locked height. Elements whose fixed height is deliberate and hold no
+   text declare `data-fixed-height` and are skipped. */
+.msp-text-fit {
+  height: auto !important;
+  min-height: 0;
+  overflow: visible;
 }
 
 /* ── Large cursor ─────────────────────────────────────────────────────────
@@ -845,8 +1134,11 @@ body::before {
 }
 :root[data-high-contrast] body { background-image: none !important; }
 :root[data-high-contrast] body::before { display: none !important; }
-:root[data-high-contrast] *:focus-visible {
-  outline: 4px solid var(--c-blue) !important;
+/* The one place the ring gets heavier than 2px. High contrast is the setting a
+   student turns on when 2px of anything is not reaching them. */
+:root[data-high-contrast] *:focus-visible,
+:root[data-high-contrast][data-always-show-focus] *:focus {
+  outline: 4px solid var(--msp-focus-ring) !important;
   outline-offset: 3px !important;
 }
 
@@ -915,7 +1207,7 @@ body::before {
 .roadmap-rail::-webkit-scrollbar { height: 0; width: 0; display: none; }
 /* Focus has to stay obvious precisely BECAUSE the scrollbar is gone — this is
    the only affordance telling a keyboard user the rail is theirs to move. */
-.roadmap-rail:focus-visible { outline: 2px solid var(--c-violet, #8b5cf6); outline-offset: 3px; }
+.roadmap-rail:focus-visible { outline: 2px solid var(--msp-focus-ring) !important; outline-offset: 2px !important; }
 /* Text selection during a drag turns a pan into a highlight halfway through it. */
 .roadmap-rail * { -webkit-user-select: none; user-select: none; }
 

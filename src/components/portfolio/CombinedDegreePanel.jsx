@@ -615,7 +615,7 @@ export default function CombinedDegreePanel({
               <Search size={12} color={C.t4} />
               <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search institution or program"
                 aria-label="Search combined-degree programs"
-                style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', color: C.t1, font: 'inherit', fontSize: 12 }} />
+                style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', color: C.t1, font: 'inherit', fontSize: 12 }} />
             </span>
             <select value={state} onChange={e => setStateFilter(e.target.value)} aria-label="Filter by state"
               style={{ padding: '8px 12px', borderRadius: 8, background: C.surf2, border: `1px solid ${C.b1}`, color: C.t2, font: 'inherit', fontSize: 12 }}>

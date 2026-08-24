@@ -488,7 +488,7 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
         <Toggle
           id="a11y-large-targets" accent={C.green}
           label="Larger tap targets"
-          description="Grows every button, tab and checkbox to at least 44×44px — the size Apple and Google both recommend as a floor."
+          description="Grows every button, tab and checkbox to at least 56×56px. On a touchscreen you already get a 44×44 tap area on everything without turning this on — this makes the controls themselves bigger, not just the area around them."
           checked={s.largeTargets} onChange={v => set({ largeTargets: v })}
         />
         <Segmented

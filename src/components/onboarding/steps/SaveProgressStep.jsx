@@ -27,11 +27,16 @@ function NameField({ value, onChange, account, onSubmit, g }) {
           autoFocus value={value} onChange={e => onChange(e.target.value)}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
           placeholder="e.g., Alex" maxLength={40} aria-label="What should we call you?"
+          // WCAG 1.3.5. This is the student's own given name, so it carries the
+          // token for one — which is what lets a password manager, an assistive
+          // tool, or the browser itself fill it, and what lets a symbol-based
+          // AAC user get an icon for the field instead of a text label.
+          autoComplete="given-name"
           onKeyDown={e => { if (e.key === 'Enter' && value.trim()) onSubmit?.(); }}
           style={{
             width: '100%', boxSizing: 'border-box',
             padding: '16px 16px 16px 40px', borderRadius: R.md, fontSize: 16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))', fontWeight: 600,
-            background: C.inputBg, color: C.t1, fontFamily: C.FB, outline: 'none',
+            background: C.inputBg, color: C.t1, fontFamily: C.FB,
             border: `1px solid ${focused ? g.edge : C.inputBorder}`,
             transition: 'border-color .18s',
             ...(focused ? focusRing(g) : null),

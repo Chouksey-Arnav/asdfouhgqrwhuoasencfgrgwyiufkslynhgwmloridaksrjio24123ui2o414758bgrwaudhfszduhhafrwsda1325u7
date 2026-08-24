@@ -78,6 +78,29 @@ export function PasswordChecklist({ password }) {
   );
 }
 
+/**
+ * A password field that satisfies WCAG 2.2's 3.3.7 / 3.3.8.
+ *
+ * ── Paste is allowed, and that is now a conformance requirement ────────────
+ * 3.3.8 Accessible Authentication (Minimum) is new in WCAG 2.2, and blocking
+ * paste in a password field is a STRAIGHT FAILURE of it — not a warning, not a
+ * best practice. The reasoning is that requiring a user to transcribe a
+ * password by hand is a cognitive function test, and a cognitive function test
+ * is exactly what the criterion prohibits as the only route to authentication.
+ * It fails a dyslexic student, a student using a password manager, and a
+ * student with any motor impairment, and it has never once stopped an attacker
+ * — the threat model it was invented for does not exist.
+ *
+ * So there is deliberately no `onPaste`, no `onCopy`, no `onContextMenu`, and
+ * no `onDrop` handler anywhere on this input, and scripts/verifyA11y.mjs fails
+ * the build if one is ever added to a password field. The comment is here
+ * because "there is no handler" is invisible in a diff, and the next person to
+ * be asked for "paste protection" needs to find this rather than the ticket.
+ *
+ * `autoComplete` carries a real token for the same criterion: the supported
+ * alternative to typing a password is letting the password manager do it, and
+ * a manager can only do it if the field says which password it wants.
+ */
 export function PasswordField({ label = 'Password', value, onChange, placeholder = 'Enter your password', autoFocus, autoComplete = 'current-password', error }) {
   const [visible, setVisible] = useState(false);
   return (
@@ -91,13 +114,20 @@ export function PasswordField({ label = 'Password', value, onChange, placeholder
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          style={inp({ paddingRight: 40, borderColor: error ? `${C.rose}80` : undefined })}
+          style={inp({ paddingRight: 44, borderColor: error ? `${C.rose}80` : undefined })}
         />
+        {/* Show/hide is the other half of 3.3.8: being able to SEE what was
+            typed is what makes a long passphrase enterable without a manager.
+            44×44, laid out as a centered flex box around a 15px icon so the hit
+            area is the button rather than a pad grown off one corner of it.
+            The input's own paddingRight matches the button's width, so the
+            text never runs under the icon. */}
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
           aria-label={visible ? 'Hide password' : 'Show password'}
-          style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: C.t3, display: 'flex', padding: 4 }}
+          aria-pressed={visible}
+          style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: C.t3, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, padding: 0 }}
         >
           {visible ? <EyeOff size={15} /> : <Eye size={15} />}
         </button>

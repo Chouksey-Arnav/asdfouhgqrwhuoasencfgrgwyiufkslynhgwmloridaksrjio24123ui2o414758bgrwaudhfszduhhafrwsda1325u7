@@ -298,7 +298,7 @@ function LogOfficialScore({ test, accent, isMobile, onCancel, onSave }) {
   const field = {
     width: '100%', padding: '8px 12px', borderRadius: 8,
     border: `1px solid ${C.b2}`, background: C.surf2, color: C.t1,
-    fontSize: 13, fontFamily: C.FM, outline: 'none',
+    fontSize: 13, fontFamily: C.FM,
   };
   const labelStyle = { fontSize: 10.5, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 4, display: 'block' };
 

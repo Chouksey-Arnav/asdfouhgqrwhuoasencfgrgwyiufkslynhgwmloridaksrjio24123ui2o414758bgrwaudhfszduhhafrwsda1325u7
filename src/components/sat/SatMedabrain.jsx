@@ -325,7 +325,7 @@ export default function SatMedabrain({
                 <input
                   value={input} onChange={e => setInput(e.target.value)}
                   placeholder={question ? 'Ask about this question…' : 'Ask about your SAT…'} disabled={loading}
-                  style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.b2}`, borderRadius: 8, padding: '8px 12px', color: C.t1, fontSize: 13, fontFamily: C.FB, outline: 'none' }}
+                  style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.b2}`, borderRadius: 8, padding: '8px 12px', color: C.t1, fontSize: 13, fontFamily: C.FB }}
                 />
                 <button type="submit" disabled={loading || !input.trim()} aria-label="Send" style={{
                   width: 40, height: 40, borderRadius: 8, border: 'none', flexShrink: 0,

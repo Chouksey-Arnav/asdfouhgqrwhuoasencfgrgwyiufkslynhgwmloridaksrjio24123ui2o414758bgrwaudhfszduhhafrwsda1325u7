@@ -100,7 +100,7 @@ export default function LessonNotesPanel({ open, onOpenChange, lessonTitle, valu
                   style={{
                     flex: 1, resize: 'none', background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.b1}`,
                     borderRadius: 12, padding: '12px 12px', color: C.t1, fontSize: 13.5, lineHeight: 1.55,
-                    fontFamily: C.FB, outline: 'none',
+                    fontFamily: C.FB,
                   }}
                 />
                 <div style={{ fontSize: 10.5, color: C.t4, marginTop: 8 }}>Autosaves as you type · synced across your devices</div>

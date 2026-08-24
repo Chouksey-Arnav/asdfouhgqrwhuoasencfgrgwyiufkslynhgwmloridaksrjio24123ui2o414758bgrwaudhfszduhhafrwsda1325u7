@@ -638,7 +638,7 @@ function CoachMock() {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); send(input); } }}
           placeholder="Ask Medabrain anything…"
-          style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: C.t1, fontSize: 13, fontFamily: 'inherit', minWidth: 0 }}
+          style={{ flex: 1, background: 'none', border: 'none', color: C.t1, fontSize: 13, fontFamily: 'inherit', minWidth: 0 }}
         />
         <button onClick={() => send(input)} aria-label="Send" style={{ width: 34, height: 34, flexShrink: 0, borderRadius: 8, background: accentGrad(C.violet), color: C.onAccent, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
           <ArrowRight size={15} style={{ transform: 'rotate(-45deg)' }} />
@@ -923,7 +923,7 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenParents, onOp
         .lp-mobile-menu a:active, .lp-mobile-menu a:hover { background: ${C.surfHi}; color: ${C.t1}; }
 
         /* ── Range sliders (college-list scorer) — scoped to this page ──── */
-        .lp input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 5px; border-radius: 5px; background: ${C.s3}; outline: none; }
+        .lp input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 5px; border-radius: 5px; background: ${C.s3}; }
         .lp input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: ${C.blueL}; box-shadow: 0 0 10px ${tint(C.blue, 0.5)}; cursor: pointer; border: 2px solid ${C.bg}; }
         .lp input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: ${C.blueL}; box-shadow: 0 0 10px ${tint(C.blue, 0.5)}; cursor: pointer; border: 2px solid ${C.bg}; }
       `}</style>

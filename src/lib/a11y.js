@@ -32,7 +32,25 @@ export const DEFAULTS = {
   // away in Settings → Appearance.
   // 'balanced' (Balanced Dark) | 'balancedLight' | 'dark' | 'light' | 'system'
   themeMode: DEFAULT_THEME_MODE,
-  fontScale: 1,               // 0.9 – 1.5
+  // 1.15, not 1. This is the app's body-size floor, and it is set here rather
+  // than in the type ramp because of how the app is built: there are ~3,500
+  // literal `fontSize:` values in inline style objects, most of the recurring
+  // body sizes are 13 and 14, and no stylesheet rule can reach any of them.
+  // `zoom` on #root (see the note in index.css) is the one mechanism that
+  // scales an inline-styled tree uniformly — padding, icons and hit areas move
+  // with the text, so proportions hold and nothing reflows.
+  //
+  // At 1.15 the app's 14px body renders at 16.1px and its 13px secondary text
+  // at 15px. 16 is the floor below which teenagers simply stop reading on a
+  // phone; it is not a low-vision number, it is a "this looks like homework"
+  // number, and the research on it does not distinguish teens from adults.
+  // The long-form reading surfaces are set larger at source on top of this and
+  // land at 17–18px, which is where sustained reading actually wants to be.
+  //
+  // The cost is honest: ~13% less fits on screen. That is the trade, and it is
+  // the right way round for this audience. A student who wants the density
+  // back has "Small" one tap away.
+  fontScale: 1.15,            // 1 – 1.6
   highContrast: false,
   readableFont: false,
   reduceMotion: 'system',     // 'system' | 'on' | 'off'
@@ -48,12 +66,15 @@ export const DEFAULTS = {
   hideDecorative: false,      // drop the noise/glow layers entirely
 };
 
+// The ladder moved up with the default. There is no longer a step below 1:
+// 0.9 put the app's 13px secondary text at 11.7px, which is not a size anyone
+// should be able to choose for a whole interface by accident.
 export const FONT_SCALE_STEPS = [
-  { value: 0.9,  label: 'Small' },
-  { value: 1,    label: 'Default' },
-  { value: 1.1,  label: 'Large' },
-  { value: 1.25, label: 'Larger' },
-  { value: 1.5,  label: 'Largest' },
+  { value: 1,    label: 'Small' },
+  { value: 1.15, label: 'Default' },
+  { value: 1.3,  label: 'Large' },
+  { value: 1.45, label: 'Larger' },
+  { value: 1.6,  label: 'Largest' },
 ];
 
 export function loadA11y() {
@@ -106,12 +127,26 @@ export function applyA11y(settings) {
   root.style.setProperty('--msp-font-scale', String(s.fontScale));
   root.style.setProperty('--msp-line-scale', String(s.lineSpacing));
   root.style.setProperty('--msp-letter-spacing', `${s.letterSpacing}em`);
-  root.style.setProperty('--msp-tap-min', s.largeTargets ? '44px' : '0px');
+  // 56, not 44. Every touch device already gets a 44px hit area unconditionally
+  // (see the touch-target block in index.css), so this setting has to mean
+  // something more than the default or turning it on does nothing — and what a
+  // student with a tremor is asking for is a bigger DRAWN control, not a bigger
+  // invisible one.
+  root.style.setProperty('--msp-tap-min', s.largeTargets ? '56px' : '0px');
   root.style.setProperty('--msp-reading-width', s.readingWidth ? '68ch' : 'none');
 
   // Boolean/enum knobs → data attributes, so index.css can select on them.
   const flag = (name, on) => { if (on) d[name] = 'true'; else delete d[name]; };
   flag('reduceMotion', motionReduced(s));
+  // The other direction, and the reason it needs its own attribute: index.css
+  // now also collapses animation from `@media (prefers-reduced-motion: reduce)`
+  // directly, so that a student who asked the OS for less motion gets it during
+  // boot, on the landing page, and on the prerendered pages — none of which
+  // have run this function yet. A media query cannot see an in-app override, so
+  // a student whose OS says "reduce" but who has deliberately set this app's
+  // toggle to "off" would be stuck with the collapse. This attribute is what
+  // lets them out.
+  flag('motionAllowed', s.reduceMotion === 'off');
   flag('reduceTransparency', s.reduceTransparency);
   flag('largeTargets', s.largeTargets);
   flag('underlineLinks', s.underlineLinks);

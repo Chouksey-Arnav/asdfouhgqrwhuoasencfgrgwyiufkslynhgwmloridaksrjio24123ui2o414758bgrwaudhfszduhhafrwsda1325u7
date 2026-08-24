@@ -206,7 +206,6 @@ export const lit = (strength = 0.16) => `inset 0 1px 0 rgba(255,255,255,${streng
 
 /** Focus ring. Keyboard users get a real one, everywhere, in the chapter hue. */
 export const focusRing = (h) => ({
-  outline: 'none',
   boxShadow: `0 0 0 2px ${C.bg}, 0 0 0 4px ${tint(h.from, 0.55)}`,
 });
 

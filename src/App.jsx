@@ -1154,8 +1154,22 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
             <MathText text={a.exp} style={{fontSize:13,color:C.t1,lineHeight:1.75,display:'block'}}/>
           </div>
         </div>}
-        <div style={R({flexWrap:'wrap',gap:4,marginTop:16})}>
-          {answers.map((ans,i)=><button key={i} onClick={()=>setRi(i)} style={{width:28,height:28,borderRadius:4,background:ans.ok?C.green:C.rose,border:'none',cursor:'pointer',fontSize:10,color:'#fff',fontWeight:700,fontFamily:C.FM,outline:ri===i?'2px solid white':undefined,outlineOffset:2,opacity:ri===i?1:.55,transition:'opacity .15s'}}>{i+1}</button>)}
+        {/* gap 8, not 4: on a touch screen each of these chips carries a 44px
+            hit area (see the touch-target block in index.css), and at a 4px gap
+            those areas overlap enough that a thumb aiming at question 7 lands
+            on 6. 8px is the minimum separation that keeps adjacent targets
+            distinguishable. */}
+        <div style={R({flexWrap:'wrap',gap:8,marginTop:16})}>
+          {/* The selected chip is marked with a box-shadow ring rather than an
+              `outline`, because `outline` is now the focus indicator and only
+              the focus indicator. Drawing selection with the same property put
+              two different meanings on one visual — a keyboard user tabbing
+              across this grid could not tell which chip was focused and which
+              was merely being reviewed. box-shadow sits outside the box model
+              too, so nothing shifts.
+              data-fixed-height: a square chip holding one or two digits, with
+              nothing to reflow at any spacing setting. */}
+          {answers.map((ans,i)=><button key={i} data-fixed-height onClick={()=>setRi(i)} aria-label={`Question ${i+1}, ${ans.ok?'correct':'incorrect'}`} aria-current={ri===i?'true':undefined} style={{width:28,height:28,borderRadius:4,background:ans.ok?C.green:C.rose,border:'none',cursor:'pointer',fontSize:10,color:'#fff',fontWeight:700,fontFamily:C.FM,boxShadow:ri===i?`0 0 0 2px ${C.bg}, 0 0 0 4px ${C.t1}`:undefined,opacity:ri===i?1:.55,transition:'opacity .15s'}}>{i+1}</button>)}
         </div>
       </div>
     );
@@ -10160,7 +10174,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             hard-coding the sidebar width. See src/components/sat/SatToolsContext.jsx. */}
         {/* tabIndex={-1} so the skip link can move focus here; without it the
             anchor scrolls but the next Tab press starts from the top again. */}
-        <main id="msp-main" tabIndex={-1} aria-label={`${NAV.find(n=>n.id===tab)?.label||'Main'} section`} data-app-content style={{flex:1,minWidth:0,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?(navItems.length<=5?84:80):0,outline:'none'}}>
+        <main id="msp-main" tabIndex={-1} aria-label={`${NAV.find(n=>n.id===tab)?.label||'Main'} section`} data-app-content style={{flex:1,minWidth:0,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?(navItems.length<=5?84:80):0}}>
           {!isMobile && <div style={{position:'sticky',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,${navColor[tab]||accent}60,transparent)`,zIndex:5,transition:'background .3s'}}/>}
           {/* 1440px used to cap this well inside a typical 1920px laptop/monitor viewport (minus
               the 236px sidebar), leaving a large, unused gutter on both sides that only grew on
@@ -10249,7 +10263,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 onClick={e=>e.stopPropagation()}>
                 <div style={{display:'flex',alignItems:'center',gap:8,padding:'12px 16px',borderBottom:`1px solid ${C.b1}`}}>
                   <Search size={16} color={C.t3}/>
-                  <input autoFocus value={cmdQ} onChange={e=>setCmdQ(e.target.value)} onKeyDown={onCmdInputKeyDown} placeholder="Jump to Prep, Portfolio, Progress…" style={{flex:1,background:'none',border:'none',outline:'none',color:C.t1,fontSize:14,fontFamily:C.FB}}/>
+                  <input autoFocus value={cmdQ} onChange={e=>setCmdQ(e.target.value)} onKeyDown={onCmdInputKeyDown} placeholder="Jump to Prep, Portfolio, Progress…" style={{flex:1,background:'none',border:'none',color:C.t1,fontSize:14,fontFamily:C.FB}}/>
                   <span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM})}}>ESC</span>
                 </div>
                 <div style={{overflowY:'auto',padding:8}}>

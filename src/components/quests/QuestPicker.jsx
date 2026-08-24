@@ -130,7 +130,7 @@ export default function QuestPicker({
               <input
                 value={q} onChange={(e) => setQ(e.target.value)}
                 placeholder="Search quests"
-                style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: C.t1, fontSize: 12.5, fontFamily: C.FB }}
+                style={{ flex: 1, background: 'transparent', border: 'none', color: C.t1, fontSize: 12.5, fontFamily: C.FB }}
               />
             </div>
             {error && (
@@ -219,7 +219,7 @@ export default function QuestPicker({
                           rows={2}
                           style={{
                             width: '100%', marginTop: 8, padding: '8px 8px', borderRadius: 8, resize: 'vertical',
-                            background: C.s3, border: `1px solid ${C.b1}`, color: C.t1, fontSize: 12, fontFamily: C.FB, outline: 'none',
+                            background: C.s3, border: `1px solid ${C.b1}`, color: C.t1, fontSize: 12, fontFamily: C.FB,
                           }}
                         />
                       )}

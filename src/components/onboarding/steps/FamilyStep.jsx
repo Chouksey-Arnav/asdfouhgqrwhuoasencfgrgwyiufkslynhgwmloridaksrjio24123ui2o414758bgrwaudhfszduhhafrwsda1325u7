@@ -88,7 +88,7 @@ export function FamilyStep({ value, onChange, onNext, h }) {
               style={{
                 width: '100%', boxSizing: 'border-box',
                 padding: '12px 12px 12px 40px', borderRadius: R.md, fontSize: 14,
-                background: C.inputBg, color: C.t1, fontFamily: C.FB, outline: 'none',
+                background: C.inputBg, color: C.t1, fontFamily: C.FB,
                 border: `1px solid ${invalid ? C.rose : focusField === 'email' ? g.edge : C.inputBorder}`,
                 transition: 'border-color .18s',
                 ...(focusField === 'email' && !invalid ? focusRing(g) : null),

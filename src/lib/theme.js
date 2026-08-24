@@ -583,7 +583,7 @@ export const btn    = (bg=C.blueGrad,x={}) => ({ display:'inline-flex', alignIte
 boxShadow:bg===C.blueGrad?`0 3px 12px ${tint(C.blue,0.22)},inset 0 1px 0 ${C.cmp.buttonSolidTopHighlight}`:C.shadowSm, transition:CONTROL_TRANSITION, ...x });
 export const btnSm  = (bg=C.surfHi,x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:4, padding:'8px 12px', borderRadius:RADIUS.sm, border:`1px solid ${C.cmp.buttonQuietBorder}`, background:bg, color:C.cmp.buttonQuietFg, fontWeight:600, fontSize:12, fontFamily:C.FB, cursor:'pointer', transition:CONTROL_TRANSITION, ...x });
 export const btnG   = (x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:8, padding:'12px 20px', borderRadius:RADIUS.sm, border:`1px solid ${C.cmp.buttonGhostBorder}`, background:'transparent', color:C.cmp.buttonGhostFg, fontWeight:500, fontSize:13, fontFamily:C.FB, cursor:'pointer', transition:CONTROL_TRANSITION, ...x });
-export const inp    = (x={}) => ({ background:C.cmp.inputBg, border:`1px solid ${C.cmp.inputBorder}`, borderRadius:RADIUS.sm, padding:'12px 16px', color:C.cmp.inputFg, fontSize:13, fontFamily:C.FB, outline:'none', width:'100%', transition:tr(['border-color','box-shadow'], DUR.focus), ...x });
+export const inp    = (x={}) => ({ background:C.cmp.inputBg, border:`1px solid ${C.cmp.inputBorder}`, borderRadius:RADIUS.sm, padding:'12px 16px', color:C.cmp.inputFg, fontSize:13, fontFamily:C.FB, width:'100%', transition:tr(['border-color','box-shadow'], DUR.focus), ...x });
 /**
  * The eyebrow label — the small line that names a section above its heading.
  *
