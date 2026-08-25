@@ -18,9 +18,10 @@ const container = document.getElementById('root');
 // the shell and a mounting app are both in the DOM.
 container?.querySelector('#seo-shell')?.remove();
 
-// Temporary site-wide downtime notice — remove this early return once the
-// app is back up to restore normal rendering.
-const MAINTENANCE_MODE = true;
+// Site-wide "down for maintenance" switch. Flip to true to show
+// MaintenanceNotice instead of the app; false to run the app normally.
+// To turn the maintenance page on/off, just flip this boolean.
+const MAINTENANCE_MODE = false;
 
 ReactDOM.createRoot(container).render(
   <React.StrictMode>
