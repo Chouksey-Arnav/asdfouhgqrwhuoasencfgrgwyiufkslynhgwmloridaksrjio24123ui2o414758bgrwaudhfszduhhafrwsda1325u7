@@ -76,7 +76,8 @@
     "verify:health-portfolio": "node scripts/verifyHealthPortfolio.mjs",
     "verify:roadmap-e2e": "node scripts/verifyRoadmapE2E.mjs",
     "verify:a11y": "node scripts/verifyA11y.mjs",
-    "verify:payload": "node scripts/verifyPayload.mjs"
+    "verify:payload": "node scripts/verifyPayload.mjs",
+    "verify:next-three": "node scripts/verifyNextThree.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.1",

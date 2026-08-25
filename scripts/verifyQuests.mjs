@@ -330,7 +330,18 @@ section('Quests are everywhere they claim to be');
 assert("'quests' is a real Progress sub-view id", SUBVIEWS.progress.ids.includes('quests'));
 assert('...and PROGRESS_SUBNAV renders it', /\{id:'quests',ic:Swords,label:'Quests'/.test(app));
 assert('...and App.jsx mounts the board for it', /progressView==='quests'&&\(?\s*<QuestBoard/.test(app));
-assert('Home carries the quest card', /<QuestHomeCard/.test(app));
+// Home deliberately no longer carries the quest card.
+//
+// Quests pay XP, and the rebuilt student dashboard is built on the opposite framing: every module
+// on it states progress toward something real and legible outside the app ("40 of 100 clinical
+// hours", "3 of 5 milestones"), because points and badges are competence signals and the research
+// on gamification is fairly consistent that it works through autonomy and relatedness instead.
+//
+// The quest system is untouched and lives in full on Progress ▸ Quests, which the two assertions
+// above pin down. What changed is that it no longer competes for the top of the dashboard.
+assert('Home does not carry the quest card', !/<QuestHomeCard/.test(app));
+assert('the quest board is still mounted on its own Progress sub-view',
+  /progressView==='quests'&&\(?\s*<QuestBoard/.test(app));
 assert('the completion takeover is mounted at the app root, not inside a tab',
   app.indexOf('<QuestCompleteOverlay') > app.indexOf('const tRenders='));
 
@@ -569,7 +580,20 @@ assert('the set bonus is worth more than any single quest in it',
 }
 
 section('Daily quests are wired into the app');
-assert('Home carries the daily rail', /<DailyQuestRail\n?\s+day=\{dailyDay\}/.test(app));
+// The daily rail is no longer on Home, and this one is not a framing preference — it is a direct
+// contradiction the rebuild had to resolve.
+//
+// The rail is a three-item list of things to do today. The dashboard's first module is also a
+// three-item list of things to do, ranked by urgency × impact across deadlines, hours, lessons,
+// flashcards and portfolio gaps (src/lib/nextThree.js). Two different three-item lists at the top
+// of the same screen, disagreeing about what the three things are, is precisely the "open the app
+// and wonder what to do" problem that module exists to end. One of them had to go, and the one
+// that survives is the one that can see a deadline.
+//
+// The rail is unchanged and still renders on the quest board and the tab strips, asserted below.
+assert('Home does not carry the daily rail', !/<DailyQuestRail\n?\s+day=\{dailyDay\}/.test(app));
+assert('the dashboard offers exactly one ranked list of what to do next',
+  (app.match(/<NextThreeCard/g) || []).length === 1);
 assert('the board carries it too', /day=\{dailyDay\}/.test(app));
 assert('the tab strips carry the compact form', /compact day=\{dailyDay\} surface=/.test(app));
 assert('there is exactly one daily evaluation in the app',

@@ -43,7 +43,6 @@ export function buildParentDigest(summary) {
 
   const days7 = effort.activeDaysLast7 || 0;
   const days28 = effort.activeDaysLast28 || 0;
-  const streak = effort.streakDays || 0;
   const everStarted = !!effort.lastActiveAt || !!quizzes.taken || !!work.lessonsStarted;
 
   // ── Never started ────────────────────────────────────────────────────────
@@ -94,12 +93,14 @@ export function buildParentDigest(summary) {
   }
 
   // ── Strong ───────────────────────────────────────────────────────────────
-  if (days7 >= 4 || streak >= 7) {
-    const streakLine = streak >= 3 ? ` That's a ${streak}-day run.` : '';
+  // Judged on days studied in the last week and month, never on a consecutive-day count. Four
+  // days a week is the habit worth naming; whether those four happened to be contiguous says
+  // more about a student's sports season or shift schedule than about their commitment.
+  if (days7 >= 4) {
     return {
       tone: TONE.strong,
       headline: 'Consistent week',
-      body: `${activityLine}${streakLine}${outcomeLine ? ` ${outcomeLine}` : ''}`,
+      body: `${activityLine}${outcomeLine ? ` ${outcomeLine}` : ''}`,
       // Specific praise beats general praise by a wide margin, and it is the one thing on this
       // page a parent can act on that has no downside for the student.
       suggestion: quizzes.trend > 0

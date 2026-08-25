@@ -311,20 +311,24 @@ function checkDerivation() {
   const at = (y, m, d) => Date.UTC(y, m, d);
   const build = (snapshot, now) => buildParentSummary({ student: { id: 'u', name: 'S' }, snapshot, now });
 
-  // A streak that ends yesterday still counts: the app's own streak logic has the same grace, and a
-  // dashboard that disagreed with the student's screen at 00:01 would be a support ticket every
-  // morning.
-  const yesterdayOnly = build({ studyDays: ['2026-03-09', '2026-03-08'] }, at(2026, 2, 10));
-  assert('a streak ending yesterday still counts', yesterdayOnly.effort.streakDays === 2,
-    `got ${yesterdayOnly.effort.streakDays}`);
-
-  const stale = build({ studyDays: ['2026-03-01', '2026-02-28'] }, at(2026, 2, 10));
-  assert('a streak that ended a week ago is zero', stale.effort.streakDays === 0,
-    `got ${stale.effort.streakDays}`);
-
-  const gap = build({ studyDays: ['2026-03-10', '2026-03-09', '2026-03-07'] }, at(2026, 2, 10));
-  assert('a gap breaks the streak rather than being counted through', gap.effort.streakDays === 2,
-    `got ${gap.effort.streakDays}`);
+  // The summary no longer derives a consecutive-day streak at all, and these three assertions —
+  // which used to pin down its grace period and its gap handling — are now the gate that keeps it
+  // gone.
+  //
+  // The argument is in api/_lib/parentSummary.js, and it is not primarily about clutter. A streak
+  // handed to a parent is a compliance number someone else is grading the student against, and a
+  // broken one turns into a conversation about discipline rather than about progress. It is also
+  // the wrong measure: consecutive days reward students with free evenings and penalize students
+  // with jobs, caregiving duties or a heavy sports season. The 56-day calendar, asserted just
+  // below, carries strictly more information and none of the framing.
+  const anyShape = build({ studyDays: ['2026-03-09', '2026-03-08'] }, at(2026, 2, 10));
+  assert('the parent summary derives no streak at all',
+    !('streakDays' in anyShape.effort),
+    `effort still carries: ${Object.keys(anyShape.effort).join(', ')}`);
+  assert('...and reports active days instead, which a gap correctly reduces',
+    anyShape.effort.activeDaysLast7 === 2, `got ${anyShape.effort.activeDaysLast7}`);
+  assert('...counted over a real window rather than a run',
+    build({ studyDays: ['2026-03-10', '2026-03-09', '2026-03-07'] }, at(2026, 2, 10)).effort.activeDaysLast7 === 3);
 
   const calendar = build({ studyDays: ['2026-03-10'] }, at(2026, 2, 10));
   assert('the calendar is 56 days ending today', calendar.effort.calendar.length === 56
@@ -375,7 +379,8 @@ function checkDerivation() {
     now: at(2026, 2, 10),
   });
   assert('a malformed snapshot degrades instead of throwing',
-    corrupt.effort.xp === 0 && corrupt.coursework.lessonsStarted === 0 && corrupt.effort.streakDays === 0);
+    corrupt.effort.xp === 0 && corrupt.coursework.lessonsStarted === 0
+    && corrupt.effort.activeDaysLast7 === 0 && corrupt.effort.calendar.length === 56);
 }
 
 // ── 7. The digest says only what it is allowed to say ───────────────────────

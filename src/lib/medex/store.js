@@ -24,6 +24,12 @@ const MIRROR_PREFIX = 'msp_medex_seal:';
 
 let cachedRows = null;
 let sealInFlight = null;
+// The last non-conflict seal failure, if any. Exposed so a surface that depends on sealed history
+// can say "this week's score hasn't been recorded" instead of silently rendering an empty chart.
+let lastSealError = null;
+
+/** The last real (non-409) seal failure, or null if the most recent seal attempt was healthy. */
+export function getLastSealError() { return lastSealError; }
 
 /** Newest last — every consumer here and in the chart wants chronological order. */
 const sortRows = (rows) => [...(rows || [])].sort((a, b) => compareWeekKeys(a.week_key, b.week_key));
@@ -88,10 +94,20 @@ export async function sealIfNeeded({ rows, live, benchmark = null, userId = null
   try {
     const created = await sealInFlight;
     cachedRows = sortRows([...(rows || []).filter(r => r.week_key !== plan.weekKey), created]);
-  } catch {
-    // Almost always the unique index doing its job — another tab or another
-    // device sealed this week first. Their row is the seal; re-read rather than
-    // retrying, so the two devices converge on one number instead of racing.
+    lastSealError = null;
+  } catch (err) {
+    // A 409 is the unique index doing its job — another tab or another device sealed this week
+    // first. Their row is the seal; re-read rather than retrying, so the two devices converge on
+    // one number instead of racing.
+    //
+    // Anything else is a real failure, and it must not be swallowed. This block used to catch
+    // everything and re-read, which meant the seal endpoint returning 500 on every single call
+    // (it did, for months — medex_scores had no WRITABLE entry) was indistinguishable from the
+    // happy "someone beat us to it" path. The table stayed empty and nothing ever said so.
+    if (err?.status !== 409) {
+      console.error('medex: weekly seal failed', err);
+      lastSealError = err;
+    }
     const fresh = await listItems('medex_scores').catch(() => null);
     if (fresh) cachedRows = sortRows(fresh);
   } finally {
@@ -148,6 +164,7 @@ export function writeMirror(settled, userId) {
 export function resetMedexCache(userId = null) {
   cachedRows = null;
   sealInFlight = null;
+  lastSealError = null;
   if (!userId) return;
   try { localStorage.removeItem(MIRROR_PREFIX + userId); } catch { /* nothing to do */ }
 }

@@ -12,9 +12,9 @@
 // the habit is forming, which is the only question they were really asking.
 import React from 'react';
 import {
-  Flame, TrendingUp, TrendingDown, Minus, Award, BookOpenCheck, Target, CalendarDays, Sparkles, Brain,
+  TrendingUp, TrendingDown, Minus, Award, BookOpenCheck, Target, CalendarDays, Sparkles, Brain,
 } from 'lucide-react';
-import { C, glass, glass2, autoGrid, CC, R, pill, tint } from '../../lib/theme';
+import { C, glass, glass2, autoGrid, CC, R, tint } from '../../lib/theme';
 import { buildParentDigest } from '../../lib/parentDigest';
 
 const fmtDate = (value) => {
@@ -154,11 +154,9 @@ export default function ProgressSummary({ summary }) {
               {effort?.lastActiveAt ? `Last studied ${fmtDate(effort.lastActiveAt)}` : 'Not started yet'}
             </div>
           </div>
-          {effort?.streakDays > 0 && (
-            <span style={pill(tint(C.orange, 0.14), C.orangeL)}>
-              <Flame size={12} style={{ marginRight: 4 }} /> {effort.streakDays}-day streak
-            </span>
-          )}
+          {/* Deliberately no streak chip — the header comment on this file already made the
+              argument ("14-day streak" and "studied every day for two weeks after three weeks
+              off" are the same number) and the calendar below is what honors it. */}
         </div>
 
         {neverStarted ? (

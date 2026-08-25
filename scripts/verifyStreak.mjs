@@ -307,7 +307,25 @@ assert("'streak' is a real Progress sub-view id", SUBVIEWS.progress.ids.includes
 assert('...and PROGRESS_SUBNAV renders it', /\{id:'streak',ic:Flame,label:'Streak'/.test(app));
 assert('...and App.jsx actually mounts the panel for it',
   /progressView==='streak'&&\(?\s*<StreakPanel/.test(app));
-assert('Home carries the streak card', /<StreakHomeCard/.test(app));
+// Home deliberately does NOT carry the streak card any more.
+//
+// This assertion used to require it. The student dashboard was rebuilt around six modules that
+// measure what a student is actually building — hours against a benchmark, a track completed, a
+// certification earned — and a consecutive-day counter competing with those at the top of Home was
+// the loudest thing on the screen while being the least informative thing on it.
+//
+// The streak still exists, still accrues, and still has its own Progress sub-view with the full
+// calendar, league and freeze economy. On the dashboard it appears exactly once: one line at the
+// bottom of the achievements module, under the substance milestones, with a sentence saying what it
+// is and is not. The reason it is small rather than absent is that consecutive-day counting rewards
+// students with free evenings and penalizes students with jobs, caregiving duties or a heavy sports
+// season — and that is disproportionately the students this product exists to serve.
+//
+// So the gate now runs the other way: the card must not come back to Home.
+assert('Home does not carry the streak card', !/<StreakHomeCard/.test(app));
+assert('the streak still has its full panel on the Progress tab', /<StreakPanel/.test(app));
+assert('the dashboard achievements module is where the streak surfaces',
+  /<SubstanceAchievements/.test(app) && /streak=\{streak\}/.test(app));
 assert('the pathway carries the mid-session encouragement strip', /<PathwayStreakStrip/.test(app));
 assert('the lesson-complete takeover is mounted at the app root, not inside a tab',
   app.indexOf('<LessonCompleteOverlay') > app.indexOf('const tRenders='));
@@ -555,8 +573,13 @@ assert('the repair debits XP before bridging, and refunds on refusal',
   /const doStreakRepair\s*=\s*useCallback/.test(app) && /refund — another device repaired first/.test(app));
 assert('the Streak tab carries the repair offer, the freeze card and the check-in calendar',
   /repair=\{streakRepair\}/.test(app) && /freezeHistory=\{freezeHistory\}/.test(app) && /checkin=\{checkinState\}/.test(app));
+// Counted instances used to stand in for "the header has one" — it wanted two, the hero's and the
+// header's. The hero no longer carries streak furniture of any kind (see above), so the assertion
+// now checks the thing it actually meant: the header renders a boost chip. A boost is genuinely
+// counting down and ends sooner than today does, and a multiplier applied silently to a number the
+// student was going to earn anyway changes no behavior at all — seeing it run is the mechanic.
 assert('a live boost is visible in the header rather than applied silently',
-  (app.match(/<BoostChip/g) || []).length >= 2);
+  /<BoostChip boosts=\{boosts\}[^/]*\bm\b\s*\/>/.test(app));
 
 for (const table of ['boosts']) {
   assert(`${table} is created by a schema version`, new RegExp(`${table}:\\s*'`).test(db));
