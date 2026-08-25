@@ -26,6 +26,23 @@ export const ACHIEVEMENTS = {
   recommender_added:{ key:'recommender_added', name:'Lining It Up', desc:'Add your first recommender', icon:'UserCheck', xp:75 },
   mmi_practiced:{ key:'mmi_practiced', name:'Format Familiar', desc:'Try an MMI or CASPer practice scenario', icon:'Sparkles', xp:75 },
 
+  // ── Substance milestones ───────────────────────────────────────────────────
+  // The dashboard's achievements module weights these above everything else in
+  // this file, and they share one property that nothing above them does: each
+  // one names a thing that is true about the student OUTSIDE this app. "First
+  // shadowing hours logged" is a sentence an admissions officer understands.
+  // "Quiz Champion" is a sentence only this app understands.
+  //
+  // That is the whole selection rule. The research on gamification is fairly
+  // consistent that it works through autonomy and relatedness and barely moves
+  // perceived competence — and points and badges are competence signals, which
+  // is the one channel they do not reach through. So these are framed as
+  // progress toward something real rather than as trophies, and the dashboard
+  // renders them with their denominators rather than as icons.
+  first_shadowing:    { key:'first_shadowing',    name:'First shadowing hours logged', desc:'Log any shadowing hours — observing a clinician at work', icon:'Stethoscope', xp:100, substance:true },
+  first_certification:{ key:'first_certification',name:'First certification earned',   desc:'Add a certification you have actually earned',            icon:'ShieldCheck', xp:150, substance:true },
+  cards_100_retained: { key:'cards_100_retained', name:'100 cards retained',           desc:'Hold 100 flashcards at strong retention — retained, not just reviewed', icon:'Layers3', xp:200, substance:true },
+
   // Fills in milestone gaps in the original set (e.g. nothing between 7- and
   // 30-day streaks, or between 10 quizzes and mastery-based achievements) so
   // long-term users keep hitting new badges instead of going quiet after the
@@ -63,7 +80,7 @@ export const ACHIEVEMENTS = {
 export const PATHWAY_KEYS = ['exploring','physician','nursing','physicianAssistant','pharmacy','dentistry','biomedResearch','physicalOccupTherapy','publicHealth','healthAdmin'];
 
 /** Check which new achievements should be unlocked given current state */
-export function checkAchievements({ level, quizCount, perfectScores, streak, cardReviews, mastery, aiChats, interviewSessions=0, colleges=0, essays=0, activities=0, deadlines=0, resumeBuilt=false, clinicalHours=0, recommenders=0, mmiCasperSessions=0, pathwayCompletions=new Set(), unlocked }) {
+export function checkAchievements({ level, quizCount, perfectScores, streak, cardReviews, mastery, aiChats, interviewSessions=0, colleges=0, essays=0, activities=0, deadlines=0, resumeBuilt=false, clinicalHours=0, recommenders=0, mmiCasperSessions=0, pathwayCompletions=new Set(), shadowingHours=0, certifications=0, cardsRetained=0, unlocked }) {
   const toUnlock = [];
   const check = (key, condition) => { if (condition && !unlocked.has(key)) toUnlock.push(ACHIEVEMENTS[key]); };
 
@@ -88,6 +105,15 @@ export function checkAchievements({ level, quizCount, perfectScores, streak, car
   check('clinical_hours_50', clinicalHours >= 50);
   check('recommender_added', recommenders >= 1);
   check('mmi_practiced', mmiCasperSessions >= 1);
+
+  // Substance milestones. `cardsRetained` counts cards whose FSRS retainability
+  // is still strong, not cards that have been seen — a student who reviewed 100
+  // cards once in March and has forgotten them has not retained 100 cards, and
+  // an achievement that said otherwise would be the exact kind of hollow
+  // competence signal this set exists to avoid.
+  check('first_shadowing',     shadowingHours > 0);
+  check('first_certification', certifications >= 1);
+  check('cards_100_retained',  cardsRetained >= 100);
 
   check('quiz_50',      quizCount >= 50);
   check('perfect_5',    perfectScores >= 5);

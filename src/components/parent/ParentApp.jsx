@@ -30,10 +30,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast';
 import {
   Loader2, LayoutDashboard, Settings, LogOut, RefreshCw, Users, Brain, CalendarDays,
-  UserCog, ChevronRight, ShieldCheck, Flame, ArrowLeft, Link2, Pencil, LifeBuoy, Eye, EyeOff,
+  UserCog, ChevronRight, ShieldCheck, ArrowLeft, Link2, Pencil, LifeBuoy, Eye, EyeOff,
   Mail, KeyRound, X, WifiOff, MessageSquare, Swords, Scale,
 } from 'lucide-react';
-import { C, glass, glass2, btn, btnG, CC, R, autoGrid, pill, tint, storeMode, onTint } from '../../lib/theme';
+import { C, glass, glass2, btn, btnG, CC, R, autoGrid, tint, storeMode, onTint } from '../../lib/theme';
 import { loadA11y, applyA11y } from '../../lib/a11y';
 import * as AuthAPI from '../../lib/authApi';
 import * as ParentAPI from '../../lib/parentApi';
@@ -300,11 +300,9 @@ function StudentCard({ entry, onOpen, href }) {
             {effort.lastActiveAt ? `Last studied ${fmtDate(effort.lastActiveAt)}` : 'Not started yet'}
           </div>
         </div>
-        {effort.streakDays > 0 && (
-          <span style={pill(tint(C.orange, 0.14), C.orangeL)}>
-            <Flame size={12} style={{ marginRight: 4 }} /> {effort.streakDays} days
-          </span>
-        )}
+        {/* No consecutive-day chip here. The eight-week calendar further down this page shows the
+            shape of the gaps, which is the thing worth knowing; a streak number collapses it into
+            a score a parent can grade their child against. See api/_lib/parentSummary.js. */}
         <ChevronRight size={16} color={C.t3} />
       </div>
 

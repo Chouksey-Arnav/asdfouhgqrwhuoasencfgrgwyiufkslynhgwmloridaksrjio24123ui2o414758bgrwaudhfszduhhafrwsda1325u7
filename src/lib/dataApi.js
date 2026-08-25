@@ -13,7 +13,17 @@ async function req(path, options = {}) {
     },
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'Request failed.');
+  if (!res.ok) {
+    // `status` and `reason` ride along on the error so callers can tell a 409 (the unique index
+    // rejecting a row another device already wrote — expected, converge by re-reading) apart from
+    // a 500 (something is actually broken and a human needs to know). Without that distinction a
+    // caller's only honest option is to treat every failure as benign, which is precisely how the
+    // MedEx seal endpoint stayed broken and silent — see api/data/[resource].js.
+    const err = new Error(data.error || 'Request failed.');
+    err.status = res.status;
+    err.reason = data.reason || null;
+    throw err;
+  }
   return data;
 }
 

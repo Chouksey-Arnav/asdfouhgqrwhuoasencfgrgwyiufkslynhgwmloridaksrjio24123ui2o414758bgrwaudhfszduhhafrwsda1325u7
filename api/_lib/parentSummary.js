@@ -48,25 +48,21 @@ function activityCalendar(studyDays, days = 56, now = Date.now()) {
   return out;
 }
 
-/**
- * Current consecutive-day streak ending today or yesterday.
- *
- * Yesterday counts because a streak should not read as broken at 00:01 for a student who studied
- * at 23:00 — the app's own streak logic has the same grace and a parent dashboard that disagreed
- * with the student's screen would be a support ticket every morning.
- */
-function currentStreak(studyDays, now = Date.now()) {
-  const active = new Set(Array.isArray(studyDays) ? studyDays : []);
-  if (!active.size) return 0;
-  let cursor = now;
-  if (!active.has(dayKey(cursor))) {
-    cursor -= DAY_MS;
-    if (!active.has(dayKey(cursor))) return 0;
-  }
-  let streak = 0;
-  while (active.has(dayKey(cursor))) { streak += 1; cursor -= DAY_MS; }
-  return streak;
-}
+// A consecutive-day count is deliberately NOT computed or sent here.
+//
+// The comment above activityCalendar() already had the argument right — a parent reading "12-day
+// streak" learns less than a parent seeing the gaps — but the field was sent anyway, and both
+// parent surfaces rendered it as a chip next to the calendar that was supposed to replace it.
+//
+// The deeper reason is about who a streak measures. Consecutive days reward students with free
+// evenings and penalize students with jobs, caregiving duties, or a heavy sports season, which is
+// disproportionately the students this product exists to serve. On the student's own dashboard
+// that is a small self-directed nudge they can take or leave. Handed to a parent it becomes a
+// compliance number someone else is grading them against, and a broken streak turns into a
+// conversation about discipline rather than about progress.
+//
+// So the calendar goes to the parent and the streak does not. scripts/verifyNextThree.mjs fails
+// the build if a streak field reappears on any parent surface.
 
 /** Reviews in the last `days` days, from the date-keyed counts the snapshot already aggregates. */
 function reviewsSince(reviewCountsByDate, days, now = Date.now()) {
@@ -157,7 +153,8 @@ export function buildParentSummary({ student, snapshot, sourceUpdatedAt = null, 
     effort: {
       xp,
       level: levelFor(xp),
-      streakDays: currentStreak(studyDays, now),
+      // No streakDays — see the note above activityCalendar's neighbour. The 56-day calendar
+      // below carries strictly more information and none of the compliance framing.
       activeDaysLast7: activeLast7,
       activeDaysLast28: activeLast28,
       calendar,

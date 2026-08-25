@@ -86,7 +86,7 @@ import {
   // short timed multipliers the check-in calendar hands out; repair is what the app says
   // the morning after a long streak actually breaks. See src/lib/streak.js for why each
   // exists and what it deliberately does NOT do.
-  leagueFor, leagueProgress, streakBonusLabel, xpMultiplier, activeBoosts, BOOST_KINDS,
+  leagueProgress, streakBonusLabel, xpMultiplier, activeBoosts, BOOST_KINDS,
   freezeCost, canBuyFreeze, repairOffer, repairCost, freezeCapFor,
 } from './lib/streak';
 import { academicFallYear, buildTimeline, summarizeTimelineForPrompt } from './lib/timeline';
@@ -119,17 +119,14 @@ import FinancialAidPanel from './components/FinancialAidPanel';
 import FinancialAidHomeCard from './components/FinancialAidHomeCard';
 import StreakHeatmap from './components/StreakHeatmap';
 import StreakPanel from './components/streak/StreakPanel';
-import StreakHomeCard from './components/streak/StreakHomeCard';
 import PathwayStreakStrip from './components/streak/PathwayStreakStrip';
 import LessonCompleteOverlay from './components/streak/LessonCompleteOverlay';
 import BoostChip from './components/streak/BoostChip';
-import { CheckInHomeCard } from './components/streak/CheckInCalendar';
 // ── Quests ──────────────────────────────────────────────────────────────────
 // The long-horizon commitment layer (src/data/questCatalog.js + src/lib/quests.js). Deliberately
 // threaded through five surfaces rather than parked in one tab: a quest that is only visible on
 // the screen you go to when you remember quests exist is a quest that gets forgotten in week two.
 import QuestBoard from './components/quests/QuestBoard';
-import QuestHomeCard from './components/quests/QuestHomeCard';
 import QuestStrip from './components/quests/QuestStrip';
 import QuestCompleteOverlay from './components/quests/QuestCompleteOverlay';
 import DailyQuestRail from './components/quests/DailyQuestRail';
@@ -157,7 +154,7 @@ import RewardChest from './components/RewardChest';
 import RecommendersPanel from './components/RecommendersPanel';
 // Milestones is the merge of the old Deadlines and Timeline tabs — one dated surface that both
 // generates the admissions calendar and edits the student's own dates. See PortfolioMilestones.jsx.
-import PortfolioMilestones, { TimelineNextCard, useDeadlines } from './components/PortfolioMilestones';
+import PortfolioMilestones, { useDeadlines } from './components/PortfolioMilestones';
 import PortfolioMedabrain from './components/PortfolioMedabrain';
 import PrepMedabrain from './components/PrepMedabrain';
 import HighlightableArticle from './components/HighlightableArticle';
@@ -194,6 +191,17 @@ import PlansTab, { fetchPortfolio as fetchPlanPortfolio } from './components/Pla
 import RoadmapTab from './components/roadmap/RoadmapTab';
 import RoadmapHomeCard from './components/roadmap/RoadmapHomeCard';
 import PlanTaskStrip from './components/ui/PlanTaskStrip';
+// ── The student dashboard ────────────────────────────────────────────────────
+// Six modules, in a fixed order, rebuilt around the question a student actually
+// opens the app with. See src/components/dashboard/ for the reasoning behind
+// each one and src/lib/nextThree.js for the ranking that drives the first.
+import NextThreeCard from './components/dashboard/NextThreeCard';
+import FourYearArc from './components/dashboard/FourYearArc';
+import HoursRings from './components/dashboard/HoursRings';
+import DeadlineHorizon from './components/dashboard/DeadlineHorizon';
+import ProgressDetail from './components/dashboard/ProgressDetail';
+import SubstanceAchievements from './components/dashboard/SubstanceAchievements';
+import { nextThree } from './lib/nextThree';
 import PortfolioPlanWeek from './components/PortfolioPlanWeek';
 import WeeklyGoalsBoard from './components/portfolio/WeeklyGoalsBoard';
 import TrackedPanel from './components/portfolio/TrackedPanel';
@@ -1542,6 +1550,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [portSnapLoading,setPortSnapLoading]= useState(false);
   const [catPerf,  setCatPerf_] = useState({});
   const [achiev,   setAchiev_]  = useState(new Set());
+  // The substance milestone earned most recently in THIS session, which is what the dashboard's
+  // achievements module flashes. Session-scoped on purpose: a milestone earned last week should
+  // not re-celebrate on every cold open, and persisting it would do exactly that.
+  const [lastEarnedAchievement, setLastEarnedAchievement] = useState(null);
   const [streak,   setStreak]   = useState(0);
   const [comebackGap, setComebackGap] = useState(null); // days since last study day (returning-user nudge), null = n/a
   const [streakFreezes, setStreakFreezes] = useState(0);
@@ -3459,6 +3471,56 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     return {quizIds,lessonIds,deckNames,articleTitles,hasAny:quizIds.size>0||lessonIds.size>0||deckNames.size>0||articleTitles.size>0};
   },[user?.masterPlan]);
 
+  // ═══ STUDENT DASHBOARD ═══════════════════════════════════════════════════════
+  // Everything the six Home modules read, derived once here rather than inside
+  // tHome() — the dashboard is the highest-traffic screen in the app and these
+  // are the same rows the Portfolio, the coach and the Admissions Calculator
+  // already reason over, so recomputing them per render would be both slower and
+  // a second opinion about the student's own numbers.
+
+  /**
+   * Hours by the four categories the pathway benchmarks are stated in.
+   *
+   * Shadowing and clinical are split on `experience_kind`, matching the split
+   * src/lib/admissions/intake.js already makes, so the rings and the Calculator
+   * can never disagree about how many shadowing hours a student has. Volunteer
+   * and leadership come from the activities list, where hours are stored as a
+   * per-week rate times weeks per year rather than as a total.
+   */
+  const dashboardHours = useMemo(()=>{
+    const clinical = portSnapshot?.clinical || clinicalHoursEntries || [];
+    const acts = portSnapshot?.activities || portActivities || [];
+    const sum = (rows,pick)=>rows.reduce((s,r)=>s+(Number(pick(r))||0),0);
+    const actHours = (a)=>(Number(a?.hours_per_week)||0)*(Number(a?.weeks_per_year)||0);
+    return {
+      shadowing: sum(clinical.filter(r=>r?.experience_kind==='shadowing'), r=>r.hours),
+      // Everything that is not explicitly shadowing is hands-on exposure —
+      // the same default intake.js uses, since a row logged before the kind
+      // field existed is far more often hands-on than observation.
+      clinical:  sum(clinical.filter(r=>r?.experience_kind!=='shadowing'), r=>r.hours),
+      volunteer: sum(acts.filter(a=>/volunteer|service|community/i.test(a?.activity_type||'')), actHours),
+      leadership: sum(acts.filter(a=>a?.leadership_role), actHours),
+    };
+  },[portSnapshot,clinicalHoursEntries,portActivities]);
+
+  /**
+   * Cards RETAINED, not cards reviewed.
+   *
+   * A student who reviewed two hundred cards in March and has forgotten them
+   * has not retained two hundred cards, and the substance milestone that claims
+   * otherwise would be exactly the hollow competence signal that module exists
+   * to avoid. 80% retrievability is the threshold below which FSRS considers a
+   * card at real risk of being lost.
+   */
+  const cardsRetained = useMemo(
+    ()=>allCards.filter(c=>{ const r=getRetainability(c); return r!==null && r>=80; }).length,
+    [allCards]
+  );
+
+  // `nextThreeItems` — the ranked three — is built further down, immediately
+  // after `dueDeckCount`, because it reads the deck counts and a `const` cannot
+  // be referenced above its own declaration.
+
   // Medabrain Quiz Recommendations — ranked #1..#N picks driven by real performance
   // data (weak categories, enrolled courses, pathway). See lib/recommend.js.
   const catAverages = useMemo(()=>Object.fromEntries(cats3.map((c,i)=>[c,secAvgs[i]])),[secAvgs]);
@@ -3552,12 +3614,22 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       activities: extra.activities??portActivities.length, deadlines: extra.deadlines??(upcomingDeadlines||[]).length, resumeBuilt: extra.resumeBuilt??appCounts.resume,
       clinicalHours: extra.clinicalHours??clinicalHoursTotal, recommenders: extra.recommenders??recommendersCount, mmiCasperSessions: extra.mmiCasperSessions??mmiCasperCount,
       pathwayCompletions,
+      // The three substance milestones the dashboard weights above everything else.
+      // `cardsRetained` is deliberately not `reviews` — see achievements.js for why
+      // "reviewed a hundred cards once" is not "retained a hundred cards".
+      shadowingHours: extra.shadowingHours??dashboardHours.shadowing,
+      certifications: extra.certifications??skillsCount,
+      cardsRetained: extra.cardsRetained??cardsRetained,
       unlocked,
     });
     for(const achievement of toUnlock){
       const isNew = await DB.unlockAchievement(achievement.key);
       if(isNew){
         setAchiev_(prev=>new Set([...prev,achievement.key]));
+        // Drives the dashboard's one celebration: a 200ms scale-and-fade on the row that just
+        // landed, and only on a substance milestone. Everything else unlocks silently, because an
+        // animation that fires on every save teaches the student it means nothing.
+        if(achievement.substance) setLastEarnedAchievement(achievement.key);
         const bonusXP=achievement.xp||0;
         // `achievements` itself is already deduped cross-device (unlocked once, merged by key —
         // see db.js), but this XP grant runs the instant THIS device notices the condition is
@@ -3575,7 +3647,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         showAchievementToast(achievement);
       }
     }
-  },[saveUser,interviewCount,appCounts,upcomingDeadlines,portActivities,clinicalHoursTotal,recommendersCount,mmiCasperCount]);
+  },[saveUser,interviewCount,appCounts,upcomingDeadlines,portActivities,clinicalHoursTotal,recommendersCount,mmiCasperCount,dashboardHours,skillsCount,cardsRetained]);
 
   // ── Level-up checker ─────────────────────────────────────────────────────────
   const prevLvlRef = useRef(1);
@@ -3741,7 +3813,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const bestStreakEver = useMemo(()=>Math.max(streak,longestStreak(metDates,bridgedDates)),[streak,metDates,bridgedDates]);
   const nextStreakReward = useMemo(()=>nextMilestone(streak),[streak]);
   // The streak's identity, and the two numbers it is actually worth.
-  const streakLeague   = useMemo(()=>leagueFor(streak),[streak]);
   const xpMult         = useMemo(()=>xpMultiplier({streak,boosts}),[streak,boosts]);
   const liveBoosts     = useMemo(()=>activeBoosts(boosts),[boosts]);
   // Keep the award-site ref in step with the derived multiplier. See awardBoostedXP above for
@@ -5538,6 +5609,38 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // How many decks have at least one card due — surfaced instead of the raw due-card count so
   // the number stays small and approachable no matter how large the underlying library grows.
   const dueDeckCount = useMemo(()=>allDecksList.filter(d=>getDueCards(d.cards).length>0).length,[allDecksList]);
+
+  /**
+   * The three things — the dashboard's first and most prominent module.
+   *
+   * Ranked by urgency × impact over deadlines, the next unstarted lesson, the
+   * weakest hours category, due flashcards and incomplete portfolio work. See
+   * src/lib/nextThree.js for why the product of the two is the only ordering
+   * that degrades correctly at both ends, and scripts/verifyNextThree.mjs for
+   * the cases that pin it down.
+   *
+   * Recomputed whenever any input moves, so finishing one promotes the next
+   * rather than leaving a completed row sitting on the dashboard.
+   *
+   * `counts` stays undefined until the Portfolio snapshot has actually loaded.
+   * nextThree() reads a missing counts object as "unknown" and offers no
+   * portfolio gaps at all, which is what stops a returning senior with six
+   * programs saved being told to save their first one for the length of a fetch.
+   */
+  const nextThreeItems = useMemo(()=>nextThree({
+    gradeBand, gradeStage: effGrade,
+    deadlines: upcomingDeadlines || [],
+    nextLesson, doneLessons: curPathDoneL, totalLessons: curPathAllL.length,
+    hours: dashboardHours, benchmarks,
+    dueCards, dueDecks: dueDeckCount,
+    counts: portLoaded ? {
+      recommenders: recommendersCount, colleges: appCounts.colleges,
+      activities: (portSnapshot?.activities||portActivities||[]).length,
+      essays: appCounts.essays,
+    } : undefined,
+  }),[gradeBand,effGrade,upcomingDeadlines,nextLesson,curPathDoneL,curPathAllL.length,
+      dashboardHours,benchmarks,dueCards,dueDeckCount,portLoaded,recommendersCount,
+      appCounts,portSnapshot,portActivities]);
   // ── Medabrain plan spotlight ─────────────────────────────────────────────────
   // Drives both the Home spotlight (TodayPlanNudge picks exactly ONE task to glow) and the small
   // nav-badge dot below (ANY pillar with outstanding plan tasks today, reusing PlanTaskStrip's
@@ -5663,7 +5766,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // ── HOME ─────────────────────────────────────────────────────────────────────
   function tHome(){
     const units=curPath?.units||[];
-    const recentQuiz=qHistory.slice(-1)[0];
     const HomeIcon=PATH_ICONS[eSpec]||Compass;
     return(
       <div style={CC({gap:20})}>
@@ -5677,18 +5779,20 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               <h1 style={{fontSize:30,fontWeight:800,color:C.t1,margin:'0px 0px 12px',letterSpacing: 'calc(-0.67px + var(--msp-letter-spacing))',fontFamily:C.FD,lineHeight:1.15}}>{user.name}</h1>
               <div style={R({gap:8,flexWrap:'wrap'})}>
                 <span style={pill(`${accent}22`,accent)}>{curPath?.label}</span>
-                <span style={pill(C.s3,C.t2,{fontFamily:C.FM})}>Level {lvl}</span>
                 {/* Renders nothing until there is a real score — see MedExChip. */}
                 <MedExChip state={medexState} onClick={()=>goPortfolio('medex')}/>
-                {streak>0&&<span style={{...pill(tint(streakLeague.color,0.14),streakLeague.color),display:'inline-flex',alignItems:'center',gap:4}}><Flame size={11}/>{streak} day streak</span>}
-                <BoostChip boosts={boosts} onClick={()=>goProgress('streak')} />
-                {streakFreezes>0&&<span style={{...pill(C.blueDim,C.blueL),display:'inline-flex',alignItems:'center',gap:4}}><Snowflake size={11}/>{streakFreezes} freeze{streakFreezes>1?'s':''}</span>}
+                {/* No streak chip here. The streak lives on exactly one surface in this product —
+                    the achievements module at the bottom of this dashboard — and nowhere else,
+                    least of all in the first thing a student reads on opening the app. Putting it
+                    in the hero makes a consecutive-day count the headline fact about a person,
+                    which is both the wrong measure and the wrong greeting. Level moved out for the
+                    same reason: it is a number that only means something inside this app. */}
                 {/* Same rule as the nav badge: don't advertise decks from a tab this student
                     hasn't unlocked yet. Flashcards open after their first quiz. */}
                 {dueDeckCount>0&&unlocks.isOpen('prep','flashcards')&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:4}}><Layers3 size={11}/>{dueDecksBadge(dueDeckCount)}</span>}
-                {/* Pace status sits beside the streak because it answers the same question the
-                    streak does — "am I actually keeping up?" — but against a target the student
-                    chose rather than a generic daily habit. */}
+                {/* Pace status — "am I actually keeping up?" against a target the student chose
+                    themselves, which is the autonomy-supporting version of the question a streak
+                    asks badly. */}
                 {paceStatus&&(()=>{
                   const t=paceTone(paceStatus.state);
                   const dim=t==='good'?C.greenDim:t==='warn'?C.amberDim:C.roseDim;
@@ -5700,11 +5804,110 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           </div>
         </div>
 
-        {/* The MedEx Score — the one block on Home that is about the outside world rather than
-            about this session. It sits above the daily rail because it is the frame everything
-            below it serves: the rail answers "what do I do in the next twenty minutes", and this
-            answers "and why does that matter". It seals weekly, so unlike everything else on this
-            screen it is deliberately not a today-shaped number. */}
+        {/* ═══ 1 · NEXT THREE THINGS ═══════════════════════════════════════════
+            First and most prominent, because it is the only block on this screen
+            that answers "what do I do in the next twenty minutes" rather than
+            "how am I doing". A student should never open this app and wonder
+            what to do; everything below this is context for the decision this
+            module makes for them. Ranked by urgency × impact — see
+            src/lib/nextThree.js. Never more than three. */}
+        <NextThreeCard
+          items={nextThreeItems}
+          onGo={(item)=>{goDest(item.destination);play('click');}}
+          accent={accent}
+          m={isMobile}
+          reducedMotion={reducedMotion}
+          loading={!portLoaded&&upcomingDeadlines===null}
+        />
+
+        {/* ═══ 2 · THE FOUR-YEAR ARC ═══════════════════════════════════════════
+            Second, because the question it answers is the one a freshman is
+            silently asking while looking at the module above: why does any of
+            this matter yet? Three of the four modules below this are scoped to
+            the next sixty days, and a ninth grader who only ever sees those
+            correctly concludes they should come back junior year. */}
+        <FourYearArc
+          gradeStage={effGrade}
+          accent={accent}
+          m={isMobile}
+        />
+
+        {/* ═══ 3 · HOURS RINGS ═════════════════════════════════════════════════
+            Hours by category against the active pathway's own benchmarks. This
+            is the substance framing in its purest form: four fractions, each
+            legible to a seventeen-year-old and to an admissions officer. */}
+        <HoursRings
+          hours={dashboardHours}
+          benchmarks={benchmarks}
+          pathwayLabel={curPath?.label||'your pathway'}
+          onLogHours={()=>{goPortfolio('activities');play('click');}}
+          accent={C.green}
+          m={isMobile}
+        />
+
+        {/* ═══ 4 · DEADLINE HORIZON ════════════════════════════════════════════
+            Sixty days, colored by when work has to START rather than when it
+            is due — the first rung of the app's own 60/30/7 alert ladder. */}
+        <DeadlineHorizon
+          deadlines={upcomingDeadlines||[]}
+          onOpen={()=>{goPortfolio('milestones');play('click');}}
+          onOpenAll={()=>{goPortfolio('milestones');play('click');}}
+          accent={C.rose}
+          m={isMobile}
+        />
+
+        {/* ═══ 5 · PROGRESS DETAIL ═════════════════════════════════════════════
+            Track completion, quiz trend by topic, flashcard retention, practice
+            test trend. Ordered by how quickly a student can move each one. */}
+        <ProgressDetail
+          trackLabel={curPath?.label||'your pathway'}
+          lessonsDone={curPathDoneL}
+          lessonsTotal={curPathAllL.length}
+          units={units.map(u=>({id:u.id,title:u.title,pct:unitM(u)}))}
+          catStats={catStats}
+          quizHistory={qHistory}
+          retention={avgRetention}
+          cardsTracked={allCards.length}
+          testScores={portSnapshot?.testScores||[]}
+          accent={accent}
+          m={isMobile}
+        />
+
+        {/* ═══ 6 · ACHIEVEMENTS, WEIGHTED BY SUBSTANCE ═════════════════════════
+            Five milestones that each name something true about the student
+            outside this app, and — under them, small, once, and nowhere else in
+            the product — the streak. See the component header for why the
+            streak is deliberately not a headline. */}
+        <SubstanceAchievements
+          context={{
+            shadowingHours: dashboardHours.shadowing,
+            certifications: skillsCount,
+            cardsRetained,
+            colleges: appCounts.colleges,
+            lessonsDone: curPathDoneL,
+            lessonsTotal: curPathAllL.length,
+          }}
+          streak={streak}
+          lastEarnedKey={lastEarnedAchievement}
+          onGo={(row)=>{goDest(row.destination);play('click');}}
+          onOpenAll={()=>{goProgress('achievements');play('click');}}
+          accent={C.amber}
+          m={isMobile}
+          reducedMotion={reducedMotion}
+        />
+
+        {/* ── Supporting surfaces ──────────────────────────────────────────────
+            Everything below the six modules is a shortcut into work that lives
+            elsewhere, not a seventh reading of how the student is doing. The XP
+            total, the level bar, the daily quest rail, the check-in card and the
+            old badge strip were all removed rather than moved: they are the
+            "points and badges" framing the six modules above deliberately
+            replace, and every one of them still exists in full on the Progress
+            tab for the student who goes looking. */}
+
+        {/* The MedEx Score — the one remaining block about the outside world.
+            It seals weekly, so unlike everything above it is deliberately not a
+            today-shaped number. */}
         <MedExHomeCard
           state={medexState}
           onOpen={()=>goPortfolio('medex')}
@@ -5713,70 +5916,38 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           reducedMotion={reducedMotion}
         />
 
-        {/* Today's three — the first thing on Home under the header, because it is the only
-            block on this screen that answers "what should I do in the next twenty minutes"
-            rather than "how am I doing". Everything below it is context; this is the decision. */}
-        <DailyQuestRail
-          day={dailyDay}
-          onClaim={claimDailyQuest}
-          onClaimSet={claimDailySetBonus}
-          onGo={goQuestDestination}
-          busyKey={dailyBusyKey}
-          streakHint={dailyStreakHint}
-          m={isMobile}
-        />
+        {/* Today's plan, if one has been generated. Distinct from module 1: the
+            plan is what the student committed to, the next three is what the
+            app would pick. Both are worth showing; they are different claims. */}
+        {user.masterPlan && <TodayPlanNudge user={user} accent={accent} onOpenPlan={goPlans} onOpenNextDay={(d)=>goPlans(d)} onOpenTask={openPlanResource} onToggleTask={handlePlanToggleTask} onSnoozeTask={handlePlanSnoozeTask} planStreak={getPlanStreak(user.masterPlan)} isMobile={isMobile} reducedMotion={reducedMotion}/>}
 
-        {/* The check-in calendar's compact form. Hidden entirely once today is claimed and
-            there is no upcoming milestone worth naming — an always-present card with nothing
-            in it is the thing students learn to scroll past. */}
-        <CheckInHomeCard
-          state={checkinState}
-          onClaim={()=>claimTodayCheckin()}
-          onOpen={()=>goProgress('streak')}
-          busy={!!streakBusy.checkin}
-          m={isMobile}
-        />
+        {/* The student's own "finish this pathway in N weeks" commitment, reported
+            on the dashboard rather than only on the tab where it was set. A goal
+            you have to go looking for stops steering anything after week one.
+            Kept deliberately while the streak card was dropped: this is a target
+            the student chose themselves against a pathway they picked, which is
+            the autonomy-supporting version of the question a streak asks badly.
+            Read-only here — changing it belongs on the Pathway tab, next to what
+            the new number costs per week. */}
+        {curPathAllL.length>0&&unlocks.isOpen('prep','pathways')&&(
+          <PaceGoalCard
+            goal={pathwayGoal} pathwayLabel={curPath?.label||'your pathway'}
+            totalLessons={curPathAllL.length} doneLessons={curPathDoneL}
+            completedAts={curPathCompletedAts}
+            accent={accent} variant="compact" isMobile={isMobile}
+            onEditRequest={()=>goPrep('pathways')}
+          />
+        )}
 
-        {/* Streak — high on Home because it is the only thing on this screen with a
-            deadline attached (today ends). It carries exactly the three facts that
-            change what a student does right now: is today earned, is a Perfect Week
-            still live, and how far to the next reward. Everything historical lives
-            one tap away in Progress → Streak. */}
-        <StreakHomeCard
-          streak={streak}
-          day={todayStatus}
-          week={weekInfo}
-          targetInfo={streakTargetInfo}
-          nextReward={nextStreakReward}
-          freezesHeld={streakFreezes}
-          boosts={boosts}
-          nextLessonTitle={nextLesson?.title||null}
-          onOpen={()=>goProgress('streak')}
-          onStartStudying={()=>goPrep('pathways')}
-          m={isMobile}
-          reducedMotion={reducedMotion}
-        />
+        {/* The max-out plan Medabrain wrote at onboarding. Kept because it is a
+            different artifact from anything above — not a reading of progress
+            but the student's own stated ambition, revisitable rather than a
+            one-time onboarding screen. */}
+        {user.generatedPlan?.summary && <MyPlanCard plan={user.generatedPlan} accent={accent} onGoUnlock={()=>goPlans()}/>}
 
-        {/* Quests — directly under the streak, because the two answer the same question on two
-            different clocks: the streak asks "is today done", a quest asks "is this month". One
-            quest at a time (the engine picks the most urgent, or a finished one to claim), with
-            the rest one tap away. Renders even with nothing running — that empty card is the
-            highest-traffic way anybody discovers quests exist. */}
-        <QuestHomeCard
-          rows={questBoard}
-          onOpenBoard={()=>goProgress('quests')}
-          onBrowse={()=>goProgress('quests')}
-          onGo={goQuestDestination}
-          onClaim={claimQuestXP}
-          busyId={questBusyId}
-          m={isMobile}
-        />
-
-        {/* The Roadmap's one line on Home: the single most urgent thing on their twelve-month
-            year, which is nearly always something whose PREPARATION starts now for a deadline
-            months away. TodayPlanNudge below answers "what do I do today" and structurally
-            cannot see past tomorrow — this is the half of the question it cannot reach.
-            Suppressed until the tab is unlocked, so it never advertises a locked destination. */}
+        {/* The Roadmap's single most urgent twelve-month item — nearly always
+            something whose preparation starts now for a date months away, which
+            is the half of the question module 4's sixty-day window cannot see. */}
         {unlocks.isOpen('roadmap')&&(
           <RoadmapHomeCard
             user={user} isMobile={isMobile}
@@ -5785,20 +5956,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           />
         )}
 
-        {/* Today's Plan nudge — keeps today's day-by-day tasks visible from Home, not just
-            inside the Plans tab, so "what do I still need to do today" is always one glance
-            away regardless of which tab a student opens the app to. */}
-        {user.masterPlan && <TodayPlanNudge user={user} accent={accent} onOpenPlan={goPlans} onOpenNextDay={(d)=>goPlans(d)} onOpenTask={openPlanResource} onToggleTask={handlePlanToggleTask} onSnoozeTask={handlePlanSnoozeTask} planStreak={getPlanStreak(user.masterPlan)} isMobile={isMobile} reducedMotion={reducedMotion}/>}
-
-        {/* Your personalized plan — the max-out plan Medabrain built at onboarding,
-            surfaced permanently so it's revisitable, not a one-time onboarding screen. */}
-        {user.generatedPlan?.summary && <MyPlanCard plan={user.generatedPlan} accent={accent} onGoUnlock={()=>goPlans()}/>}
-
-        {/* Running several pathways? The dashboard says so, and lets the student pick up any of
-            them from here. Home is where a study session starts, so "which of my three do I
-            touch today" is a Home-level question — answering it anywhere else would mean two
-            navigations before a single lesson opens. When only one pathway is enrolled this is
-            silent and the classic single "Continue" card below is unchanged. */}
+        {/* Running several pathways? "Which of my three do I touch today" is a
+            dashboard-level question — answering it anywhere else would mean two
+            navigations before a single lesson opens. Silent for one pathway. */}
         {isParallel&&unlocks.isOpen('prep','pathways')&&(
           <div>
             <div style={R({justifyContent:'space-between',marginBottom:8,flexWrap:'wrap',gap:8})}>
@@ -5813,108 +5973,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           </div>
         )}
 
-        {/* Continue where you left off — the focused pathway's next lesson. Suppressed while
-            several pathways are running, since the board directly above already offers this
-            exact lesson (and the other two), and showing it twice would make the dashboard
-            argue with itself about what "continue" means. */}
-        {((nextLesson&&!isParallel)||topPick)&&<div style={{...glass({padding:20}),display:'flex',gap:16,flexWrap:'wrap'}}>
-          {!isParallel&&<div style={{flex:1,minWidth:220}}>
-            <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom:8}}>Continue</div>
-            {nextLesson?(
-              <div style={{display:'flex',alignItems:'center',gap:12}}>
-                <div style={{width:36,height:36,borderRadius:8,background:`${accent}15`,border:`1px solid ${accent}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Route size={16} color={accent}/></div>
-                <div style={{minWidth:0}}>
-                  <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{nextLesson.title}</div>
-                  <div style={{fontSize:11,color:C.t3,marginTop:4}}>{nextLesson.unitTitle}</div>
-                </div>
-              </div>
-            ):<div style={{fontSize:13,color:C.t2}}>Your pathway is fully complete — nice work.</div>}
-            {nextLesson&&<button onClick={()=>goPrep('pathways')} style={btn(C.blueGrad,{marginTop:12,fontSize:12,padding:'8px 16px'})}>Resume lesson</button>}
-          </div>}
-          {topPick&&<div style={{flex:1,minWidth:220,borderLeft:`1px solid ${C.b1}`,paddingLeft:16}}>
-            <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom:8,display:'flex',alignItems:'center',gap:4}}><Brain size={11} color={C.violetL}/>Medabrain's #1 Pick</div>
-            <div style={{display:'flex',alignItems:'center',gap:12}}>
-              <div style={{width:36,height:36,borderRadius:8,background:`${C.amber}15`,border:`1px solid ${C.amber}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Layers size={16} color={C.amberL}/></div>
-              <div style={{minWidth:0}}>
-                <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{topPick.quiz.title}</div>
-                <div style={{fontSize:11,color:C.t3,marginTop:4}}>{topPick.reason}</div>
-              </div>
-            </div>
-            {/* Home still hands a brand-new student their single best next quiz — that's the
-                one-decision dashboard working as intended. What it doesn't do is offer the
-                whole 200-quiz library before they've finished anything; taking this pick is
-                what opens it. */}
-            {unlocks.isOpen('prep','quizzes')&&<button onClick={()=>goPrep('quizzes')} style={btnG({marginTop:12,fontSize:12,padding:'8px 16px'})}>See all recommendations</button>}
-          </div>}
-        </div>}
-
-        {/* Pace goal — the student's own "finish this pathway in N weeks" commitment, reported
-            on the dashboard rather than only on the tab where it was set. A goal you have to go
-            looking for is a goal that stops steering anything after week one. Read-only here:
-            the button hands off to the Pathway tab, which is where changing it (and seeing what
-            the new number costs per week) belongs. */}
-        {curPathAllL.length>0&&unlocks.isOpen('prep','pathways')&&(
-          <PaceGoalCard
-            goal={pathwayGoal} pathwayLabel={curPath?.label||'your pathway'}
-            totalLessons={curPathAllL.length} doneLessons={curPathDoneL}
-            completedAts={curPathCompletedAts}
-            accent={accent} variant="compact" isMobile={isMobile}
-            onEditRequest={()=>goPrep('pathways')}
-          />
-        )}
-
-        {/* Medabrain ranked quiz recommendations — top 3 on the dashboard */}
-        {/* Plan-named picks pulled to the front before slicing to 3, so a plan quiz ranked #5
-            overall still makes it into this compact Home card instead of being cut off. */}
-        {medabrainPicksUnlocked&&rankedQuizzes.length>0&&<QuizRecommendationsPanel
-          ranked={[...rankedQuizzes.filter(p=>todayPlanTargets.quizIds.has(p.quiz.id)),...rankedQuizzes.filter(p=>!todayPlanTargets.quizIds.has(p.quiz.id))].slice(0,3)}
-          onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMedabrain={askMedabrainAboutPick} planQuizIds={todayPlanTargets.quizIds}
-          unlocked compact/>}
-
-        {/* What's next — the generated timeline, not just the deadlines table.
-            This used to be a countdown to the soonest row in the Deadlines panel, which meant
-            a student who had never typed a deadline (every new user, and most freshmen) was
-            told they had none. The timeline engine (src/lib/timeline.js) knows their class
-            year, courses, test track and college list, so Home can name a real next date on
-            day one — and it is the same feed the Portfolio Timeline tab shows, so the two can
-            never disagree. */}
-        <TimelineNextCard user={user} accent={accent} onNavigate={goAnywhere}/>
-
-        {/* Financial Aid & Scholarships — tracking something in the Financial Aid tab used to be a
-            dead end: it never surfaced anywhere else in the app unless it happened to carry a real
-            deadline date. This is the fix — every tracked scholarship (named, with its deadline/
-            org/eligibility) is one glance away from the dashboard, not buried three taps into
-            Portfolio. Hidden entirely when nothing is tracked yet, same as MyPlanCard above. */}
+        {/* Financial aid & scholarships — every tracked scholarship one glance
+            from the dashboard rather than three taps into Portfolio. Hidden
+            entirely when nothing is tracked. */}
         <FinancialAidHomeCard scholarships={portScholarships} accent={C.green} onOpen={()=>goPortfolio('aid')}/>
 
-        {/* Stats */}
-        <div style={G(4,14,{},isMobile)}>
-          <Stat label="Total XP" value={(user.xp||0).toLocaleString()} icon={<Zap size={16}/>} color={C.amber} sub={`${xpForNext-xpIn} to Level ${lvl+1}`} m={isMobile}/>
-          <Stat label="Level" value={`${lvl} · ${levelInfo.tier}`} icon={<Trophy size={16}/>} color={C.violet} sub={`${levelInfo.pct}% to next`} m={isMobile}/>
-          <Stat label="Quizzes done" value={qTaken} icon={<CheckCircle2 size={16}/>} color={C.green} sub={`${ALL_QUIZZES.length-qTaken} remaining`} m={isMobile}/>
-          <Stat label="Mastery" value={`${mastery}%`} icon={<TrendingUp size={16}/>} color={accent} sub={`${doneL}/${allL.length} lessons`} m={isMobile}/>
-        </div>
-
-        {/* XP Progress */}
-        <motion.div
-          animate={nearLevelUp?{boxShadow:[`0 0 0px ${accent}00`,`0 0 26px ${accent}55`,`0 0 0px ${accent}00`]}:{boxShadow:'0 0 0px transparent'}}
-          transition={nearLevelUp?{duration:1.6,repeat:Infinity,ease:'easeInOut'}:{}}
-          style={glass({padding:16})}
-        >
-          <div style={R({justifyContent:'space-between',marginBottom:8})}>
-            <div><span style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Level {lvl} · {levelInfo.tier}</span><span style={{fontSize:12,color:C.t3,marginLeft:8,display:'inline-flex',alignItems:'center',gap:4}}><ArrowRight size={11}/>Level {lvl+1}</span></div>
-            <span style={{fontSize:12,fontFamily:C.FM,color:nearLevelUp?C.amberL:C.blueL,fontWeight:700}}>{nearLevelUp?`Only ${xpForNext-xpIn} XP to go!`:`${xpIn} / ${xpForNext} XP`}</span>
-          </div>
-          <Bar pct={levelInfo.pct} color={nearLevelUp?C.amber:accent} h={8} glow/>
-        </motion.div>
-
-        {/* Quick Actions */}
-        {/* Filtered through the unlock ladder like every other route into the app. A quick
-            action is a shortcut, and a shortcut to a screen the nav has deliberately not shown
-            you yet is just the wall of options rebuilt on the dashboard — it would also trip
-            the deep-link unlock and quietly hand the student everything on their first click.
-            A brand-new account sees two of these (Diagnostic, Pathway), which is exactly the
-            "here is what to do first" the nav is now trying to say. */}
+        {/* Quick actions, filtered through the unlock ladder like every other
+            route into the app — a shortcut to a screen the nav has deliberately
+            not shown yet is the wall of options rebuilt on the dashboard. */}
         <div>
           <SL>Quick Actions</SL>
           <div style={G(3,14,{},isMobile)}>
@@ -5940,64 +6006,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           </div>
         </div>
 
-        {/* What opens next. Home is where a new student actually starts, so this is the one
-            place the ladder is stated in full rather than one row at a time: three upcoming
-            areas, each with the sentence that opens it. It is the answer to the question the
-            reviewer couldn't answer on his own — "where do I go?" — and it disappears
-            entirely once there is nothing left to unlock. */}
+        {/* What opens next — the unlock ladder stated in full, in the one place
+            a new student actually starts. Disappears once nothing is left. */}
         {unlocks.locked().length>0&&(
           <NextUnlockCard items={unlocks.locked()} variant="card" accent={C.violet}/>
         )}
-
-        {/* Achievements strip — clicking the header or any badge jumps to the full Progress >
-            Achievements view (same data via the shared achievementProgress memo), which shows
-            every achievement with a live progress bar, not just the unlocked ones. Shown even at
-            0 unlocked (not gated on achiev.size) so brand-new accounts can discover it and see
-            progress toward their first badge, not just once they've already earned one. */}
-        <div onClick={()=>{goProgress('achievements');play('click');}} style={{...glass({padding:16}),cursor:'pointer',transition:'border-color .2s'}}
-          onMouseEnter={e=>e.currentTarget.style.borderColor=`${C.amber}35`}
-          onMouseLeave={e=>e.currentTarget.style.borderColor=C.b1}>
-          <div style={{...R({justifyContent:'space-between'}),marginBottom:12}}>
-            <SL extra={{marginBottom:0}}>Achievements ({achiev.size}/{Object.keys(ACHIEVEMENTS).length})</SL>
-            <span style={{...R({gap:4}),fontSize:11,color:C.t3,fontWeight:600}}>View all<ChevronRight size={13}/></span>
-          </div>
-          <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
-            {Object.values(ACHIEVEMENTS).map(a=>{
-              const has=achiev.has(a.key);
-              const AIc=ACH_ICONS[a.icon]||Award;
-              const prog=achievementProgress[a.key];const pct=prog?Math.min(100,Math.round((prog[0]/prog[1])*100)):null;
-              return<div key={a.key} title={`${a.name}: ${a.desc}${!has&&prog?` — ${prog[0]}/${prog[1]}`:''}`} style={{width:40,height:40,borderRadius:8,background:has?`${C.amber}18`:'rgba(255,255,255,0.04)',border:`1px solid ${has?`${C.amber}30`:C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',position:'relative',opacity:has?1:.55,transition: CONTROL_TRANSITION,overflow:'hidden'}}>
-                <AIc size={18} color={has?C.amberL:C.t3}/>
-                {!has&&pct!==null&&pct>0&&<div style={{position:'absolute',left:0,right:0,bottom:0,height:3,background:C.s4}}>
-                  <div style={{height:'100%',width: '100%', transform: `scaleX(${(pct) / 100})`, transformOrigin: 'left',background:accent,transition: 'transform 200ms cubic-bezier(0.4, 0, 0.2, 1)'}}/>
-                </div>}
-              </div>;
-            })}
-          </div>
-        </div>
-
-        {/* Pathway preview */}
-        <div style={glass()}>
-          <div style={R({justifyContent:'space-between',marginBottom:16})}>
-            <div><SL extra={{marginBottom:4}}>Current Pathway</SL><div style={{fontSize:17, letterSpacing: 'calc(-0.11px + var(--msp-letter-spacing))',fontWeight:700,color:C.t1,fontFamily:C.FD}}>{curPath?.label}</div></div>
-            <Arc pct={mastery} size={60} stroke={5} color={accent} label={`${mastery}%`}/>
-          </div>
-          <div style={CC({gap:8})}>
-            {units.map((u)=>{const p=unitM(u);return(
-              <div key={u.id} style={R({gap:12})}>
-                <div style={{width:8,height:8,borderRadius:'50%',background:p===100?C.green:p>0?accent:C.s4,flexShrink:0,boxShadow:p>0?`0 0 6px ${p===100?C.green:accent}`:undefined}}/>
-                <div style={{flex:1}}>
-                  <div style={R({justifyContent:'space-between',marginBottom:4})}>
-                    <span style={{fontSize:12,color:p===100?C.green:C.t2,fontWeight:p===100?700:400}}>{u.title}</span>
-                    <span style={{fontSize:11,fontFamily:C.FM,color:C.t3}}>{p}%</span>
-                  </div>
-                  <Bar pct={p} color={p===100?C.green:accent} h={3} glow={p>40}/>
-                </div>
-              </div>
-            );})}
-          </div>
-          <button onClick={()=>goPrep('pathways')} style={{...btnG({marginTop:16,width:'100%',justifyContent:'center'}),display:'inline-flex',alignItems:'center',gap:8}}>View full pathway<ArrowRight size={14}/></button>
-        </div>
       </div>
     );
   }
@@ -10173,12 +10186,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <div style={R({gap:8})}>
               <button data-tour="cmdk" onClick={()=>setCmdOpen(true)} aria-label="Quick switch" style={{width:32,height:32,borderRadius:8,background:C.s2,border:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.t2,cursor:'pointer'}}><Search size={14}/></button>
               <ThemeToggle mode={a11y.themeMode} onChange={m=>updateA11y({themeMode:m})} size={32} align="right" accent={accent}/>
-              {/* The two things in the header that are counting down: the streak (today ends)
-                  and any live XP boost (this one ends sooner). A boost applied silently to a
-                  number the student was going to earn anyway changes no behavior at all —
-                  seeing it run is the entire mechanic. */}
+              {/* A live XP boost is genuinely counting down and ends sooner than today does —
+                  a boost applied silently to a number the student was going to earn anyway
+                  changes no behavior at all, so seeing it run is the entire mechanic.
+                  The streak used to sit beside it and no longer does: a consecutive-day count
+                  pinned to the header is on screen on every tab, all session, which makes it the
+                  most persistent number in the product. It now appears once, small, at the bottom
+                  of the student dashboard's achievements module and nowhere else. */}
               <BoostChip boosts={boosts} onClick={()=>goProgress('streak')} m />
-              {streak>0&&<span onClick={()=>goProgress('streak')} style={{...pill(tint(streakLeague.color,0.14),streakLeague.color,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4,flexShrink:0,cursor:'pointer'}}><Flame size={10}/>{streak}d</span>}
               <div style={{textAlign:'right'}}>
                 <div style={{fontSize:10,color:C.t3,fontFamily:C.FM}}>Lv.{lvl}</div>
                 <div style={{fontSize:11,fontWeight:700,color:C.t1}}>{user.name}</div>

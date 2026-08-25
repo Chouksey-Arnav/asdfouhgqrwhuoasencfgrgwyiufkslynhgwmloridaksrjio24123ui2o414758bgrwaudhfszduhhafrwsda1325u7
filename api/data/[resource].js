@@ -5,7 +5,7 @@ import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
 import { requireStudent } from '../_lib/session.js';
 // Shared with api/auth/account.js so a new table is exportable and deletable
 // the moment it is readable — see api/_lib/resources.js.
-import { RESOURCE_SET as RESOURCES } from '../_lib/resources.js';
+import { RESOURCES, RESOURCE_SET } from '../_lib/resources.js';
 
 // Columns a client may write per resource (id, user_id, created_at are server-controlled).
 const WRITABLE = {
@@ -38,7 +38,28 @@ const WRITABLE = {
   // memory of when it changed. See supabase/migrations/0020_recommender_asks.sql.
   recommenders: ['name', 'relationship', 'type', 'status', 'due_date', 'notes', 'verification_status', 'asked_at'],
   portfolio_evidence: ['entity_type', 'entity_id', 'url', 'label'],
+  // The MedEx Score's weekly seal (see supabase/migrations/0021_medex_score.sql). A seal is
+  // written once per ISO week and never edited — the unique index on (user_id, week_key) is what
+  // makes that true, and src/lib/medex/store.js relies on the conflict to converge two devices.
+  // `week_key` and `score` are the only NOT NULL columns; the rest describe how the number was
+  // reached so a sealed week stays readable after the benchmark or pillar weights change.
+  medex_scores: ['week_key', 'score', 'band', 'benchmark_id', 'benchmark_name', 'pillars', 'coverage', 'confidence'],
 };
+
+// Every readable resource must also declare what a client may write to it. This used to be an
+// unwritten convention, and medex_scores broke it: it was added to RESOURCES (so it read and
+// exported fine) but never given a WRITABLE row, which made `pick(body, undefined)` throw a
+// TypeError on every POST. The endpoint caught it, logged it, and returned a generic 500 — and
+// src/lib/medex/store.js treats a failed seal as "another device sealed first" and re-reads. The
+// result was a table that had never received a single row since launch with nothing anywhere
+// reporting a problem. Failing loudly at module load is the cheap way to make that class of drift
+// impossible: a missing entry now breaks every request to this endpoint on the first deploy,
+// instead of silently breaking one table forever.
+for (const resource of RESOURCES) {
+  if (!Array.isArray(WRITABLE[resource])) {
+    throw new Error(`api/data/[resource]: '${resource}' is in RESOURCES but has no WRITABLE column list.`);
+  }
+}
 
 // Resources whose rows get an `updated_at` bump on PATCH (only tables that actually have that
 // column — see the migration file for which ones do).
@@ -46,6 +67,12 @@ const TOUCHES_UPDATED_AT = new Set([
   'colleges', 'essays', 'research_experience', 'skills_certifications', 'clinical_hours', 'recommenders',
   'admission_intake', 'credential_suggestions', 'reflection_entries',
 ]);
+
+// Resources a client may create and delete but never edit. A MedEx seal is a record of what a
+// student's profile looked like in one particular week; the whole point of sealing is that the
+// number stops moving, so an endpoint that accepted a PATCH would quietly make the history
+// rewritable and every week-over-week delta in the app unreliable.
+const APPEND_ONLY = new Set(['medex_scores']);
 
 // entity_type -> table, for validating portfolio_evidence's polymorphic entity_id ownership.
 const EVIDENCE_ENTITY_TABLES = new Set(['activities', 'awards', 'research_experience', 'clinical_hours']);
@@ -98,7 +125,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const { resource } = req.query;
-  if (!RESOURCES.has(resource)) return res.status(404).json({ error: 'Unknown resource.' });
+  if (!RESOURCE_SET.has(resource)) return res.status(404).json({ error: 'Unknown resource.' });
 
   const user = await requireStudent(req, res);
   if (!user) return;
@@ -132,6 +159,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'PATCH') {
+      if (APPEND_ONLY.has(resource)) return res.status(405).json({ error: 'This record cannot be edited once written.' });
       const id = firstValue(body?.id);
       if (!id) return res.status(400).json({ error: 'Missing id.' });
       const updates = pick(body, WRITABLE[resource]);
@@ -155,6 +183,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (err) {
     console.error(`data/${resource} error:`, err);
+    // A duplicate is not a failure — it is the unique index doing its job, and the caller's
+    // correct response is to re-read rather than retry. Collapsing it into the same generic 500
+    // every other error returns is what let a genuinely broken write path masquerade as a
+    // harmless "another device got there first" for the entire life of the medex_scores table.
+    if (err?.code === '23505') {
+      return res.status(409).json({ error: 'This record already exists.', reason: 'duplicate' });
+    }
     return res.status(500).json({ error: 'Request failed.' });
   }
 }
