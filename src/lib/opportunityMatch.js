@@ -598,8 +598,37 @@ export function buildMatchPrompt(profile, matches) {
 // rest of their account rather than living in localStorage.
 export const PREFS_KEY = 'opportunityPrefs';
 
+// ── The application pipeline ─────────────────────────────────────────────────
+// The Opportunities tab used to have exactly two states for a program: you had
+// tracked it, or you hadn't. That is a bookmark, not a pipeline, and it is why
+// students would save eleven programs in October and apply to none of them —
+// nothing in the interface distinguished "I might do this" from "my essay is
+// half written and the deadline is Tuesday".
+//
+// These five stages live in prefs rather than in a table because until you
+// submit, a stage is an intention rather than a record. The moment it becomes a
+// record — you were accepted — it belongs in Activities & Honors, and the
+// 'accepted' stage says so.
+export const PIPELINE_STAGES = [
+  { id: 'interested', label: 'Interested', colorKey: 't3', sub: 'On your list' },
+  { id: 'preparing', label: 'Preparing', colorKey: 'blue', sub: 'Gathering what it asks for' },
+  { id: 'applying', label: 'Applying', colorKey: 'amber', sub: 'Writing it now' },
+  { id: 'submitted', label: 'Submitted', colorKey: 'violet', sub: 'Sent — waiting' },
+  { id: 'accepted', label: 'Accepted', colorKey: 'green', sub: 'Log it in Activities & Honors' },
+];
+export const STAGE_BY_ID = Object.fromEntries(PIPELINE_STAGES.map(s => [s.id, s]));
+/** The stages that mean a student still has work to do before a deadline. */
+export const ACTIVE_STAGES = ['interested', 'preparing', 'applying'];
+
 export const DEFAULT_PREFS = Object.freeze({
   themeIds: [], effortAppetite: 'balanced', costStance: 'any', formatPref: 'any', gradeStage: null,
+  // Two-letter state code, used to hide programs a student is not eligible for
+  // on residency grounds. Never inferred from anything — a wrong guess here
+  // hides real opportunities silently, which is the worst failure mode there
+  // is, so it stays null until the student says.
+  homeState: null,
+  // programId -> PIPELINE_STAGES id.
+  stages: {},
   // eventId -> level id, for the HOSA competitive events a student is chasing
   // (see HOSA_EVENTS in src/data/opportunityPrograms.js). Lives here rather
   // than in its own resource because it is a preference — "I intend to compete
@@ -620,7 +649,21 @@ export function readPrefs(user) {
     formatPref: FORMAT_PREFS.some((f) => f.id === raw.formatPref) ? raw.formatPref : DEFAULT_PREFS.formatPref,
     gradeStage: GRADE_KEYS.includes(raw.gradeStage) ? raw.gradeStage : DEFAULT_PREFS.gradeStage,
     hosa: (raw.hosa && typeof raw.hosa === 'object' && !Array.isArray(raw.hosa)) ? raw.hosa : {},
+    homeState: /^[A-Z]{2}$/.test(String(raw.homeState || '').toUpperCase()) ? String(raw.homeState).toUpperCase() : null,
+    // Anything not a real stage id is dropped rather than kept: a stale value
+    // from an older build would otherwise render as a blank chip forever.
+    stages: Object.fromEntries(
+      Object.entries((raw.stages && typeof raw.stages === 'object' && !Array.isArray(raw.stages)) ? raw.stages : {})
+        .filter(([, v]) => STAGE_BY_ID[v]),
+    ),
   };
+}
+
+/** How many programs sit in each pipeline stage. Drives the tab's header counts. */
+export function stageCounts(stages = {}) {
+  const out = Object.fromEntries(PIPELINE_STAGES.map(s => [s.id, 0]));
+  for (const v of Object.values(stages)) if (out[v] != null) out[v] += 1;
+  return out;
 }
 
 /** A new user object with `patch` merged into the saved prefs. Never mutates. */

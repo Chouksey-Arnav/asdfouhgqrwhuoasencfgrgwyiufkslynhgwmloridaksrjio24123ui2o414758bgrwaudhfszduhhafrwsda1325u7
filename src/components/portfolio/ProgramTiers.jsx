@@ -5,11 +5,14 @@ import {
 } from 'lucide-react';
 import { C, glass, glass2, btnSm, R, CC, pill, tint, onTint } from '../../lib/theme';
 import {
-  PROGRAMS, PROGRAM_TIERS, HOSA_EVENTS_BY_CAT, HOSA_LEVELS, HOSA_GUIDELINES_URL, HOSA_VERIFIED,
+  PROGRAMS, PROGRAM_TIERS, TIER_BY_ID, CATEGORY_BY_ID, isRegional,
+  HOSA_EVENTS_BY_CAT, HOSA_LEVELS, HOSA_GUIDELINES_URL, HOSA_VERIFIED,
 } from '../../data/opportunityPrograms';
 import {
   evaluateEligibility, nextDeadline, isFreeOrFunded, costLabel, verifiedLabel, ALERT_OFFSETS,
+  upcomingDeadlines,
 } from '../../lib/opportunityEligibility';
+import { PIPELINE_STAGES, STAGE_BY_ID } from '../../lib/opportunityMatch';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The tiered programs, the deadline board, and the HOSA event tracker.
@@ -79,7 +82,60 @@ function Fact({ icon: Icon, label, value }) {
   );
 }
 
-export function ProgramCard({ program, facts, saved, saving, onSaveDeadline, isMobile }) {
+/**
+ * The stage control that rides on every program card.
+ *
+ * Deliberately five visible buttons rather than a dropdown: a dropdown hides
+ * the fact that there IS a pipeline, and the behavioral point of the whole
+ * feature is that a student sees "submitted" sitting two steps past where they
+ * currently are. Tapping the active stage clears it.
+ */
+export function StageControl({ programId, stage, onStage }) {
+  return (
+    <div style={R({ gap: 8, flexWrap: 'wrap' })} role="group" aria-label="Where you have got to with this program">
+      {PIPELINE_STAGES.map(s => {
+        const on = stage === s.id;
+        const col = C[s.colorKey] || C.t3;
+        return (
+          <button key={s.id} type="button" aria-pressed={on} title={s.sub}
+            onClick={() => onStage?.(programId, on ? null : s.id)}
+            style={{
+              font: 'inherit', cursor: 'pointer', fontSize: 9.5,
+              padding: '4px 8px', borderRadius: 999,
+              background: on ? tint(col, 0.2) : 'transparent',
+              border: `1px solid ${on ? tint(col, 0.44) : C.b1}`,
+              color: on ? onTint(col) : C.t4, fontWeight: on ? 800 : 500,
+            }}>
+            {s.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * Tier, category and geography as three small chips.
+ *
+ * Geography is on the card rather than in a filter alone because "National" is
+ * itself information: a student scanning a list needs to know instantly which
+ * of these are open to them wherever they live and which are one city's.
+ */
+export function ProgramMeta({ program }) {
+  const tc = C[TIER_BY_ID[program.tier]?.colorKey] || C.t3;
+  const cc = C[CATEGORY_BY_ID[program.category]?.colorKey] || C.t3;
+  return (
+    <div style={R({ gap: 8, flexWrap: 'wrap' })}>
+      <span style={pill(tint(tc, 0.14), tc, { fontSize: 9 })}>{TIER_BY_ID[program.tier]?.label}</span>
+      <span style={pill(tint(cc, 0.12), cc, { fontSize: 9 })}>{CATEGORY_BY_ID[program.category]?.label}</span>
+      <span style={pill(C.surf2, C.t3, { fontSize: 9 })}>
+        {isRegional(program) ? program.states.join(', ') : 'National'}
+      </span>
+    </div>
+  );
+}
+
+export function ProgramCard({ program, facts, saved, saving, onSaveDeadline, isMobile, stage = null, onStage, showMeta = false }) {
   const [open, setOpen] = useState(false);
   const verdict = useMemo(() => evaluateEligibility(program, facts), [program, facts]);
   const dl = useMemo(() => nextDeadline(program), [program]);
@@ -112,6 +168,8 @@ export function ProgramCard({ program, facts, saved, saving, onSaveDeadline, isM
           <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4 }}>{program.org}</div>
         </div>
 
+        {showMeta && <ProgramMeta program={program} />}
+
         <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }}>{program.why}</div>
 
         {/* Blocked, and what to do instead. Never a dead end. */}
@@ -139,7 +197,7 @@ export function ProgramCard({ program, facts, saved, saving, onSaveDeadline, isM
         )}
 
         {open && (
-          <div style={{ ...CC({ gap: 4 }), paddingTop: 8, borderTop: `1px solid ${C.b1}` }}>
+          <div style={{ ...CC({ gap: 8 }), paddingTop: 8, borderTop: `1px solid ${C.b1}` }}>
             <Fact icon={Users} label="Who can apply" value={program.eligibility} />
             <Fact icon={CalendarClock} label="Deadline" value={dl?.note} />
             <Fact icon={CalendarClock} label="When it runs" value={program.starts?.note} />
@@ -175,10 +233,55 @@ export function ProgramCard({ program, facts, saved, saving, onSaveDeadline, isM
           </button>
         </div>
 
+        {/* Where you have got to. Below the actions rather than above them,
+            because the first question is "can I do this and when does it
+            close", and only then "have I started". */}
+        {onStage && (
+          <div style={{ ...CC({ gap: 8 }), paddingTop: 8, borderTop: `1px solid ${C.b1}` }}>
+            <span style={{ fontSize: 9.5, color: C.t4, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>
+              {stage ? STAGE_BY_ID[stage]?.sub : 'Where are you with this?'}
+            </span>
+            <StageControl programId={program.id} stage={stage} onStage={onStage} />
+          </div>
+        )}
+
         <div style={{ fontSize: 9.5, color: C.t4, lineHeight: 1.5 }}>
           {verifiedLabel(program)} · dates and fees shift every cycle — confirm on the official page before you plan around them.
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * The four tiers, said once, as a legend above the explorer.
+ *
+ * When the board was three accordions the tier blurbs were unavoidable — you
+ * had to read one to open one. The explorer replaced the accordions with a
+ * filter chip, which is a better control and a worse teacher: a chip labelled
+ * "Expensive, and worth knowing why" does not tell a family that anyone who
+ * pays gets in. That sentence is the entire reason the tier exists, so it keeps
+ * its own line here.
+ */
+export function TierLegend({ isMobile = false }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit,minmax(240px,1fr))', gap: 12 }}>
+      {PROGRAM_TIERS.map(tier => {
+        const col = C[tier.colorKey] || C.blue;
+        const n = PROGRAMS.filter(p => p.tier === tier.id).length;
+        return (
+          <div key={tier.id} style={{
+            ...glass2({ padding: 12 }),
+            borderLeft: `3px solid ${col}`,
+          }}>
+            <div style={R({ gap: 8, flexWrap: 'wrap', marginBottom: 4 })}>
+              <span style={{ fontSize: 11.5, fontWeight: 800, color: C.t1 }}>{tier.label}</span>
+              <span style={pill(tint(col, 0.14), col, { fontSize: 9, fontFamily: C.FM })}>{n}</span>
+            </div>
+            <div style={{ fontSize: 10.5, color: C.t3, lineHeight: 1.55 }}>{tier.blurb}</div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -245,14 +348,19 @@ export function ProgramTiersSection({
  * the failure that most justifies the whole feature: a student who looks in
  * April and finds that February has already happened.
  */
-export function DeadlineBoard({ facts, onSaveDeadline, savedIds = new Set(), savingId = null, isMobile = false }) {
-  const rows = useMemo(() => (
-    PROGRAMS
-      .map(p => ({ p, dl: nextDeadline(p), verdict: evaluateEligibility(p, facts) }))
-      .filter(r => r.dl?.date && r.verdict.status !== 'too_young' && r.p.tier !== 'pay_to_play')
-      .sort((a, b) => a.dl.daysOut - b.dl.daysOut)
-      .slice(0, 4)
-  ), [facts]);
+export function DeadlineBoard({
+  facts, onSaveDeadline, savedIds = new Set(), savingId = null, isMobile = false,
+  freeOnly = false, homeState = null, limit = 6,
+}) {
+  // Six rather than four now that the database is a hundred programs deep: at
+  // twenty-one, four rows covered most of what was closing; at a hundred and
+  // four, four rows is a keyhole. Geography and cost are honored here too, so
+  // this board can never urge a student toward something they cannot enter or
+  // cannot pay for.
+  const rows = useMemo(
+    () => upcomingDeadlines(PROGRAMS, facts, { limit, freeOnly, state: homeState }),
+    [facts, limit, freeOnly, homeState],
+  );
 
   if (!rows.length) return null;
 
