@@ -17,7 +17,7 @@
 // is no value in mirroring six step-ticks as six writes, and the local copy is authoritative
 // between them either way.
 import { getToken } from '../authApi';
-import { apiFetch, parseJson } from '../http';
+import { apiFetch, parseJson } from '../http.js';
 
 const PUSH_DEBOUNCE_MS = 6000;
 

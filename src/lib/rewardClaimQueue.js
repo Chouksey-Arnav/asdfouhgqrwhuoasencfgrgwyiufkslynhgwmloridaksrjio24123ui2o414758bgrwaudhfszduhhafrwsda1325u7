@@ -25,7 +25,7 @@
 // number, so there's nothing to roll back there even if the XP portion of the same claim is.
 import * as DB from './db';
 import { getToken } from './authApi';
-import { apiFetch, parseJson } from './http';
+import { apiFetch, parseJson } from './http.js';
 
 const RETRY_DELAYS_MS = [2000, 5000, 15000, 45000, 120000]; // mirrors trackQueue.js's ladder
 

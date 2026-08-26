@@ -14,7 +14,7 @@
 // applyTheme() in theme.js, and the App remounts so inline styles recompute.
 // ─────────────────────────────────────────────────────────────────────────────
 import { applyTheme, getStoredMode, DEFAULT_THEME_MODE } from './theme';
-import { readViewport, publishViewport } from './viewportFit';
+import { readViewport, publishViewport } from './viewportFit.js';
 
 const KEY = 'msp_a11y';
 

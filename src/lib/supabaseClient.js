@@ -7,7 +7,7 @@
 // service role key) to be set at build time. If they're missing, GOOGLE_OAUTH_CONFIGURED
 // is false and the Google button degrades to a friendly error instead of crashing.
 import { createClient } from '@supabase/supabase-js';
-import { ApiNetworkError } from './http';
+import { ApiNetworkError } from './http.js';
 
 const url = import.meta.env.VITE_SUPABASE_URL;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;

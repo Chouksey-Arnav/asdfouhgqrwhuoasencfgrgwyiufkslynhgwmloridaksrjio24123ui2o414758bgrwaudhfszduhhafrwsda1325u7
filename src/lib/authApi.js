@@ -5,7 +5,7 @@
 //   - Log in:   login(email, password)
 // Password recovery (also used by legacy passwordless accounts to set their first password):
 //   - sendResetCode(email) -> verifyResetCode(email, code) -> resetPassword(email, verificationToken, password)
-import { apiFetch, parseJson, AUTH_TIMEOUT_MS } from './http';
+import { apiFetch, parseJson, AUTH_TIMEOUT_MS } from './http.js';
 
 const TOKEN_KEY = 'msp_session_token';
 // Where the account-type choice waits out the Google redirect. sessionStorage, not localStorage:

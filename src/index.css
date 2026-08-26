@@ -4,7 +4,7 @@
    the app's default theme) purely so the very first paint — before any JS runs
    — isn't a flash of the wrong palette.
 
-   Do NOT hand-edit these to a colour you liked: they are asserted against the
+   Do NOT hand-edit these to a color you liked: they are asserted against the
    BALANCED palette by scripts/verifyDesignTokens.mjs on every build, so drifting
    out of sync is a build failure rather than a first-paint flash nobody
    notices. `color-scheme: dark` is here for the same first-paint reason and so
@@ -83,7 +83,7 @@ body {
    `width` here used to be `calc(100% / var(--msp-font-scale))`, mirroring the
    `--msp-vh` division above. That looks symmetrical and is not, because `zoom`
    treats percentages and viewport units differently — and the difference
-   changed under the app when `zoom` was standardised (Chrome 128+, and the
+   changed under the app when `zoom` was standardized (Chrome 128+, and the
    other engines since):
 
      • A PERCENTAGE resolves against the containing block already converted
@@ -470,7 +470,7 @@ body::before {
   will-change: transform;
 }
 
-/* Ambient light. Three pools whose turns overlap, so the colour of the frame
+/* Ambient light. Three pools whose turns overlap, so the color of the frame
    moves with the story: violet as the book opens, cyan while the spark hangs,
    gold once the star is lit. */
 .msp-j-glow {
@@ -575,7 +575,7 @@ body::before {
 }
 
 /* Loading placeholders (see SkeletonCard in src/components/parent/ParentApp.jsx). A pulse rather
-   than a travelling highlight: the highlight version needs a gradient sized to each block, which
+   than a traveling highlight: the highlight version needs a gradient sized to each block, which
    means every skeleton has to know its own width, and it reads as glare on the light palettes.
    Opacity animates on the compositor, so a page full of these costs nothing to paint. */
 @keyframes mspShimmer { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
@@ -714,7 +714,7 @@ body::before {
 /* Inset by 2px rather than outset: this rail is a horizontally scrolling strip
    whose items sit flush against its edges, so an outset ring on the first or
    last tab would be clipped by the scroll container. Same 2px weight, same ink
-   colour as the global ring. */
+   color as the global ring. */
 .sat-nav-tab:focus-visible { outline: 2px solid var(--msp-focus-ring) !important; outline-offset: -2px !important; border-radius: 6px; }
 
 /* Segmented control segments. Same restraint as the tabs: hover only lifts the
@@ -853,14 +853,14 @@ body::before {
               it. That is the vestibular trigger: parallax, slide-ins,
               zoom-and-drift, large decorative reveals.
 
-     STAYS    opacity, colour, background, border, fill/stroke — at 120ms,
+     STAYS    opacity, color, background, border, fill/stroke — at 120ms,
               which is a cross-fade. A pressed button still darkens, a checked
               box still fills, a saved field still flashes green. None of it
               moves.
 
    `transition-property` is what makes that selective: restating the property
    list drops every transform/layout transition an author declared while
-   keeping the colour ones, which a blanket `transition-duration` override
+   keeping the color ones, which a blanket `transition-duration` override
    cannot do.
 
    Skeletons and spinners are exempt further down: a loading state with no

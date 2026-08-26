@@ -8,7 +8,7 @@
 // single watcher measures once per frame and pushes the same object to every
 // subscriber, so every component in a given render sees identical numbers.
 import { useEffect, useState } from 'react';
-import { readViewport, watchViewport, publishViewport } from './viewportFit';
+import { readViewport, watchViewport, publishViewport } from './viewportFit.js';
 
 let current = null;
 const listeners = new Set();
@@ -69,7 +69,7 @@ export function subscribeViewport(fn) {
  * The live viewport: `{ width, height, device, orientation, fit, isMobile,
  * isTablet, isCompact, isShort, coarse, dpr }`.
  *
- * Initialised by measuring synchronously rather than starting empty and
+ * Initialized by measuring synchronously rather than starting empty and
  * correcting in an effect. The same reasoning as useMediaQuery in
  * components/ui/primitives.jsx: a first paint at the wrong size is a visible
  * jump, and it is worst on exactly the elements that care most about size.

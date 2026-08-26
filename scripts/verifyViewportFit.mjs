@@ -5,7 +5,7 @@
 // this repo and to the eye on the machine it was written on. `#root` carried
 // `width: calc(100% / var(--msp-font-scale))` alongside `height: calc(100dvh /
 // var(--msp-font-scale))`, which reads as a matched pair and is not one: under
-// the standardised `zoom` that every current browser now implements, a
+// the standardized `zoom` that every current browser now implements, a
 // percentage is already resolved in the zoomed coordinate space and a viewport
 // unit is not. The height was right and the width divided twice.
 //

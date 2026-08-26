@@ -1,5 +1,5 @@
 import { getToken } from './authApi';
-import { apiFetch, parseJson } from './http';
+import { apiFetch, parseJson } from './http.js';
 
 // Client for /api/lesson-feedback — the dedicated Supabase log of lesson difficulty answers
 // (see supabase/migrations/0012_lesson_feedback.sql).

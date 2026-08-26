@@ -18,7 +18,7 @@
 // Plans tab; a student with no network still has their plan, because the local copy was always
 // the working one.
 import { getToken } from './authApi';
-import { apiFetch, parseJson } from './http';
+import { apiFetch, parseJson } from './http.js';
 
 const PUSH_DEBOUNCE_MS = 3000;
 

@@ -42,7 +42,7 @@
 // student will win anything.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const HEALTH_SCHOLARSHIP_READ_ON = '2026-08-22';
+export const HEALTH_SCHOLARSHIP_READ_ON = '2026-08-26';
 
 /** Which stage of life an entry is actually open to. */
 export const OPEN_TO = {
@@ -67,18 +67,31 @@ export const HEALTH_SCHOLARSHIPS = [
     url: 'https://hosa.org/scholarships/',
     alsoInGeneralDatabase: 'hosa-scholarships',
   },
+  // ── Corrected 2026-08-26, and left in place rather than deleted ───────────
+  // This entry used to say a graduating high school senior holding an
+  // acceptance could apply. That was true for years and is no longer true: the
+  // program's current eligibility is graduate students, or college seniors
+  // enrolling in a medical, nursing or pharmacy graduate program the following
+  // year, with at least one year of study remaining.
+  //
+  // Deleting it would have been the wrong fix. Tylenol is one of the most
+  // searched health scholarships there is, a student who has heard of it WILL
+  // look for it here, and finding nothing teaches them the database is
+  // incomplete rather than that they are not eligible. So it stays, marked
+  // 'undergrad', saying plainly that this door is further down the road — which
+  // is the same job the FNSNA and NHSC entries below already do.
   {
     id: 'hc-tylenol-future-care',
     kind: 'named',
     name: 'Tylenol Future Care Scholarship',
     org: 'Kenvue / Tylenol',
-    openTo: ['senior'],
+    openTo: ['undergrad'],
     pathways: ['md', 'pa', 'rn', 'pharmd', 'dds'],
-    amount: 'Historically $5,000–$10,000 across a few dozen awards',
-    deadline: 'Typically opens in the spring and closes in early summer — which is AFTER most college decisions, so a senior applies with an acceptance in hand',
-    eligibility: 'Students pursuing a career in healthcare who have been accepted to or are enrolled in an eligible program. A graduating senior with an acceptance to a nursing, pre-health or health-science program can apply; a senior still waiting on decisions generally cannot. Confirm the current year\'s wording before you plan around it.',
-    why: 'One of very few large national awards specifically for healthcare-bound students that a graduating senior is eligible for at all. The late deadline is the feature — it is one of the few things still open after everything else has closed.',
-    url: 'https://www.tylenol.com/news/scholarship',
+    amount: 'Recently 10 awards of $10,000 and 25 of $5,000, around $350,000 in total each year',
+    deadline: 'Recently closing in mid-July — one of the latest deadlines in the health-scholarship year',
+    eligibility: 'NOT open to high school students. You must be a graduate student, or a college senior who will be enrolled in a graduate program in medicine, nursing or pharmacy the following academic year, with proof of enrollment and at least one year of study remaining. Residents of the 50 states, D.C. or Puerto Rico.',
+    why: 'One of the largest and best-known health-career awards in the country — and it is listed here precisely so you do not spend an evening on it now. Put it in your calendar for the spring you apply to a health graduate program; the mid-July deadline means it is still open long after everything else has closed.',
+    url: 'https://www.tylenol.com/tylenol-future-care-scholarship',
   },
   {
     id: 'hc-amt',

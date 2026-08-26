@@ -4,7 +4,7 @@
 // writes — db.js calls scheduleSyncPush() (registered as its dirty listener) any time a synced
 // table changes, so App.jsx doesn't need to remember to trigger a push at every call site.
 import { getToken } from './authApi';
-import { apiFetch, parseJson } from './http';
+import { apiFetch, parseJson } from './http.js';
 import * as DB from './db';
 
 const PUSH_DEBOUNCE_MS = 4000;

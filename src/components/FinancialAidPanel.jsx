@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, Suspense, lazy } from 'react';
 import toast from 'react-hot-toast';
-import { Trash2, DollarSign, CalendarPlus, Handshake, Landmark, Trophy, Send, Search as SearchIcon, CalendarX, ChevronDown, ChevronUp, Building2, Users, FileText, Scale, Calculator, Shield, Stethoscope } from 'lucide-react';
+import { Trash2, DollarSign, CalendarPlus, Handshake, Landmark, Trophy, Send, Search as SearchIcon, CalendarX, ChevronDown, ChevronUp, Building2, Users, FileText, Scale, Calculator, Shield, Stethoscope, Route } from 'lucide-react';
 import { C, glass, glass2, btnSm, inp, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, updateItem, deleteItem } from '../lib/dataApi';
 import { trackItem, cancelQueuedTrack } from '../lib/trackQueue';
@@ -16,6 +16,14 @@ import DebtTrajectoryTable from './finance/DebtTrajectoryTable';
 import PathwayCostCalculator from './finance/PathwayCostCalculator';
 import ServiceCommitmentPrograms from './finance/ServiceCommitmentPrograms';
 import HealthCareerScholarships from './finance/HealthCareerScholarships';
+// Lazily loaded, unlike its three siblings above. The pipeline carries the
+// medicine-specific database (src/data/medicalScholarships.js), which is the
+// largest single content file this panel touches, and scripts/verifyPayload.mjs
+// is right that it has no business in the first-load bundle: it is four screens
+// deep inside Portfolio, and a student on a mid-range Android should not pay for
+// it to reach a lesson. The dynamic import moves it out of the entry graph into
+// its own chunk, fetched when this panel actually renders.
+const MedicalScholarshipPipeline = lazy(() => import('./finance/MedicalScholarshipPipeline'));
 import { FINANCE_BY_PATHWAY } from '../data/pathwayFinance';
 import { showMedabrainToast } from '../lib/medabrainComments';
 
@@ -48,8 +56,16 @@ const STATUSES = [
 //   2. What it would cost YOU                          (their own numbers)
 //   3. Routes that pay for it in exchange for service  (deadline-critical)
 //   4. Health-career scholarships, senior-filtered     (what they can win now)
-//   5. The general scholarship database + tracker      (unchanged)
-//   6. FAFSA and CSS Profile                           (demoted, not removed)
+//   5. The medicine pipeline, high school to residency (where the money is)
+//   6. The general scholarship database + tracker      (unchanged)
+//   7. FAFSA and CSS Profile                           (demoted, not removed)
+//
+// 4 before 5 is deliberate and was the one ordering decision worth arguing
+// about. 5 is where the large numbers are — medical school scholarships,
+// funded MD-PhDs, tuition-free schools — and putting it first would open this
+// screen on a wall of money a sixteen-year-old cannot apply for, which is the
+// exact "there is nothing for me" feeling the panel exists to prevent. What
+// they can act on this month comes first; the road comes after.
 // ─────────────────────────────────────────────────────────────────────────────
 export default function FinancialAidPanel({ accent = C.blue, askMedabrain, pathwayKey = null }) {
   const [scholarships, setScholarships] = useState([]);
@@ -192,6 +208,22 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain, pathw
       <div style={{...glass({padding:16}),background:`linear-gradient(120deg,${tint(C.fuchsia,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.fuchsia,0.2)}`}}>
         <SectionTitle icon={Stethoscope} color={C.fuchsia}>Health-Career Scholarships</SectionTitle>
         <HealthCareerScholarships accent={C.fuchsia} pathwayFinanceId={financeProfile?.id || null}/>
+      </div>
+
+      {/* ── 5. The rest of the road ────────────────────────────────────────
+          Section 4 above answers "what can I win now?", which is the right
+          question and has a short answer. This one answers the question that
+          has the money in it: where does the $300,000 for an MD actually come
+          from, and what does a fifteen-year-old do about it today. Placed
+          after the senior-eligible list on purpose — a student should meet what
+          they can act on this month before they meet what they can act on in
+          2032. See src/data/medicalScholarships.js. */}
+      <div style={{...glass({padding:16}),background:`linear-gradient(120deg,${tint(C.violet,0.06)},${tint(C.t1,0.02)} 55%)`,border:`1px solid ${tint(C.violet,0.2)}`}}>
+        <SectionTitle icon={Route} color={C.violetL}>Paying for Medical School — The Whole Road</SectionTitle>
+        <Suspense fallback={<div style={{fontSize:12,color:C.t3,padding:'12px 0'}}>Loading the pipeline…</div>}>
+          <MedicalScholarshipPipeline accent={C.violet} pathwayFinanceId={financeProfile?.id || null}
+            onTrack={trackScholarship} trackedKeys={trackedScholarshipKeys} pendingKeys={pendingScholarshipKeys}/>
+        </Suspense>
       </div>
 
       {/* Every curated scholarship arrives without a usable deadline date — the database records

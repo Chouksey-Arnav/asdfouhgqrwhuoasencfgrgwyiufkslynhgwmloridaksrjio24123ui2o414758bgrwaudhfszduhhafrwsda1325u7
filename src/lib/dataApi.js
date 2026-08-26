@@ -1,6 +1,6 @@
 // Generic authenticated CRUD client for the Supabase-backed feature tables.
 import { getToken } from './authApi';
-import { apiFetch, parseJson } from './http';
+import { apiFetch, parseJson } from './http.js';
 import * as DB from './db';
 
 // Through apiFetch (src/lib/http.js) so a dropped request on a filtered network

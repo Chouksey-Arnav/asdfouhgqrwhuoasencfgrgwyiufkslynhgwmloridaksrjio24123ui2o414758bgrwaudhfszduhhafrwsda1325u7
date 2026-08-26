@@ -43,7 +43,7 @@
 //      the interface is actually up — a request issued in that window WAITS for
 //      the connection rather than failing on it.
 //   4. A response that isn't JSON (a proxy's block page, a captive portal, an
-//      edge 502 HTML page) is recognised instead of being fed to JSON.parse and
+//      edge 502 HTML page) is recognized instead of being fed to JSON.parse and
 //      surfacing as an unrelated syntax error.
 //   5. Every error carries a machine-readable `reason`, so a caller branches on
 //      a code and never on the wording of a sentence.
@@ -277,7 +277,7 @@ export async function apiFetch(path, {
     } catch (err) {
       if (err instanceof ApiNetworkError) throw err;
 
-      // The caller cancelled deliberately — not a failure, and never retried.
+      // The caller canceled deliberately — not a failure, and never retried.
       if (signal?.aborted) throw err;
 
       const isTimeout = err?.name === 'TimeoutError'
@@ -314,7 +314,7 @@ export async function parseJson(res) {
     return JSON.parse(text);
   } catch {
     // JSON content-type, unparseable body: a truncated response, which is a
-    // transport problem however it is labelled.
+    // transport problem however it is labeled.
     throw new ApiNetworkError(MESSAGES.network, 'network', { retryable: true, status: res.status });
   }
 }
