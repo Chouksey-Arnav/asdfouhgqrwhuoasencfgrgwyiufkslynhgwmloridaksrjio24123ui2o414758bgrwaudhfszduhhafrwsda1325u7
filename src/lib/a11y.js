@@ -14,6 +14,7 @@
 // applyTheme() in theme.js, and the App remounts so inline styles recompute.
 // ─────────────────────────────────────────────────────────────────────────────
 import { applyTheme, getStoredMode, DEFAULT_THEME_MODE } from './theme';
+import { readViewport, publishViewport } from './viewportFit.js';
 
 const KEY = 'msp_a11y';
 
@@ -51,6 +52,18 @@ export const DEFAULTS = {
   // the right way round for this audience. A student who wants the density
   // back has "Small" one tap away.
   fontScale: 1.15,            // 1 – 1.6
+  // Fit the app to the screen it was opened on, sizing around `fontScale` above
+  // rather than replacing it — see src/lib/viewportFit.js for the whole design.
+  //
+  // On by default, which is the unusual half of this decision. The argument for
+  // it: the alternative default is a single fixed scale that is correct on one
+  // laptop and progressively wrong on every other screen, and the students most
+  // affected — the ones on 1366×768 school Chromebooks — are the least likely to
+  // go looking through Settings for a fix. The argument against it is that an
+  // automatic size is a size nobody chose, which is why it is damped, clamped,
+  // and switched off permanently the moment a student picks a size by hand (see
+  // the note on the type-size control in AppearanceSettings.jsx).
+  autoFit: true,
   highContrast: false,
   readableFont: false,
   reduceMotion: 'system',     // 'system' | 'on' | 'off'
@@ -123,8 +136,24 @@ export function applyA11y(settings) {
   const root = document.documentElement;
   const d = root.dataset;
 
+  // ── The effective scale ────────────────────────────────────────────────────
+  // `fontScale` is what the student chose; `effectiveScale` is what this screen
+  // actually runs at. With auto-fit off they are the same number, which is what
+  // makes this change inert for anyone who has turned it off or picked a size
+  // by hand. The measurement is also published here so that the very first
+  // paint already carries `data-device` and `--msp-vw` — index.css's fluid
+  // rules key off those, and a frame without them is a frame of the wrong
+  // layout. src/lib/useViewport.js keeps both current from then on.
+  const vp = readViewport(s.fontScale);
+  publishViewport(vp);
+  const effectiveScale = s.autoFit === false ? s.fontScale : vp.fit;
+
   // Numeric knobs → custom properties consumed by index.css.
-  root.style.setProperty('--msp-font-scale', String(s.fontScale));
+  root.style.setProperty('--msp-font-scale', String(effectiveScale));
+  // The chosen value, kept separately so a settings screen can show what the
+  // student picked rather than what the screen resolved it to.
+  root.style.setProperty('--msp-font-scale-chosen', String(s.fontScale));
+  if (s.autoFit === false) delete d.autoFit; else d.autoFit = 'true';
   root.style.setProperty('--msp-line-scale', String(s.lineSpacing));
   root.style.setProperty('--msp-letter-spacing', `${s.letterSpacing}em`);
   // 56, not 44. Every touch device already gets a 44px hit area unconditionally

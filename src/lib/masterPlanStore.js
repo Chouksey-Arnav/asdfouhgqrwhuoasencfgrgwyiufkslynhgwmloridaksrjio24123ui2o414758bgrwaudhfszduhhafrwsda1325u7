@@ -18,6 +18,7 @@
 // Plans tab; a student with no network still has their plan, because the local copy was always
 // the working one.
 import { getToken } from './authApi';
+import { apiFetch, parseJson } from './http.js';
 
 const PUSH_DEBOUNCE_MS = 3000;
 
@@ -42,11 +43,14 @@ export function isRemoteNewer(remotePlan, localPlan) {
 async function req(path, options = {}) {
   const token = getToken();
   if (!token) throw new Error('Not signed in.');
-  const res = await fetch(`/api${path}`, {
+  // apiFetch, not fetch: a request that dies in transit on a flaky or filtered
+  // network is retried with backoff instead of failing the whole sync with the
+  // browser's own "Failed to fetch". See src/lib/http.js.
+  const res = await apiFetch(path, {
     ...options,
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...(options.headers || {}) },
   });
-  const data = await res.json().catch(() => ({}));
+  const data = await parseJson(res).catch(() => ({}));
   if (!res.ok) throw new Error(data.error || 'Request failed.');
   return data;
 }

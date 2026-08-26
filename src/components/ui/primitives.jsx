@@ -7,6 +7,9 @@
 // the same palette (the two were byte-identical).
 import React, { useState, useEffect } from 'react';
 import { C, glass, R, accentSweep, CONTROL_TRANSITION } from '../../lib/theme';
+import { useViewport } from '../../lib/useViewport';
+
+export { useViewport };
 
 /**
  * Matches a CSS media query reactively. The app's mobile breakpoint is
@@ -35,8 +38,22 @@ export function useMediaQuery(query) {
   return matches;
 }
 
-/** Convenience wrapper for the app-wide mobile breakpoint. */
-export const useIsMobile = () => useMediaQuery('(max-width: 768px)');
+/**
+ * The app-wide mobile breakpoint.
+ *
+ * Answers from src/lib/viewportFit.js rather than from `matchMedia('(max-width:
+ * 768px)')`, and the difference is not cosmetic. A media query sees the raw
+ * screen; this app renders inside a zoomed root, so a 768px screen at the
+ * default 1.15 scale gives its layout 668 pixels. The media query would call
+ * that a desktop and hand it a 236px sidebar it cannot afford. See the note on
+ * effective width in readViewport().
+ *
+ * `useMediaQuery` above is unchanged and still exported — a query about the
+ * physical screen (`prefers-reduced-motion`, a print rule, the SAT player's
+ * split-view minimum) is a different question and should keep asking the
+ * browser directly.
+ */
+export const useIsMobile = () => useViewport().isMobile;
 
 /** Circular progress gauge with a glowing stroke and optional center label. */
 export function Arc({ pct = 0, size = 52, stroke = 4, color = C.blue, label = '', sub = '' }) {

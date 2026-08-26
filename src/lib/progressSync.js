@@ -4,6 +4,7 @@
 // writes — db.js calls scheduleSyncPush() (registered as its dirty listener) any time a synced
 // table changes, so App.jsx doesn't need to remember to trigger a push at every call site.
 import { getToken } from './authApi';
+import { apiFetch, parseJson } from './http.js';
 import * as DB from './db';
 
 const PUSH_DEBOUNCE_MS = 4000;
@@ -51,11 +52,14 @@ export function subscribeSyncStatus(fn) {
 async function req(path, options = {}) {
   const token = getToken();
   if (!token) throw new Error('Not signed in.');
-  const res = await fetch(`/api${path}`, {
+  // apiFetch, not fetch: a request that dies in transit on a flaky or filtered
+  // network is retried with backoff instead of failing the whole sync with the
+  // browser's own "Failed to fetch". See src/lib/http.js.
+  const res = await apiFetch(path, {
     ...options,
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...(options.headers || {}) },
   });
-  const data = await res.json().catch(() => ({}));
+  const data = await parseJson(res).catch(() => ({}));
   if (!res.ok) throw new Error(data.error || 'Request failed.');
   return data;
 }

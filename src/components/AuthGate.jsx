@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { C, tint, getStoredMode, storeMode, watchSystemTheme } from '../lib/theme';
 import { loadA11y, applyA11y } from '../lib/a11y';
+import { subscribeViewport } from '../lib/useViewport';
 import { getToken, setToken, clearToken, fetchMe, logout, revokeSession } from '../lib/authApi';
 import {
   AUTH_VIEWS, parseAuthPath, isAuthPath, normalizePath, parseLegalPath, isParentInvitePath,
@@ -209,8 +210,15 @@ export default function AuthGate({ children }) {
       if (appliedRef.current !== resolved) { appliedRef.current = resolved; setThemeEpoch(e => e + 1); }
     };
     apply();
-    if (themeMode !== 'system') return undefined;
-    return watchSystemTheme(apply);
+    // Re-fit the sign-in screens to the screen too (src/lib/viewportFit.js).
+    // This is not a nicety here: a parent opening an invitation link and a
+    // student signing in on a school Chromebook are both meeting the app for the
+    // first time, on a device it has never measured, and the auth screens are
+    // the one surface where "it doesn't fit" has no workaround — there is no tab
+    // to switch to and no setting to reach.
+    const unwatchViewport = subscribeViewport(apply);
+    const unwatchTheme = themeMode === 'system' ? watchSystemTheme(apply) : undefined;
+    return () => { unwatchViewport(); unwatchTheme?.(); };
   }, [preAuth, themeMode]);
 
   const changeTheme = useCallback((mode) => {

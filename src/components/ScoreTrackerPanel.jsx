@@ -6,6 +6,9 @@ import { Plus, Trash2, Target, Sparkles, Brain, Trophy, Zap, TrendingUp, CheckCi
 import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
 import PanelHero from './ui/PanelHero';
+// Was a third private copy of useMediaQuery, hard-coding the same 768px the app
+// no longer decides "mobile" by. See useIsMobile in ui/primitives.jsx.
+import { useIsMobile } from './ui/primitives';
 
 const SAT_SECTIONS = [
   { key: 'rw', label: 'Reading & writing', max: 800, placeholder: 'e.g. 680' },
@@ -21,20 +24,8 @@ const ACT_SECTIONS = [
 
 function SL({ children, extra = {} }) { return <div style={{fontSize:11,fontWeight:700,color:C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginBottom:12,...extra}}>{children}</div>; }
 
-function useMediaQuery(query) {
-  const [matches, setMatches] = useState(false);
-  useEffect(() => {
-    const m = window.matchMedia(query);
-    setMatches(m.matches);
-    const l = (e) => setMatches(e.matches);
-    m.addEventListener('change', l);
-    return () => m.removeEventListener('change', l);
-  }, [query]);
-  return matches;
-}
-
 export default function ScoreTrackerPanel({ accent = C.blue }) {
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useIsMobile();
   const [scores, setScores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [testType, setTestType] = useState('SAT');

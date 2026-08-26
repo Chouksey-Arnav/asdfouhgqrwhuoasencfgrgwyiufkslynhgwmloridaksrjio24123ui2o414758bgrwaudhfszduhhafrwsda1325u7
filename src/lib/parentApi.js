@@ -7,18 +7,24 @@
 // verifyParentDashboard.mjs imports parseInviteInput from here and exercises it for real, and
 // Node's ESM resolver does not guess extensions the way the bundler does.
 import { getToken } from './authApi.js';
+import { apiFetch, parseJson, AUTH_TIMEOUT_MS } from './http.js';
 
 async function req(path, options = {}) {
   const token = getToken();
-  const res = await fetch(`/api/parent${path}`, {
+  // Same transport hardening as authApi — a parent following an invitation link
+  // is, by definition, someone using this app for the first time, often on a
+  // phone on cellular. "Failed to fetch" on that screen is an invitation that
+  // simply does not work, with nothing on screen to say why. See src/lib/http.js.
+  const res = await apiFetch(`/parent${path}`, {
     ...options,
+    timeout: AUTH_TIMEOUT_MS,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
   });
-  const data = await res.json().catch(() => ({}));
+  const data = await parseJson(res).catch(() => ({}));
   if (!res.ok) {
     const err = new Error(data.error || 'Request failed.');
     err.reason = data.reason;
@@ -132,12 +138,13 @@ export const QUIZ_TOPICS = [
 // every one of these runs for someone who has no session and quite possibly no account. Attaching
 // a stale token from whoever last used this browser would be, at best, confusing.
 async function claimReq(body) {
-  const res = await fetch('/api/parent/claim', {
+  const res = await apiFetch('/parent/claim', {
     method: 'POST',
+    timeout: AUTH_TIMEOUT_MS,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  const data = await res.json().catch(() => ({}));
+  const data = await parseJson(res).catch(() => ({}));
   if (!res.ok) {
     const err = new Error(data.error || 'Request failed.');
     err.reason = data.reason;

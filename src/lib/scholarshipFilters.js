@@ -18,8 +18,8 @@
 // So the rule is inverted: everything in the curated database is open to a
 // current senior EXCEPT the four entries whose own eligibility text says
 // otherwise, which are named here individually with the reason. Four exceptions
-// out of eighty-one is a list a human can verify by reading, which a regex over
-// eighty-one prose sentences is not.
+// out of ninety is a list a human can verify by reading, which a regex over
+// ninety prose sentences is not.
 //
 // scripts/verifyPathwayFinance.mjs asserts every id below still exists in the
 // database, so a renamed entry fails the build instead of silently rejoining
