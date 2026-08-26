@@ -12,7 +12,7 @@
 // "confirm on the official site" notice) — don't remove that banner without
 // keeping an equivalent warning elsewhere.
 //
-// This is a curated ~100-program reference set, not an exhaustive index of
+// This is a curated ~90-program reference set, not an exhaustive index of
 // "every scholarship that exists" — no database, ours or a paid one, actually
 // achieves that, and claiming otherwise would be dishonest. Students can add
 // any scholarship not listed here as a custom entry (see FinancialAidPanel),
@@ -484,4 +484,67 @@ export const SCHOLARSHIPS = [
     eligibility: 'Colorado high school seniors with strong academics and leadership, nominated by their school',
     description: "One of the most competitive full-ride scholarships in the country by acceptance rate — usable only at Colorado institutions, and requires a school nomination, so ask your counselor early in the fall.",
     tags: ['colorado', 'full ride', 'school nomination', 'in-state'] },
+// ── 2026 expansion ────────────────────────────────────────────────────────
+  // Added after a full research pass over the pre-health funding landscape (see
+  // the header of src/data/medicalScholarships.js for the rest of it). Weighted
+  // deliberately toward biology, neuroscience and research competitions rather
+  // than adding another dozen general essay contests: this app's students are
+  // pre-health, the biology-specific competitions are the ones a future medical
+  // school actually reads as evidence, and none of them was in here.
+  //
+  // Same honesty rules as everything above — ranges and seasons, never this
+  // year's figures.
+  { id: 'usabo', name: 'USA Biology Olympiad (USABO)', org: 'Center for Excellence in Education',
+    categories: ['stem-prehealth', 'national-merit'], amount: 'No cash award for most participants — the value is the credential, the training, and eventually the International Biology Olympiad team', deadline: 'Your SCHOOL must register in the autumn (historically by early November) before you can sit the first exam; there has been a registration fee',
+    eligibility: 'High school students whose school registers them. Around 12,000 students sit the open exam each year; two rounds narrow it to twenty finalists who attend a residential training program.',
+    description: "The single most relevant academic competition in this whole database for a future doctor, and the one nobody tells pre-meds about. Semifinalist standing is a real, legible signal on a college application in a way that a generic 'science club' line is not. The catch is structural rather than academic: your school has to register, in the autumn, before you can enter at all — so the person to talk to is your biology teacher, in September.",
+    tags: ['biology', 'olympiad', 'competition', 'pre-med', 'semifinalist'] },
+  { id: 'usa-brain-bee', name: 'USA Brain Bee Championship', org: 'The Brain Bee, with regional chapters',
+    categories: ['stem-prehealth'], amount: 'Prizes and, at the national level, research and travel opportunities; a registration fee has applied at the championship',
+    deadline: 'Regional competitions run through the winter and spring; you must win a local or regional Brain Bee to reach the national championship',
+    eligibility: 'High school students. Entry is at a regional chapter — usually hosted by a university neuroscience department — and only regional winners advance.',
+    description: 'A neuroscience competition run out of university departments, which is the interesting part: entering one puts a high schooler inside a real neuroscience department, in front of people who supervise research. Students have turned a regional Brain Bee into a lab placement more often than into a prize. Search for the chapter nearest you rather than waiting for it to be advertised at school.',
+    tags: ['neuroscience', 'brain', 'competition', 'pre-med', 'research'] },
+  { id: 'jshs', name: 'Junior Science and Humanities Symposium (JSHS)', org: 'U.S. Department of Defense, with the National Science Teaching Association',
+    categories: ['stem-prehealth', 'national-merit'], amount: 'More than $400,000 in scholarships and cash across regional and national levels; national finalists in each subject category receive undergraduate tuition scholarships',
+    deadline: 'Regional symposia run through the academic year, most in late winter and early spring — the regional deadline is the one that matters',
+    eligibility: 'Students in grades 9-12 with original, independent STEM research, including students at DoD schools in Europe and the Pacific. Free to enter.',
+    description: 'The best-kept secret in high school research funding: free to enter, eight subject categories including medicine and health, and real tuition scholarships rather than a plaque. Far less contested than ISEF or the Science Talent Search, and it takes the same research project — so a student with a project should enter all three rather than choosing.',
+    tags: ['research', 'competition', 'STEM', 'department of defense', 'free to enter'] },
+  { id: 'ge-reagan-scholarship', name: 'GE-Reagan Foundation Scholarship Program', org: 'The Ronald Reagan Presidential Foundation & Institute',
+    categories: ['national-merit', 'community-leadership'], amount: 'Recently $10,000 a year, renewable for up to three further years — up to $40,000 in total',
+    deadline: 'Applications have historically opened in the autumn and closed in early January of senior year',
+    eligibility: 'U.S. high school seniors demonstrating leadership, drive, integrity and citizenship, with financial need considered.',
+    description: 'One of the few large national awards that is RENEWABLE rather than a single check, which makes it worth several times a headline-equal one-off. Judged on character and leadership rather than on a test score.',
+    tags: ['renewable', 'leadership', 'senior', 'citizenship'] },
+  { id: 'rmhc-scholarships', name: 'RMHC Scholarships', org: 'Ronald McDonald House Charities and its local chapters',
+    categories: ['need-based', 'state-regional', 'community-leadership'], amount: 'Commonly $1,000–$4,000 per year depending on the chapter; several chapters run larger named awards',
+    deadline: 'Chapter-set, most commonly closing in the winter of senior year',
+    eligibility: 'High school seniors under 21 who live inside a participating chapter\'s geographic area, with a minimum GPA (recently 2.7) and plans to enroll in a two- or four-year or vocational program. Some chapters run additional awards restricted to particular communities.',
+    description: 'A national name attached to a LOCAL applicant pool, which is the best combination in scholarship searching — you compete against your county rather than the country. The GPA floor is also unusually low for an award of this size, so students rule themselves out of it who should not.',
+    tags: ['local chapter', 'health charity', 'senior', 'lower GPA threshold'] },
+  { id: 'hispanic-heritage-youth-awards', name: 'Hispanic Heritage Foundation Youth Awards', org: 'Hispanic Heritage Foundation',
+    categories: ['diversity', 'stem-prehealth', 'community-leadership'], amount: 'One-time grants toward college, or toward a community-service project, at gold/silver/bronze levels in each category',
+    deadline: 'Applications have historically opened in the autumn and closed in the winter of senior year',
+    eligibility: 'Hispanic high school seniors graduating that spring and enrolling in higher education the following year, with an unweighted GPA of at least 3.0. Categories include Healthcare and Science, Engineering, Community Service, Education and several more.',
+    description: 'Has a HEALTHCARE AND SCIENCE category specifically, which means a pre-health student competes against other pre-health students rather than against the whole applicant pool. Category-specific awards are almost always better odds than general ones, and this is the clearest example in this database.',
+    tags: ['hispanic', 'latino', 'healthcare category', 'senior', 'science'] },
+  { id: 'nsa-stokes', name: 'NSA Stokes Educational Scholarship Program', org: 'National Security Agency',
+    categories: ['stem-prehealth', 'employer-professional', 'diversity'], amount: 'Tuition and mandatory fees up to a substantial annual cap, PLUS an annual salary, paid summer work at NSA, and a job on graduation',
+    deadline: 'Applications open to seniors in the autumn and close in the winter — and the security clearance process behind it takes months, so late is genuinely fatal here',
+    eligibility: 'U.S. citizens who are high school seniors at the time of application, able to obtain a security clearance, planning to major in computer science, mathematics, cybersecurity, or computer/electrical engineering (and, in some years, Chinese or Russian). Test-score and GPA thresholds apply.',
+    description: 'Not a pre-med route, and it is in this database anyway because it is one of the very few programs that pays a high schooler a SALARY through college and guarantees employment afterwards. It carries a service obligation — you work at NSA for at least one and a half times the length of your funded study — and a security clearance, which is a serious commitment to make at seventeen. Read both before the money.',
+    tags: ['computer science', 'cybersecurity', 'salary', 'service commitment', 'security clearance', 'senior'] },
+  { id: 'university-full-ride-merit', name: 'Flagship university full-ride merit scholarships', org: 'Individual universities — Morehead-Cain, Robertson, Jefferson, Stamps, Park and others',
+    categories: ['national-merit', 'state-regional'], amount: 'Full cost of attendance for four years — tuition, fees, housing, meals — plus enrichment and summer funding at several',
+    deadline: 'Almost all have their own deadline in the AUTUMN of senior year, EARLIER than the university\'s ordinary admissions deadline, and several require a school nomination before that',
+    eligibility: 'Applicants to that specific university, generally with exceptional academics and leadership. Some are open nationally (Morehead-Cain at UNC, Robertson at Duke and UNC, Jefferson at UVA, Stamps at around forty partner universities); others are restricted to residents of that state.',
+    description: "Worth more than every national scholarship in this database combined, and routinely missed for one reason: the deadline is in the autumn and it is not the admissions deadline. A student who applies to UNC in January has already missed the Morehead-Cain. Build your college list in the summer before senior year and check each school's own merit-scholarship deadline the same week you add it.",
+    tags: ['full ride', 'merit', 'early deadline', 'school nomination', 'cost of attendance'] },
+  { id: 'ncwit-aspirations', name: 'NCWIT Award for Aspirations in Computing', org: 'National Center for Women & Information Technology',
+    categories: ['women', 'stem-prehealth'], amount: 'Cash awards and hardware at national level; regional and affiliate awards vary and are far less competitive',
+    deadline: 'Applications have historically opened in the summer and closed in the autumn',
+    eligibility: 'High school students who identify as women, genderqueer or non-binary, with an interest in computing and technology.',
+    description: 'The affiliate (regional) award is the one to aim at — it has a fraction of the applicants of the national and carries the same alumni network, which includes internship pipelines with a long list of technology employers. Relevant to pre-health students heading toward bioinformatics, medical imaging or health data science.',
+    tags: ['women in tech', 'computing', 'regional affiliate', 'bioinformatics'] },
 ];

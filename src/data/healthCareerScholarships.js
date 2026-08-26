@@ -3,8 +3,8 @@
 // actually apply for.
 //
 // ── Why this is a separate file from src/data/scholarships.js ───────────────
-// The general database is 80-odd well-established awards a strong student of
-// any intended major can win. Exactly one of them is health-career specific.
+// The general database is 90-odd well-established awards a strong student of
+// any intended major can win. A handful are health-career specific.
 // That is not a gap in the curation — it reflects the real landscape, in which
 // nearly every profession-specific award (nursing associations, dental
 // foundations, pharmacy societies, the AMA Foundation) requires you to be
