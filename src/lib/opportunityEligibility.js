@@ -206,6 +206,83 @@ export function nextDeadline(program, today = new Date()) {
   };
 }
 
+// ── The year, as a shape ─────────────────────────────────────────────────────
+//
+// A list sorted by "closing soonest" answers "what is urgent". It does not
+// answer the question that actually reorganizes a student's year: WHEN does
+// this stuff happen? The answer is startling the first time you see it — the
+// good summer programs cluster in December, January and February, months before
+// anybody is thinking about summer, and October and November carry the national
+// competitions. A twelve-month strip makes that visible in one glance, which a
+// sorted list never does however well it is sorted.
+
+export const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export const MONTH_LONG = MONTHS;
+
+/**
+ * Every dated program bucketed into the month its deadline falls in, starting
+ * from the current month so the strip reads forward rather than from January.
+ *
+ * Programs with no month (rolling, or set locally) are returned separately
+ * rather than dropped — "no deadline" is a useful answer to "when", not an
+ * absence of one.
+ *
+ * @returns {{ months: Array<{month, label, isNow, count, programs}>, undated: [] }}
+ */
+export function deadlineCalendar(programs = [], today = new Date()) {
+  const t = startOfDay(today);
+  const nowMonth = t.getMonth() + 1;
+  const buckets = new Map();
+  const undated = [];
+  for (const p of programs) {
+    const m = p?.deadline?.month;
+    if (!m) { undated.push(p); continue; }
+    if (!buckets.has(m)) buckets.set(m, []);
+    buckets.get(m).push(p);
+  }
+  const months = [];
+  for (let i = 0; i < 12; i += 1) {
+    const month = ((nowMonth - 1 + i) % 12) + 1;
+    const list = buckets.get(month) || [];
+    months.push({
+      month,
+      label: MONTH_SHORT[month - 1],
+      longLabel: MONTHS[month - 1],
+      isNow: i === 0,
+      count: list.length,
+      programs: list,
+    });
+  }
+  return { months, undated };
+}
+
+/**
+ * The next `limit` deadlines a student can actually act on, sorted by how soon
+ * they close.
+ *
+ * Filters, in order of how badly getting them wrong wastes a student's time:
+ *   - too young: a countdown to something you cannot enter is not a reminder
+ *   - wrong state: a Baltimore-only internship shown to a student in Nebraska
+ *   - not free, when they have said cost is the binding constraint
+ *   - pay-to-play: never in a "closing soon" list, because urgency is exactly
+ *     the lever those programs already pull on families
+ */
+export function upcomingDeadlines(programs = [], facts = {}, {
+  limit = 6, freeOnly = false, state = null, today = new Date(),
+} = {}) {
+  return programs
+    .map(p => ({ p, dl: nextDeadline(p, today), verdict: evaluateEligibility(p, facts) }))
+    .filter(({ p, dl, verdict }) => (
+      dl?.date
+      && p.tier !== 'pay_to_play'
+      && verdict.status !== 'too_young'
+      && (!freeOnly || isFreeOrFunded(p))
+      && (!state || !p.states || p.states.includes(state))
+    ))
+    .sort((a, b) => a.dl.daysOut - b.dl.daysOut)
+    .slice(0, limit);
+}
+
 /** The three alert offsets the milestone rows are built from. */
 export const ALERT_OFFSETS = [60, 30, 7];
 

@@ -16,9 +16,11 @@ import { OPPORTUNITIES, OPPORTUNITY_TYPES } from '../../data/opportunities';
 import {
   INTEREST_THEMES, THEME_BY_ID, EFFORT_APPETITES, COST_STANCES, FORMAT_PREFS,
   buildMatchProfile, matchOpportunities, buildMatchPrompt, readPrefs, writePrefs, themeReach,
+  PIPELINE_STAGES, ACTIVE_STAGES,
 } from '../../lib/opportunityMatch';
 import { trackTargetForOpportunity, resourceForOpportunity, catalogDedupeKey } from '../../lib/trackingCatalog';
-import { ProgramTiersSection, DeadlineBoard, HosaTracker } from './ProgramTiers';
+import { TierLegend, DeadlineBoard, HosaTracker } from './ProgramTiers';
+import ProgramExplorer from './ProgramExplorer';
 import {
   studentEligibilityFacts, milestoneRowsFor,
 } from '../../lib/opportunityEligibility';
@@ -232,6 +234,31 @@ export default function OpportunitiesPanel({
 
   const setHosa = useCallback((next) => { savePrefs({ hosa: next }); }, [savePrefs]);
 
+  // ── The application pipeline ──────────────────────────────────────────────
+  // Stored on the user record beside the interest prefs rather than in a table,
+  // because until a student submits, a stage is an intention. Setting the same
+  // stage twice clears it, so the control is its own undo.
+  const stages = prefs.stages || {};
+  const setStage = useCallback((programId, stage) => {
+    const next = { ...stages };
+    if (!stage) delete next[programId];
+    else next[programId] = stage;
+    savePrefs({ stages: next });
+  }, [stages, savePrefs]);
+  const setHomeState = useCallback((code) => { savePrefs({ homeState: code }); }, [savePrefs]);
+
+  // Programs the student has started but not sent. This is the number the hero
+  // should lead with once it exists: "six in progress" is a different sentence
+  // from "six bookmarked", and it is the one that gets an application finished.
+  const inProgressCount = useMemo(
+    () => Object.values(stages).filter((s) => ACTIVE_STAGES.includes(s)).length,
+    [stages],
+  );
+  const submittedCount = useMemo(
+    () => Object.values(stages).filter((s) => s === 'submitted' || s === 'accepted').length,
+    [stages],
+  );
+
   const stateOf = (o) => {
     const resource = resourceForOpportunity(o);
     const key = catalogDedupeKey(resource, o);
@@ -250,6 +277,8 @@ export default function OpportunitiesPanel({
         stats={[
           { value: matches.length, label: 'picked for you', color: C.violetL },
           { value: trackedOpportunityIds.length, label: 'you’re tracking', color: C.greenL },
+          ...(inProgressCount ? [{ value: inProgressCount, label: 'in progress', color: C.amberL }] : []),
+          ...(submittedCount ? [{ value: submittedCount, label: 'submitted', color: C.tealL }] : []),
         ]}
         right={
           <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => setTuning((t) => !t)}
@@ -412,6 +441,7 @@ export default function OpportunitiesPanel({
           recommendation, and the students who lose the most are the ones who
           never learn that the good summer programs close in winter. */}
       <DeadlineBoard facts={eligibilityFacts} isMobile={isMobile}
+        freeOnly={freeOnly} homeState={prefs.homeState}
         savedIds={savedProgramIds} savingId={savingProgramId} onSaveDeadline={saveDeadline} />
 
       <TrackQueueNotice entries={pendingEntries.filter((e) => e.resource === 'activities' || e.resource === 'scholarships')} status={trackStatus} />
@@ -520,13 +550,19 @@ export default function OpportunitiesPanel({
           thousand dollars for an open-enrollment summer program in the belief
           that it is a selective one. Three honest tiers, including the one that
           says so. */}
-      <section aria-label="Programs by tier" style={CC({ gap: 12 })}>
+      <section aria-label="The program database" style={CC({ gap: 12 })}>
         <SectionIntro icon={Trophy} color={C.gold} color2={C.orange} m={isMobile}
           title="What's actually worth your time"
-          blurb="The programs where the specifics matter, with their real eligibility, real deadlines and an honest read on what each one is worth. Eligibility is on the card, before you spend any attention on it."
-          stats={[{ value: PROGRAMS.length, label: 'with full details', color: C.goldL }]} />
-        <ProgramTiersSection facts={eligibilityFacts} freeOnly={freeOnly} isMobile={isMobile}
-          savedIds={savedProgramIds} savingId={savingProgramId} onSaveDeadline={saveDeadline} />
+          blurb="Every program we can state real specifics about: the real deadline, the real age and residency rules, what it costs, and an honest read on what it is worth. Search it, filter it by where you live, and see the whole year at once."
+          stats={[
+            { value: PROGRAMS.length, label: 'with full details', color: C.goldL },
+            { value: PROGRAMS.filter((p) => p.deadline?.month != null).length, label: 'dated deadlines', color: C.roseL },
+          ]} />
+        <TierLegend isMobile={isMobile} />
+        <ProgramExplorer facts={eligibilityFacts} freeOnly={freeOnly} isMobile={isMobile}
+          savedIds={savedProgramIds} savingId={savingProgramId} onSaveDeadline={saveDeadline}
+          stages={stages} onStage={setStage}
+          homeState={prefs.homeState} onHomeState={setHomeState} />
       </section>
 
       {/* ── 3c. HOSA ────────────────────────────────────────────────────────

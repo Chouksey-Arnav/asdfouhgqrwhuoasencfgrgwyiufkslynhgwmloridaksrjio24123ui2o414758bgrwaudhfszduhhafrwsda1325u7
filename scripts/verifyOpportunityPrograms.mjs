@@ -23,14 +23,19 @@
 //   node scripts/verifyOpportunityPrograms.mjs
 import {
   PROGRAMS, PROGRAM_TIERS, TIER_BY_ID, DEADLINE_PRECISIONS, COST_MODELS,
+  PROGRAM_CATEGORIES, CATEGORY_BY_ID, programsInState, isRegional,
   HOSA_EVENTS, HOSA_CATEGORIES, HOSA_EVENTS_BY_CAT, HOSA_LEVELS,
 } from '../src/data/opportunityPrograms.js';
 import { OPPORTUNITIES, OPPORTUNITY_TYPES } from '../src/data/opportunities.js';
 import {
   evaluateEligibility, nextDeadline, milestoneRowsFor, ALERT_OFFSETS,
   isFreeOrFunded, costLabel, verifiedLabel, studentEligibilityFacts, GENERIC_ALTERNATIVE,
+  deadlineCalendar, upcomingDeadlines, MONTH_SHORT,
 } from '../src/lib/opportunityEligibility.js';
-import { PATHS } from '../src/data/constants.js';
+import { PIPELINE_STAGES, STAGE_BY_ID, ACTIVE_STAGES, stageCounts, readPrefs, writePrefs } from '../src/lib/opportunityMatch.js';
+import { PATHS, US_STATES } from '../src/data/constants.js';
+
+const STATE_CODES = new Set(US_STATES.map(s => s.code));
 
 let passed = 0;
 const failures = [];
@@ -78,6 +83,20 @@ for (const p of PROGRAMS) {
   // Grade/age gates have to be internally consistent or the badge lies.
   if (p.minGrade != null && p.maxGrade != null) assert(`${at} minGrade <= maxGrade`, p.minGrade <= p.maxGrade);
   if (p.minAge != null && p.maxAge != null) assert(`${at} minAge <= maxAge`, p.minAge <= p.maxAge);
+  // ── The two fields the expansion added ──────────────────────────────────
+  // `category` drives the explorer's filter chips; a value outside the
+  // vocabulary is invisible to every chip and the program becomes unreachable
+  // by browsing, which is the same failure enum drift causes in the catalog.
+  assert(`${at} category is a known category`, !!CATEGORY_BY_ID[p.category], `got: ${p.category}`);
+  // `states` is the field that decides whether a student is shown a program at
+  // all once they set their home state. A typo'd or lowercase code silently
+  // hides a real program from the students it is FOR, which is worse than
+  // showing it to everyone.
+  assert(`${at} states is null or a non-empty array`, p.states === null || (Array.isArray(p.states) && p.states.length > 0));
+  if (Array.isArray(p.states)) {
+    const bad = p.states.filter(s => !STATE_CODES.has(s));
+    assert(`${at} every state code is real and uppercase`, bad.length === 0, `unknown: ${bad.join(', ')}`);
+  }
 }
 
 // ── 2. The two catalogs agree ────────────────────────────────────────────────
@@ -204,6 +223,118 @@ assert('the categories are HOSA\'s own',
 assert('the qualification ladder runs interested → national',
   HOSA_LEVELS[0].id === 'interested' && HOSA_LEVELS[HOSA_LEVELS.length - 1].id === 'national');
 
+// ── 7. Scale and coverage ────────────────────────────────────────────────────
+// The database's usefulness is breadth. These are floors, not targets: a
+// student in any grade, in any state, with no money, has to find something.
+assert('the structured layer has at least 90 programs', PROGRAMS.length >= 90, `got ${PROGRAMS.length}`);
+for (const c of PROGRAM_CATEGORIES) {
+  const n = PROGRAMS.filter(p => p.category === c.id).length;
+  assert(`category "${c.id}" has at least 2 programs`, n >= 2, `got ${n}`);
+}
+assert('every category id is unique', new Set(PROGRAM_CATEGORIES.map(c => c.id)).size === PROGRAM_CATEGORIES.length);
+assert('every category has a label, blurb and color token',
+  PROGRAM_CATEGORIES.every(c => c.label && c.blurb && c.colorKey));
+
+// The hidden-gem tier makes an editorial promise — small, real and winnable —
+// and a tier that quietly fills up with elite national programs has broken it
+// without anything failing. These two assertions are that promise, in code.
+const gems = PROGRAMS.filter(p => p.tier === 'hidden_gem');
+assert('the hidden-gem tier is substantial', gems.length >= 15, `got ${gems.length}`);
+assert('most hidden gems cost the student nothing',
+  gems.filter(isFreeOrFunded).length >= gems.length * 0.7,
+  `${gems.filter(isFreeOrFunded).length}/${gems.length}`);
+assert('the hidden-gem tier is not mostly elite programs wearing a friendlier label',
+  gems.filter(p => p.selectivity === 'elite').length <= gems.length * 0.25,
+  `${gems.filter(p => p.selectivity === 'elite').length}/${gems.length} are elite`);
+
+// A student who has told us nothing must still see most of the database, and a
+// student in any single state must still have real options. The second one is
+// the check that catches a future expansion that is accidentally all New York.
+assert('geography never hides a national program', programsInState('NE').every(p => !p.states || p.states.includes('NE')));
+assert('a national program is open in every state',
+  PROGRAMS.filter(p => !isRegional(p)).every(p => programsInState('WY').includes(p)));
+for (const code of ['CA', 'TX', 'NY', 'NE', 'WY']) {
+  const n = programsInState(code).length;
+  assert(`a student in ${code} sees at least 60 programs`, n >= 60, `got ${n}`);
+}
+
+// ── 8. The year, as a shape ──────────────────────────────────────────────────
+{
+  const { months, undated } = deadlineCalendar(PROGRAMS, new Date(2026, 7, 26));
+  assert('the calendar is twelve months long', months.length === 12);
+  assert('the calendar starts at the current month', months[0].month === 8 && months[0].isNow === true);
+  assert('the calendar wraps rather than stopping at December', months.some(m => m.month === 1));
+  assert('every month carries a short label', months.every(m => MONTH_SHORT.includes(m.label)));
+  const bucketed = months.reduce((n, m) => n + m.count, 0);
+  assert('every dated program lands in exactly one month',
+    bucketed === PROGRAMS.filter(p => p.deadline?.month != null).length, `bucketed ${bucketed}`);
+  assert('undated programs are reported rather than dropped',
+    bucketed + undated.length === PROGRAMS.length);
+  // The fact the whole strip exists to make visible: the winter really is where
+  // the deadlines are. If a future edit made this false, the copy on the tab
+  // ("the good summer programs close in December through February") would be
+  // telling students something untrue.
+  const winter = months.filter(m => [12, 1, 2].includes(m.month)).reduce((n, m) => n + m.count, 0);
+  const spring = months.filter(m => [4, 5, 6].includes(m.month)).reduce((n, m) => n + m.count, 0);
+  assert('the winter really is the busiest deadline season', winter > spring, `winter ${winter} vs spring ${spring}`);
+}
+
+// ── 9. What is closing soonest ───────────────────────────────────────────────
+{
+  const facts = { age: 17, grade: 11 };
+  const soon = upcomingDeadlines(PROGRAMS, facts, { limit: 6 });
+  assert('the closing-soonest board returns a full slate', soon.length === 6);
+  assert('it is sorted by how soon each one closes',
+    soon.every((r, i) => i === 0 || soon[i - 1].dl.daysOut <= r.dl.daysOut));
+  assert('a pay-to-play program is never urged on anyone',
+    soon.every(r => r.p.tier !== 'pay_to_play'));
+  assert('nothing in it has already passed', soon.every(r => r.dl.daysOut > 0));
+
+  // A fourteen-year-old must never be given a countdown to something with a
+  // sixteen-or-over gate: an urgent reminder about a program you cannot enter
+  // is worse than no reminder.
+  const young = upcomingDeadlines(PROGRAMS, { age: 14, grade: 9 }, { limit: 20 });
+  assert('a too-young student is never shown a countdown they cannot act on',
+    young.every(r => evaluateEligibility(r.p, { age: 14, grade: 9 }).status !== 'too_young'));
+
+  assert('free-only really is free-only',
+    upcomingDeadlines(PROGRAMS, facts, { limit: 20, freeOnly: true }).every(r => isFreeOrFunded(r.p)));
+  assert('a state filter never surfaces a program that state cannot enter',
+    upcomingDeadlines(PROGRAMS, facts, { limit: 20, state: 'NE' })
+      .every(r => !r.p.states || r.p.states.includes('NE')));
+  assert('a student who sets their state still gets a usable board',
+    upcomingDeadlines(PROGRAMS, facts, { limit: 6, state: 'NE' }).length === 6);
+}
+
+// ── 10. The application pipeline ─────────────────────────────────────────────
+{
+  const ids = PIPELINE_STAGES.map(s => s.id);
+  assert('every pipeline stage id is unique', new Set(ids).size === ids.length);
+  assert('the pipeline runs interested → accepted', ids[0] === 'interested' && ids[ids.length - 1] === 'accepted');
+  assert('STAGE_BY_ID indexes every stage', ids.every(id => STAGE_BY_ID[id]));
+  assert('every stage has a label, a color token and a one-line meaning',
+    PIPELINE_STAGES.every(s => s.label && s.colorKey && s.sub));
+  assert('the active stages are the ones with work left in them',
+    ACTIVE_STAGES.every(id => STAGE_BY_ID[id]) && !ACTIVE_STAGES.includes('submitted') && !ACTIVE_STAGES.includes('accepted'));
+
+  // Stages round-trip through the user record, and a junk value from an older
+  // build is dropped rather than rendered as a blank chip forever.
+  const saved = writePrefs({ name: 'x' }, {
+    stages: { 'stanford-simr': 'applying', 'made-up-program': 'not_a_stage' },
+    homeState: 'ny',
+  });
+  const back = readPrefs(saved);
+  assert('a real stage survives the round trip', back.stages['stanford-simr'] === 'applying');
+  assert('an unknown stage value is dropped', back.stages['made-up-program'] === undefined);
+  assert('a home state is normalized to uppercase', back.homeState === 'NY');
+  assert('a junk home state is refused', readPrefs(writePrefs({}, { homeState: 'nonsense' })).homeState === null);
+  assert('writePrefs does not clobber the rest of the user record', saved.name === 'x');
+
+  const counts = stageCounts({ a: 'applying', b: 'applying', c: 'submitted' });
+  assert('stage counts add up', counts.applying === 2 && counts.submitted === 1 && counts.interested === 0);
+  assert('stage counts name every stage even at zero', ids.every(id => counts[id] != null));
+}
+
 // ── Report ───────────────────────────────────────────────────────────────────
 console.log(`\nStructured programs: ${PROGRAMS.length}`);
 for (const t of PROGRAM_TIERS) {
@@ -211,6 +342,12 @@ for (const t of PROGRAM_TIERS) {
   console.log(`  ${t.label}: ${list.length} (${list.filter(isFreeOrFunded).length} free or funded)`);
 }
 console.log(`  ${PROGRAMS.filter(p => p.deadline?.month != null).length} carry a dated deadline · ${PROGRAMS.filter(p => p.citizenship).length} require US citizenship or a green card`);
+console.log(`  ${PROGRAMS.filter(p => !isRegional(p)).length} national · ${PROGRAMS.filter(isRegional).length} open to particular states`);
+console.log(`  by kind: ${PROGRAM_CATEGORIES.map(c => `${c.label.toLowerCase()} ${PROGRAMS.filter(p => p.category === c.id).length}`).join(' · ')}`);
+{
+  const { months } = deadlineCalendar(PROGRAMS, new Date(2026, 0, 1));
+  console.log(`  the year: ${months.map(m => `${m.label} ${m.count}`).join(' · ')}`);
+}
 console.log(`HOSA: ${HOSA_EVENTS.length} competitive events across ${HOSA_CATEGORIES.length} categories`);
 
 if (failures.length) {

@@ -90,7 +90,11 @@ for (const o of OPPORTUNITIES) {
 // ── 4. Coverage ──────────────────────────────────────────────────────────────
 // The database's usefulness is breadth: a student on any pathway, in any grade, at any effort
 // level should find something. These are floors, not targets.
-assert('catalog has at least 200 programs', OPPORTUNITIES.length >= 200, `got ${OPPORTUNITIES.length}`);
+// Raised from 200 with the database expansion. A floor is only useful if it
+// tracks what the catalog is actually for: a student on any pathway, in any
+// grade, with no money, finding something. It goes up when the catalog does,
+// and it never comes back down without somebody deciding to lower it.
+assert('catalog has at least 300 programs', OPPORTUNITIES.length >= 300, `got ${OPPORTUNITIES.length}`);
 for (const type of TYPES) {
   assert(`type "${type}" has entries`, OPPORTUNITIES.some((o) => o.type === type));
 }

@@ -8,10 +8,11 @@ import { ANCHORS } from './anchors.js';
 import { COMPETITIONS } from './competitions.js';
 import { PROGRAMS } from './programs.js';
 import { AWARDS } from './awards.js';
+import { OPPORTUNITY_EXPANSION } from './expansion.js';
 import { PRIORITY, TRACK_IDS } from './schema.js';
 
 export * from './schema.js';
-export { ANCHORS, COMPETITIONS, PROGRAMS, AWARDS };
+export { ANCHORS, COMPETITIONS, PROGRAMS, AWARDS, OPPORTUNITY_EXPANSION };
 
 /**
  * Every catalog entry, normalized.
@@ -21,7 +22,7 @@ export { ANCHORS, COMPETITIONS, PROGRAMS, AWARDS };
  * means "no lead time needed". Authoring files stay readable and the consumers
  * never have to write `entry.effort ?? 'moderate'` at every call site.
  */
-export const ROADMAP_CATALOG = [...ANCHORS, ...COMPETITIONS, ...PROGRAMS, ...AWARDS].map((e) => ({
+export const ROADMAP_CATALOG = [...ANCHORS, ...COMPETITIONS, ...PROGRAMS, ...AWARDS, ...OPPORTUNITY_EXPANSION].map((e) => ({
   selectivity: 'open',
   effort: 'moderate',
   format: 'varies',
