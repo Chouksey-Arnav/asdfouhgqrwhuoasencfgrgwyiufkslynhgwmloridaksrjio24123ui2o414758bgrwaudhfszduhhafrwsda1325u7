@@ -223,7 +223,7 @@ import {
 import SubNav from './components/ui/SubNav';
 import TabContentGuard from './components/TabContentGuard';
 import EmptyState from './components/ui/EmptyState';
-import { useMediaQuery, Arc, Bar, Stat } from './components/ui/primitives';
+import { useMediaQuery, useViewport, Arc, Bar, Stat } from './components/ui/primitives';
 // The SAT pillar ships sealed for v1 — the tab renders behind SatBetaCover and
 // nothing outside it integrates with SAT any more. See src/lib/betaFlags.js.
 import SatTab from './components/sat/SatTab';
@@ -254,6 +254,7 @@ import {
   onTint, accentText, accentFill, accentGrad, accentSweep, shade, isLight,
   applyTheme, getStoredMode, storeMode, resolveMode, watchSystemTheme, THEME_MODES, CONTROL_TRANSITION } from './lib/theme';
 import { loadA11y, saveA11y, applyA11y, motionReduced, DEFAULTS as A11Y_DEFAULTS, FONT_SCALE_STEPS, announce } from './lib/a11y';
+import { subscribeViewport, setViewportBase } from './lib/useViewport';
 import AboutMePanel from './components/AboutMePanel';
 import AppearanceSettings from './components/AppearanceSettings';
 import ConnectionsPanel from './components/parent/ConnectionsPanel';
@@ -1509,7 +1510,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     e.preventDefault();
     onOpenLegal(path);
   }, [onOpenLegal]);
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  // One source of truth for "how much room is there" — see useIsMobile in
+  // components/ui/primitives.jsx for why this is no longer a media query.
+  const viewport = useViewport();
+  const isMobile = viewport.isMobile;
 
   // ── DB loading ──────────────────────────────────────────────────────────────
   const [dbReady, setDbReady] = useState(false);
@@ -2096,6 +2100,26 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   useEffect(()=>{
     if(a11y.themeMode!=='system') return;
     return watchSystemTheme(()=>{ applyA11yAndSync(a11y); });
+  },[a11y,applyA11yAndSync]);
+
+  // ── Follow the screen ──────────────────────────────────────────────────────
+  // Re-fits the app whenever the viewport meaningfully changes: a window
+  // dragged between a laptop display and an external monitor, a tablet rotated,
+  // a Chromebook waking on a different screen, a phone keyboard opening. The
+  // shared watcher in src/lib/useViewport.js coalesces all of that to one
+  // measurement per frame and only calls back when the snapped scale or the
+  // measured size actually moved, so this is not a per-frame restyle.
+  //
+  // applyA11yAndSync rather than a bare re-render: the effective zoom lives in a
+  // custom property on <html>, so refitting IS re-applying the a11y settings.
+  // It is declarative and converges, which is what makes calling it from a
+  // resize safe. Nothing is saved — the fit is a property of the screen, not a
+  // preference, and writing it to storage would carry one device's screen to
+  // the next one the student signs in on.
+  useEffect(()=>{
+    if(a11y.autoFit===false) return;
+    setViewportBase(a11y.fontScale);
+    return subscribeViewport(()=>{ applyA11yAndSync(a11y); });
   },[a11y,applyA11yAndSync]);
 
   const updateA11y=useCallback((patch)=>{setA11y(s=>({...s,...patch}));},[]);
@@ -10240,8 +10264,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         )}
 
         {/* ══ SIDEBAR (Desktop) ════════════════════════════════════════════════ */}
+        {/* Width via a custom property, not a literal 236: index.css narrows the rail
+            on a tablet-sized canvas, where 236 of ~890 usable pixels is a quarter of
+            the screen spent on navigation. An inline number would outrank the
+            stylesheet and there would be nothing the rule could do. */}
         {!isMobile && (
-          <aside style={{width:236,flexShrink:0,display:'flex',flexDirection:'column',overflow:'hidden',borderRight:`1px solid ${C.b1}`,background:`linear-gradient(180deg,${C.s0} 0%,${C.bg} 100%)`,position:'relative',zIndex:10}}>
+          <aside className="msp-nav-rail" style={{width:'var(--msp-rail-w, 236px)',flexShrink:0,display:'flex',flexDirection:'column',overflow:'hidden',borderRight:`1px solid ${C.b1}`,background:`linear-gradient(180deg,${C.s0} 0%,${C.bg} 100%)`,position:'relative',zIndex:10}}>
             <div style={{position:'absolute',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,transparent,${accent}60,transparent)`}}/>
             <div style={{padding:'20px 16px 16px',borderBottom:`1px solid ${C.b1}`}}>
               <div style={R({gap:12})}>
@@ -10393,7 +10421,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               bigger screens. Raised so ordinary desktop/laptop viewports use their full width;
               content that genuinely needs a narrower reading measure (lesson articles, essay
               editor, etc.) already caps itself internally rather than relying on this wrapper. */}
-          <div style={{maxWidth:isMobile?'none':'min(1760px, 100%)',margin:'0 auto',padding:isMobile?'20px 16px 40px':'30px 40px 70px'}}>
+          {/* The measure and the gutters are custom properties now, not a
+              two-way `isMobile ?`. index.css defines them per device class
+              (phone / tablet / laptop / desktop / wide) and again for a short
+              screen, which is what lets a 1024px iPad and a 1366×768 Chromebook
+              each get gutters sized for the room they actually have instead of
+              both taking the same "not mobile" branch. See the AUTO-FIT section
+              in index.css and src/lib/viewportFit.js. */}
+          <div style={{maxWidth:'var(--msp-content-max)',margin:'0 auto',padding:'var(--msp-content-pad)'}}>
             {/* The tab swap deliberately does NOT go through AnimatePresence — mounting the next
                 tab must never be conditional on an exit animation reporting itself finished, which
                 is precisely how this app's content column used to end up permanently black after a

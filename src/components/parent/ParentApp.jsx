@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { C, glass, glass2, btn, btnG, CC, R, autoGrid, tint, storeMode, onTint } from '../../lib/theme';
 import { loadA11y, applyA11y } from '../../lib/a11y';
+import { subscribeViewport } from '../../lib/useViewport';
 import * as AuthAPI from '../../lib/authApi';
 import * as ParentAPI from '../../lib/parentApi';
 import { buildParentDigest } from '../../lib/parentDigest';
@@ -553,8 +554,14 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
   // object, which an already-committed render cannot observe, so the apply happens in an effect and
   // bumps an epoch that keys the tree. See the header of lib/theme.js.
   useEffect(() => {
-    const resolved = applyA11y({ ...loadA11y(), themeMode });
-    if (appliedRef.current !== resolved) { appliedRef.current = resolved; setThemeEpoch((e) => e + 1); }
+    const apply = () => {
+      const resolved = applyA11y({ ...loadA11y(), themeMode });
+      if (appliedRef.current !== resolved) { appliedRef.current = resolved; setThemeEpoch((e) => e + 1); }
+    };
+    apply();
+    // And re-fit on every screen change, same as the student app — a parent
+    // dashboard is read on a phone at least as often as on a laptop.
+    return subscribeViewport(apply);
   }, [themeMode]);
 
   /**

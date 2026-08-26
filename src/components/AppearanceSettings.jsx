@@ -30,7 +30,7 @@ import { DEFAULTS, FONT_SCALE_STEPS, systemReducedMotion, motionReduced } from '
 // "customized" indicator and the reset flow can be verified key-by-key
 // against exactly what's rendered — no setting silently falls outside both.
 const CARD_KEYS = {
-  text: ['fontScale', 'lineSpacing', 'letterSpacing', 'readableFont', 'boldText', 'readingWidth'],
+  text: ['autoFit', 'fontScale', 'lineSpacing', 'letterSpacing', 'readableFont', 'boldText', 'readingWidth'],
   contrast: ['highContrast', 'reduceTransparency', 'underlineLinks', 'alwaysShowFocus'],
   motion: ['reduceMotion', 'hideDecorative'],
   pointer: ['largeTargets', 'cursorSize'],
@@ -349,12 +349,27 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
         subtitle="Scaling resizes the whole interface, not just the words — buttons, icons and spacing grow with it."
         changed={cardChanged('text')} onReset={() => resetCard('text')}
       >
+        <Toggle
+          id="a11y-autofit"
+          label="Fit to my screen"
+          description="Sizes the app for whatever device you open it on — a small Chromebook, a tablet, a large monitor — starting from the interface size you pick below. Turn it off to use that size exactly as chosen everywhere."
+          checked={s.autoFit !== false}
+          onChange={v => set({ autoFit: v })}
+          accent={accent}
+        />
+
         <Segmented
           label="Interface size"
           description="Everything gets proportionally bigger. Useful on a small laptop or if you sit far from the screen."
           value={s.fontScale}
           options={FONT_SCALE_STEPS}
-          onChange={v => set({ fontScale: v })}
+          // Picking a size by hand ends the automatic fitting, and does so
+          // silently rather than by putting a second decision to the student.
+          // Somebody who has just told the app how big they want it does not
+          // then want the app adjusting that number for them — and if they do,
+          // the toggle directly above is the way back. This is the "an explicit
+          // choice is never overridden" rule the theme picker already follows.
+          onChange={v => set({ fontScale: v, autoFit: false })}
           accent={accent}
         />
 

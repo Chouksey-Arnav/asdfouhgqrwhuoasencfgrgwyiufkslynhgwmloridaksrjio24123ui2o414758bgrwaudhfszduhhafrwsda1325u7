@@ -79,11 +79,36 @@ body {
   touch-action: manipulation;
   transition: background-color .25s ease, color .25s ease;
 }
+/* ── #root, and the width bug that cost every screen 13% of itself ───────────
+   `width` here used to be `calc(100% / var(--msp-font-scale))`, mirroring the
+   `--msp-vh` division above. That looks symmetrical and is not, because `zoom`
+   treats percentages and viewport units differently — and the difference
+   changed under the app when `zoom` was standardised (Chrome 128+, and the
+   other engines since):
+
+     • A PERCENTAGE resolves against the containing block already converted
+       into this element's zoomed coordinate space. `width: 100%` on a zoomed
+       #root therefore fills the viewport exactly. Dividing by the scale on top
+       of that divides a second time.
+     • A VIEWPORT UNIT does not. `100dvh` inside a zoomed subtree is the full
+       viewport height in LOCAL pixels, which the zoom then multiplies — so
+       here the division is the correction that makes it right, and
+       `--msp-vh` above is correct as written.
+
+   Measured on Chrome 141 at the default 1.15 scale, the old rule laid #root out
+   at 1188px on a 1366px screen: a 178px dead strip down the right-hand side of
+   every 1366×768 Chromebook, 250px on a 1920px monitor, 51px on a phone. It
+   was proportional to the scale, so it grew for any student who had chosen
+   larger text — precisely the students least able to spare the room.
+
+   Do not "restore the symmetry" here without measuring both axes on a real
+   browser first. scripts/verifyViewportFit.mjs does exactly that, on six device
+   sizes, and fails the build if either axis drifts again. */
 #root {
   display: flex;
   zoom: var(--msp-font-scale);
   height: var(--msp-vh);
-  width: calc(100% / var(--msp-font-scale));
+  width: 100%;
   overflow: hidden;
 }
 
@@ -1221,6 +1246,98 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   .rm-shimmer { animation: none; opacity: 0.6; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   AUTO-FIT — the layout half of src/lib/viewportFit.js
+
+   viewportFit.js decides how BIG the app is on this screen and stamps what it
+   measured onto <html> (`data-device`, `data-orientation`, `data-short-screen`,
+   `--msp-vw`, `--msp-vh-px`). This section decides how the app is SHAPED at
+   each of those sizes.
+
+   Two things are deliberately absent:
+
+   • There is no transition on `zoom`. It is animatable, and animating it would
+     relayout the entire tree on every frame of the transition — the resize
+     would be measurably worse, not smoother. Smoothness here comes from the
+     scale being snapped and stable (so it changes rarely and decisively) and
+     from the layout below reflowing cleanly when it does.
+   • There are no `!important` overrides of component styles. Where a layout
+     value has to vary by device, the component reads a custom property defined
+     here instead — see `--msp-content-max` / `--msp-content-pad`, which App.jsx's
+     content column uses in place of the fixed numbers it used to inline.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* The content column's measure and gutters, per device class. The old inline
+   values were a two-way `isMobile ? phone : everything-else` split, which meant
+   a 1024px tablet and a 2560px monitor were laid out identically. */
+:root {
+  --msp-content-max: min(1760px, 100%);
+  --msp-content-pad: 30px 40px 70px;
+}
+:root[data-device="phone"]   { --msp-content-max: none;  --msp-content-pad: 20px 16px 40px; }
+:root[data-device="tablet"]  { --msp-content-max: 100%;  --msp-content-pad: 24px 24px 56px; }
+:root[data-device="laptop"]  { --msp-content-max: 100%;  --msp-content-pad: 26px 30px 64px; }
+:root[data-device="desktop"] { --msp-content-max: min(1760px, 100%); --msp-content-pad: 30px 40px 70px; }
+:root[data-device="wide"]    { --msp-content-max: min(1980px, 100%); --msp-content-pad: 34px 56px 80px; }
+
+/* A short screen — a 1366×768 Chromebook, a phone in landscape — is short
+   whatever its width, and vertical padding is the cheapest thing to give back.
+   This is most of what makes the app feel like it fits on a school Chromebook:
+   ~30 pixels of height returned to content at the top of every tab. */
+:root[data-short-screen] { --msp-content-pad: 18px 30px 48px; }
+:root[data-short-screen][data-device="phone"] { --msp-content-pad: 14px 16px 36px; }
+
+/* ── The no-horizontal-scroll guarantee ────────────────────────────────────
+   A tab that scrolls sideways is the single most common way "it doesn't fit on
+   this screen" actually shows up, and it is almost always one element: a wide
+   table, a long unbroken URL in a student's own note, a fixed-width embed.
+
+   The fix is per-element and structural rather than a blanket `overflow:hidden`
+   on the container, which would hide the overflowing content instead of making
+   it reachable. Wide things scroll INSIDE their own box; long words wrap. */
+[data-app-content] img,
+[data-app-content] svg:not([width]),
+[data-app-content] video,
+[data-app-content] canvas { max-width: 100%; }
+
+[data-app-content] table { max-width: 100%; }
+
+/* Tables and code are the two things that legitimately cannot be narrowed, so
+   they get their own scroll context rather than pushing the page sideways. */
+[data-app-content] pre,
+[data-app-content] .msp-scroll-x { max-width: 100%; overflow-x: auto; }
+
+/* Student-entered text — essay titles, activity descriptions, pasted links —
+   is the other source, and a URL has no break opportunities at all. */
+[data-app-content] p,
+[data-app-content] h1, [data-app-content] h2, [data-app-content] h3,
+[data-app-content] li, [data-app-content] td, [data-app-content] dd {
+  overflow-wrap: break-word;
+}
+
+/* ── Tablets, and the gap this app used to have ────────────────────────────
+   Between 768px and 1024px the app took the desktop branch of every
+   `isMobile ?` in the codebase: a 236px sidebar plus desktop gutters out of
+   1024 total, leaving a content column narrower than the phone layout's. An
+   iPad in portrait was the worst screen this app ran on. Narrowing the rail
+   here gives that width back without changing a single component. */
+:root { --msp-rail-w: 236px; }
+:root[data-device="tablet"] { --msp-rail-w: 196px; }
+/* On a wide canvas the rail can afford to be a little more legible. */
+:root[data-device="wide"] { --msp-rail-w: 260px; }
+
+/* A coarse pointer is a real finger, whatever the screen size — a touchscreen
+   Chromebook and a tablet both qualify. 44px is the WCAG 2.5.8 target size. */
+:root[data-coarse-pointer] button,
+:root[data-coarse-pointer] a[href],
+:root[data-coarse-pointer] [role="button"] { min-height: 44px; }
+/* Inline links inside prose are excluded: a 44px tall link in the middle of a
+   sentence breaks the line box it sits in, and the rule above would otherwise
+   reach every link in every lesson. */
+:root[data-coarse-pointer] p a[href],
+:root[data-coarse-pointer] li a[href],
+:root[data-coarse-pointer] a[href].msp-inline-link { min-height: 0; }
 
 /* ══════════════════════════════════════════════════════════════════════════
    PRINT — "print the whole portfolio"

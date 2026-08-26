@@ -1,18 +1,34 @@
 // Generic authenticated CRUD client for the Supabase-backed feature tables.
 import { getToken } from './authApi';
+import { apiFetch, parseJson } from './http';
 import * as DB from './db';
+
+// Through apiFetch (src/lib/http.js) so a dropped request on a filtered network
+// retries instead of surfacing as the browser's "Failed to fetch" — see that
+// file's header for the whole story.
+//
+// A write gets ONE retry where a read gets the default two. The asymmetry is the
+// honest reading of the risk: apiFetch only ever repeats a request that failed
+// at the transport layer, but "failed at the transport layer" includes the case
+// where the server handled the request and the *response* was lost on the way
+// back, and repeating that turns one created row into two. The unique indexes on
+// these tables catch most of it as a 409 (which callers already treat as
+// converge-and-re-read), so one retry is worth having; a second is spending
+// somebody's data on a diminishing return.
+const retriesFor = (method) => (!method || method === 'GET' ? 2 : 1);
 
 async function req(path, options = {}) {
   const token = getToken();
-  const res = await fetch(`/api${path}`, {
+  const res = await apiFetch(path, {
     ...options,
+    retries: retriesFor(options.method),
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
   });
-  const data = await res.json().catch(() => ({}));
+  const data = await parseJson(res).catch(() => ({}));
   if (!res.ok) {
     // `status` and `reason` ride along on the error so callers can tell a 409 (the unique index
     // rejecting a row another device already wrote — expected, converge by re-reading) apart from

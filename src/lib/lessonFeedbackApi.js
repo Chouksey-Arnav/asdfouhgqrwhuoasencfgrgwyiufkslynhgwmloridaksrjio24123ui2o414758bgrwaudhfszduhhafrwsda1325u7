@@ -1,4 +1,5 @@
 import { getToken } from './authApi';
+import { apiFetch, parseJson } from './http';
 
 // Client for /api/lesson-feedback — the dedicated Supabase log of lesson difficulty answers
 // (see supabase/migrations/0012_lesson_feedback.sql).
@@ -12,8 +13,13 @@ import { getToken } from './authApi';
 async function post(body) {
   const token = getToken();
   if (!token) return false; // signed out / local-only session — Dexie already has it
-  const res = await fetch('/api/lesson-feedback', {
+  // No retries: this whole module is fire-and-forget (see the note above), the
+  // row is already in Dexie and queued for the next progress push, and spending
+  // three attempts and six seconds of a flaky connection on an analytics write
+  // would compete with the requests the student is actually waiting on.
+  const res = await apiFetch('/lesson-feedback', {
     method: 'POST',
+    retries: 0,
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify(body),
   });
@@ -52,9 +58,9 @@ export async function fetchLessonFeedback(lessonId = null) {
     const token = getToken();
     if (!token) return [];
     const qs = lessonId ? `?lessonId=${encodeURIComponent(lessonId)}` : '';
-    const res = await fetch(`/api/lesson-feedback${qs}`, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await apiFetch(`/lesson-feedback${qs}`, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) return [];
-    const data = await res.json().catch(() => ({}));
+    const data = await parseJson(res).catch(() => ({}));
     return data?.feedback || [];
   } catch {
     return [];

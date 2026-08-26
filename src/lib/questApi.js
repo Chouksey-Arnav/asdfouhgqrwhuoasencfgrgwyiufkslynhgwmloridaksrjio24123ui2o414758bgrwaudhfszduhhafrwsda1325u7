@@ -9,18 +9,22 @@
 //
 // Explicit .js extension so scripts/verifyQuests.mjs can load it under plain Node.
 import { getToken } from './authApi.js';
+import { apiFetch, parseJson } from './http.js';
 
 async function req(options = {}) {
   const token = getToken();
-  const res = await fetch(`/api/parent/quests${options.search || ''}`, {
+  const res = await apiFetch(`/parent/quests${options.search || ''}`, {
     method: options.method || 'GET',
+    // One retry for a write, two for a read — same reasoning as dataApi.js:
+    // repeating a request whose response was lost can claim a quest twice.
+    retries: options.method && options.method !== 'GET' ? 1 : 2,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     ...(options.body ? { body: JSON.stringify(options.body) } : {}),
   });
-  const data = await res.json().catch(() => ({}));
+  const data = await parseJson(res).catch(() => ({}));
   if (!res.ok) {
     const err = new Error(data.error || 'Request failed.');
     err.reason = data.reason;

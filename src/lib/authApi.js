@@ -5,6 +5,8 @@
 //   - Log in:   login(email, password)
 // Password recovery (also used by legacy passwordless accounts to set their first password):
 //   - sendResetCode(email) -> verifyResetCode(email, code) -> resetPassword(email, verificationToken, password)
+import { apiFetch, parseJson, AUTH_TIMEOUT_MS } from './http';
+
 const TOKEN_KEY = 'msp_session_token';
 // Where the account-type choice waits out the Google redirect. sessionStorage, not localStorage:
 // the choice is scoped to this one signup attempt, and a stale 'parent' left behind by an
@@ -38,17 +40,40 @@ export function takePendingRole() {
   } catch { return 'student'; }
 }
 
+/**
+ * Every auth request in the app.
+ *
+ * Routed through apiFetch (src/lib/http.js) rather than calling fetch directly,
+ * which is what stops a single dropped request on a school Chromebook from
+ * reaching the sign-in screen as the browser's own "Failed to fetch". That
+ * helper retries the transport failures worth retrying, bounds every attempt
+ * with a real timeout, and raises an error whose message is a sentence rather
+ * than a browser string. Read the header of that file before changing any of
+ * the numbers below.
+ *
+ * AUTH_TIMEOUT_MS, not the default: signup and password reset send mail inside
+ * the request, and the first request into a cold serverless region pays for the
+ * runtime boot on top of that. The default 20s was cutting off requests that
+ * were about to succeed.
+ */
 async function req(path, options = {}) {
   const token = getToken();
-  const res = await fetch(`/api${path}`, {
+  const res = await apiFetch(path, {
     ...options,
+    timeout: AUTH_TIMEOUT_MS,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
   });
-  const data = await res.json().catch(() => ({}));
+  // Deliberately NOT `.catch(() => ({}))`, which is what the old code did. That
+  // swallowed the one case worth reporting loudest — a school filter or captive
+  // portal answering with its own HTML page — and turned it into a bare
+  // "Request failed." with no clue where the request actually went. parseJson
+  // already returns {} for a legitimately empty body; the only things it throws
+  // are transport problems, and those should reach the screen.
+  const data = await parseJson(res);
   if (!res.ok) {
     const err = new Error(data.error || 'Request failed.');
     err.data = data;
@@ -116,8 +141,9 @@ export const logout = () => req('/auth/logout', { method: 'POST' }).finally(clea
  * Deliberately does not go through `req()`: that attaches whatever token storage currently holds,
  * which by the time this settles is the new one — i.e. it would end the wrong session.
  */
-export const revokeSession = (token) => fetch('/api/auth/logout', {
+export const revokeSession = (token) => apiFetch('/auth/logout', {
   method: 'POST',
+  timeout: AUTH_TIMEOUT_MS,
   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
 });
 
@@ -134,12 +160,13 @@ export const revokeSession = (token) => fetch('/api/auth/logout', {
  */
 export async function exportMyData() {
   const token = getToken();
-  const res = await fetch('/api/auth/account', {
+  const res = await apiFetch('/auth/account', {
     method: 'GET',
+    timeout: AUTH_TIMEOUT_MS,
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
+    const data = await parseJson(res).catch(() => ({}));
     throw new Error(data.error || 'Could not export your data.');
   }
   const blob = await res.blob();
