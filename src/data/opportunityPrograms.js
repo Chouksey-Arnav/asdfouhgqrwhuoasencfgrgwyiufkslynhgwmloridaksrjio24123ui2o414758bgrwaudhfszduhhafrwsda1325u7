@@ -7,7 +7,7 @@
 // specific would rot or point at the wrong place.
 //
 // That is the right call for a local hospital volunteer program. It is the
-// WRONG call for the twenty-odd national programs where the specifics are the
+// WRONG call for the programs where the specifics are the
 // whole point — where a student loses a year because they found out in April
 // that the application closed in February, or spends a week on an application
 // they were never eligible for. Those get this file: real fields, real dates,
@@ -44,13 +44,29 @@
 // sentence that says what they can do at fourteen instead.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** The three honesty tiers. Order is the order they render in. */
+import { EXPANSION_PROGRAMS } from './opportunityProgramsExpansion.js';
+
+/** The honesty tiers. Order is the order they render in. */
 export const PROGRAM_TIERS = [
   {
     id: 'admissions_moving',
     label: 'Genuinely admissions-moving',
     colorKey: 'gold',
     blurb: 'National awards and programs that admissions readers recognize on sight. Almost all are free to enter, and almost all have deadlines months earlier than students expect.',
+  },
+  {
+    // Added with the database expansion, and the tier this app is most
+    // opinionated about. A student comparing themselves to the internet sees
+    // SIMR, RSI and STS and concludes the whole category is closed to them.
+    // It isn't: there is a paid fisheries internship placed within forty-five
+    // minutes of almost any American house, an essay contest scored by working
+    // geneticists that a teacher submits for you, and a state academy your
+    // state government pays for. The odds in this tier are better by an order
+    // of magnitude precisely because the names are not famous.
+    id: 'hidden_gem',
+    label: 'Small, real, and winnable',
+    colorKey: 'teal',
+    blurb: 'Lesser-known programs where the field is a state, a city or a congressional district rather than the country — and where the ratio of what you get out to how hard it is to get in is the best on this list. Most are free.',
   },
   {
     id: 'accessible',
@@ -71,6 +87,25 @@ export const DEADLINE_PRECISIONS = ['exact', 'approx', 'window', 'rolling', 'var
 export const COST_MODELS = ['free', 'free_plus_stipend', 'entry_fee', 'course_fee', 'tuition', 'varies'];
 export const CITIZENSHIP = { US: 'us', US_OR_PR: 'us_or_pr' };
 
+// ── What kind of thing this is ───────────────────────────────────────────────
+// `type` (Research/Competition/Program/…) is the catalog's vocabulary and has
+// to stay aligned with it. `category` is this layer's own, and answers the
+// question a student actually asks the board: "show me the ones where I'd be in
+// a lab" versus "show me the ones I can enter from my bedroom". At a hundred-
+// plus programs, tiers alone stopped being navigable.
+export const PROGRAM_CATEGORIES = [
+  { id: 'research', label: 'Research & labs', colorKey: 'amber', blurb: 'Bench, field or clinical research with a mentor.' },
+  { id: 'competition', label: 'Competitions & olympiads', colorKey: 'violet', blurb: 'You enter, you are judged, you can place.' },
+  { id: 'clinical', label: 'Clinical & patient contact', colorKey: 'pink', blurb: 'Time in the room where care happens.' },
+  { id: 'credential', label: 'Certifications', colorKey: 'cyan', blurb: 'Named, dated qualifications you can hold.' },
+  { id: 'summer', label: 'Summer academies', colorKey: 'orange', blurb: 'Residential or intensive summer programs.' },
+  { id: 'service', label: 'Service & community health', colorKey: 'green', blurb: 'Sustained, countable service.' },
+  { id: 'leadership', label: 'Leadership', colorKey: 'fuchsia', blurb: 'Running something, or being trained to.' },
+  { id: 'writing', label: 'Writing & publication', colorKey: 'indigo', blurb: 'Essays, journals and science communication.' },
+  { id: 'scholarship', label: 'Scholarships & recognition', colorKey: 'gold', blurb: 'Money and named honors.' },
+];
+export const CATEGORY_BY_ID = Object.fromEntries(PROGRAM_CATEGORIES.map(c => [c.id, c]));
+
 /**
  * The structured programs. `id` matches src/data/opportunities.js where the
  * program is already in the browsable catalog, so the two never fork.
@@ -88,7 +123,7 @@ export const CITIZENSHIP = { US: 'us', US_OR_PR: 'us_or_pr' };
  *   url, verified
  *   eligibility, why, altUnder                        — prose
  */
-export const PROGRAMS = [
+const CORE_PROGRAMS = [
   // ── Tier 1: genuinely admissions-moving ────────────────────────────────────
   {
     id: 'regeneron-science-talent-search',
@@ -463,7 +498,65 @@ export const PROGRAMS = [
   },
 ];
 
+// ── The core twenty-one, given the two fields the expansion introduced ───────
+// `category` and `states` arrived with src/data/opportunityProgramsExpansion.js.
+// Rather than thread them through twenty-one hand-written literals above (and
+// risk a silent mismatch between the two halves of the same list), they are
+// declared once here. Anything not named falls back to a category derived from
+// its catalog type and to `states: null`, which means national.
+const CORE_META = {
+  'regeneron-science-talent-search': { category: 'competition' },
+  'regeneron-isef': { category: 'competition' },
+  'davidson-fellows': { category: 'scholarship' },
+  'usa-biology-olympiad': { category: 'competition' },
+  'research-science-institute': { category: 'research' },
+  'stanford-simr': { category: 'research', states: ['CA'] },
+  'nih-high-school-sip': { category: 'research' },
+  'junior-science-humanities-symposium': { category: 'competition' },
+  'congressional-award': { category: 'service' },
+  'hospital-junior-volunteer': { category: 'clinical' },
+  'hosa-future-health-professionals': { category: 'leadership' },
+  'american-chemical-society-project-seed': { category: 'research' },
+  'american-red-cross-certifications': { category: 'credential' },
+  'usa-brain-bee': { category: 'competition' },
+  'nremt-emt-pathway': { category: 'credential' },
+  'congress-of-future-medical-leaders': { category: 'summer' },
+  'nslc-medicine': { category: 'summer' },
+  'university-precollege-summer': { category: 'summer' },
+};
+
+const CATEGORY_FOR_TYPE = {
+  Research: 'research', Competition: 'competition', Scholarship: 'scholarship',
+  Volunteering: 'service', Organization: 'leadership', Academic: 'writing', Program: 'summer',
+};
+
+/** Fills in the two fields every consumer now expects, without ever overwriting a declared one. */
+const normalizeProgram = (p) => ({
+  ...p,
+  category: p.category || CORE_META[p.id]?.category || CATEGORY_FOR_TYPE[p.type] || 'research',
+  states: p.states !== undefined ? p.states : (CORE_META[p.id]?.states ?? null),
+});
+
+/**
+ * The full structured set: the original twenty-one plus the expansion.
+ *
+ * Kept as one exported array because every consumer — the tier board, the
+ * deadline calendar, the matcher's fact block, the verify script — reasons over
+ * "all the programs we know specifics about", and splitting that concept in two
+ * is how the two halves drift.
+ */
+export const PROGRAMS = [...CORE_PROGRAMS, ...EXPANSION_PROGRAMS].map(normalizeProgram);
+
 export const PROGRAM_BY_ID = Object.fromEntries(PROGRAMS.map(p => [p.id, p]));
+
+/** Programs open to a student in `state` (a two-letter code). A national program is open to everyone. */
+export function programsInState(state, programs = PROGRAMS) {
+  if (!state) return programs;
+  return programs.filter(p => !p.states || p.states.includes(state));
+}
+
+/** True when a program is restricted to particular states. */
+export const isRegional = (p) => Array.isArray(p?.states) && p.states.length > 0;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HOSA competitive events, organized the way HOSA organises them.

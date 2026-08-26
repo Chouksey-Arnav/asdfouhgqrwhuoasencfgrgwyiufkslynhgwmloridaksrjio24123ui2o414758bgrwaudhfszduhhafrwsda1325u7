@@ -38,6 +38,8 @@
 // `cost` is the facet students actually filter on and the one most likely to be wrong if
 // guessed, so it is never inferred: an entry without a confirmed cost model simply omits the
 // field, and the UI reports those as "not listed" rather than folding them into "Free".
+import { OPPORTUNITIES_EXPANSION } from './opportunitiesExpansion.js';
+
 export const OPPORTUNITY_TYPES = ['All', 'Competition', 'Research', 'Scholarship', 'Volunteering', 'Organization', 'Academic', 'Program'];
 export const OPPORTUNITY_LEVELS = ['National', 'International', 'State', 'Regional', 'Local'];
 export const OPPORTUNITY_SEASONS = ['Summer', 'School year', 'Year-round', 'Fall', 'Winter', 'Spring', 'Varies'];
@@ -66,7 +68,7 @@ export function facetCounts(entries, facet) {
   return { counts, missing };
 }
 
-export const OPPORTUNITIES = [
+const BASE_OPPORTUNITIES = [
   // ── Health & Medicine-Specific ────────────────────────────────────────────
   { id: 'hosa-future-health-professionals', name: 'HOSA-Future Health Professionals', org: 'HOSA, Inc.', type: 'Organization', level: 'National', effort: 'Open',
     desc: "The largest student organization for future health professionals — local chapters run health-science competitive events, guest speakers, and community health projects.", eligibility: 'Open to any student enrolled in a health-science pathway or interested in a health career; join through your school chapter or start one.',
@@ -134,7 +136,7 @@ export const OPPORTUNITIES = [
     desc: 'A tuition-free summer research program for NYC-area high school juniors working directly in Rockefeller University biomedical labs.', eligibility: 'NYC-area rising seniors with strong science grades; competitive application.',
     tags: ['biomedical research', 'NYC', 'free'], pathways: ['biomedResearch', 'physician'] },
   { id: 'csh-partners-for-the-future', name: 'Partners for the Future', org: 'Cold Spring Harbor Laboratory', type: 'Research', level: 'Regional', effort: 'Elite',
-    desc: 'A year-long, mentored molecular biology research apprenticeship in real CSHL labs for Long Island-area seniors.', eligibility: 'Long Island-area rising seniors with strong biology/chemistry background; competitive application.',
+    desc: 'A year-long, mentored molecular biology research apprenticeship in real CSHL labs for Long Island-area seniors, running afternoons from September through March.', eligibility: 'Long Island-area juniors nominated by their school\'s science chairperson — two nominations per school, so the competition starts inside your own building and you cannot nominate yourself.',
     tags: ['molecular biology', 'year-long research', 'mentorship'], pathways: ['biomedResearch'] },
   { id: 'jackson-laboratory-summer-student', name: 'Summer Student Program', org: 'The Jackson Laboratory', type: 'Research', level: 'National', effort: 'Elite',
     desc: 'A paid, mentored summer research internship in genetics/genomics labs at one of the world\'s leading mammalian genetics research institutions.', eligibility: 'High school juniors/seniors and up, strong biology background; competitive application.',
@@ -294,7 +296,7 @@ export const OPPORTUNITIES = [
   { id: 'girls-who-code-clubs', name: 'Girls Who Code Clubs', org: 'Girls Who Code', type: 'Organization', level: 'National', effort: 'Open', desc: 'Free after-school and summer coding clubs for girls, distinct from the selective Summer Immersion Program — open enrollment, no application.', eligibility: 'Girls in grades 3-12, join or start a free club.', tags: ['coding', 'women in tech', 'free'] },
 
   // ── Recognized Volunteer-Hour Credential ──────────────────────────────────
-  { id: 'presidents-volunteer-service-award', name: "President's Volunteer Service Award (PVSA)", org: 'AmeriCorps (Points of Light-administered)', type: 'Academic', level: 'National', effort: 'Open', desc: 'An official federal recognition (Bronze/Silver/Gold/Lifetime) awarded for cumulative documented volunteer hours over 12 months — a real credential for the hours you already log.', eligibility: 'Any age; log qualifying volunteer hours through the PVSA online portal.', tags: ['volunteer hours', 'federal recognition', 'credential'] },
+  { id: 'presidents-volunteer-service-award', name: "President's Volunteer Service Award (PVSA)", org: 'AmeriCorps (Points of Light-administered)', type: 'Academic', level: 'National', effort: 'Open', desc: 'An official federal recognition (Bronze/Silver/Gold/Lifetime) awarded for cumulative documented volunteer hours over 12 months — a real credential for the hours you already log. AmeriCorps placed the award on a temporary pause in 2025, so confirm it is issuing again before planning around the medal; the hours are worth logging regardless.', eligibility: 'Any age, with tiered hour thresholds by age band; hours must be certified by an approved certifying organization, not self-reported.', tags: ['volunteer hours', 'federal recognition', 'credential'] },
 
   // ── More Civic & Government Leadership ─────────────────────────────────────
   { id: 'boys-nation-girls-nation', name: 'American Legion Boys Nation / Girls Nation', org: 'American Legion / American Legion Auxiliary', type: 'Program', level: 'National', effort: 'Elite', desc: 'The national-level extension of Boys State/Girls State — two delegates per state attend a week-long mock federal government program in Washington, D.C.', eligibility: 'Selected from each state\'s Boys State/Girls State program.', tags: ['government simulation', 'leadership', 'national'] },
@@ -325,7 +327,7 @@ export const OPPORTUNITIES = [
     tags: ['NIH', 'pipeline', 'paid', 'health careers'], pathways: ['physician', 'biomedResearch', 'publicHealth'],
     season: 'Summer', cost: 'Free + stipend', format: 'In person', grades: ['11'] },
   { id: 'jhu-jhibs', name: 'Johns Hopkins Internship in Brain Sciences (JHIBS)', org: 'Johns Hopkins University School of Medicine', type: 'Research', level: 'Local', effort: 'Competitive',
-    desc: 'A paid multi-year neuroscience research internship for Baltimore City high school students, pairing them with Hopkins mentors and a real lab project.', eligibility: 'Baltimore City public high school students, typically applying as sophomores/juniors.',
+    desc: 'A paid neuroscience research internship pairing students with Hopkins mentors — eight weeks in person for Baltimore students, and a five-week virtual track open to students anywhere in the United States, which most applicants never notice exists.', eligibility: 'Juniors and seniors from backgrounds under-represented in neuroscience; the in-person track requires enrollment at a Baltimore City school, the virtual track does not.',
     tags: ['neuroscience', 'paid research', 'mentorship'], pathways: ['physician', 'biomedResearch'],
     season: 'Summer', cost: 'Free + stipend', format: 'In person', grades: ['10', '11'] },
   { id: 'mskcc-hopp-summer', name: 'HOPP Summer Student Program', org: 'Memorial Sloan Kettering Cancer Center', type: 'Research', level: 'Regional', effort: 'Elite',
@@ -337,13 +339,13 @@ export const OPPORTUNITIES = [
     tags: ['cancer research', 'paid internship', 'diversity in STEM'], pathways: ['biomedResearch', 'physician'],
     season: 'Summer', cost: 'Free + stipend', format: 'In person', grades: ['11', '12'] },
   { id: 'mdanderson-hs-summer', name: 'High School Summer Program', org: 'The University of Texas MD Anderson Cancer Center', type: 'Research', level: 'Regional', effort: 'Competitive',
-    desc: 'A summer research experience placing Texas high schoolers in cancer research labs and clinical departments, with a stipend for selected participants.', eligibility: 'Texas high school students, typically 16+ and rising juniors/seniors.',
+    desc: 'A summer research experience placing Texas high schoolers in cancer research labs and clinical departments, with a stipend for selected participants.', eligibility: 'Current Texas high school seniors who are at least 18 years old — the age rule is a hard employment requirement and is the most common reason applications are rejected.',
     tags: ['cancer research', 'clinical research', 'stipend'], pathways: ['physician', 'biomedResearch'],
     season: 'Summer', cost: 'Free + stipend', format: 'In person', grades: ['11', '12'] },
-  { id: 'mayo-spark', name: 'SPARK Research Fellowship', org: 'Mayo Clinic', type: 'Research', level: 'Local', effort: 'Competitive',
-    desc: 'A year-long mentored research fellowship pairing high school students with Mayo Clinic investigators, culminating in a research presentation.', eligibility: 'Students near a Mayo Clinic campus (Rochester MN and affiliated sites); apply in the spring for the following year.',
-    tags: ['mentored research', 'clinical research', 'year-long'], pathways: ['physician', 'biomedResearch'],
-    season: 'School year', cost: 'Free', format: 'In person', grades: ['10', '11'] },
+  { id: 'mayo-spark', name: 'SPARK Research Mentorship Program', org: 'Mayo Clinic (Florida)', type: 'Research', level: 'Local', effort: 'Competitive',
+    desc: 'A mentored research program pairing high school students with Mayo Clinic investigators in Jacksonville, running full-time through the summer and continuing part-time into the autumn, ending in a research presentation.', eligibility: 'Rising juniors and seniors enrolled at a school in Duval or St. Johns County, Florida; the application window has run November to December for the following summer.',
+    tags: ['mentored research', 'clinical research', 'summer into autumn'], pathways: ['physician', 'biomedResearch'],
+    season: 'Summer', cost: 'Free', format: 'In person', grades: ['10', '11'] },
   { id: 'amnh-srmp', name: 'Science Research Mentoring Program (SRMP)', org: 'American Museum of Natural History', type: 'Research', level: 'Local', effort: 'Competitive',
     desc: 'A year-long paid program pairing NYC high schoolers with museum scientists on authentic research in astrophysics, genomics, paleontology, and earth science.', eligibility: 'New York City high school students, typically applying as sophomores/juniors.',
     tags: ['mentored research', 'museum science', 'stipend'], pathways: ['biomedResearch'],
@@ -724,3 +726,14 @@ export const OPPORTUNITIES = [
     season: 'Year-round', cost: 'Free', format: 'In person', grades: ['9', '10', '11', '12'] },
 
 ];
+
+/**
+ * The full browsable catalog: the original curated set plus
+ * src/data/opportunitiesExpansion.js.
+ *
+ * One exported array because everything downstream — the Fuse index, the facet
+ * counts, the matcher, the verify script — reasons over "every program a
+ * student can browse", and a catalog split in two is a catalog where half the
+ * entries silently stop being searchable.
+ */
+export const OPPORTUNITIES = [...BASE_OPPORTUNITIES, ...OPPORTUNITIES_EXPANSION];
