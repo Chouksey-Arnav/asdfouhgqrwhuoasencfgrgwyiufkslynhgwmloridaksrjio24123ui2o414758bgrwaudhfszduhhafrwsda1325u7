@@ -172,8 +172,10 @@ import { seededShuffle, newShuffleSeed } from './lib/shuffle';
 import { summarizeLessonFeedback, FEEDBACK_LABELS } from './lib/lessonFeedback';
 import { logLessonFeedback } from './lib/lessonFeedbackApi';
 import OpportunitiesPanel from './components/portfolio/OpportunitiesPanel';
-import { buildMatchProfile, matchOpportunities, readPrefs, THEME_BY_ID } from './lib/opportunityMatch';
+import { buildMatchProfile, matchOpportunities, readPrefs, THEME_BY_ID, ACTIVE_STAGES } from './lib/opportunityMatch';
 import { OPPORTUNITIES } from './data/opportunities';
+import { PROGRAMS } from './data/opportunityPrograms';
+import { upcomingDeadlines, studentEligibilityFacts } from './lib/opportunityEligibility';
 import PanelHero, { SectionTitle, StatTile } from './components/ui/PanelHero';
 // Parallel pathways — a student can run up to three tracks at once (see
 // lib/pathwayEnrollment.js for the model, PathwaySwitcher.jsx for the surfaces).
@@ -2860,9 +2862,26 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // one matcher, one answer, so the card is a real preview of the tab rather than a second, quieter
   // recommendation that happens to disagree with it. Memoized here for the same reason
   // trackedSummary is: tPort() re-runs on every unrelated state change in this component.
+  // It also carries the two facts from the structured layer that a dashboard is
+  // the right place for and a tab is the wrong place for, because you have to
+  // go to a tab: the single next deadline the student is eligible for, and how
+  // many applications they have started and not sent. A card that says "your
+  // top three picks" is a menu. A card that says "Rockefeller closes in 41 days
+  // and you have two half-written applications" is a reason to open the tab.
   const opportunityPreview = useMemo(()=>{
-    const profile = buildMatchProfile({ user, snapshot:portSnapshot, pathwayKey:eSpec, prefs:readPrefs(user) });
-    return { profile, matches: matchOpportunities({ opportunities:OPPORTUNITIES, profile, count:3 }) };
+    const prefs = readPrefs(user);
+    const profile = buildMatchProfile({ user, snapshot:portSnapshot, pathwayKey:eSpec, prefs });
+    const facts = studentEligibilityFacts({ user, grade: profile.grade });
+    const [next] = upcomingDeadlines(PROGRAMS, facts, {
+      limit:1, freeOnly: prefs.costStance==='free_only', state: prefs.homeState,
+    });
+    const inProgress = Object.values(prefs.stages||{}).filter(s=>ACTIVE_STAGES.includes(s)).length;
+    return {
+      profile,
+      matches: matchOpportunities({ opportunities:OPPORTUNITIES, profile, count:3 }),
+      next: next || null,
+      inProgress,
+    };
   },[user,portSnapshot,eSpec]);
   // accentText, not the raw brand hex: a pathway's accent is fixed identity
   // (constants.js `physician: '#2d7fff'`), tuned as a fill, and this same value
@@ -8116,6 +8135,23 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   ?`Picked for you because you’re into ${opportunityPreview.profile.activeThemeIds.slice(0,3).map(id=>THEME_BY_ID[id]?.label.toLowerCase()).filter(Boolean).join(', ')}${opportunityPreview.profile.usingInferredThemes?' — tap to confirm that’s right':''}`
                   :'Tell us what you care about and these change to match'}
               </div>
+              {/* The two facts a dashboard is for. A deadline you are eligible
+                  for is the only thing on this card that expires. */}
+              {(opportunityPreview.next||opportunityPreview.inProgress>0)&&(
+                <div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:8}}>
+                  {opportunityPreview.next&&(
+                    <span style={pill(tint(C.rose,0.14),accentText(C.rose),{fontSize:10.5,gap:4})}>
+                      <CalendarClock size={10}/>
+                      {opportunityPreview.next.p.name.slice(0,34)} closes in {opportunityPreview.next.dl.daysOut} days
+                    </span>
+                  )}
+                  {opportunityPreview.inProgress>0&&(
+                    <span style={pill(tint(C.amber,0.14),accentText(C.amber),{fontSize:10.5})}>
+                      {opportunityPreview.inProgress} application{opportunityPreview.inProgress===1?'':'s'} started, not sent
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
             <span style={{...pill(tint(C.gold,0.16),accentText(C.gold),{fontSize:11,gap:4}),flexShrink:0}}>Open Opportunities<ArrowRight size={11}/></span>
           </div>

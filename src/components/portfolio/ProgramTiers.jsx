@@ -258,7 +258,7 @@ export function ProgramCard({ program, facts, saved, saving, onSaveDeadline, isM
  *
  * When the board was three accordions the tier blurbs were unavoidable — you
  * had to read one to open one. The explorer replaced the accordions with a
- * filter chip, which is a better control and a worse teacher: a chip labelled
+ * filter chip, which is a better control and a worse teacher: a chip labeled
  * "Expensive, and worth knowing why" does not tell a family that anyone who
  * pays gets in. That sentence is the entire reason the tier exists, so it keeps
  * its own line here.

@@ -40,6 +40,7 @@
 
 import { PATHS, GRADE_STAGES } from '../data/constants.js';
 import { PROGRAM_BY_ID } from '../data/opportunityPrograms.js';
+import { nextDeadline } from './opportunityEligibility.js';
 
 // ── Interest themes ──────────────────────────────────────────────────────────
 // The vocabulary the student picks from ("let them choose") AND the vocabulary
@@ -557,6 +558,15 @@ export function buildMatchPrompt(profile, matches) {
     .filter((x) => x.f)
     .map(({ m, f }) => {
       const bits = [];
+      // How many days out the NEXT occurrence is, computed rather than
+      // remembered. Without it the model can say "the deadline is in February"
+      // to a student reading this in March and be technically correct and
+      // practically useless — the useful sentence is "that is eleven months
+      // away, so this is next year's".
+      const dl = nextDeadline(f);
+      if (dl?.daysOut != null) {
+        bits.push(`next deadline is ${dl.label}, ${dl.daysOut} days away${dl.passedThisCycle ? " (this year's has already passed, so that is next cycle)" : ''}`);
+      }
       if (f.deadline?.note) bits.push(`deadline: ${f.deadline.note}`);
       if (f.minAge != null) bits.push(`minimum age ${f.minAge}`);
       if (f.minGrade != null) bits.push(`grade ${f.minGrade}${f.maxGrade && f.maxGrade !== f.minGrade ? `-${f.maxGrade}` : ''} only`);
