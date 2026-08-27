@@ -80,4 +80,12 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      # `npm run build` chains verify:viewport-fit, which drives real headless
+      # Chromium (see that script's header) rather than mocking layout — the
+      # only way it catches a CSS bug that only shows up in an actual browser.
+      # `npm ci` installs the `playwright` package but not the browser binary
+      # itself; without this step the runner has the library and not the
+      # executable, and every build here fails on "Executable doesn't exist"
+      # before a single verify script's assertions ever run.
+      - run: npx playwright install --with-deps chromium
       - run: npm run build
