@@ -8,6 +8,7 @@ import { renderMarkdown } from '../lib/renderMarkdown';
 import TrackButton from './ui/TrackButton';
 import { scholarshipRowFromCatalog, scholarshipRowFromCustom, normalizeKey } from '../lib/trackingCatalog';
 import { openToSeniors, seniorExclusionReason, scholarshipCounts } from '../lib/scholarshipFilters';
+import { useSearchFocus } from '../lib/useSearchFocus';
 
 const fuse = new Fuse(SCHOLARSHIPS, {
   keys: [
@@ -30,7 +31,12 @@ const fuse = new Fuse(SCHOLARSHIPS, {
 // them every entry rendered an identical "Track" button forever — a student who tracked something
 // last week had no way to tell, so the honest thing to do was tap it again, which is exactly how
 // duplicate rows got created.
-export default function ScholarshipDatabase({ accent = C.blue, onTrack, trackedKeys, pendingKeys, askMedabrain }) {
+// `focus` is the app-wide search landing on one specific award: `{ id, q, n }`,
+// handed down from App.jsx when a ⌘K result opened this page. See the header of
+// src/lib/contentSearch.js — arriving on the Financial Aid page and leaving a
+// student to find the scholarship they typed the name of among ninety cards is
+// the same wall the search exists to remove, with one extra step in front of it.
+export default function ScholarshipDatabase({ accent = C.blue, onTrack, trackedKeys, pendingKeys, askMedabrain, focus = null }) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [expandedId, setExpandedId] = useState(null);
@@ -42,6 +48,19 @@ export default function ScholarshipDatabase({ accent = C.blue, onTrack, trackedK
   // eligibility text rules a senior out — see src/lib/scholarshipFilters.js.
   const [seniorOnly, setSeniorOnly] = useState(false);
   const counts = scholarshipCounts();
+
+  // Arriving from the app-wide search. Every filter that could hide the answer
+  // is cleared on the way in — a student who searched by name did not ask to
+  // keep whichever category chip they left selected a week ago, and a landing
+  // that shows "no matches" for a record we just told them we had is worse than
+  // never having offered it.
+  const focusRef = useSearchFocus(focus, ({ id, q }) => {
+    setQuery(q);
+    setCategory('all');
+    setSeniorOnly(false);
+    setExpandedId(id);
+    setAiLookup(null);
+  });
 
   const results = useMemo(() => {
     const base = query.trim().length >= 2
@@ -153,7 +172,8 @@ export default function ScholarshipDatabase({ accent = C.blue, onTrack, trackedK
             const isOpen = expandedId === s.id;
             const state = stateOf(s.name);
             return (
-              <div key={s.id} style={{ ...glass2({ padding: 0, overflow: 'hidden' }), borderLeft: `3px solid ${state === 'tracked' ? C.green : accent}` }}>
+              <div key={s.id} ref={focus?.id === s.id ? focusRef : undefined}
+                style={{ ...glass2({ padding: 0, overflow: 'hidden' }), borderLeft: `3px solid ${state === 'tracked' ? C.green : accent}` }}>
                 <div style={{ ...R({ gap: 12, padding: 12, cursor: 'pointer' }) }} onClick={() => setExpandedId(isOpen ? null : s.id)}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{s.name}</div>

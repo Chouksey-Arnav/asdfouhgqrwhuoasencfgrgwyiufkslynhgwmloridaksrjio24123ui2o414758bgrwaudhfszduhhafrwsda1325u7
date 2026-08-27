@@ -18,6 +18,7 @@ import {
 import { PATHWAY_FINANCE } from '../../data/pathwayFinance';
 import TrackButton from '../ui/TrackButton';
 import { scholarshipRowFromCatalog, normalizeKey } from '../../lib/trackingCatalog';
+import { useSearchFocus } from '../../lib/useSearchFocus';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The medicine-specific scholarship pipeline (src/data/medicalScholarships.js).
@@ -82,8 +83,10 @@ const fuse = new Fuse(MED_SCHOLARSHIPS, {
   ignoreLocation: true,
 });
 
+// `focus` is the app-wide search landing on one named award — see the header of
+// src/lib/contentSearch.js.
 export default function MedicalScholarshipPipeline({
-  accent = C.violet, pathwayFinanceId = null, onTrack, trackedKeys, pendingKeys,
+  accent = C.violet, pathwayFinanceId = null, onTrack, trackedKeys, pendingKeys, focus = null,
 }) {
   const [stage, setStage] = useState('all');
   const [track, setTrack] = useState('all');
@@ -107,6 +110,18 @@ export default function MedicalScholarshipPipeline({
       return aMine - bMine;
     });
   }, [stage, track, query, pathwayFinanceId]);
+
+  // Arriving from the app-wide search. Stage and track are widened to
+  // everything on the way in: this catalog spans high school to residency, and
+  // most of what it holds is deliberately outside the stage a student is
+  // standing in — hiding the award they typed the name of because it is awarded
+  // in their twenties is exactly backwards.
+  const focusRef = useSearchFocus(focus, ({ id, q }) => {
+    setQuery(q);
+    setStage('all');
+    setTrack('all');
+    setOpenId(id);
+  });
 
   const stateOf = (name) => {
     const key = normalizeKey(name);
@@ -223,7 +238,7 @@ export default function MedicalScholarshipPipeline({
             const applicableNow = (s.stage || []).includes('high-school');
             const trackState = stateOf(s.name);
             return (
-              <div key={s.id} style={{
+              <div key={s.id} ref={focus?.id === s.id ? focusRef : undefined} style={{
                 ...glass2({ padding: 0, overflow: 'hidden' }),
                 borderLeft: `3px solid ${trackState === 'tracked' ? C.green : color}`,
                 background: `linear-gradient(120deg,${tint(color, 0.05)},${tint(C.t1, 0.02)} 55%)`,

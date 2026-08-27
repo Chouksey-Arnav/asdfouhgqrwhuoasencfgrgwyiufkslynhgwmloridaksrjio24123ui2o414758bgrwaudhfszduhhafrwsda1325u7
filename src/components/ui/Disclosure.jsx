@@ -43,6 +43,7 @@ function hasChoice(id) {
  */
 export default function Disclosure({
   id, title, sub, icon: Icon, color = C.blue, defaultOpen = false, children, m = false,
+  openSignal = 0,
 }) {
   const [open, setOpen] = useState(() => readOpen(id, defaultOpen));
 
@@ -54,6 +55,17 @@ export default function Disclosure({
   // choose, the choice is theirs and nothing overrides it.
   const chosen = useRef(hasChoice(id));
   useEffect(() => { if (!chosen.current) setOpen(defaultOpen); }, [defaultOpen]);
+
+  // ── Something outside asked for this door, by name ────────────────────────
+  // `openSignal` is a counter a caller bumps to mean "the thing the student just
+  // asked for is behind this door". The app-wide search is the case it exists
+  // for: sending somebody to a program that lives inside a collapsed catalog and
+  // leaving the catalog collapsed is a search result that lands on nothing.
+  //
+  // It deliberately does NOT touch the stored preference. A door opened this way
+  // was opened for one specific arrival, and the student's own last choice is
+  // still what greets them the next time they come here on their own.
+  useEffect(() => { if (openSignal) setOpen(true); }, [openSignal]);
 
   function toggle() {
     chosen.current = true;

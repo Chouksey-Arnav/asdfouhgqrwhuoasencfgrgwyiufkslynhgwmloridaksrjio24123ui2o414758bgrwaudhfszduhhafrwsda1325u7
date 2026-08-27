@@ -8,6 +8,7 @@ import { showMedabrainToast } from '../lib/medabrainComments';
 import { renderMarkdown } from '../lib/renderMarkdown';
 import { trackTargetForOpportunity, resourceForOpportunity, catalogDedupeKey, normalizeKey } from '../lib/trackingCatalog';
 import TrackButton from './ui/TrackButton';
+import { useSearchFocus } from '../lib/useSearchFocus';
 
 const fuse = new Fuse(OPPORTUNITIES, {
   keys: [
@@ -43,7 +44,10 @@ const effortColor = (effort) => ({ Elite: C.rose, Competitive: C.amber, Open: C.
 // dedupe-key Sets so each row can show whether it's already saved. Both trackers are represented
 // because a type:'Scholarship' entry here belongs in the Financial Aid tracker, not the activity
 // list — see resourceForOpportunity().
-export default function OpportunitiesDatabase({ accent = C.blue, onTrack, trackedKeys, pendingKeys, askMedabrain, activityCount = 0 }) {
+// `focus` is the app-wide search landing on one specific program: `{ id, q, n }`,
+// handed down from App.jsx when a ⌘K result opened this page. See the header of
+// src/lib/contentSearch.js.
+export default function OpportunitiesDatabase({ accent = C.blue, onTrack, trackedKeys, pendingKeys, askMedabrain, activityCount = 0, focus = null }) {
   const [query, setQuery] = useState('');
   const [type, setType] = useState('All');
   // Secondary facets, collapsed behind a toggle so the search-first shape of this tab survives
@@ -96,6 +100,20 @@ export default function OpportunitiesDatabase({ accent = C.blue, onTrack, tracke
   }
 
   const showAiFallback = query.trim().length >= 3 && results.length === 0;
+
+  // Arriving from the app-wide search. Everything that could hide the answer is
+  // cleared on the way in — the type pill, all six facet filters and the sort —
+  // because a student who searched a program by name did not ask to keep the
+  // "Free, virtual, grade 9" filter they set last week, and this page has more
+  // ways to hide a card than any other in the product.
+  const focusRef = useSearchFocus(focus, ({ id, q }) => {
+    setQuery(q);
+    setType('All');
+    clearFilters();
+    setSort('relevance');
+    setExpandedId(id);
+    setAiLookup(null);
+  });
 
   const stateOf = (o) => {
     const resource = resourceForOpportunity(o);
@@ -225,7 +243,8 @@ export default function OpportunitiesDatabase({ accent = C.blue, onTrack, tracke
             const ec = effortColor(o.effort) || C.t2;
             const state = stateOf(o);
             return (
-              <div key={o.id} style={{ ...glass2({ padding: 0, overflow: 'hidden' }), borderLeft: `3px solid ${state === 'tracked' ? C.green : ec}` }}>
+              <div key={o.id} ref={focus?.id === o.id ? focusRef : undefined}
+                style={{ ...glass2({ padding: 0, overflow: 'hidden' }), borderLeft: `3px solid ${state === 'tracked' ? C.green : ec}` }}>
                 <div style={{ ...R({ gap: 12, padding: 12, cursor: 'pointer' }) }} onClick={() => setExpandedId(isOpen ? null : o.id)}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{o.name}</div>

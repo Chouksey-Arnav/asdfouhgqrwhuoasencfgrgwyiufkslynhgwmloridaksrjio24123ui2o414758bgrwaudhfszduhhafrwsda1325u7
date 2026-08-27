@@ -23,7 +23,7 @@ import {
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
   Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
   Highlighter, Accessibility, Gauge, Info, Download, Headphones, Users,
-  Shuffle, Flag, Swords, Gift, ListChecks,
+  Shuffle, Flag, Swords, Gift, ListChecks, Loader2,
   // Aliased: `Radar` is already taken in this file by react-chartjs-2's chart component.
   Radar as RadarIcon,
   // Aliased for the same reason: `Map` is a JavaScript global this file uses.
@@ -56,6 +56,12 @@ import { SUBVIEWS, bootRoute, routeFromState, resolveView, formatPath, LEGAL_VIE
 // quick-jump palette ranks with — see the header of src/lib/navMap.js for the
 // searches that returned nothing before it existed.
 import { keywordsFor, searchNav, readRecents, pushRecent } from './lib/navMap';
+// …and the CONTENT it holds. navMap answers "what else might somebody call this
+// screen"; contentSearch answers "where is the actual thing I am looking for" —
+// the named scholarship, the summer program, the BS/MD at Drexel. See the header
+// of src/lib/contentSearch.js for why that is a different problem and why it is
+// the bigger half of navigating this app.
+import { loadContentIndex, searchContent } from './lib/contentSearch';
 import { LEGAL, TRADEMARK_NOTICE } from './legal/legalConfig';
 import useAppRouter, { isPlainLeftClick } from './lib/useAppRouter';
 import * as AuthAPI from './lib/authApi';
@@ -175,7 +181,14 @@ import OpportunitiesPanel from './components/portfolio/OpportunitiesPanel';
 import { buildMatchProfile, matchOpportunities, readPrefs, THEME_BY_ID, ACTIVE_STAGES } from './lib/opportunityMatch';
 import { OPPORTUNITIES } from './data/opportunities';
 import { PROGRAMS } from './data/opportunityPrograms';
-import { upcomingDeadlines, studentEligibilityFacts } from './lib/opportunityEligibility';
+// Aliased, and it MUST stay aliased: the component below binds a local
+// `upcomingDeadlines` to the student's own saved deadline rows (useDeadlines()),
+// which shadows this import for the whole body. Imported under its own name, the
+// one call site that wants the FUNCTION — opportunityPreview, which runs on
+// every render — called an array instead and threw, taking the entire app into
+// the root error boundary on load. Two different things were sharing one name;
+// this gives the function its own.
+import { upcomingDeadlines as upcomingProgramDeadlines, studentEligibilityFacts } from './lib/opportunityEligibility';
 import PanelHero, { SectionTitle, StatTile } from './components/ui/PanelHero';
 // Parallel pathways — a student can run up to three tracks at once (see
 // lib/pathwayEnrollment.js for the model, PathwaySwitcher.jsx for the surfaces).
@@ -1698,6 +1711,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // thirty destinations. Read once at mount and kept in step by the effect
   // beside the router below. See src/lib/navMap.js.
   const [cmdRecents, setCmdRecents] = useState(readRecents);
+  // ── The searchable library ─────────────────────────────────────────────────
+  // ~900 curated records — every scholarship, opportunity, combined-degree
+  // program, college, lesson and deck the app ships — loaded on the FIRST
+  // keystroke of the first search and then held for the session. Not at mount:
+  // it is a few hundred kilobytes of catalog that a student who never opens the
+  // palette should never pay for, and the nav half of the search is synchronous
+  // and already on screen while this resolves. See src/lib/contentSearch.js.
+  const [contentIndex, setContentIndex] = useState(null);
+  const [contentLoading, setContentLoading] = useState(false);
 
   // True for the rest of this session once completeOnboarding() runs — lets Home greet a
   // genuinely first-time user with "Welcome" instead of the default "Welcome back".
@@ -1873,6 +1895,29 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     return goAnywhere(tabId, view);
   }, [goAnywhere,goPortfolio]);
 
+  // ── Arriving somewhere holding a specific record ───────────────────────────
+  // The search does not merely navigate to the screen that holds the Coca-Cola
+  // scholarship — it hands that screen the scholarship. Landing a student on a
+  // page of ninety cards and leaving them to find the one they typed the name
+  // of is the same wall with an extra step in front of it.
+  //
+  // `kind` picks which panel is being spoken to (a page can hold several
+  // searchable databases — Financial Aid holds three), `id` is the card, `q` is
+  // what its own search box should say, and `n` is a nonce so that searching the
+  // SAME record twice still moves the page. Without the nonce the second search
+  // is a no-op and, to the student, the palette has stopped working.
+  //
+  // Consumed via useSearchFocus() in src/lib/useSearchFocus.js.
+  const [contentFocus,setContentFocus]=useState(null); // { kind, id, q, n }
+  const focusContent=useCallback((dest,focus)=>{
+    if(focus?.kind && focus.kind!=='none'){
+      setContentFocus(prev=>({ kind:focus.kind, id:focus.id||null, q:focus.q||'', n:(prev?.n||0)+1 }));
+    }
+    goDest(dest);
+  },[goDest]);
+  /** The arrival, if it was addressed to this panel. Panels see null the rest of the time. */
+  const focusFor=useCallback((kind)=>(contentFocus?.kind===kind?contentFocus:null),[contentFocus]);
+
   // Persist the current tab/sub-view on every change so a reload (a stuck PWA, the phone
   // locking, a flaky connection) resumes on the same screen instead of resetting to Home.
   useEffect(()=>{ saveViewState({ tab, prepView, portfolioView, roadmapView, progressView, satView, settingsView }); },[tab, prepView, portfolioView, roadmapView, progressView, satView, settingsView]);
@@ -1917,15 +1962,57 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // since that's the whole point of a command palette for a fast typist.
   const [cmdActiveIdx,setCmdActiveIdx]=useState(0);
   useEffect(()=>{ setCmdActiveIdx(0); },[cmdQ,cmdOpen]);
+  // Keep the highlighted row on screen. Without this the arrow keys walk the
+  // selection off the bottom of a scrollable list and the student is driving
+  // blind — which now happens far sooner than it used to, because the results
+  // include the library and not only the thirty-odd screens.
+  const cmdListRef=useRef(null);
+  useEffect(()=>{
+    const row=cmdListRef.current?.querySelector('[data-cmd-active="true"]');
+    row?.scrollIntoView({ block:'nearest' });
+  },[cmdActiveIdx,cmdQ]);
+  // ⌘ on a Mac, Ctrl everywhere else. Printing "⌘K" to a student on a
+  // Chromebook is an instruction they cannot follow, and this hint is the only
+  // place most of them will ever learn the shortcut exists.
+  const isApple=useMemo(()=>{
+    if(typeof navigator==='undefined') return false;
+    const p=navigator.userAgentData?.platform||navigator.platform||navigator.userAgent||'';
+    return /mac|iphone|ipad|ipod/i.test(p);
+  },[]);
+  const cmdKeyHint=isApple?'⌘K':'Ctrl K';
+  // ── Opening the search, on every keyboard there is ─────────────────────────
+  // ⌘K is the convention a Mac user already has in their fingers and Ctrl+K is
+  // the same key everywhere else — both have always worked here. What did not
+  // was "/", which is the shortcut a student learns from every other product
+  // they use all day (Gmail, YouTube, GitHub, Slack), needs no modifier at all,
+  // and is therefore the only one that is reachable on a Chromebook without
+  // knowing which key is Meta. It is guarded on not already typing: a "/" while
+  // the cursor is in an essay draft is a slash, and stealing it would be a bug
+  // in the most expensive possible place.
+  const isTypingTarget=useCallback((el)=>{
+    if(!el) return false;
+    const tag=el.tagName;
+    return tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||el.isContentEditable===true;
+  },[]);
   useEffect(()=>{
     function onKey(e){
       if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); setCmdOpen(o=>!o); }
       else if(e.key==='Escape'){ setCmdOpen(false); }
+      else if(e.key==='/'&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&!isTypingTarget(e.target)){ e.preventDefault(); setCmdOpen(true); }
     }
     document.addEventListener('keydown',onKey);
     return ()=>document.removeEventListener('keydown',onKey);
-  },[]);
+  },[isTypingTarget]);
   useEffect(()=>{ if(!cmdOpen) setCmdQ(''); },[cmdOpen]);
+  // The library loads on the first keystroke of the first search and is then
+  // held for the session — see the note beside contentIndex above. Failure is
+  // silent and leaves the search working exactly as it did before content
+  // search existed, which is a degraded search rather than a broken one.
+  useEffect(()=>{
+    if(!cmdOpen||contentIndex||contentLoading||cmdQ.trim().length<2) return;
+    setContentLoading(true);
+    loadContentIndex().then(setContentIndex).catch(()=>{}).finally(()=>setContentLoading(false));
+  },[cmdOpen,cmdQ,contentIndex,contentLoading]);
 
   // ── Diagnostic ──────────────────────────────────────────────────────────────
   const [dStep,setDS]=useState(0);const [dAns,setDA]=useState([]);const [dDone,setDD]=useState(false);const [dRes,setDR]=useState(null);const [dCats,setDCats]=useState(null);const [dWhy,setDWhy]=useState(null);
@@ -2896,7 +2983,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const prefs = readPrefs(user);
     const profile = buildMatchProfile({ user, snapshot:portSnapshot, pathwayKey:eSpec, prefs });
     const facts = studentEligibilityFacts({ user, grade: profile.grade });
-    const [next] = upcomingDeadlines(PROGRAMS, facts, {
+    const [next] = upcomingProgramDeadlines(PROGRAMS, facts, {
       limit:1, freeOnly: prefs.costStance==='free_only', state: prefs.homeState,
     });
     const inProgress = Object.values(prefs.stages||{}).filter(s=>ACTIVE_STAGES.includes(s)).length;
@@ -3355,8 +3442,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       body:`You're studying ${activePathways.length} pathways at once. This stays with you on every screen — click it to switch, or press ⌥1 / ⌥2${activePathways.length>2?' / ⌥3':''}. Nothing is lost when you move between them.`,
       onEnter:()=>{setCmdOpen(false);},
     }]:[]),
-    { target:'cmdk', section:'Everywhere', color:C.blueL, title:'Quick jump — ⌘K', body:"From anywhere, press ⌘K (Ctrl+K) to jump straight to any section. That's it — go explore.", onEnter:()=>{setTab('home');setCmdOpen(false);} },
-  ],[navItems,TOUR_COPY,activePathways]);
+    { target:'cmdk', section:'Everywhere', color:C.blueL, title:'Search everything', body:`From anywhere, press ${cmdKeyHint} — or just "/" — to search. Not only the tabs: type a scholarship, a summer program, a BS/MD, a college or a lesson by name and it takes you to the exact card. On a phone, tap the magnifier up here.`, onEnter:()=>{setTab('home');setCmdOpen(false);} },
+  ],[navItems,TOUR_COPY,activePathways,cmdKeyHint]);
 
   // ── Quick-switch command palette — one searchable jump point across every ────
   // pillar/subview so the whole product (Prep, Portfolio, Progress, and every
@@ -3407,13 +3494,18 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     ...settingsSubnav.map(n=>({ id:`set-${n.id}`, dest:`settings/${n.id}`, keywords:keywordsFor(`settings/${n.id}`), label:n.label, group:'Settings', ic:n.ic, action:()=>goSettings(null,n.id) })),
   ],[navItems,prepSubnav,portfolioSubnav,roadmapSubnav,progressSubnav,satSubnav,settingsSubnav,unlocks,goPrep,goPortfolio,goRoadmap,goProgress,goSat,goSettings,activePathways,pathwayRows,focusedPathway,switchPath,goManagePathways]);
   // ── What the palette shows ──────────────────────────────────────────────────
-  // Two different jobs, and they used to be one:
+  // Three different jobs, and they used to be one:
   //
   //   TYPING   → rank every destination by how well it answers the words the
   //              student used, including the words that are not its label
   //              (searchNav, src/lib/navMap.js). Substring-matching labels meant
   //              "deadlines", "gpa", "fafsa" and "dark mode" all returned
   //              nothing at all, for screens that exist and are finished.
+  //   ALSO     → rank the LIBRARY: the ~900 named records — scholarships,
+  //              programs, combined degrees, colleges, lessons, decks — that a
+  //              student is far more likely to be looking for than a screen.
+  //              Nobody wants "Financial Aid"; they want Coca-Cola. See
+  //              contentCmds below and src/lib/contentSearch.js.
   //   NOT YET  → an empty palette was a fixed list of thirty-odd destinations,
   //              which is a scan. It leads with the handful of screens this
   //              student was actually just on, because that is overwhelmingly
@@ -3439,15 +3531,43 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     id:`locked-${l.id}`, dest:l.id, keywords:keywordsFor(l.id), label:l.label,
     group:'Not shown yet', ic:Lock, hint:l.hint, locked:true, action:()=>goDest(l.id),
   })),[unlocks,goDest]);
+  // ── The library, as commands ───────────────────────────────────────────────
+  // Each hit carries its own breadcrumb ('Portfolio › Applying › Financial aid')
+  // and, where the landing screen can act on it, the focus that opens the exact
+  // card. The breadcrumb is not decoration: it is the only part of this feature
+  // that teaches a student where things live, which is the only way anybody ever
+  // stops needing to search in the first place.
+  const CONTENT_ICONS = useMemo(()=>({
+    Scholarships:Landmark, Opportunities:Trophy, 'Combined degrees':Stethoscope,
+    Colleges:GraduationCap, Lessons:BookOpen, Flashcards:Layers,
+  }),[]);
+  const contentCmds = useMemo(()=>{
+    const q=cmdQ.trim();
+    if(q.length<2||!contentIndex) return [];
+    return searchContent(q, contentIndex).map(e=>({
+      id:`content-${e.id}`, label:e.label, hint:e.sub, where:e.where, group:e.group,
+      ic:CONTENT_ICONS[e.group]||Search, action:()=>focusContent(e.dest, e.focus),
+    }));
+  },[cmdQ,contentIndex,CONTENT_ICONS,focusContent]);
   const filteredCmds = useMemo(()=>{
     const q=cmdQ.trim();
     if(!q) return [...recentCmds, ...COMMANDS.filter(c=>!recentCmds.some(r=>r.id===c.id))];
-    return searchNav(q, [...COMMANDS, ...lockedCmds]);
-  },[COMMANDS,cmdQ,recentCmds,lockedCmds]);
+    // Screens first, records second. Both were ranked on the same scale (see
+    // CONTENT_PENALTY in src/lib/contentSearch.js), so this is not a thumb on
+    // the scale — it is the tiebreak that makes Enter mean the same thing every
+    // time: typing "essays" opens the Essays section, never a scholarship that
+    // happens to be an essay contest.
+    return [...searchNav(q, [...COMMANDS, ...lockedCmds]), ...contentCmds];
+  },[COMMANDS,cmdQ,recentCmds,lockedCmds,contentCmds]);
   const runCommand=useCallback((cmd)=>{ cmd.action(); setCmdOpen(false); play('click'); },[]);
   const onCmdInputKeyDown=useCallback((e)=>{
     if(e.key==='ArrowDown'){ e.preventDefault(); setCmdActiveIdx(i=>Math.min(i+1,filteredCmds.length-1)); }
     else if(e.key==='ArrowUp'){ e.preventDefault(); setCmdActiveIdx(i=>Math.max(i-1,0)); }
+    // Home/End jump the list rather than moving the caret, which is what every
+    // other palette on this student's machine does and what makes a long result
+    // list navigable without thirty presses of an arrow key.
+    else if(e.key==='Home'){ e.preventDefault(); setCmdActiveIdx(0); }
+    else if(e.key==='End'){ e.preventDefault(); setCmdActiveIdx(Math.max(0,filteredCmds.length-1)); }
     else if(e.key==='Enter'){ e.preventDefault(); const cmd=filteredCmds[cmdActiveIdx]; if(cmd)runCommand(cmd); }
   },[filteredCmds,cmdActiveIdx,runCommand]);
 
@@ -9875,7 +9995,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               onTrack={trackOpportunity}
               trackedKeys={{activities:trackedActivityKeys,scholarships:trackedScholarshipKeys}}
               pendingKeys={{activities:pendingTracks.byResource.activities,scholarships:pendingTracks.byResource.scholarships}}
-              pendingEntries={pendingTracks.entries} trackStatus={pendingTracks.status}/> },
+              pendingEntries={pendingTracks.entries} trackStatus={pendingTracks.status}
+              focus={focusFor('opportunity')}/> },
           { id:'tracked', ic:RadarIcon, label:'What you\u2019re tracking', color:C.violet,
             blurb:'Every program you saved, with its deadline, its status and a daily read',
             render:()=><TrackedPanel snapshot={portSnapshot} loading={portSnapLoading} accent={portC.opportunities}
@@ -9902,9 +10023,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       // tap from the screen that fixes it, and a program that runs an MMI is one tap from the MMI
       // circuit with the mode already selected.
       combined:()=><CombinedDegreePanel accent={C.blue} user={user} snapshot={portSnapshot} loading={portSnapLoading}
-        pathwayKey={eSpec} onGoTo={goPortfolio} isMobile={isMobile}/>,
+        pathwayKey={eSpec} onGoTo={goPortfolio} isMobile={isMobile} focus={focusFor('combined')}/>,
       essays:()=><EssayWorkspacePanel accent={C.violet} user={user} gradeLabel={gradeLabel} askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onCreated={()=>{logEvent('portfolio_item_added','essay');saveUser(applyPlanAutoComplete(user,typeMatch('essay')));}}/>,
-      aid:()=><FinancialAidPanel accent={C.green} askMedabrain={askPortfolioMedabrain} pathwayKey={eSpec}/>,
+      aid:()=><FinancialAidPanel accent={C.green} askMedabrain={askPortfolioMedabrain} pathwayKey={eSpec}
+        focusScholarship={focusFor('scholarship')} focusHealthScholarship={focusFor('health-scholarship')}
+        focusMedScholarship={focusFor('med-scholarship')}/>,
       recommenders:()=><RecommendersPanel accent={C.fuchsia} user={user} gradeLabel={gradeLabel} snapshot={portSnapshot} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);logEvent('portfolio_item_added','recommender');checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});saveUser(applyPlanAutoComplete(user,typeMatch('recommender')));}}/>,
       interview:()=><InterviewPrepPanel accent={C.orange} pathway={curPath} pathwayKey={eSpec} studentName={user?.name?.split(' ')[0]||user?.name||null} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);logEvent('interview_session_completed',mode);const ivWrite=saveUser(applyPlanAutoComplete({...user,interviewCount:nc},t=>t.type==='interview'));bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});ivWrite.then(()=>creditStreak('interview_session')).catch(console.error);}}/>,
       calc:tCalc,
@@ -10244,7 +10367,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               )}
             </div>
             <div style={R({gap:8})}>
-              <button data-tour="cmdk" onClick={()=>setCmdOpen(true)} aria-label="Quick switch" style={{width:32,height:32,borderRadius:8,background:C.s2,border:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.t2,cursor:'pointer'}}><Search size={14}/></button>
+              {/* The ONLY route into search on a phone — there is no ⌘K there —
+                  so it is 36px rather than 32, tinted with the accent rather
+                  than another gray chip in a row of gray chips, and labeled for
+                  a screen reader as what it does rather than as a mechanism. */}
+              <button data-tour="cmdk" onClick={()=>setCmdOpen(true)} aria-label="Search the app"
+                style={{width:36,height:36,borderRadius:12,background:tint(accent,0.14),border:`1px solid ${tint(accent,0.3)}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.t1,cursor:'pointer',flexShrink:0}}><Search size={16}/></button>
               <ThemeToggle mode={a11y.themeMode} onChange={m=>updateA11y({themeMode:m})} size={32} align="right" accent={accent}/>
               {/* A live XP boost is genuinely counting down and ends sooner than today does —
                   a boost applied silently to a number the student was going to earn anyway
@@ -10281,7 +10409,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               </div>
             </div>
             <button data-tour="cmdk" onClick={()=>setCmdOpen(true)} style={{margin:'12px 16px 0px',padding:'8px 12px',borderRadius:8,background:C.s2,border:`1px solid ${C.b1}`,color:C.t3,fontSize:12,fontFamily:C.FB,display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}>
-              <Search size={13}/><span style={{flex:1,textAlign:'left'}}>Jump to…</span><span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM,padding:'4px 4px'})}}>⌘K</span>
+              {/* "Search everything", not "Jump to…": the palette stopped being a
+                  screen switcher when it learned the library, and a student who
+                  reads "jump to" has no reason to believe typing a scholarship's
+                  name into it will work. */}
+              <Search size={13}/><span style={{flex:1,textAlign:'left'}}>Search everything…</span><span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM,padding:'4px 4px'})}}>{cmdKeyHint}</span>
             </button>
             <div onClick={()=>setTab('settings')} style={{padding:'12px 16px',borderBottom:`1px solid ${C.b1}`,cursor:'pointer',background:tab==='settings'?`${settingsAccent}12`:undefined}}>
               <div style={R({gap:12,marginBottom:12})}>
@@ -10516,22 +10648,78 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* ══ QUICK-SWITCH COMMAND PALETTE (⌘K) ═══════════════════════════════════ */}
         <AnimatePresence>
           {cmdOpen && (
-            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={()=>setCmdOpen(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:500,display:'flex',alignItems:'flex-start',justifyContent:'center',paddingTop:isMobile?60:'12vh'}}>
-              <motion.div initial={{opacity:0,y:-10,scale:.98}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:-10,scale:.98}} transition={{duration:.16}}
-                style={{width:'min(520px,92vw)',maxHeight:'64vh',display:'flex',flexDirection:'column',background:C.s1,borderRadius:16,border:`1px solid ${C.b2}`,boxShadow:'0 24px 70px rgba(0,0,0,0.65)',overflow:'hidden'}}
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={()=>setCmdOpen(false)}
+              style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:500,display:'flex',alignItems:'flex-start',justifyContent:'center',paddingTop:isMobile?0:'12vh'}}>
+              {/* On a phone this is a full-screen sheet, not a floating card, and
+                  that is not a style choice. A centered dialog with a 64vh cap
+                  loses its bottom half to the on-screen keyboard the instant the
+                  input focuses — which is immediately, since the input
+                  autofocuses — leaving about two visible results. Anchoring the
+                  sheet to the top puts the search field above the keyboard and
+                  spends every remaining pixel on results, which is the same
+                  shape as the phone-native search surfaces a student already
+                  uses (Spotlight, the Android app drawer). */}
+              <motion.div initial={{opacity:0,y:-10,scale:isMobile?1:.98}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:-10,scale:isMobile?1:.98}} transition={{duration:.16}}
+                role="dialog" aria-modal="true" aria-label="Search MedSchoolPrep"
+                style={{
+                  width:isMobile?'100%':'min(560px,92vw)',
+                  height:isMobile?'100%':undefined, maxHeight:isMobile?undefined:'70vh',
+                  display:'flex',flexDirection:'column',background:C.s1,
+                  borderRadius:isMobile?0:16, border:isMobile?'none':`1px solid ${C.b2}`,
+                  boxShadow:'0 24px 70px rgba(0,0,0,0.65)',overflow:'hidden',
+                  paddingTop:isMobile?'env(safe-area-inset-top)':undefined,
+                }}
                 onClick={e=>e.stopPropagation()}>
-                <div style={{display:'flex',alignItems:'center',gap:8,padding:'12px 16px',borderBottom:`1px solid ${C.b1}`}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,padding:isMobile?'14px 16px':'12px 16px',borderBottom:`1px solid ${C.b1}`}}>
                   <Search size={16} color={C.t3}/>
-                  <input autoFocus value={cmdQ} onChange={e=>setCmdQ(e.target.value)} onKeyDown={onCmdInputKeyDown} placeholder="Jump to Prep, Portfolio, Progress…" style={{flex:1,background:'none',border:'none',color:C.t1,fontSize:14,fontFamily:C.FB}}/>
-                  <span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM})}}>ESC</span>
+                  {/* 16px on a phone and never smaller: iOS Safari zooms the whole
+                      page in on any focused input below 16px, and a palette that
+                      zooms the app the moment you tap it is a palette people stop
+                      tapping. */}
+                  <input autoFocus value={cmdQ} onChange={e=>setCmdQ(e.target.value)} onKeyDown={onCmdInputKeyDown}
+                    type="search" enterKeyHint="go" autoCorrect="off" autoCapitalize="none" spellCheck={false}
+                    aria-label="Search screens, scholarships, programs and lessons"
+                    placeholder={isMobile?'Search anything…':'Search screens, scholarships, programs, lessons…'}
+                    style={{flex:1,minWidth:0,background:'none',border:'none',color:C.t1,fontSize:isMobile?16:14,fontFamily:C.FB}}/>
+                  {/* A phone has no Escape key, so it gets a real, thumb-sized
+                      way out instead of a keycap that means nothing to it. */}
+                  {isMobile
+                    ? <button type="button" onClick={()=>setCmdOpen(false)} aria-label="Close search"
+                        style={{width:36,height:36,flexShrink:0,borderRadius:12,background:C.s3,border:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.t2,cursor:'pointer'}}><X size={16}/></button>
+                    : <span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM})}}>ESC</span>}
                 </div>
-                <div style={{overflowY:'auto',padding:8}}>
-                  {filteredCmds.length===0&&<div style={{padding:'24px 12px',textAlign:'center',fontSize:12.5,color:C.t3}}>No matches — try a different word.</div>}
+                <div ref={cmdListRef} style={{overflowY:'auto',WebkitOverflowScrolling:'touch',flex:1,padding:8,paddingBottom:isMobile?'max(20px, env(safe-area-inset-bottom))':8}}>
+                  {/* The library is fetched on the first keystroke (see the note
+                      beside contentIndex), so for a moment the screens are ranked
+                      and the records are not. Saying so beats a list that quietly
+                      grows under the student's finger while they are reading it. */}
+                  {contentLoading&&cmdQ.trim().length>=2&&(
+                    <div style={{...R({gap:8}),padding:'8px 8px',fontSize:11,color:C.t4}}>
+                      <Loader2 size={12} className="spin"/>Searching scholarships, programs and lessons…
+                    </div>
+                  )}
+                  {filteredCmds.length===0&&!contentLoading&&(
+                    <div style={{padding:'24px 16px',textAlign:'center'}}>
+                      <div style={{fontSize:12.5,color:C.t2,marginBottom:4}}>Nothing matched “{cmdQ.trim()}”.</div>
+                      {/* Never a bare dead end. The honest reason a search fails
+                          here is almost always that the thing is not in the
+                          curated set — not that the student typed it wrong — and
+                          telling them what IS searchable is the difference
+                          between trying again and concluding the app hasn't got
+                          it. */}
+                      <div style={{fontSize:11,color:C.t4,lineHeight:1.6}}>
+                        You can search every screen, plus scholarships, summer programs, competitions,
+                        combined-degree programs, colleges, lessons and decks by name.
+                      </div>
+                    </div>
+                  )}
                   {/* 'Pathways' leads: for a student running three tracks, "switch to Nursing"
-                      is the single most-repeated action in the app. ('Settings' is listed here
-                      too because those commands were already being built and matched by the
-                      filter — including by Enter on the keyboard — but never rendered.) */}
-                  {['Recent','Pathways','Jump to','SAT','Prep','Portfolio','Roadmap','Progress','Settings','Not shown yet'].map(group=>{
+                      is the single most-repeated action in the app. Screens come next, then the
+                      library, then the screens the ladder has not opened yet — most specific
+                      answer first, least certain answer last. */}
+                  {/* One line, deliberately: scripts/verifyParallelPathways.mjs reads this literal
+                      to prove 'Pathways' is rendered and rendered ahead of the destinations. */}
+                  {['Recent','Pathways','Jump to','SAT','Prep','Portfolio','Roadmap','Progress','Settings','Scholarships','Opportunities','Combined degrees','Colleges','Lessons','Flashcards','Not shown yet'].map(group=>{
                     const items=filteredCmds.filter(c=>c.group===group);
                     if(!items.length)return null;
                     return(
@@ -10541,15 +10729,39 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                           const idx=filteredCmds.indexOf(cmd);
                           const active=idx===cmdActiveIdx;
                           return(
-                            <motion.div key={cmd.id} onMouseEnter={()=>setCmdActiveIdx(idx)} whileHover={{background:'rgba(255,255,255,0.05)'}} onClick={()=>runCommand(cmd)} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 8px',borderRadius:8,cursor:'pointer',color:C.t1,fontSize:13,background:active?`${accent}16`:undefined,border:active?`1px solid ${accent}30`:'1px solid transparent'}}>
-                              <cmd.ic size={15} color={cmd.locked?C.t4:accent}/>
+                            // 44px minimum on a phone, which is the smallest
+                            // target a thumb hits reliably — the old 8px padding
+                            // made these about 33px, and a mis-tap in a list of
+                            // near-identical rows navigates somewhere wrong.
+                            <motion.div key={cmd.id} data-cmd-active={active?'true':undefined}
+                              // onMouseMove, not onMouseEnter. A pointer that
+                              // merely HAPPENS to be resting where the results
+                              // will appear fires mouseenter as they render,
+                              // which silently drags the keyboard selection off
+                              // the best answer and onto whatever is under the
+                              // cursor. Enter then opens the wrong thing, and by
+                              // the time the student sees which one, they have
+                              // already pressed it. mousemove fires only when the
+                              // mouse actually moves, which is the only moment
+                              // hover is evidence of intent.
+                              onMouseMove={()=>setCmdActiveIdx(idx)} whileHover={{background:'rgba(255,255,255,0.05)'}} onClick={()=>runCommand(cmd)}
+                              style={{display:'flex',alignItems:'center',gap:10,padding:isMobile?'10px 8px':'8px 8px',minHeight:isMobile?44:undefined,borderRadius:8,cursor:'pointer',color:C.t1,fontSize:13,background:active?`${accent}16`:undefined,border:active?`1px solid ${accent}30`:'1px solid transparent'}}>
+                              <cmd.ic size={15} color={cmd.locked?C.t4:accent} style={{flexShrink:0}}/>
                               <span style={{flex:1,minWidth:0}}>
-                                <span style={{color:cmd.locked?C.t2:C.t1}}>{cmd.label}</span>
+                                <span style={{display:'block',color:cmd.locked?C.t2:C.t1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{cmd.label}</span>
                                 {/* A locked row says what opens it. "Not shown yet" with no
-                                    "yet what?" is a closed door with no handle. */}
-                                {cmd.hint&&<span style={{display:'block',fontSize:10.5,color:C.t4,marginTop:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{cmd.hint}</span>}
+                                    "yet what?" is a closed door with no handle. A library row
+                                    says what it is — the org, the state, the degree — because
+                                    "Drexel University" alone does not distinguish the college
+                                    from the BS/MD program at it. */}
+                                {cmd.hint&&<span style={{display:'block',fontSize:10.5,color:C.t4,marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{cmd.hint}</span>}
+                                {/* The breadcrumb. This is the part that teaches
+                                    somebody where things live, and it is the only
+                                    route by which a student eventually stops
+                                    needing to search at all. */}
+                                {cmd.where&&<span style={{display:'block',fontSize:9.5,color:C.t3,marginTop:3,fontFamily:C.FM,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{cmd.where}</span>}
                               </span>
-                              {active?<span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM,padding:'4px 4px'})}}>↵</span>:<ChevronRight size={13} color={C.t4}/>}
+                              {active&&!isMobile?<span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM,padding:'4px 4px'})}}>↵</span>:<ChevronRight size={13} color={C.t4} style={{flexShrink:0}}/>}
                             </motion.div>
                           );
                         })}
@@ -10557,6 +10769,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                     );
                   })}
                 </div>
+                {/* The keyboard legend, on the surface where the keyboard is the
+                    point. "/" is here because it is the shortcut most students
+                    already own from every other product they use, and nothing in
+                    the app said it worked. */}
+                {!isMobile&&(
+                  <div style={{...R({gap:12}),padding:'8px 14px',borderTop:`1px solid ${C.b1}`,background:C.s0,fontSize:9.5,color:C.t4,fontFamily:C.FM,flexWrap:'wrap'}}>
+                    <span>↑↓ move</span><span>↵ open</span><span>esc close</span>
+                    <span style={{marginLeft:'auto'}}>{cmdKeyHint} or / to reopen</span>
+                  </div>
+                )}
               </motion.div>
             </motion.div>
           )}

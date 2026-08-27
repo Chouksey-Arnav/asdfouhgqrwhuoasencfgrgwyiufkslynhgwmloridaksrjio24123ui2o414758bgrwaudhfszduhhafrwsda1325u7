@@ -22,6 +22,7 @@ import {
 } from '../../lib/combinedDegree';
 import { setInterviewIntent } from '../../lib/interviewIntent';
 import { listItems, createItem } from '../../lib/dataApi';
+import { useSearchFocus } from '../../lib/useSearchFocus';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Portfolio ▸ Applying ▸ Combined Degrees.
@@ -175,7 +176,7 @@ function GapRow({ row, onGoTo }) {
 }
 
 /** One fully specified program. */
-function ProgramCard({ program, facts, saved, saving, onSave, onGoTo, isMobile }) {
+function ProgramCard({ program, facts, saved, saving, onSave, onGoTo, isMobile, cardRef = null }) {
   const [open, setOpen] = useState(false);
   const dl = useMemo(() => nextDeadline(program), [program]);
   const v = useMemo(() => verificationStatus(program), [program]);
@@ -193,7 +194,7 @@ function ProgramCard({ program, facts, saved, saving, onSave, onGoTo, isMobile }
   }
 
   return (
-    <motion.div layout style={{
+    <motion.div layout ref={cardRef} style={{
       ...glass({ padding: 0, overflow: 'hidden' }),
       border: `1px solid ${tint(col, 0.22)}`,
       background: `linear-gradient(155deg,${tint(col, 0.05)},rgba(255,255,255,0.02) 55%)`,
@@ -367,14 +368,14 @@ function ProgramCard({ program, facts, saved, saving, onSave, onGoTo, isMobile }
  * Placed high on the page rather than in a footnote, because the failure it
  * prevents is a whole senior year spent on an application that does not exist.
  */
-function MislistedBlock({ isMobile }) {
+function MislistedBlock({ isMobile, focusId = null, focusRef = null }) {
   return (
     <div style={CC({ gap: 8 })}>
       {MISLISTED_PROGRAMS.map(m => {
         const closed = m.kind === 'closed';
         const col = closed ? C.rose : C.amber;
         return (
-          <div key={m.id} style={{
+          <div key={m.id} ref={focusId === m.id ? focusRef : undefined} style={{
             ...glass2({ padding: isMobile ? 13 : 15 }),
             border: `1px solid ${tint(col, 0.26)}`,
             background: `linear-gradient(140deg,${tint(col, 0.07)},rgba(255,255,255,0.02) 60%)`,
@@ -400,7 +401,7 @@ function MislistedBlock({ isMobile }) {
 
 export default function CombinedDegreePanel({
   accent = C.blue, user = null, snapshot = null, loading = false,
-  pathwayKey = null, onGoTo, isMobile = false,
+  pathwayKey = null, onGoTo, isMobile = false, focus = null,
 }) {
   const [pathway, setPathway] = useState(() => (PATHWAY_BY_ID[pathwayKey] ? pathwayKey : 'all'));
   const [state, setStateFilter] = useState('all');
@@ -466,6 +467,20 @@ export default function CombinedDegreePanel({
       setSavingId(null);
     }
   }, [savedIds, existingColleges]);
+
+  // Arriving from the app-wide search on one named program. The query is the
+  // institution rather than the full program label because that is what both
+  // filterPrograms and filterRoster match on, and because a student who typed
+  // "Drexel" should see every Drexel program here, not only the one row the
+  // palette happened to rank first. The pathway and state filters are cleared
+  // for the reason every focusable panel clears its filters: a landing that
+  // reads "no matches" for a record we just offered is worse than not offering
+  // it.
+  const focusRef = useSearchFocus(focus, ({ q }) => {
+    setQuery(q);
+    setPathway('all');
+    setStateFilter('all');
+  });
 
   const filtersOn = pathway !== 'all' || state !== 'all' || !!query.trim();
   const clearFilters = () => { setPathway('all'); setStateFilter('all'); setQuery(''); };
@@ -573,7 +588,7 @@ export default function CombinedDegreePanel({
           title="Commonly recommended — and wrong"
           blurb="Programs that are closed, or that you cannot apply to from high school at all, and that get listed beside the real ones constantly. Getting one of these wrong costs a senior year."
           stats={[{ value: MISLISTED_PROGRAMS.length, label: 'to know about', color: C.roseL }]} />
-        <MislistedBlock isMobile={isMobile} />
+        <MislistedBlock isMobile={isMobile} focusId={focus?.id || null} focusRef={focusRef} />
       </section>
 
       {/* ── The catalog ──────────────────────────────────────────────────── */}
@@ -639,6 +654,7 @@ export default function CombinedDegreePanel({
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill,minmax(400px,1fr))', gap: 12 }}>
               {list.map(p => (
                 <ProgramCard key={p.id} program={p} facts={facts} isMobile={isMobile}
+                  cardRef={focus?.id === p.id ? focusRef : undefined}
                   saved={savedIds.has(p.id)} saving={savingId === p.id} onSave={save} onGoTo={onGoTo} />
               ))}
             </div>
@@ -677,7 +693,7 @@ export default function CombinedDegreePanel({
                 const g = PATHWAY_BY_ID[r.pathway];
                 const gc = C[g?.colorKey] || C.blue;
                 return (
-                  <div key={r.id} style={{ ...glass2({ padding: 12 }), borderLeft: `3px solid ${tint(gc, 0.5)}` }}>
+                  <div key={r.id} ref={focus?.id === r.id ? focusRef : undefined} style={{ ...glass2({ padding: 12 }), borderLeft: `3px solid ${tint(gc, 0.5)}` }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: C.t1, lineHeight: 1.4 }}>{r.institution}</div>
                     <div style={{ fontSize: 11, color: C.t2, marginTop: 4, lineHeight: 1.5 }}>{r.program}</div>
                     <div style={R({ gap: 4, flexWrap: 'wrap', marginTop: 8 })}>
