@@ -112,8 +112,8 @@ renderer.tablecell = function (cell) {
   const tag = cell.header ? 'th' : 'td';
   const align = cell.align ? `text-align:${cell.align};` : '';
   const cellStyle = cell.header
-    ? `${align}padding:6px 10px;border:1px solid ${BORDER};background:${SURF};color:${T1};font-weight:700;white-space:nowrap`
-    : `${align}padding:6px 10px;border:1px solid ${BORDER};color:${T2}`;
+    ? `${align}padding:8px 12px;border:1px solid ${BORDER};background:${SURF};color:${T1};font-weight:700;white-space:nowrap`
+    : `${align}padding:8px 12px;border:1px solid ${BORDER};color:${T2}`;
   return `<${tag} style="${cellStyle}">${content}</${tag}>`;
 };
 
