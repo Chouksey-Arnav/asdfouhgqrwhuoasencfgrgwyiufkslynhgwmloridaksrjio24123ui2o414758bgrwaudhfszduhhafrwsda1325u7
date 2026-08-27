@@ -3,7 +3,13 @@ import React from 'react';
 export default function MaintenanceNotice() {
   return (
     <div style={{
-      minHeight: '100vh',
+      // position: fixed + inset: 0 stretches to the viewport's actual visible
+      // area on every device, unlike 100vh which can leave a gap or force a
+      // scroll on mobile browsers whose address bar resizes the viewport.
+      position: 'fixed',
+      inset: 0,
+      boxSizing: 'border-box',
+      overflow: 'auto',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
