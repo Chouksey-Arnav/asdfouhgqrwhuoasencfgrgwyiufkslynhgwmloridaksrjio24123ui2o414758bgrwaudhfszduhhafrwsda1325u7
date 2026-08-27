@@ -93,13 +93,37 @@ renderer.hr = function () {
   return `<hr style="border:none;border-top:1px solid ${BORDER};margin:12px 0"/>`;
 };
 
+// ── Tables — the piece Medabrain needs to hand back a student schedule ──────
+// gfm:true already makes `marked` parse `| a | b |` rows into table tokens, but
+// the default renderer's output was still being thrown away: DOMPurify's
+// ALLOWED_TAGS below never listed table/thead/tbody/tr/th/td, so any schedule
+// or comparison the model formatted as a table rendered as stripped, run-
+// together text instead. These overrides give a table the same CSS-variable
+// theming as everything else in this file (see the header comment above), and
+// the ALLOWED_TAGS/ALLOWED_ATTR sets underneath now keep what these emit.
+renderer.table = function ({ header, rows }) {
+  const head = header.map(cell => this.tablecell(cell)).join('');
+  const body = rows.map(row => `<tr>${row.map(cell => this.tablecell(cell)).join('')}</tr>`).join('');
+  return `<div style="overflow-x:auto;margin:8px 0"><table style="border-collapse:collapse;width:100%;font-size:13px"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+};
+
+renderer.tablecell = function (cell) {
+  const content = this.parser.parseInline(cell.tokens);
+  const tag = cell.header ? 'th' : 'td';
+  const align = cell.align ? `text-align:${cell.align};` : '';
+  const cellStyle = cell.header
+    ? `${align}padding:6px 10px;border:1px solid ${BORDER};background:${SURF};color:${T1};font-weight:700;white-space:nowrap`
+    : `${align}padding:6px 10px;border:1px solid ${BORDER};color:${T2}`;
+  return `<${tag} style="${cellStyle}">${content}</${tag}>`;
+};
+
 marked.setOptions({ renderer, gfm: true, breaks: true });
 
 export function renderMarkdown(text) {
   if (!text || typeof text !== 'string') return '';
   const html = marked.parse(text);
   return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['p','strong','em','ul','ol','li','code','pre','blockquote','h1','h2','h3','hr','br','div','span'],
+    ALLOWED_TAGS: ['p','strong','em','ul','ol','li','code','pre','blockquote','h1','h2','h3','hr','br','div','span','table','thead','tbody','tr','th','td'],
     ALLOWED_ATTR: ['style','class'],
     FORBID_ATTR: ['onerror','onclick','onload'],
   });
