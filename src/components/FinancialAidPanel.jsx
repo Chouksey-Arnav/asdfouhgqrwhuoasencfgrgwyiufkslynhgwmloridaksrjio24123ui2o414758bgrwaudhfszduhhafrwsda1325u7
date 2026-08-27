@@ -67,7 +67,15 @@ const STATUSES = [
 // exact "there is nothing for me" feeling the panel exists to prevent. What
 // they can act on this month comes first; the road comes after.
 // ─────────────────────────────────────────────────────────────────────────────
-export default function FinancialAidPanel({ accent = C.blue, askMedabrain, pathwayKey = null }) {
+// This page holds THREE scholarship databases with three different jobs (see the
+// section comments below), so the app-wide search addresses them separately:
+// `focusScholarship`, `focusHealthScholarship` and `focusMedScholarship` are each
+// non-null only when a ⌘K result opened the one they belong to. See the header of
+// src/lib/contentSearch.js.
+export default function FinancialAidPanel({
+  accent = C.blue, askMedabrain, pathwayKey = null,
+  focusScholarship = null, focusHealthScholarship = null, focusMedScholarship = null,
+}) {
   const [scholarships, setScholarships] = useState([]);
   const [colleges, setColleges] = useState([]);
   const [deadlineCollegeIds, setDeadlineCollegeIds] = useState(new Set());
@@ -207,7 +215,7 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain, pathw
       {/* ── 4. What they can actually win now ──────────────────────────────── */}
       <div style={{...glass({padding:16}),background:`linear-gradient(120deg,${tint(C.fuchsia,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.fuchsia,0.2)}`}}>
         <SectionTitle icon={Stethoscope} color={C.fuchsia}>Health-Career Scholarships</SectionTitle>
-        <HealthCareerScholarships accent={C.fuchsia} pathwayFinanceId={financeProfile?.id || null}/>
+        <HealthCareerScholarships accent={C.fuchsia} pathwayFinanceId={financeProfile?.id || null} focus={focusHealthScholarship}/>
       </div>
 
       {/* ── 5. The rest of the road ────────────────────────────────────────
@@ -222,7 +230,8 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain, pathw
         <SectionTitle icon={Route} color={C.violetL}>Paying for Medical School — The Whole Road</SectionTitle>
         <Suspense fallback={<div style={{fontSize:12,color:C.t3,padding:'12px 0'}}>Loading the pipeline…</div>}>
           <MedicalScholarshipPipeline accent={C.violet} pathwayFinanceId={financeProfile?.id || null}
-            onTrack={trackScholarship} trackedKeys={trackedScholarshipKeys} pendingKeys={pendingScholarshipKeys}/>
+            onTrack={trackScholarship} trackedKeys={trackedScholarshipKeys} pendingKeys={pendingScholarshipKeys}
+            focus={focusMedScholarship}/>
         </Suspense>
       </div>
 
@@ -262,7 +271,7 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain, pathw
 
       <div style={{...glass({padding:16}),background:`linear-gradient(120deg,${tint(C.violet,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.2)}`}}>
         <SectionTitle icon={SearchIcon} color={C.violetL}>Scholarship Database</SectionTitle>
-        <ScholarshipDatabase accent={C.violet} onTrack={trackScholarship} trackedKeys={trackedScholarshipKeys} pendingKeys={pendingScholarshipKeys} askMedabrain={askMedabrain}/>
+        <ScholarshipDatabase accent={C.violet} onTrack={trackScholarship} trackedKeys={trackedScholarshipKeys} pendingKeys={pendingScholarshipKeys} askMedabrain={askMedabrain} focus={focusScholarship}/>
       </div>
 
       <ScholarshipResearchAdd accent={accent} onTrack={addResearchedScholarship}/>

@@ -4,6 +4,7 @@ import { C, glass2, btnSm, R, CC, pill, tint } from '../../lib/theme';
 import { OPEN_TO } from '../../data/healthCareerScholarships';
 import { PATHWAY_FINANCE } from '../../data/pathwayFinance';
 import { healthScholarshipsFor, scholarshipCounts } from '../../lib/scholarshipFilters';
+import { useSearchFocus } from '../../lib/useSearchFocus';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Health-career scholarship discovery, filtered to a high school senior.
@@ -37,7 +38,9 @@ const STAGE_TABS = [
   { id: 'all', label: 'Everything' },
 ];
 
-export default function HealthCareerScholarships({ accent = C.green, pathwayFinanceId = null }) {
+// `focus` is the app-wide search landing on one named award — see the header of
+// src/lib/contentSearch.js.
+export default function HealthCareerScholarships({ accent = C.green, pathwayFinanceId = null, focus = null }) {
   const [stage, setStage] = useState('senior');
   const [pathwayFilter, setPathwayFilter] = useState(pathwayFinanceId || 'all');
   const [openId, setOpenId] = useState(null);
@@ -47,6 +50,16 @@ export default function HealthCareerScholarships({ accent = C.green, pathwayFina
     const list = healthScholarshipsFor(stage);
     return pathwayFilter === 'all' ? list : list.filter(s => (s.pathways || []).includes(pathwayFilter));
   }, [stage, pathwayFilter]);
+
+  // Arriving from the app-wide search. This panel has no search box of its own —
+  // it filters by stage and pathway — so focusing means widening BOTH filters to
+  // everything and expanding the card. An award a senior cannot enter yet is
+  // still an award they searched for by name and are owed the sight of.
+  const focusRef = useSearchFocus(focus, ({ id }) => {
+    setStage('all');
+    setPathwayFilter('all');
+    setOpenId(id);
+  });
 
   return (
     <div style={CC({ gap: 12 })}>
@@ -101,7 +114,7 @@ export default function HealthCareerScholarships({ accent = C.green, pathwayFina
             const open = openId === s.id;
             const Icon = discovery ? Compass : notYet ? Clock3 : Stethoscope;
             return (
-              <div key={s.id} style={{
+              <div key={s.id} ref={focus?.id === s.id ? focusRef : undefined} style={{
                 ...glass2({ padding: 0, overflow: 'hidden' }),
                 borderLeft: `3px solid ${color}`,
                 opacity: notYet ? 0.82 : 1,

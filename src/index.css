@@ -241,6 +241,36 @@ body::before {
   .msp-aurora, .msp-pulse-glow { animation: none !important; }
 }
 
+/* ── The card the search just landed on ────────────────────────────────────
+   Applied for ~2s by revealFocused() (src/lib/contentSearch.js) to the one card
+   a ⌘K result opened, after the page has scrolled it into view.
+
+   This exists because the search's promise is "take me to the Coca-Cola
+   scholarship", and a page that scrolls to roughly the right place among ninety
+   near-identical cards has kept the letter of that promise and broken it in
+   practice. The ring answers "which one" in the half-second before the student
+   starts reading, and then gets out of the way — a permanent highlight would
+   become one more piece of state to dismiss.
+
+   `outline` rather than `border` on purpose: these cards are laid out to the
+   pixel and a 2px border would reflow the one card the student is looking at.
+   Reduced motion keeps the ring and drops the pulse: the ring is INFORMATION
+   (it says which card), and only the animation is decoration. */
+@keyframes mspSearchHit {
+  0%   { outline-color: var(--c-blue); box-shadow: 0 0 0 6px var(--c-blueDim); }
+  70%  { outline-color: var(--c-blue); box-shadow: 0 0 0 3px var(--c-blueDim); }
+  100% { outline-color: transparent; box-shadow: 0 0 0 0 transparent; }
+}
+.msp-search-hit {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+  border-radius: 12px;
+  animation: mspSearchHit 2.2s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .msp-search-hit { animation: none; }
+}
+
 /* ── The brand journey loader ──────────────────────────────────────────────
    MedSchoolPrep's loading animation, driven entirely from here. See
    src/components/BrandJourney.jsx for the markup and the call sites.

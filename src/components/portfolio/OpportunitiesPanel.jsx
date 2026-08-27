@@ -84,6 +84,7 @@ export default function OpportunitiesPanel({
   accent = C.gold, user, onSaveUser, snapshot = null, loading = false,
   pathwayKey = null, pathwayLabel = 'pre-health', askMedabrain, isMobile = false,
   onTrack, trackedKeys, pendingKeys, pendingEntries = [], trackStatus = {}, onOpen,
+  focus = null,
 }) {
   const prefs = useMemo(() => readPrefs(user), [user]);
   const [tuning, setTuning] = useState(false);
@@ -580,7 +581,13 @@ export default function OpportunitiesPanel({
           the page ended in a wall of programs that nobody asked for, which is exactly the thing
           that makes the picks above look like just another filter preset. It's a door now: open
           when you want to shop, shut when you came here to be told what to do. */}
+      {/* `openSignal`: the catalog is a door, and the app-wide search sends
+          students to programs that live behind it. A result that lands on a
+          collapsed panel has landed on nothing — see the note beside openSignal
+          in Disclosure.jsx for why this does not overwrite the student's own
+          last choice about the door. */}
       <Disclosure id="opportunities-catalog" icon={Library} color={C.gold} m={isMobile}
+        openSignal={focus?.n || 0}
         title={`Browse all ${OPPORTUNITIES.length} programs yourself`}
         sub="Search and filter the whole catalog yourself.">
         <div style={CC({ gap: 12 })}>
@@ -588,7 +595,7 @@ export default function OpportunitiesPanel({
           <OpportunitiesDatabase accent={accent} onTrack={onTrack}
             trackedKeys={trackedKeys} pendingKeys={pendingKeys}
             activityCount={profile.totalActivities}
-            askMedabrain={askMedabrain} />
+            askMedabrain={askMedabrain} focus={focus} />
         </div>
       </Disclosure>
     </div>
