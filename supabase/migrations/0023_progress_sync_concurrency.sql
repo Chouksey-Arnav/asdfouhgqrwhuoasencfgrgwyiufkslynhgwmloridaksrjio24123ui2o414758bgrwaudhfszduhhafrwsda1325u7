@@ -181,15 +181,47 @@ begin
 end;
 $$;
 
--- Same lockdown 0008 applied to every other function that trusts a user id in its
--- arguments. This one upserts an arbitrary account's entire progress snapshot, so
--- it must be reachable only by the service role that /api/* authenticates behind —
--- Postgres grants EXECUTE to PUBLIC by default and Supabase publishes every
--- public-schema function at /rest/v1/rpc/<name>, where the anon key from the
--- browser bundle would reach it.
-revoke all on function public.merge_progress_snapshot(uuid, jsonb, jsonb, bigint) from public;
-revoke all on function public.merge_progress_snapshot(uuid, jsonb, jsonb, bigint) from anon;
-revoke all on function public.merge_progress_snapshot(uuid, jsonb, jsonb, bigint) from authenticated;
+-- ── EXECUTE grants ───────────────────────────────────────────────────────────
+-- The same lockdown 0008 applied to every other function that trusts a user id in
+-- its arguments, and for the same reason: this one upserts an arbitrary account's
+-- entire progress snapshot, Postgres grants EXECUTE to PUBLIC by default, and
+-- Supabase publishes every public-schema function at /rest/v1/rpc/<name> — where
+-- the anon key that ships inside the browser bundle would reach it.
+--
+-- Written as 0008 writes it, rather than as three bare REVOKE lines, for two
+-- reasons that a plain version of this got wrong:
+--
+--   • `anon` and `authenticated` are Supabase inventions. This chain is also
+--     applied to a bare PostgreSQL by scripts/verifyMigrations.mjs (and by the
+--     "Migrations apply, re-apply, and serialize" CI job), where revoking from a
+--     role that does not exist is a hard error and fails the whole migration.
+--
+--   • REVOKE FROM PUBLIC is the load-bearing line — revoking from anon and
+--     authenticated individually would leave the default PUBLIC grant sitting
+--     behind them — but it also takes the grant away from service_role, which is
+--     the one role that must keep it: every /api/* handler runs as service_role
+--     (api/_lib/supabaseAdmin.js). Supabase's default privileges happen to grant
+--     it back on newly created functions, but relying on that is relying on a
+--     setting this migration does not control. State it.
+do $$
+declare
+  fn   constant text := 'public.merge_progress_snapshot(uuid,jsonb,jsonb,bigint)';
+  role text;
+begin
+  if to_regprocedure(fn) is null then return; end if;
+
+  execute format('revoke all on function %s from public', fn);
+
+  foreach role in array array['anon', 'authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = role) then
+      execute format('revoke all on function %s from %I', fn, role);
+    end if;
+  end loop;
+
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    execute format('grant execute on function %s to service_role', fn);
+  end if;
+end $$;
 
 -- bump_progress_counters is deliberately left in place rather than dropped: a
 -- deploy is not instantaneous, and a serverless instance still running the old

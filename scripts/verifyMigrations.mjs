@@ -105,7 +105,7 @@ const EXPECTED_TABLES = [
 /** Every function the API calls by name via supabase.rpc(). */
 const EXPECTED_FUNCTIONS = [
   'accept_parent_link', 'bump_progress_counters', 'claim_reward',
-  'find_or_create_parent_for_claim',
+  'find_or_create_parent_for_claim', 'merge_progress_snapshot',
   'revoke_links_on_user_delete', 'save_master_plan', 'save_roadmap',
   'touch_parent_profile_updated_at',
 ];
