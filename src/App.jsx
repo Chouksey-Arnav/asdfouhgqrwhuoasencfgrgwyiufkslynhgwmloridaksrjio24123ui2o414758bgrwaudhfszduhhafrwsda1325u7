@@ -2496,6 +2496,35 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // ── Sync status (for the "Synced just now" indicator in Settings) ───────────
   const [syncStatus,setSyncStatus]=useState(()=>ProgressSync.getSyncStatus());
   useEffect(()=>ProgressSync.subscribeSyncStatus(setSyncStatus),[]);
+  // ── Progress that arrived from another device mid-session ───────────────────
+  // Everything below this component reads Dexie once, at mount, and holds the
+  // result in React state. So when progressSync merges another device's snapshot
+  // into IndexedDB — on a foreground reconcile, or after a push was refused for
+  // being stale — the merged data is on disk but not on screen, and the two only
+  // agree again after a reload.
+  //
+  // Reloading on the student's behalf is not an option: this can fire in the
+  // middle of a lesson, a timed SAT section or a half-written essay. So it is
+  // offered instead, once, and it waits — which is also the honest version of
+  // what happened, since nothing they can see has changed yet.
+  useEffect(()=>{
+    const onMerged=()=>{
+      toast.success(
+        (t)=>(
+          <span style={{display:'flex',alignItems:'center',gap:10}}>
+            Progress from another device is ready.
+            <button
+              onClick={()=>{toast.dismiss(t.id);window.location.reload();}}
+              style={{fontWeight:700,color:C.blueL,background:'none',border:'none',cursor:'pointer',padding:0,textDecoration:'underline'}}
+            >Refresh</button>
+          </span>
+        ),
+        {id:'remote-progress-merged',duration:8000,icon:'☁️'},
+      );
+    };
+    window.addEventListener(ProgressSync.REMOTE_MERGE_EVENT,onMerged);
+    return()=>window.removeEventListener(ProgressSync.REMOTE_MERGE_EVENT,onMerged);
+  },[]);
   // Forces the "Xm ago" label in Settings to keep advancing even when no new
   // sync event has fired — only ticks while Settings is actually open.
   const [,setSyncTick]=useState(0);
