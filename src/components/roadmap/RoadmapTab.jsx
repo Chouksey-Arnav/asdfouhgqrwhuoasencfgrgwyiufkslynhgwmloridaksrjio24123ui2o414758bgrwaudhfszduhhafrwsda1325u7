@@ -313,7 +313,12 @@ export default function RoadmapTab({
     attemptedDeepenRef.current.add(needs.id);
     (async () => {
       try {
-        const next = await deepenSeason(roadmap, needs.id, { user, portfolioFacts, lane: user?.id || null });
+        // Same lane expression as the build and the repair below. The lane now decides which
+        // rate-limit budget the call spends (see subjectFor in api/groq.js), so a student who
+        // fell back to their email for one call and to nothing for another would be two different
+        // people to the budget — and the one with no lane at all would be charged to the whole
+        // school's shared bucket, which is the failure this was all fixed for.
+        const next = await deepenSeason(roadmap, needs.id, { user, portfolioFacts, lane: user?.id || user?.email || null });
         if (next !== roadmap) commit(next, `deepened ${needs.label}`);
       } finally {
         deepenRef.current = false;

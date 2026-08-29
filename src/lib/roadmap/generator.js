@@ -112,6 +112,13 @@ export const TERMINAL_CODES = new Set([
   // The daily budget is spent. It does not come back before tomorrow, so the
   // remaining passes cannot succeed and neither can an immediate retry.
   'daily_limit',
+  // The NETWORK's shared daily ceiling, not this student's own allowance. Same
+  // terminal shape — it does not clear before tomorrow on this connection — but
+  // a completely different sentence, because telling a student who has never
+  // built a roadmap that they have used up their builds is a false statement
+  // about them rather than about their school's wifi. See budgetVerdict() in
+  // api/groq.js for the per-IP-bucket bug that made this distinction necessary.
+  'shared_network_limit',
 ]);
 
 /**
@@ -144,6 +151,16 @@ export const DEGRADED_REASONS = {
     title: 'You have used up today\'s roadmap builds.',
     detail: 'Building a year is the most expensive thing this app does, so there is a daily ceiling on it. This roadmap was assembled from the verified deadline catalog — real programs, real dates — and you can rebuild it properly tomorrow.',
     retryable: false,
+  },
+  shared_network_limit: {
+    title: 'This network has used up today\'s roadmap builds — not you.',
+    detail: 'Roadmap builds are budgeted per person, with a much larger shared ceiling for everyone on one connection, and that shared ceiling is what has been reached. Your own allowance is untouched: the same build usually works straight away on a phone off the school wifi, and the network\'s resets tomorrow. This roadmap was assembled from the verified deadline catalog in the meantime — real programs, real dates.',
+    retryable: false,
+  },
+  shared_network_busy: {
+    title: 'A lot of people on this network are asking Medabrain at once.',
+    detail: 'This is the shared per-minute ceiling for your connection rather than anything to do with your own account. It clears in under a minute — the retry below should work.',
+    retryable: true,
   },
   unreachable: {
     title: 'Medabrain could not be reached while this was being built.',
@@ -269,6 +286,48 @@ async function callOnce({ system, user, maxTokens, reasoningEffort, lane }) {
   } catch (err) {
     const aborted = err?.name === 'AbortError';
     return { retryable: true, detail: aborted ? 'client timeout' : `network error (${err?.message || 'unknown'})`, waitMs: aborted ? 0 : 1000 };
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+/**
+ * Ask the server whether a build can succeed BEFORE spending one.
+ *
+ * A build is five passes of up to four attempts. When the answer was always going to be no — no
+ * key on the deployment, this student's daily allowance spent, the school's shared ceiling reached
+ * — every one of those calls fails identically, and the student learns it after ninety seconds of
+ * backoff sleeps in the form of a roadmap that quietly became the deterministic slate. The server
+ * knows all of that before it dials anything (see the probe handler in api/groq.js), so asking
+ * costs one fast round-trip and turns a ninety-second mystery into an immediate sentence.
+ *
+ * Deliberately fail-OPEN. A probe that errors, times out, or comes back in a shape we don't
+ * recognize returns null, and the build proceeds exactly as it would have. This is an accelerant
+ * for a failure we can predict, never a new way to block a build that would have worked — a
+ * preflight that can veto is a preflight that can be wrong about it.
+ *
+ * @returns {Promise<{code: string, error: string|null}|null>} the terminal cause, or null to proceed
+ */
+export async function preflight({ lane = null, timeoutMs = 6000 } = {}) {
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+  try {
+    const r = await fetch('/api/groq', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ probe: true, purpose: 'roadmap', lane }),
+      signal: controller ? controller.signal : undefined,
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (!d || d.probe !== true || d.ok !== false) return null;
+    // Only a cause no retry can fix is worth aborting a build for. A minute bucket that needs
+    // another twenty seconds is exactly what call()'s backoff ladder is for, and short-circuiting
+    // it here would turn a build that recovers on its own into one that refuses to start.
+    if (!TERMINAL_CODES.has(d.code)) return null;
+    return { code: d.code, error: typeof d.error === 'string' ? d.error : null };
+  } catch {
+    return null;
   } finally {
     if (timer) clearTimeout(timer);
   }
@@ -813,6 +872,18 @@ export async function createRoadmap({
   const slate = buildCandidateSlate({ user, answers: gates, now, horizonMonths: 12 });
   const seasons = buildSeasons(today);
 
+  // ── Preflight ──────────────────────────────────────────────────────────────
+  // One cheap round-trip that asks whether a build can succeed at all. Seeding the trace's
+  // terminal field is all it takes to change the outcome: every call() short-circuits on it
+  // without touching the network, so a doomed build resolves to the deterministic slate in about
+  // two seconds carrying the real reason, rather than in ninety carrying "unreachable". Fails
+  // open — see preflight().
+  const gate = await preflight({ lane });
+  if (gate) {
+    trace.terminal = gate.code;
+    noteError(trace, 'preflight', gate.error || gate.code);
+  }
+
   // ── Everything the model is shown, sized per rung ──────────────────────────
   // The shortlist and the student digest are the only two parts of these prompts
   // that scale with a student, so they are the only two that shrink. The stance,
@@ -993,14 +1064,18 @@ export async function createRoadmap({
  * Deepen a season that was left as a spine at build time — called when the
  * student reaches it, or when they ask for it. One call, and it never damages
  * the existing roadmap: a failure returns the roadmap unchanged.
+ *
+ * `trace` is optional and exists for repairRoadmap, which deepens several seasons in one run: a
+ * terminal cause established while repairing the first season has to stop the rest, and it can
+ * only do that if they share a trace. Called on its own, this still gets a fresh one.
  */
-export async function deepenSeason(roadmap, seasonId, { user, portfolioFacts, lane, onStage = () => {} } = {}) {
+export async function deepenSeason(roadmap, seasonId, { user, portfolioFacts, lane, trace: sharedTrace = null, onStage = () => {} } = {}) {
   const season = (roadmap?.seasons || []).find((s) => s.id === seasonId);
   if (!season) return roadmap;
   const picks = (roadmap.items || []).filter((i) => i.season === seasonId && i.status !== 'skipped');
   if (!picks.length) return roadmap;
 
-  const trace = createTrace();
+  const trace = sharedTrace || createTrace();
   onStage(`Writing the working detail for ${season.label}…`);
   const studentAt = (i) => studentText({
     user, answers: roadmap.intake || {},
@@ -1106,6 +1181,17 @@ export async function repairRoadmap(roadmap, {
   }
 
   const trace = createTrace();
+
+  // The same preflight the initial build runs, and it matters more here than there. This is the
+  // "Rebuild it properly" button, and the failure it was reported for was pressing it against a
+  // cause a rebuild cannot touch: a minute and a half of nothing, then the same banner. Seeding
+  // the terminal code makes the button answer honestly and instantly instead. Fails open.
+  const gate = await preflight({ lane });
+  if (gate) {
+    trace.terminal = gate.code;
+    noteError(trace, 'preflight', gate.error || gate.code);
+  }
+
   let out = roadmap;
   const repaired = [];
 
@@ -1116,7 +1202,7 @@ export async function repairRoadmap(roadmap, {
     const season = (out.seasons || []).find((s) => s.id === seasonId);
     if (!season) continue;
     onStage(`Writing the working detail for ${season.label}…`);
-    const next = await deepenSeason(out, seasonId, { user, portfolioFacts, lane });
+    const next = await deepenSeason(out, seasonId, { user, portfolioFacts, lane, trace });
     // deepenSeason returns the SAME object on failure, which is what makes this
     // identity check a truthful test of whether anything was actually repaired.
     if (next !== out) { out = next; repaired.push(stage); }

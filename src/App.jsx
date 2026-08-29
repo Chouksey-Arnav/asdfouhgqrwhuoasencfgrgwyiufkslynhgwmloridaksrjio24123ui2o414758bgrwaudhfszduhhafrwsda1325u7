@@ -109,6 +109,7 @@ import { landingFor, flowForBand, shouldShowReturnScreen, PATHWAY_SKIP_LABEL, DI
 import GradYearCheckIn from './components/GradYearCheckIn';
 import ReturningBreakScreen from './components/ReturningBreakScreen';
 import { summarizeRoadmapForPrompt } from './lib/roadmap/model';
+import { setAiLane, aiLane } from './lib/aiLane';
 import { rollCosmetic } from './lib/cosmetics';
 import { renderMarkdown } from './lib/renderMarkdown';
 import { exportQuizResult, exportFlashDeck, exportPathwayCertificate } from './lib/exportPDF';
@@ -1604,6 +1605,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [cosmetics, setCosmetics] = useState(new Set());
   const [chest, setChest] = useState(null); // { title, eyebrow, xp, cosmetic }
   const upcomingDeadlines = useDeadlines();
+  // ── Who Medabrain requests are budgeted to ─────────────────────────────────
+  // Set here, in the one place that learns who the student is, and read at call time by every
+  // /api/groq caller in the app (see src/lib/aiLane.js). Threading the user object through
+  // nineteen unrelated modules to achieve the same thing would be the worse trade.
+  //
+  // An effect rather than a hook into each setUser_ call site, because the requirement is "the
+  // lane always matches the signed-in student", and an effect on the identity itself is the only
+  // form of that which cannot be forgotten at a new call site. Runs with null on sign-out, which
+  // is the correct value: an unclaimed request is budgeted to the network.
+  useEffect(()=>{ setAiLane(user); },[user?.id,user?.email]);
   const [totalReviews, setTotalReviews] = useState(0);
   const [aiChatCount, setAiChatCount] = useState(0);
   const [interviewCount, setInterviewCount] = useState(0);
@@ -4821,7 +4832,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       r = await fetch('/api/groq', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ system: sys, message: msg, messages: hist, maxTokens: toks, tier, purpose }),
+        // `lane` identifies the student to the server's rate-limit budgets. Without it every
+        // request from one school's NAT shares one allowance — see src/lib/aiLane.js for the
+        // failure that produced.
+        body: JSON.stringify({ system: sys, message: msg, messages: hist, maxTokens: toks, tier, purpose, lane: aiLane() }),
       });
     } catch {
       throw new Error("Couldn't reach Medabrain — check your connection and try again.");
