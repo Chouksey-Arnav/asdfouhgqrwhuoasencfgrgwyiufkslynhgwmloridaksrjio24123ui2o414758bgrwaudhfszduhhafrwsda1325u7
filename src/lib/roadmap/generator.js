@@ -55,7 +55,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { dayKey, daysBetween, shiftDays, effectiveGradeStage, GRADE_LABELS } from '../timeline.js';
 import { buildCandidateSlate, shortlistForPrompt, catalogEntry } from './catalog.js';
-import { answersToGates, intakeToPromptText, targetSchools } from './intake.js';
+import { answersToGates, intakeToPromptText, targetSchools, homePlace, intendedMajor } from './intake.js';
+import { MAJOR_BY_ID } from '../geo/majors.js';
 import { ROADMAP_VERSION, SEASON_COUNT, roadmapFingerprint, validateSlate, monthlyLoad } from './model.js';
 import { measure, rung, rungForOverage, squeeze, LAST_RUNG } from './promptBudget.js';
 import { TRACK_BY_ID } from '../../data/roadmap/index.js';
@@ -468,6 +469,13 @@ function shortlistText(items) {
       i.format !== 'varies' ? i.format : null,
       i.confidence === 'typical' ? 'date is typical, not confirmed' : null,
       i.confidence === 'varies' ? 'date varies locally — student must look it up' : null,
+      // Where the student stands relative to a residency restriction. Stated in the shortlist
+      // rather than left for the model to work out from a state list, because "IN THEIR STATE" is
+      // a reason to pick something and the model should see the reason, not the raw data it would
+      // have to derive it from. Absent entirely when we do not know where they live.
+      i.proximity === 'home' ? 'IN THEIR STATE — far smaller applicant pool than a national equivalent' : null,
+      i.proximity === 'region' ? 'in their region' : null,
+      i.proximity === 'far' ? 'RESTRICTED TO STATES THEY DO NOT LIVE IN — do not pick this' : null,
       i.missed ? 'ALREADY PASSED THIS YEAR' : null,
     ].filter(Boolean).join(' · ');
     return `id: ${i.catalogId}
@@ -481,6 +489,8 @@ function shortlistText(items) {
 /** Who this student is, in prose. Draws on onboarding, the intake, and the Portfolio digest the caller passes in. */
 function studentText({ user, answers, portfolioFacts, gradeStage, today }) {
   const schools = targetSchools(answers);
+  const place = homePlace(answers);
+  const major = MAJOR_BY_ID[intendedMajor(answers)];
   const lines = [
     `Today is ${today}. They are a ${GRADE_LABELS[gradeStage] || gradeStage}.`,
     user?.name ? `Name: ${user.name}.` : null,
@@ -491,6 +501,22 @@ function studentText({ user, answers, portfolioFacts, gradeStage, today }) {
     user?.gpaBand ? `Self-reported grades: ${user.gpaBand}.` : null,
     (user?.obstacles || []).length ? `What they said gets in their way: ${(user.obstacles || []).join(', ')}.` : null,
     schools.length ? `Colleges they are aiming at: ${schools.join(', ')}. Every deadline and supplement in this roadmap should be back-planned from these.` : 'They have not named target colleges yet — say so, and make building that list an early item.',
+    // ── Where they live ──────────────────────────────────────────────────────
+    // The STATE, never the ZIP — see the note in intakeToPromptText. Written as
+    // an instruction rather than a fact because the model's job with this
+    // information is specific: prefer in-state programs, and refer to the state
+    // by name so the roadmap reads as having been written for a person who
+    // lives somewhere.
+    place
+      ? `They live in ${place.stateName} (${place.regionLabel}). Programs restricted to ${place.stateName} residents are among the best-value things available to them — a state applicant pool instead of a national one — so prefer them where the shortlist offers them, and name ${place.stateName} out loud when you do. Never pick anything the shortlist flags as restricted to states they do not live in.`
+      : 'They have not said where they live, so you do not know their state. Do not guess at one, do not say "near you" about anything, and prefer nationally open and virtual options. It is worth telling them once that adding a ZIP code would surface state programs they cannot currently see.',
+    // ── What they want to study ──────────────────────────────────────────────
+    // Framed to the model exactly as it is framed to the student, because the
+    // failure to avoid is a roadmap that treats a fifteen-year-old's guess at a
+    // major as a commitment and builds a narrow year around it.
+    major && major.id !== 'undecided'
+      ? `If they had to pick an undergraduate major today it would be: ${major.label}. Treat this as a LEAN, not a commitment — they are in high school and may well change it, and medical schools do not care which major anyone picks. What it should change is which of several equally good options you choose and what the year coheres around. For this major specifically: ${major.lean} The high-school courses it makes load-bearing next year: ${major.courses.join(', ')}.`
+      : 'They have not settled on a major, which is completely normal at this stage. Build the year broad enough that none of it is wasted whichever way they go, and say that is what you are doing.',
   ].filter(Boolean);
   const intake = intakeToPromptText(answers);
   return [lines.join('\n'), intake, portfolioFacts].filter(Boolean).join('\n\n');
