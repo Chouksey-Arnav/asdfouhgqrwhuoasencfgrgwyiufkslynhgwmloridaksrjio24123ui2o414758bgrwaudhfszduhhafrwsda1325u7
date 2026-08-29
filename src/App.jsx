@@ -113,6 +113,7 @@ import { setAiLane, aiLane } from './lib/aiLane';
 import CommonAppMirror from './components/portfolio/CommonAppMirror';
 import CommonAppMirrorBadge from './components/portfolio/CommonAppMirrorBadge';
 import { useCommonApp } from './lib/commonApp/useCommonApp';
+import { visibleModules as homeModules, focusNote as homeFocusNote, DENSITIES as HOME_DENSITIES } from './lib/dashboardStages';
 import { rollCosmetic } from './lib/cosmetics';
 import { renderMarkdown } from './lib/renderMarkdown';
 import { exportQuizResult, exportFlashDeck, exportPathwayCertificate } from './lib/exportPDF';
@@ -4945,6 +4946,39 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // One factory, handed to each scrolling page as a render-prop. A page whose section feeds no
   // part of the Common App gets null back and renders nothing, which is the honest output —
   // a neutral badge would read as a check that was performed and passed.
+  // ── What the dashboard leads with ───────────────────────────────────────────
+  // Home renders fourteen modules and six of them are readings of progress a brand-new account
+  // does not have yet — rings at zero, an empty sixty-day horizon, five unearned achievements.
+  // Scrolling past a page of empty measurements of yourself reads as a list of things you are
+  // already behind on, which is the wrong first impression in a damaging and specific way.
+  //
+  // Nothing is removed: every deferred module is still on its own tab right now, and
+  // `homeDensity:'full'` brings them all back permanently. See src/lib/dashboardStages.js for the
+  // ladder and for why it ratchets rather than tracking the data down again.
+  const homeSignals=useMemo(()=>({
+    activities: portActivities.length,
+    clinicalHours: clinicalHoursTotal,
+    deadlines: (upcomingDeadlines||[]).length,
+    colleges: appCounts.colleges,
+    lessonsDone: curPathDoneL,
+    quizzes: qTaken,
+    achievements: achiev.size,
+    streak,
+    scholarships: (portScholarships||[]).length,
+    hasMedexScore: !!medexState?.score,
+    hasRoadmap: !!user?.roadmap,
+  }),[portActivities.length,clinicalHoursTotal,upcomingDeadlines,appCounts.colleges,curPathDoneL,qTaken,achiev.size,streak,portScholarships,medexState,user?.roadmap]);
+  const home=useMemo(()=>homeModules(homeSignals,user?.homeDensity||'auto',user?.homeEarnedModules||[]),
+    [homeSignals,user?.homeDensity,user?.homeEarnedModules]);
+  // Persist newly-earned modules so the ratchet survives a reload — a module that appeared
+  // yesterday must not vanish today because an activity was deleted in between.
+  useEffect(()=>{
+    if(!user||user.homeDensity==='full')return;
+    const known=new Set(user.homeEarnedModules||[]);
+    if(home.earned.every(id=>known.has(id)))return;
+    saveUser({...user,homeEarnedModules:home.earned});
+  },[home.earned,user,saveUser]);
+
   const commonAppBadgeFor=useCallback((view)=>(sectionId)=>(
     <CommonAppMirrorBadge
       tab="portfolio" view={view} section={sectionId}
@@ -6042,30 +6076,30 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             Hours by category against the active pathway's own benchmarks. This
             is the substance framing in its purest form: four fractions, each
             legible to a seventeen-year-old and to an admissions officer. */}
-        <HoursRings
+        {home.visible.has('hoursRings')&&<HoursRings
           hours={dashboardHours}
           benchmarks={benchmarks}
           pathwayLabel={curPath?.label||'your pathway'}
           onLogHours={()=>{goPortfolio('activities');play('click');}}
           accent={C.green}
           m={isMobile}
-        />
+        />}
 
         {/* ═══ 4 · DEADLINE HORIZON ════════════════════════════════════════════
             Sixty days, colored by when work has to START rather than when it
             is due — the first rung of the app's own 60/30/7 alert ladder. */}
-        <DeadlineHorizon
+        {home.visible.has('deadlineHorizon')&&<DeadlineHorizon
           deadlines={upcomingDeadlines||[]}
           onOpen={()=>{goPortfolio('milestones');play('click');}}
           onOpenAll={()=>{goPortfolio('milestones');play('click');}}
           accent={C.rose}
           m={isMobile}
-        />
+        />}
 
         {/* ═══ 5 · PROGRESS DETAIL ═════════════════════════════════════════════
             Track completion, quiz trend by topic, flashcard retention, practice
             test trend. Ordered by how quickly a student can move each one. */}
-        <ProgressDetail
+        {home.visible.has('progressDetail')&&<ProgressDetail
           trackLabel={curPath?.label||'your pathway'}
           lessonsDone={curPathDoneL}
           lessonsTotal={curPathAllL.length}
@@ -6077,14 +6111,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           testScores={portSnapshot?.testScores||[]}
           accent={accent}
           m={isMobile}
-        />
+        />}
 
         {/* ═══ 6 · ACHIEVEMENTS, WEIGHTED BY SUBSTANCE ═════════════════════════
             Five milestones that each name something true about the student
             outside this app, and — under them, small, once, and nowhere else in
             the product — the streak. See the component header for why the
             streak is deliberately not a headline. */}
-        <SubstanceAchievements
+        {home.visible.has('achievements')&&<SubstanceAchievements
           context={{
             shadowingHours: dashboardHours.shadowing,
             certifications: skillsCount,
@@ -6100,7 +6134,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           accent={C.amber}
           m={isMobile}
           reducedMotion={reducedMotion}
-        />
+        />}
 
         {/* ── Supporting surfaces ──────────────────────────────────────────────
             Everything below the six modules is a shortcut into work that lives
@@ -6114,13 +6148,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* The MedEx Score — the one remaining block about the outside world.
             It seals weekly, so unlike everything above it is deliberately not a
             today-shaped number. */}
-        <MedExHomeCard
+        {home.visible.has('medex')&&<MedExHomeCard
           state={medexState}
           onOpen={()=>goPortfolio('medex')}
           onGoTo={goMedexDimension}
           m={isMobile}
           reducedMotion={reducedMotion}
-        />
+        />}
 
         {/* Today's plan, if one has been generated. Distinct from module 1: the
             plan is what the student committed to, the next three is what the
@@ -6154,7 +6188,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* The Roadmap's single most urgent twelve-month item — nearly always
             something whose preparation starts now for a date months away, which
             is the half of the question module 4's sixty-day window cannot see. */}
-        {unlocks.isOpen('roadmap')&&(
+        {home.visible.has('roadmapCard')&&unlocks.isOpen('roadmap')&&(
           <RoadmapHomeCard
             user={user} isMobile={isMobile}
             onOpen={()=>goRoadmap('overview')}
@@ -6182,12 +6216,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* Financial aid & scholarships — every tracked scholarship one glance
             from the dashboard rather than three taps into Portfolio. Hidden
             entirely when nothing is tracked. */}
-        <FinancialAidHomeCard scholarships={portScholarships} accent={C.green} onOpen={()=>goPortfolio('aid')}/>
+        {home.visible.has('financialAid')&&<FinancialAidHomeCard scholarships={portScholarships} accent={C.green} onOpen={()=>goPortfolio('aid')}/>}
 
         {/* Quick actions, filtered through the unlock ladder like every other
             route into the app — a shortcut to a screen the nav has deliberately
             not shown yet is the wall of options rebuilt on the dashboard. */}
-        <div>
+        {home.visible.has('quickActions')&&<div>
           <SL>Quick Actions</SL>
           <div style={G(3,14,{},isMobile)}>
             {[
@@ -6210,13 +6244,40 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               </motion.div>
             ))}
           </div>
-        </div>
+        </div>}
 
         {/* What opens next — the unlock ladder stated in full, in the one place
             a new student actually starts. Disappears once nothing is left. */}
         {unlocks.locked().length>0&&(
           <NextUnlockCard items={unlocks.locked()} variant="card" accent={C.violet}/>
         )}
+
+        {/* ── What this page is not showing yet ────────────────────────────────
+            The dashboard is deliberately a reduced view for a new account (see
+            src/lib/dashboardStages.js), and this card is what keeps that honest. It
+            names every module being held back and what each one would add, and it offers
+            the switch — because deciding for someone what they are ready to see, with no
+            way to disagree, is its own kind of condescension. Disappears the moment
+            nothing is deferred. */}
+        {home.isFocused&&(()=>{
+          const note=homeFocusNote(home.deferred);
+          if(!note)return null;
+          return (
+            <div style={{...glass({padding:20}),border:`1px solid ${tint(C.violet,0.18)}`,background:`linear-gradient(135deg,${tint(C.violet,0.05)},transparent 60%)`}}>
+              <SectionTitle icon={Sparkles} color={C.violetL}>{note.title}</SectionTitle>
+              <p style={{fontSize:12.5,color:C.t2,lineHeight:1.6,margin:'0 0 12px'}}>{note.body}</p>
+              <ul style={{margin:'0 0 16px',paddingLeft:24}}>
+                {note.items.map((it,i)=>(
+                  <li key={i} style={{fontSize:11.5,color:C.t3,lineHeight:1.55,marginBottom:4}}>{it}</li>
+                ))}
+              </ul>
+              <button onClick={()=>{saveUser({...user,homeDensity:'full'});play('click');toast('Everything is on your dashboard now. You can go back to the focused view in Settings.',{icon:'✨',duration:5000});}}
+                style={{...btnG({fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',gap:8}}>
+                Show me all of it anyway<ChevronRight size={12}/>
+              </button>
+            </div>
+          );
+        })()}
       </div>
     );
   }
@@ -9157,6 +9218,44 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 style={{...(user.navMode===NAV_MODES.EVERYTHING?btn(accentGrad(accent),{fontSize:12,padding:'8px 16px'}):btnG({fontSize:12,padding:'8px 16px'})),flexShrink:0}}
               >
                 {user.navMode===NAV_MODES.EVERYTHING?<><Check size={14}/>Showing everything</>:<><Layers size={14}/>Show everything</>}
+              </button>
+            </div>
+          </div>
+
+          {/* ── The same escape hatch, one level down ──────────────────────────
+              The switch above decides which TABS exist; this one decides how much of the
+              dashboard leads with progress readings. They are separate because they answer
+              separate complaints: "I cannot find anything" and "the first thing I see is a
+              page of zeros about me". A student can want either fix without the other.
+              Both are reversible and neither ever hides data — every deferred module is on
+              its own tab the whole time. See src/lib/dashboardStages.js. */}
+          <div style={glass({padding:16,marginTop:12})}>
+            <div style={R({justifyContent:'space-between',gap:16,flexWrap:'wrap'})}>
+              <div style={{flex:1,minWidth:240}}>
+                <SL extra={{marginBottom:4}}>Dashboard modules</SL>
+                <p style={{fontSize:12.5,color:C.t3,lineHeight: 1.55,margin:0}}>
+                  {user.homeDensity==='full'
+                    ? <>Your dashboard shows every module, including ones with nothing in them yet.</>
+                    : <>Your dashboard shows a module once there is something for it to measure — hours once you log an activity, deadlines once you have one. Nothing is hidden: all of it is on its own tab right now.</>}
+                </p>
+                {user.homeDensity!=='full'&&home.deferred.length>0&&(
+                  <div style={{fontSize:11.5,color:C.t4,marginTop:8,fontFamily:C.FM}}>
+                    {home.deferred.length} module{home.deferred.length===1?'':'s'} waiting on data
+                  </div>
+                )}
+              </div>
+              <button
+                role="switch"
+                aria-checked={user.homeDensity==='full'}
+                onClick={()=>{
+                  const on=user.homeDensity!=='full';
+                  saveUser({...user,homeDensity:on?'full':'auto'});
+                  play('select');
+                  toast.success(on?'Showing every dashboard module.':'Back to a dashboard that grows with you — nothing you have earned goes away.');
+                }}
+                style={{...(user.homeDensity==='full'?btn(accentGrad(accent),{fontSize:12,padding:'8px 16px'}):btnG({fontSize:12,padding:'8px 16px'})),flexShrink:0}}
+              >
+                {user.homeDensity==='full'?<><Check size={14}/>Showing all modules</>:<><Layers size={14}/>Show all modules</>}
               </button>
             </div>
           </div>
