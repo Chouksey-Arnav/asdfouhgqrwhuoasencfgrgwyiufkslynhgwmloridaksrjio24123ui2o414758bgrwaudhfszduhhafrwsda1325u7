@@ -6,6 +6,7 @@ import { C, glass, tint, accentGrad } from '../lib/theme';
 import { buildPrepSystemPrompt } from '../lib/studentProfile';
 import { renderMarkdown } from '../lib/renderMarkdown';
 import MedabrainLauncher from './MedabrainLauncher';
+import { aiLane } from '../lib/aiLane';
 
 const LESSON_SUGGESTIONS = [
   'Explain this a different way',
@@ -87,7 +88,7 @@ export default function PrepMedabrain({
       const res = await fetch('/api/groq', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ system: sys, messages: nextMsgs.slice(-10), purpose: 'prep', maxTokens: 1400 }),
+        body: JSON.stringify({ system: sys, messages: nextMsgs.slice(-10), purpose: 'prep', maxTokens: 1400, lane: aiLane() }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || `Medabrain error (${res.status})`);
