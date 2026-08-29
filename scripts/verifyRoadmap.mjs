@@ -515,6 +515,54 @@ assert('a forged model-authored date is caught', MODEL.assertTraceable(forged).l
 const badLink = { ...base, items: [...base.items, { id: 'y', addedBy: 'model', title: 'Ghost', due: '2027-01-01', catalogId: 'not-real', status: 'todo' }] };
 assert('a dangling catalog id is caught', MODEL.assertTraceable(badLink).length === 1);
 
+// ── Suggestions from outside the catalog ────────────────────────────────────
+// The catalog whitelist is what makes an invented DATE impossible. Suggestions are the
+// deliberate hole in the whitelist for NAMES, and the rule that keeps that safe is that a
+// suggestion can never carry a date of its own — only one a student typed in. These
+// assertions are the enforcement.
+{
+  const sg = { name: 'State Science Olympiad', org: 'Somebody', why: 'Because.', whereToLook: 'Their site.', track: 'competition' };
+  const withSg = MODEL.addSuggestionAsItem(base, sg, '2027-03-04');
+  eq('accepting a suggestion appends exactly one item', countOf(withSg), countOf(base) + 1);
+  const item = withSg.items[withSg.items.length - 1];
+  eq('an accepted suggestion is the student\'s own item', item.addedBy, 'student');
+  assert('and is marked as having come from a suggestion', item.fromSuggestion === true);
+  assert('it carries no catalog id', !item.catalogId);
+  eq('it carries the date the student typed', item.studentDate, '2027-03-04');
+  assert('it renders as an exact date, because they looked it up', CAT.displaysExactDate(item));
+  assert('it is exempt from catalog traceability', MODEL.assertTraceable(withSg).length === 0);
+  assert('the reason keeps the instructions for finding the real date', /Their site/.test(item.why));
+
+  // A suggestion with no date is kept rather than lost — better an undated item the
+  // roadmap keeps asking about than a suggestion discarded because the student could not
+  // find the deadline in the moment.
+  const undated = MODEL.addSuggestionAsItem(base, sg, null);
+  eq('a suggestion with no date is still accepted', countOf(undated), countOf(base) + 1);
+  assert('and is flagged as needing one', undated.items[undated.items.length - 1].needsStudentDate === true);
+
+  // Garbage in must not produce an item.
+  for (const bad of [null, undefined, {}, { name: '' }, 'x', 42]) {
+    eq(`a ${JSON.stringify(bad)} suggestion is ignored`, countOf(MODEL.addSuggestionAsItem(base, bad, '2027-01-01')), countOf(base));
+  }
+  // An unknown track falls back rather than producing an item on no track at all.
+  const oddTrack = MODEL.addSuggestionAsItem(base, { ...sg, track: 'wizardry' }, '2027-03-04');
+  assert('an unknown track falls back to a real one',
+    CAT.TRACK_IDS.includes(oddTrack.items[oddTrack.items.length - 1].track));
+}
+
+// The generator's own contract: it may name things outside the catalog and may never date
+// them. The prompt says so; this asserts the CODE strips dates regardless of what came
+// back, because a rule that lives only in a prompt is a rule a model can ignore.
+{
+  const genSrc = read('src/lib/roadmap/generator.js');
+  assert('the selection prompt asks for out-of-catalog suggestions', /beyondCatalog/.test(genSrc));
+  assert('and forbids dating them in the strongest terms',
+    /may NEVER state its date/.test(genSrc), 'the one rule that makes this safe');
+  assert('and the code strips every date field regardless of what came back',
+    /due: null, on: null, date: null, deadline: null/.test(genSrc),
+    'a rule that lives only in a prompt is a rule a model can ignore');
+}
+
 // URL sanitisation. Every roadmap URL ends up in an `<a href>` a student clicks, and two of them
 // are not build-checked: one a student types, and one arriving on a roadmap restored from a
 // revision or synced from another device. `javascript:` in an href is script execution.

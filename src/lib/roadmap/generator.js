@@ -59,7 +59,7 @@ import { answersToGates, intakeToPromptText, targetSchools, homePlace, intendedM
 import { MAJOR_BY_ID } from '../geo/majors.js';
 import { ROADMAP_VERSION, SEASON_COUNT, roadmapFingerprint, validateSlate, monthlyLoad } from './model.js';
 import { measure, rung, rungForOverage, squeeze, LAST_RUNG } from './promptBudget.js';
-import { TRACK_BY_ID } from '../../data/roadmap/index.js';
+import { TRACK_BY_ID, TRACK_IDS } from '../../data/roadmap/index.js';
 
 // ── Wire plumbing ────────────────────────────────────────────────────────────
 // Deliberately the same shape, retry policy and trace discipline as
@@ -605,7 +605,16 @@ Return ONLY this JSON:
   "omitted": [
     { "id": "a catalog id you deliberately left out that they might expect", "reason": "one honest sentence why not" }
   ],
-  "gaps": ["anything genuinely important for this student that was NOT in the catalog — name it, do not invent dates for it"]
+  "beyondCatalog": [
+    {
+      "name": "the real name of a competition, program or award that is NOT in the catalog above but genuinely belongs in THIS student's year",
+      "org": "who runs it, if you are sure — otherwise null",
+      "why": "1-2 sentences: why this specific student, given what you know about them. Not what it is — what it does for them.",
+      "whereToLook": "how they find its real deadline — the organization's own site, a school chapter, a state coordinator. Be specific about WHO holds the date.",
+      "track": "competition|program|scholarship|experience|academics|essays|relationships|testing|aid|application",
+      "confidence": "sure|unsure"
+    }
+  ]
 }
 
 Rules that decide whether this is a real roadmap or a list:
@@ -616,6 +625,7 @@ Rules that decide whether this is a real roadmap or a list:
 - Items marked ALREADY PASSED THIS YEAR: only include one if the student can still act on next year's cycle, and say so plainly in the reason.
 - Local items — the ones marked "date varies locally" — are usually the BEST bets, because the field is small and the student is already there. Use them. But no more than about two in five picks may be ones the student has to go and look the date up for, or the roadmap opens as a list of chores rather than a plan.
 - "omitted" is not optional and it is not padding — naming two or three things you deliberately did not choose, and why, is what makes the rest credible.
+- "beyondCatalog" is where you are allowed to go outside the list. Name up to four real things that belong in this student's year and are not above — a competition their state runs, a program at a university near them, an award in their specific field. THE ONE ABSOLUTE RULE: you may name the thing, and you may NEVER state its date. Not a day, not a month, not "usually around March", not "the deadline is in the spring". You do not know, and a date you produce here will be believed and acted on by a seventeen-year-old. Say WHO HOLDS the date instead, so they can go and get the real one. If you are not certain the thing exists under that name, mark it "unsure" — an unsure entry is useful and a confident wrong one is not.
 - Every id must appear exactly once. No markdown, JSON only.`;
 }
 
@@ -645,8 +655,46 @@ function resolveSelection(parsed, { slateById, seasons, trace }) {
   const omitted = arr(parsed?.omitted).slice(0, 6)
     .map((o) => ({ id: str(o?.id, 80), name: slateById[o?.id]?.name || null, reason: str(o?.reason, 300) }))
     .filter((o) => o.reason && o.name);
+  // ── Suggestions from outside the catalog ───────────────────────────────────
+  // The catalog is a whitelist for anything carrying a DATE, and that is not
+  // negotiable — it is the single mechanism that makes an invented deadline
+  // structurally impossible (see the header of src/data/roadmap/schema.js). But
+  // a whitelist of a few hundred entries cannot contain every competition worth
+  // a student's year: their state's own contests, a program at the university
+  // twenty minutes away, an award specific to the field they care about. Refusing
+  // to name those means the roadmap is silently narrower than the world.
+  //
+  // So the model may NAME things outside the catalog, and may never DATE them.
+  // That is the whole design, and the enforcement is here rather than in the
+  // prompt: every date-shaped field is stripped from a suggestion before it can
+  // reach a student, whatever the model returned. A suggestion arrives as a name,
+  // a reason, and instructions for finding the real deadline from whoever
+  // actually holds it — and it becomes a dated roadmap item only when the student
+  // has looked it up and typed it in themselves.
+  const beyondCatalog = arr(parsed?.beyondCatalog).slice(0, 4).map((g) => {
+    const name = str(g?.name, 140);
+    const why = str(g?.why, 400);
+    if (!name || !why) return null;
+    return {
+      name,
+      org: str(g?.org, 120),
+      why,
+      whereToLook: str(g?.whereToLook, 300) || 'Search the organization\'s own site for this year\'s deadline — it is the only place the real date lives.',
+      track: TRACK_IDS.includes(g?.track) ? g.track : 'competition',
+      // 'unsure' is surfaced to the student as a caveat rather than filtered out.
+      // A model that flags its own uncertainty is more useful than one that only
+      // ever speaks confidently, and hiding the flagged ones would train it out.
+      unsure: g?.confidence === 'unsure',
+      // Stripped unconditionally. Nothing downstream can render a date for a
+      // suggestion because no date survives this point, whatever was returned.
+      due: null, on: null, date: null, deadline: null,
+    };
+  }).filter(Boolean);
+
+  // The old flat-string shape, kept so a roadmap built before this change still
+  // renders its gaps rather than losing them on the next load.
   const gaps = arr(parsed?.gaps).slice(0, 5).map((g) => str(g, 300)).filter(Boolean);
-  return { picks, omitted, gaps };
+  return { picks, omitted, gaps, beyondCatalog };
 }
 
 // ── Pass 3: deepening one season ─────────────────────────────────────────────
@@ -821,6 +869,7 @@ export function heuristicRoadmap({ slate, seasons, answers, gradeStage }) {
     picks: kept,
     omitted: [],
     gaps: [],
+    beyondCatalog: [],
   };
 }
 
@@ -957,7 +1006,7 @@ export async function createRoadmap({
   }), trace, 'select');
   let selection = selectionRaw
     ? resolveSelection(selectionRaw, { slateById, seasons: strategy.seasons, trace })
-    : { picks: fallback.picks, omitted: [], gaps: [] };
+    : { picks: fallback.picks, omitted: [], gaps: [], beyondCatalog: [] };
   // A model that returned JSON but chose almost nothing usable is a failed pass,
   // not a minimal roadmap. Four is the floor below which this is not a year.
   if (selection.picks.length < 4) {
@@ -971,7 +1020,7 @@ export async function createRoadmap({
       // button loses its credibility.
       if (!trace.thinSelection) trace.thinSelection = true;
     }
-    selection = { picks: fallback.picks, omitted: [], gaps: selection.gaps };
+    selection = { picks: fallback.picks, omitted: [], gaps: selection.gaps, beyondCatalog: selection.beyondCatalog };
   }
 
   // Pass 3 — deepen the near seasons, one call each.
@@ -1020,6 +1069,7 @@ export async function createRoadmap({
     risks: strategy.risks,
     omitted: selection.omitted,
     gaps: selection.gaps,
+    beyondCatalog: selection.beyondCatalog || [],
     intake: answers,
     fingerprint: roadmapFingerprint({ user, answers, portfolio }),
   };

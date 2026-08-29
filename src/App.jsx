@@ -5851,6 +5851,48 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const dueDeckCount = useMemo(()=>allDecksList.filter(d=>getDueCards(d.cards).length>0).length,[allDecksList]);
 
   /**
+   * Everything with a date on it that the dashboard should treat as a deadline.
+   *
+   * ── The gap this closes ─────────────────────────────────────────────────────
+   * `upcomingDeadlines` is the `deadlines` TABLE — dates the student typed in or saved from a
+   * program card. The Roadmap keeps its year in its own document, and until now the two only met
+   * on the Milestones feed. So a student could accept a competition into their roadmap, see it on
+   * their roadmap, and have the dashboard go on saying there was nothing coming up — the two
+   * surfaces they check most often describing two different calendars.
+   *
+   * Roadmap items are mapped into the row shape the dashboard modules already read rather than
+   * teaching those modules a second shape, so "the next three things" and the sixty-day horizon
+   * both see one calendar without either of them knowing the Roadmap exists.
+   *
+   * ── What is deliberately excluded ───────────────────────────────────────────
+   * An item with no resolvable date, and an item whose date is a catalog ESTIMATE rather than a
+   * real one. The dashboard prints dates as facts; a 'typical' window shown here as "due Nov 14"
+   * would be exactly the invented deadline the whole catalog design exists to prevent. Those
+   * items stay on the Roadmap, where the UI renders them as a window and says so.
+   */
+  const homeDeadlineRows = useMemo(()=>{
+    const rows = [...(upcomingDeadlines || [])];
+    const items = user?.roadmap?.items || [];
+    for (const item of items) {
+      if (item.status === 'done' || item.status === 'skipped') continue;
+      // Only dates we can state as facts — see above.
+      const exact = !!item.studentDate || item.confidence === 'fixed' || item.addedBy === 'student';
+      if (!exact) continue;
+      const date = item.studentDate || item.due || item.on || item.anchor;
+      if (!date) continue;
+      rows.push({
+        id: `roadmap:${item.id}`,
+        title: item.title,
+        due_date: date,
+        completed_at: null,
+        kind: item.track === 'competition' ? 'competition' : item.track === 'scholarship' ? 'scholarship' : 'other',
+        source: 'roadmap',
+      });
+    }
+    return rows;
+  },[upcomingDeadlines,user?.roadmap]);
+
+  /**
    * The three things — the dashboard's first and most prominent module.
    *
    * Ranked by urgency × impact over deadlines, the next unstarted lesson, the
@@ -5869,7 +5911,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
    */
   const nextThreeItems = useMemo(()=>nextThree({
     gradeBand, gradeStage: effGrade,
-    deadlines: upcomingDeadlines || [],
+    deadlines: homeDeadlineRows,
     nextLesson, doneLessons: curPathDoneL, totalLessons: curPathAllL.length,
     hours: dashboardHours, benchmarks,
     dueCards, dueDecks: dueDeckCount,
@@ -5878,7 +5920,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       activities: (portSnapshot?.activities||portActivities||[]).length,
       essays: appCounts.essays,
     } : undefined,
-  }),[gradeBand,effGrade,upcomingDeadlines,nextLesson,curPathDoneL,curPathAllL.length,
+  }),[gradeBand,effGrade,homeDeadlineRows,nextLesson,curPathDoneL,curPathAllL.length,
       dashboardHours,benchmarks,dueCards,dueDeckCount,portLoaded,recommendersCount,
       appCounts,portSnapshot,portActivities]);
   // ── Medabrain plan spotlight ─────────────────────────────────────────────────
@@ -6089,7 +6131,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             Sixty days, colored by when work has to START rather than when it
             is due — the first rung of the app's own 60/30/7 alert ladder. */}
         {home.visible.has('deadlineHorizon')&&<DeadlineHorizon
-          deadlines={upcomingDeadlines||[]}
+          deadlines={homeDeadlineRows}
           onOpen={()=>{goPortfolio('milestones');play('click');}}
           onOpenAll={()=>{goPortfolio('milestones');play('click');}}
           accent={C.rose}
