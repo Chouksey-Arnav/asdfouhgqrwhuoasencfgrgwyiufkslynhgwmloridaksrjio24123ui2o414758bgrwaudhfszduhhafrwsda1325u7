@@ -18,7 +18,7 @@
 //
 // ── The honesty line, which is the same one the catalog is held to ───────────
 // This resolves a ZIP to a STATE and a REGION. It does not resolve one to a
-// city, a neighbourhood, a school district, or a set of hospitals within
+// city, a neighborhood, a school district, or a set of hospitals within
 // twenty miles, and nothing downstream may claim it does. A three-digit prefix
 // covers an area that can be most of a state; treating it as a pin on a map
 // would let the roadmap tell a student that a program is "near you" when it is
@@ -42,7 +42,7 @@
  * proofread against the published allocation.
  *
  * Gaps are deliberate and meaningful: an unallocated prefix (there are several)
- * resolves to null rather than to its nearest neighbour, because a wrong state
+ * resolves to null rather than to its nearest neighbor, because a wrong state
  * is worse than no state — it would gate a student into another state's
  * residency-restricted programs and out of their own.
  */

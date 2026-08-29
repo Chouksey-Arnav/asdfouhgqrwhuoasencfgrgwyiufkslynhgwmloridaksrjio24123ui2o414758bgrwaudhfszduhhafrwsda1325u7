@@ -55,7 +55,7 @@ export const MAJORS = [
   {
     id: 'neuroscience',
     label: 'Neuroscience',
-    sublabel: 'Brain, behaviour, and the psych/soc half of the MCAT',
+    sublabel: 'Brain, behavior, and the psych/soc half of the MCAT',
     tags: ['neuroscience', 'brain bee', 'psychology', 'research', 'biology', 'behavioral'],
     courses: ['AP Biology', 'AP Psychology', 'Statistics'],
     lean: 'Brain Bee is the single highest-value competition available to you, and it has a published study text — an unusually winnable credential.',
@@ -79,7 +79,7 @@ export const MAJORS = [
   {
     id: 'psychology',
     label: 'Psychology or cognitive science',
-    sublabel: 'Mental health, behaviour, and the human side',
+    sublabel: 'Mental health, behavior, and the human side',
     tags: ['psychology', 'behavioral', 'neuroscience', 'research', 'mental health', 'community'],
     courses: ['AP Psychology', 'AP Statistics', 'AP Biology'],
     lean: 'Crisis-line and peer-support training are genuinely differentiating here, and they are among the few clinical-adjacent roles open to a sixteen-year-old.',

@@ -5,7 +5,7 @@
 // ── Why this file exists ─────────────────────────────────────────────────────
 // The best-value opportunities available to an American high schooler are almost
 // never the national ones. A state AHEC summer placement, a state medical
-// society scholarship, a hospital's own youth research programme: the applicant
+// society scholarship, a hospital's own youth research program: the applicant
 // pool is one state, one county, sometimes one city, instead of fifty states.
 // The odds are not marginally better than at the national equivalent — they are
 // different by an order of magnitude. And they are consistently the ones nobody
@@ -17,7 +17,7 @@
 // which so the roadmap can say "this one is in North Carolina" out loud.
 //
 // ── The two kinds of entry, and why the second kind is honest ───────────────
-// NAMED PROGRAMS come first: specific, verifiable programmes at named
+// NAMED PROGRAMS come first: specific, verifiable programs at named
 // institutions, with their own pages. Every rule from schema.js applies
 // unchanged.
 //
@@ -26,7 +26,7 @@
 // Each one names a category of institution that provably exists in every state
 // — an Area Health Education Center, a state-affiliated Regeneron ISEF fair, a
 // state HOSA association, a state medical society foundation, a Governor's
-// School — where the ORGANISATION is real and national in structure but the
+// School — where the ORGANIZATION is real and national in structure but the
 // LOCAL INSTANCE, its date, and its exact name belong to the student's own
 // state. The national body's page is linked, because that is where the state
 // directory lives.
@@ -36,12 +36,12 @@
 // rather than printing one we invented. The alternative — enumerating all fifty
 // states from memory — would produce a file that looked far more impressive and
 // was wrong about a great many of them, and a student who turns up to a
-// programme that closed in March because we said April has been failed worse
+// program that closed in March because we said April has been failed worse
 // than one we never told about it.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const REGIONAL_PROGRAMS = [
-  // ── Named programmes at named institutions ────────────────────────────────
+  // ── Named programs at named institutions ────────────────────────────────
   {
     id: 'fred-hutch-ship',
     name: 'Fred Hutch Summer High School Internship Program (SHIP)',
@@ -89,7 +89,7 @@ export const REGIONAL_PROGRAMS = [
     steps: [
       'Applications close in winter for a summer placement',
       'You are matched to a lab, so the personal statement about what interests you is doing real work',
-      'Confirm the current year\'s eligibility radius on the programme page — it has changed before',
+      'Confirm the current year\'s eligibility radius on the program page — it has changed before',
     ],
     tags: ['research', 'lab', 'clinical', 'pediatrics', 'internship'],
   },
@@ -108,11 +108,11 @@ export const REGIONAL_PROGRAMS = [
     cost: 'free-plus-stipend',
     format: 'in-person',
     url: 'https://www.mdanderson.org/education-training/programs-degrees/summer-research-programs.html',
-    why: 'Paid summer cancer research at the largest cancer centre in the United States, reserved for Texas high school students — the strongest research opportunity in the state and one most Texas students never hear about.',
+    why: 'Paid summer cancer research at the largest cancer center in the United States, reserved for Texas high school students — the strongest research opportunity in the state and one most Texas students never hear about.',
     prepWeeks: 10,
     requires: { wantsResearch: true },
     steps: [
-      'Several separate programmes run under one page — read which one matches your year',
+      'Several separate programs run under one page — read which one matches your year',
       'Applications close early in the new year',
       'Texas residency and a minimum age are both hard requirements; check both before writing anything',
     ],
@@ -133,10 +133,10 @@ export const REGIONAL_PROGRAMS = [
     cost: 'free-plus-stipend',
     format: 'in-person',
     url: 'https://college.mayo.edu/academics/biomedical-research-training/high-school-student-programs/',
-    why: 'Mayo runs several separate high school programmes across its Minnesota, Arizona and Florida campuses, most of them paid — a genuine research or clinical summer inside one of the most recognized names in medicine.',
+    why: 'Mayo runs several separate high school programs across its Minnesota, Arizona and Florida campuses, most of them paid — a genuine research or clinical summer inside one of the most recognized names in medicine.',
     prepWeeks: 10,
     steps: [
-      'The programmes differ by campus and by year — start from the index page rather than a remembered name',
+      'The programs differ by campus and by year — start from the index page rather than a remembered name',
       'Most require you to be within commuting distance of a campus',
       'Deadlines are in winter for the following summer',
     ],
@@ -158,11 +158,11 @@ export const REGIONAL_PROGRAMS = [
     format: 'in-person',
     url: 'https://www.hopkinsmedicine.org/psychiatry/education-training/pipeline-programs',
     opportunityId: 'jhu-jhibs',
-    why: 'A paid neuroscience research internship for Baltimore-area students, with mentoring that continues past the summer — one of the few programmes anywhere that puts a high schooler in a working brain-sciences lab.',
+    why: 'A paid neuroscience research internship for Baltimore-area students, with mentoring that continues past the summer — one of the few programs anywhere that puts a high schooler in a working brain-sciences lab.',
     prepWeeks: 10,
     requires: { wantsResearch: true },
     steps: [
-      'Written for Baltimore City students; confirm the current catchment on the programme page',
+      'Written for Baltimore City students; confirm the current catchment on the program page',
       'Applications close in winter',
       'The mentoring relationship afterwards is worth as much as the summer itself — ask about it',
     ],
@@ -183,7 +183,7 @@ export const REGIONAL_PROGRAMS = [
     cost: 'free',
     format: 'in-person',
     url: 'https://www.uthscsa.edu/academics/biomedical-sciences/programs/voelcker-biomedical-research-academy',
-    why: 'A three-summer programme that takes students from the end of ninth grade onward — one of the very few research pipelines that will take a fourteen-year-old and keep them for three years, which is a far better story than three unrelated summers.',
+    why: 'A three-summer program that takes students from the end of ninth grade onward — one of the very few research pipelines that will take a fourteen-year-old and keep them for three years, which is a far better story than three unrelated summers.',
     prepWeeks: 8,
     steps: [
       'Aimed at San Antonio-area students; apply after ninth or tenth grade',
@@ -211,7 +211,7 @@ export const REGIONAL_PROGRAMS = [
     prepWeeks: 8,
     requires: { wantsClinical: true },
     steps: [
-      'Several distinct programmes; start from the high school index page',
+      'Several distinct programs; start from the high school index page',
       'Applications generally close in late winter',
       'Ohio residency and proximity to a Cleveland Clinic site are usually required',
     ],
@@ -225,7 +225,7 @@ export const REGIONAL_PROGRAMS = [
     grades: ['9', '10', '11', '12'],
     states: ['MI'],
     confidence: 'varies',
-    season: 'Recruitment runs at partner schools in the autumn; the programme runs across the school year',
+    season: 'Recruitment runs at partner schools in the autumn; the program runs across the school year',
     priority: 'helpful',
     effort: 'moderate',
     selectivity: 'selective',
@@ -237,7 +237,7 @@ export const REGIONAL_PROGRAMS = [
     prepWeeks: 2,
     requires: { wantsClinical: true },
     steps: [
-      'Runs through partner high schools in Michigan — ask your counsellor whether yours is one',
+      'Runs through partner high schools in Michigan — ask your counselor whether yours is one',
       'A school-year commitment rather than a summer one',
       'Includes a capstone project presented at the medical school',
     ],
@@ -251,18 +251,18 @@ export const REGIONAL_PROGRAMS = [
     grades: ['9', '10', '11', '12'],
     states: ['MA'],
     confidence: 'varies',
-    season: 'Recruitment for most programmes runs in late winter for the summer and the following school year',
+    season: 'Recruitment for most programs runs in late winter for the summer and the following school year',
     priority: 'helpful',
     effort: 'moderate',
     selectivity: 'selective',
     cost: 'free-plus-stipend',
     format: 'in-person',
     url: 'https://www.massgeneral.org/children/community-health/youth-programs',
-    why: 'A cluster of paid youth programmes attached to a major teaching hospital, aimed at students from specific Boston-area communities — free, paid, local, and far less competitive than the national programmes students chase instead.',
+    why: 'A cluster of paid youth programs attached to a major teaching hospital, aimed at students from specific Boston-area communities — free, paid, local, and far less competitive than the national programs students chase instead.',
     prepWeeks: 6,
     requires: { wantsClinical: true },
     steps: [
-      'Several programmes with different catchments — check which one covers your town',
+      'Several programs with different catchments — check which one covers your town',
       'Most recruit in late winter',
       'Paid positions, which matters if you would otherwise need a summer job',
     ],
@@ -284,7 +284,7 @@ export const REGIONAL_PROGRAMS = [
     format: 'in-person',
     url: 'https://medicaleducation.weill.cornell.edu/education-programs/youth-scholars-program',
     opportunityId: 'weill-cornell-youth-scholars',
-    why: 'A structured pipeline programme for New York City students that runs across several years rather than one summer — continuity a medical school reader can see, from a name they will recognize.',
+    why: 'A structured pipeline program for New York City students that runs across several years rather than one summer — continuity a medical school reader can see, from a name they will recognize.',
     prepWeeks: 8,
     steps: [
       'Aimed at New York City public school students; check the current eligibility',
@@ -303,19 +303,19 @@ export const REGIONAL_PROGRAMS = [
     track: 'program',
     grades: ['9', '10', '11', '12'],
     confidence: 'varies',
-    season: 'Most AHEC summer programmes recruit between January and April for the following summer',
+    season: 'Most AHEC summer programs recruit between January and April for the following summer',
     priority: 'important',
     effort: 'moderate',
     selectivity: 'selective',
     cost: 'free',
     format: 'in-person',
     url: 'https://www.nachw.org/',
-    why: 'Area Health Education Centers exist in every state and are federally funded specifically to bring local students into health careers — which makes them, in most states, the single least competitive good health programme available to a high schooler, and almost nobody applies because almost nobody has heard of them.',
+    why: 'Area Health Education Centers exist in every state and are federally funded specifically to bring local students into health careers — which makes them, in most states, the single least competitive good health program available to a high schooler, and almost nobody applies because almost nobody has heard of them.',
     prepWeeks: 4,
     requires: { wantsClinical: true },
     steps: [
-      'Find your state\'s AHEC and then your regional centre — the programme is run regionally, not nationally',
-      'Ask specifically about health careers academies, scholars programmes and summer camps',
+      'Find your state\'s AHEC and then your regional center — the program is run regionally, not nationally',
+      'Ask specifically about health careers academies, scholars programs and summer camps',
       'Rural and small-town students are frequently the priority, not an afterthought',
     ],
     tags: ['clinical', 'community', 'health science', 'internship', 'shadowing'],
@@ -406,7 +406,7 @@ export const REGIONAL_PROGRAMS = [
     cost: 'free',
     format: 'in-person',
     url: 'https://ncsss.org/',
-    why: 'Most states run a free, residential, state-funded summer or full-time academy for their strongest students, several with dedicated medicine or life-science strands — the best-value selective programme in the country in the states that have one, because the state pays for it.',
+    why: 'Most states run a free, residential, state-funded summer or full-time academy for their strongest students, several with dedicated medicine or life-science strands — the best-value selective program in the country in the states that have one, because the state pays for it.',
     prepWeeks: 8,
     steps: [
       'Some require a school nomination, which means asking a teacher months before the deadline',
@@ -433,7 +433,7 @@ export const REGIONAL_PROGRAMS = [
     requires: { wantsClinical: true, hasCarOrTransit: true },
     steps: [
       'Search your nearest hospital plus "junior volunteer" or "teen volunteer" — every system words it differently',
-      'Expect a health screening, immunisation records and a minimum-hours commitment; start those early',
+      'Expect a health screening, immunization records and a minimum-hours commitment; start those early',
       'One hospital for two years reads far better than four hospitals for a summer each',
     ],
     tags: ['clinical', 'volunteering', 'patient care', 'community'],

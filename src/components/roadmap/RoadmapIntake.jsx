@@ -7,10 +7,10 @@ import { QUESTIONS, isAnswered, intakeProgress, buildPrefill, buildDefaults } fr
 import { resolveZip } from '../../lib/geo/zip';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// The thirteen-question intake, one question per screen.
+// The fifteen-question intake, one question per screen.
 //
 // ── Why one per screen and not a form ───────────────────────────────────────
-// The same thirteen questions in a scrolling form is a wall of inputs that reads
+// The same fifteen questions in a scrolling form is a wall of inputs that reads
 // as paperwork and gets abandoned. One at a time, each with its own reason for
 // existing printed underneath it, reads as a conversation — which is what it is,
 // and which is also what makes a student willing to answer the question about
@@ -21,11 +21,11 @@ import { resolveZip } from '../../lib/geo/zip';
 // student who has been through onboarding already knows how to drive this.
 //
 // ── Prefill is the whole trick ──────────────────────────────────────────────
-// Nine of the thirteen arrive already answered from the user record and the
+// Ten of the fifteen arrive already answered from the user record and the
 // Portfolio. A prefilled question shows its proposed answer selected, with a
 // small note saying where it came from, so answering it is one tap of
 // confirmation rather than a decision. In practice this turns thirteen questions
-// into about five real ones — while still showing the student every guess we
+// into about six real ones — while still showing the student every guess we
 // made, which is the part that keeps a wrong guess from silently becoming a
 // wrong roadmap.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -85,7 +85,7 @@ export default function RoadmapIntake({
 
   return (
     <div style={{ ...CC({ gap: 0 }) }}>
-      {/* Progress rail. Segments rather than a bar: thirteen is a countable
+      {/* Progress rail. Segments rather than a bar: fifteen is a countable
           number, and seeing exactly how many remain is the difference between
           "this is nearly over" and "this might go on forever". */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 20 }}>
@@ -238,9 +238,9 @@ function QuestionBody({ q, value, onChange, accent, isMobile }) {
           onChange={(e) => onChange(e.target.value.replace(/[^\d-]/g, '').slice(0, 10))}
           placeholder={q.placeholder || '12345'}
           aria-label="ZIP code"
-          style={inp({ fontSize: 18, fontFamily: C.FM, letterSpacing: '2px', maxWidth: 220, textAlign: 'center' })}
+          style={inp({ fontSize: 18, fontFamily: C.FM, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))', maxWidth: 220, textAlign: 'center' })}
         />
-        <div style={{ fontSize: 12, color: place ? C.greenL : typedEnough ? C.amberL : C.t4, marginTop: 10, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 12, color: place ? C.greenL : typedEnough ? C.amberL : C.t4, marginTop: 12, lineHeight: 1.5 }}>
           {place
             ? `${place.stateName} — your roadmap can now include ${place.stateName} programs and scholarships you have to live there to get.`
             : typedEnough

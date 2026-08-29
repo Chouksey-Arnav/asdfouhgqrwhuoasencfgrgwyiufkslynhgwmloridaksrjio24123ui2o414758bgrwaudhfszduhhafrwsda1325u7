@@ -72,7 +72,7 @@ export const SYNC_VERSION = 1;
  * collides on that question about once in four billion — which is a rate the
  * consequence (one field wrongly reported as synced) does not justify improving.
  *
- * Whitespace is normalised first, so re-wrapping a paragraph does not read as an
+ * Whitespace is normalized first, so re-wrapping a paragraph does not read as an
  * edit. A student who reflowed their essay has not changed it.
  */
 export function hashValue(text) {
@@ -97,7 +97,7 @@ export function emptyState() {
 }
 
 /**
- * Normalise whatever came off the user record into something safe to read.
+ * Normalize whatever came off the user record into something safe to read.
  *
  * A stored blob can be from an older version, half-written by an interrupted
  * sync, or absent. Every one of those has to degrade to an empty ledger rather
@@ -239,7 +239,7 @@ export function reconcile(sections = [], rawState = null) {
 
 /**
  * "I have put this into the real Common App." Records what was copied, so a
- * later edit here can be recognised as drift.
+ * later edit here can be recognized as drift.
  *
  * The value is hashed rather than stored. There is no reason to keep a second
  * copy of a student's essay in a sync ledger that rides their user record, and

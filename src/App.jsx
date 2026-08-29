@@ -110,6 +110,9 @@ import GradYearCheckIn from './components/GradYearCheckIn';
 import ReturningBreakScreen from './components/ReturningBreakScreen';
 import { summarizeRoadmapForPrompt } from './lib/roadmap/model';
 import { setAiLane, aiLane } from './lib/aiLane';
+import CommonAppMirror from './components/portfolio/CommonAppMirror';
+import CommonAppMirrorBadge from './components/portfolio/CommonAppMirrorBadge';
+import { useCommonApp } from './lib/commonApp/useCommonApp';
 import { rollCosmetic } from './lib/cosmetics';
 import { renderMarkdown } from './lib/renderMarkdown';
 import { exportQuizResult, exportFlashDeck, exportPathwayCertificate } from './lib/exportPDF';
@@ -427,6 +430,10 @@ const PORTFOLIO_SUBNAV = [
   {id:'resume',ic:Award,label:'Activities',color:C.amber},
   {id:'opportunities',ic:Trophy,label:'Opportunities',color:C.gold},
   {id:'applying',ic:GraduationCap,label:'Applying',color:C.sky},
+  // The Common App mirror. Sits directly after Applying because it is the thing every panel in
+  // this tab feeds — see src/lib/commonApp/sections.js. Deliberately not first: a student who
+  // opens Portfolio should land on their work, not on the form the work is for.
+  {id:'commonapp',ic:ClipboardList,label:'Common App',color:C.teal},
   // One tab, not two. 'Deadlines' (the dates you type) and 'Timeline' (the dates we generate)
   // were the write half and the read half of the same calendar; splitting them meant a date added
   // on one showed up on the other only after a reload, and the two could disagree about what was
@@ -4924,6 +4931,28 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // the tab because the coach, the Prep specialist and the plan generator all need it and none
   // of them mounts the Roadmap tab — a summary computed where it is rendered would be missing
   // from every surface that matters.
+  // ── The Common App mirror's live state ──────────────────────────────────────
+  // One derivation and one ledger for the whole app: the mirror screen and every panel badge read
+  // this same object, so they cannot disagree about whether a section is ready — the same "one
+  // fetch, one truth" rule the shared portfolio snapshot exists for.
+  //
+  // `persist` merges rather than replacing, because saveUser takes the WHOLE user record. Handing
+  // it a bare { commonApp } would replace the account with a single key.
+  const persistCommonApp=useCallback((ledger)=>{ setUser_(u=>{ if(!u) return u; const next={...u,commonApp:ledger}; DB.saveUser(next).catch(console.error); return next; }); },[]);
+  const commonApp=useCommonApp(user,persistCommonApp,portSnapshot);
+
+  // ── The mirror strip every Portfolio page carries ──────────────────────────
+  // One factory, handed to each scrolling page as a render-prop. A page whose section feeds no
+  // part of the Common App gets null back and renders nothing, which is the honest output —
+  // a neutral badge would read as a check that was performed and passed.
+  const commonAppBadgeFor=useCallback((view)=>(sectionId)=>(
+    <CommonAppMirrorBadge
+      tab="portfolio" view={view} section={sectionId}
+      application={commonApp.application} sync={commonApp.sync}
+      onOpenMirror={()=>{ setPortfolioView('commonapp'); play('click'); }}
+    />
+  ),[commonApp.application,commonApp.sync]);
+
   const roadmapSummary=useMemo(()=>{
     try{ return summarizeRoadmapForPrompt(user?.roadmap); }catch{ return null; }
   },[user?.roadmap]);
@@ -9998,6 +10027,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // saveUser, so a student's interests live on their account, not on one device.
     opportunities:()=>(
       <SectionScroller accent={portC.opportunities} isMobile={isMobile}
+        mirrorBadge={commonAppBadgeFor('opportunities')}
         focusId={sectionFor('opportunities')} focusNonce={sectionNonce}
         defaultOpenIds={['find']} printLabel="Print this page"
         sections={[
@@ -10024,6 +10054,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // was a tab, so adding a college still moves the counters, a finished interview still credits
     // the streak, and every old /portfolio/essays URL still lands on the essay workspace.
     applying:()=><ApplyingPanel accent={portC.applying} isMobile={isMobile}
+      mirrorBadge={commonAppBadgeFor('applying')}
       focusId={sectionFor('applying')} focusNonce={sectionNonce}
       onSectionOpen={(id)=>focusPortfolioSection('applying',id)}
       sectionLocks={applyingSectionLocks}
@@ -10057,7 +10088,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // callback the four separate panels had is still wired, one per section, so logging clinical
     // hours still moves the readiness gauge and the achievement counters exactly as it did when
     // it was its own tab.
+    // The Common App mirror — the whole real form with this student's Portfolio in it, plus the
+    // ledger that tracks which parts of it they have actually copied across. See
+    // src/lib/commonApp/ for the model, the derivation and the sync.
+    commonapp:()=><CommonAppMirror
+      application={commonApp.application} sync={commonApp.sync} actions={commonApp.actions}
+      loading={!portLoaded||portSnapLoading} isMobile={isMobile}
+      onNavigate={(src)=>{ if(src?.tab==='portfolio') goPortfolio(src.section||src.view); else goAnywhere(src.tab, src.view); }}/>,
     resume:()=><ActivitiesResumePanel accent={portC.resume} user={user} gradeLabel={gradeLabel} isMobile={isMobile}
+      mirrorBadge={commonAppBadgeFor('resume')}
       portfolioSnapshot={portSnapshot} pathwayLabel={PATHS[eSpec]?.label||null}
       section={sectionFor('resume')} sectionNonce={sectionNonce}
       onSectionChange={(id)=>focusPortfolioSection('resume',id)} sectionLocks={resumeSectionLocks}

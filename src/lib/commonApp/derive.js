@@ -26,7 +26,7 @@
 // It would be wrong in both directions at once: it would count the sections we
 // cannot see (making it too low), and it would count a typed-in draft the same
 // as a submitted one (making it too high). Worse, it would be the number
-// students optimise, and the sections that move it fastest are the trivial ones.
+// students optimize, and the sections that move it fastest are the trivial ones.
 // So: per-section states, an honest count of how many sections we can even speak
 // to, and no headline percentage anywhere.
 //
@@ -405,7 +405,7 @@ function deriveCbo(ctx) {
   // useful thing, since the section's whole problem is that nobody knows it
   // exists.
   return state('education-cbo', 'empty', {
-    summary: `Up to ${CA_WRITING_LIMITS.maxCommunityOrgs} organizations, and almost nobody fills this in. If a college access programme, a mentoring nonprofit or a community organization has helped you with any of this for free, it belongs here.`,
+    summary: `Up to ${CA_WRITING_LIMITS.maxCommunityOrgs} organizations, and almost nobody fills this in. If a college access program, a mentoring nonprofit or a community organization has helped you with any of this for free, it belongs here.`,
   });
 }
 

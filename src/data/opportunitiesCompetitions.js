@@ -18,7 +18,7 @@
 // Duplicating an entry would have shown a student the same program twice under
 // two slightly different names and made the two copies free to drift apart.
 //
-// Same integrity bar as both neighbours, and the same two rules that bind
+// Same integrity bar as both neighbors, and the same two rules that bind
 // hardest at this size:
 //
 //   - Every entry is a real program at a real organization, and there is
@@ -60,7 +60,7 @@ export const OPPORTUNITIES_COMPETITIONS = [
     tags: ['mathematical modeling', 'public health', 'scholarship'], pathways: ['publicHealth', 'biomedResearch', 'physician'],
     season: 'Winter', cost: 'Free', format: 'Virtual', grades: ['11', '12'] },
   { id: 'modeling-the-future-challenge', name: 'Modeling the Future Challenge', org: 'The Actuarial Foundation', type: 'Competition', level: 'National', effort: 'Competitive',
-    desc: 'A data-analysis and risk-modelling competition using real datasets, with an actuarial mentor assigned to every team that advances past the first round; health risk is a recurring topic.', eligibility: 'Open to juniors and seniors in teams; free to enter, with the first round submitted in the autumn and the full project round running into spring.',
+    desc: 'A data-analysis and risk-modeling competition using real datasets, with an actuarial mentor assigned to every team that advances past the first round; health risk is a recurring topic.', eligibility: 'Open to juniors and seniors in teams; free to enter, with the first round submitted in the autumn and the full project round running into spring.',
     tags: ['data analysis', 'risk modeling', 'mentored', 'epidemiology'], pathways: ['publicHealth', 'healthAdmin', 'biomedResearch'],
     season: 'Fall', cost: 'Free', format: 'Virtual', grades: ['11', '12'] },
   { id: 'usa-earth-science-olympiad', name: 'U.S. Earth Science Olympiad (USESO)', org: 'American Geosciences Institute', type: 'Competition', level: 'National', effort: 'Competitive',
@@ -162,23 +162,23 @@ export const OPPORTUNITIES_COMPETITIONS = [
     tags: ['pediatrics', 'paid research', 'Philadelphia'], pathways: ['biomedResearch', 'physician'],
     season: 'Summer', cost: 'Free + stipend', format: 'In person', grades: ['11', '12'] },
   { id: 'mdanderson-high-school-summer', name: 'MD Anderson High School Summer Research Programs', org: 'The University of Texas MD Anderson Cancer Center', type: 'Research', level: 'State', effort: 'Elite',
-    desc: 'Paid summer cancer research at the largest cancer centre in the United States, reserved for Texas high school students across several separate programmes.', eligibility: 'Texas residency and a minimum age are both hard requirements and worth checking before writing anything; applications close early in the new year.',
+    desc: 'Paid summer cancer research at the largest cancer center in the United States, reserved for Texas high school students across several separate programs.', eligibility: 'Texas residency and a minimum age are both hard requirements and worth checking before writing anything; applications close early in the new year.',
     tags: ['oncology', 'paid research', 'Texas'], pathways: ['biomedResearch', 'physician', 'pharmacy'],
     season: 'Summer', cost: 'Free + stipend', format: 'In person', grades: ['11', '12'] },
   { id: 'mayo-clinic-high-school-programs', name: 'Mayo Clinic High School Student Programs', org: 'Mayo Clinic', type: 'Research', level: 'Regional', effort: 'Elite',
-    desc: 'Several distinct high school programmes across the Minnesota, Arizona and Florida campuses, most of them paid, spanning biomedical research and clinical exposure.', eligibility: 'The programmes differ by campus and by year, and most require commuting distance to a campus; start from the education index page rather than a remembered programme name.',
+    desc: 'Several distinct high school programs across the Minnesota, Arizona and Florida campuses, most of them paid, spanning biomedical research and clinical exposure.', eligibility: 'The programs differ by campus and by year, and most require commuting distance to a campus; start from the education index page rather than a remembered program name.',
     tags: ['biomedical research', 'shadowing', 'paid'], pathways: ['physician', 'biomedResearch', 'nursing'],
     season: 'Summer', cost: 'Free + stipend', format: 'In person', grades: ['11', '12'] },
   { id: 'ut-voelcker-biomedical-academy', name: 'Voelcker Biomedical Research Academy', org: 'UT Health San Antonio', type: 'Research', level: 'Regional', effort: 'Competitive',
-    desc: 'A three-summer research programme that accepts students after ninth or tenth grade and keeps the same cohort — one of very few pipelines that will take a fourteen-year-old and hold on to them.', eligibility: 'Aimed at San Antonio-area students; applications close in late winter, and the commitment runs across three consecutive summers.',
+    desc: 'A three-summer research program that accepts students after ninth or tenth grade and keeps the same cohort — one of very few pipelines that will take a fourteen-year-old and hold on to them.', eligibility: 'Aimed at San Antonio-area students; applications close in late winter, and the commitment runs across three consecutive summers.',
     tags: ['multi-year', 'early start', 'San Antonio'], pathways: ['biomedResearch', 'physician'],
     season: 'Summer', cost: 'Free', format: 'In person', grades: ['9', '10', '11'] },
   { id: 'cleveland-clinic-high-school-programs', name: 'Cleveland Clinic High School Programs', org: 'Cleveland Clinic', type: 'Program', level: 'Regional', effort: 'Competitive',
-    desc: 'Paid summer placements inside a major hospital system spanning clinical, research and administrative tracks — one of the few ways a high schooler gets inside a hospital in a role rather than as a visitor.', eligibility: 'Ohio residency and proximity to a Cleveland Clinic site are usually required; several distinct programmes run under one index page and applications generally close in late winter.',
+    desc: 'Paid summer placements inside a major hospital system spanning clinical, research and administrative tracks — one of the few ways a high schooler gets inside a hospital in a role rather than as a visitor.', eligibility: 'Ohio residency and proximity to a Cleveland Clinic site are usually required; several distinct programs run under one index page and applications generally close in late winter.',
     tags: ['hospital', 'paid', 'Ohio'], pathways: ['physician', 'nursing', 'healthAdmin'],
     season: 'Summer', cost: 'Free + stipend', format: 'In person', grades: ['11', '12'] },
   { id: 'mgh-youth-programs', name: 'Massachusetts General Hospital Youth Programs', org: 'Massachusetts General Hospital', type: 'Program', level: 'Local', effort: 'Competitive',
-    desc: 'A cluster of paid youth programmes attached to a major teaching hospital, aimed at students from specific Boston-area communities and far less competitive than the national programmes students chase instead.', eligibility: 'Each programme has a different community catchment, so check which one covers your town; most recruit in late winter and the positions are paid.',
+    desc: 'A cluster of paid youth programs attached to a major teaching hospital, aimed at students from specific Boston-area communities and far less competitive than the national programs students chase instead.', eligibility: 'Each program has a different community catchment, so check which one covers your town; most recruit in late winter and the positions are paid.',
     tags: ['hospital', 'paid', 'Boston'], pathways: ['physician', 'nursing', 'publicHealth'],
     season: 'Summer', cost: 'Free + stipend', format: 'In person', grades: ['9', '10', '11', '12'] },
 ];

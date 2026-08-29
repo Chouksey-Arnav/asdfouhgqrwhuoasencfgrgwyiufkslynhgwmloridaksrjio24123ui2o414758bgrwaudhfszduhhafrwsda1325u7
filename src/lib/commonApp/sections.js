@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// The Common Application, modelled section by section.
+// The Common Application, modeled section by section.
 //
 // ── What this file is for ────────────────────────────────────────────────────
 // The Portfolio already collected almost everything the Common App asks for. It
@@ -28,12 +28,12 @@
 // that is approximately right is worse than no limit at all, because it will be
 // believed: a description written to a 200-character cap we invented gets
 // truncated mid-sentence by the real 150-character field, and the student finds
-// out after submitting. Where the real form's behaviour genuinely varies by
+// out after submitting. Where the real form's behavior genuinely varies by
 // college — which supplements exist, whether courses and grades is required,
 // how many teacher recommenders are allowed — this file says so rather than
 // picking a number.
 //
-// ── What is deliberately NOT modelled ────────────────────────────────────────
+// ── What is deliberately NOT modeled ────────────────────────────────────────
 // Anything we would be guessing at, and anything we should not hold. The Family
 // section, the demographic questions, the fee-waiver questions and the
 // disciplinary-history question are all named as sections so the student sees a
@@ -76,7 +76,7 @@ export const CA_WRITING_LIMITS = {
  * The seven Common App personal essay prompts, verbatim.
  *
  * The seventh is the free-choice option and is quoted in full rather than
- * summarised as "topic of your choice", because its actual wording — that the
+ * summarized as "topic of your choice", because its actual wording — that the
  * essay may be one you have already written — is the part students most often
  * do not know and the part that saves them the most work.
  */
@@ -192,9 +192,13 @@ export const CA_SECTIONS = [
     id: 'education-cbo',
     formName: 'Education → Community-Based Organizations',
     label: 'Community-Based Organizations',
-    blurb: 'Up to three organizations that have given you free help with your application — a college access programme, a mentoring nonprofit, an upward-bound style programme.',
+    blurb: 'Up to three organizations that have given you free help with your application — a college access program, a mentoring nonprofit, an upward-bound style program.',
     status: 'mirrored',
-    source: { tab: 'portfolio', view: 'opportunities' },
+    // Pinned to the finder section rather than to the Opportunities view as a whole. Without the
+    // section, sectionsFedBy falls back to the view-level key and this badge would also appear on
+    // "What you're tracking", where it makes no sense — a tracked program is not an organization
+    // that helped you with your application.
+    source: { tab: 'portfolio', view: 'opportunities', section: 'find' },
     limitCount: CA_WRITING_LIMITS.maxCommunityOrgs,
     fields: [
       field('organization', 'Organization name', { required: true }),

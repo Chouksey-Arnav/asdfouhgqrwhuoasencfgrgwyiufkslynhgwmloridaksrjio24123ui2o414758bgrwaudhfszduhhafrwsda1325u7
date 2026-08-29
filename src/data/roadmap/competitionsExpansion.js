@@ -346,7 +346,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'free',
     format: 'virtual',
     url: 'https://www.mtfchallenge.org/',
-    why: 'A data-analysis and risk-modelling competition with real datasets and a mentor assigned to every team — health risk is one of the recurring topics, and it teaches the exact skill epidemiology is built on.',
+    why: 'A data-analysis and risk-modeling competition with real datasets and a mentor assigned to every team — health risk is one of the recurring topics, and it teaches the exact skill epidemiology is built on.',
     prepWeeks: 10,
     steps: [
       'Round one is a scenario analysis submitted in the autumn',
@@ -495,7 +495,7 @@ export const COMPETITIONS_EXPANSION = [
     format: 'virtual',
     url: 'https://www.artandwriting.org/',
     opportunityId: 'scholastic-art-writing-awards',
-    why: 'The oldest and most recognized writing award open to American teenagers, and a National Medal is one of the few honours in this whole catalog an admissions reader will know without being told what it is.',
+    why: 'The oldest and most recognized writing award open to American teenagers, and a National Medal is one of the few honors in this whole catalog an admissions reader will know without being told what it is.',
     prepWeeks: 6,
     steps: [
       'Regional deadlines fall between December and January and vary by region — check yours',
@@ -542,7 +542,7 @@ export const COMPETITIONS_EXPANSION = [
     format: 'virtual',
     url: 'https://www.nytimes.com/spotlight/learning-contests',
     opportunityId: 'nyt-stem-writing-contest',
-    why: 'Explain something scientific to a general reader in 500 words. Free, quick, and it is a direct rehearsal for the hardest part of medicine that nobody practises: telling a frightened person what is happening to them in words they can hold on to.',
+    why: 'Explain something scientific to a general reader in 500 words. Free, quick, and it is a direct rehearsal for the hardest part of medicine that nobody practices: telling a frightened person what is happening to them in words they can hold on to.',
     prepWeeks: 2,
     steps: [
       'Five hundred words, one concept, written for someone who does not already understand it',
@@ -804,7 +804,7 @@ export const COMPETITIONS_EXPANSION = [
     format: 'in-person',
     url: 'https://www.usad.org/',
     opportunityId: 'us-academic-decathlon',
-    why: 'Ten events across science, literature, maths, art, music, economics, essay, speech and interview — including a scored interview, which nothing else at this level gives you a rehearsed reason to practise.',
+    why: 'Ten events across science, literature, maths, art, music, economics, essay, speech and interview — including a scored interview, which nothing else at this level gives you a rehearsed reason to practice.',
     prepWeeks: 20,
     steps: [
       'Requires a school team; ask in September, because study material is released early',
