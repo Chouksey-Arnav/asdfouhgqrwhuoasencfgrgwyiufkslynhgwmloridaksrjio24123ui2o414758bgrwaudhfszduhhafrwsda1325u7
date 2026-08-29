@@ -60,6 +60,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'free',
     format: 'in-person',
     url: 'https://www.thebrainbee.org/',
+    opportunityId: 'international-brain-bee',
     why: 'The national round for local Brain Bee winners, and the only neuroscience credential a high schooler can hold that a medical school admissions reader will recognize on sight.',
     prepWeeks: 10,
     requires: { wantsCompetition: true },
@@ -108,6 +109,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'free',
     format: 'in-person',
     url: 'https://www.jshs.org/',
+    opportunityId: 'junior-science-humanities-symposium',
     why: 'A research symposium rather than a poster fair: you defend your work in a talk to a panel, which is the single best rehearsal available for a medical school interview and for any research presentation after it.',
     prepWeeks: 16,
     requires: { wantsResearch: true },
@@ -180,6 +182,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'free',
     format: 'virtual',
     url: 'https://www.exploravision.org/',
+    opportunityId: 'toshiba-exploravision',
     why: 'Teams pick a current technology and write what it becomes in twenty years, with the science to back it — a medical device or diagnostic project here is genuinely original work that needs no lab.',
     prepWeeks: 10,
     steps: [
@@ -205,6 +208,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'entry-fee',
     format: 'in-person',
     url: 'https://maa.org/student-programs/amc/',
+    opportunityId: 'amc-10-12',
     why: 'The entry point to the entire American mathematics olympiad ladder, and the qualifying score is a concrete, comparable number — useful for any student heading toward engineering, computing or a quantitative major.',
     prepWeeks: 8,
     requires: { strongMathScience: true },
@@ -253,6 +257,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'entry-fee',
     format: 'in-person',
     url: 'https://www.aapt.org/programs/physicsbowl/',
+    opportunityId: 'physics-bowl',
     why: 'A forty-question, forty-five-minute physics contest with no qualifying round — the lowest-effort way to find out whether the olympiad track is worth your time before committing a winter to it.',
     prepWeeks: 3,
     steps: [
@@ -317,6 +322,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'free',
     format: 'virtual',
     url: 'https://www.amstat.org/education/posterproject/',
+    opportunityId: 'asa-statistics-poster-competition',
     why: 'A statistics project judged by professional statisticians, which is the cheapest credible way for a student heading toward public health or epidemiology to show they can actually handle data rather than just say they like it.',
     prepWeeks: 6,
     steps: [
@@ -365,6 +371,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'entry-fee',
     format: 'in-person',
     url: 'https://www.skillsusa.org/competitions/skillsusa-championships/',
+    opportunityId: 'skillsusa-health-science',
     why: 'Hands-on, judged health-occupations events — nursing assisting, medical terminology, first aid and CPR, health knowledge bowl — scored by working clinicians, which is a different and more credible kind of evidence than a written exam.',
     prepWeeks: 10,
     requires: { wantsClinical: true },
@@ -412,6 +419,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'entry-fee',
     format: 'in-person',
     url: 'https://bpa.org/students/competitive-events/',
+    opportunityId: 'business-professionals-of-america',
     why: 'The administrative half of medicine — health records, medical office procedures, health insurance and coding — which is unglamorous, genuinely useful, and almost nobody applying to medical school can speak about it.',
     prepWeeks: 6,
     steps: [
@@ -435,6 +443,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'entry-fee',
     format: 'in-person',
     url: 'https://www.deca.org/high-school-programs/high-school-competitive-events/',
+    opportunityId: 'deca',
     why: 'Role-play and written case events in health services marketing and entrepreneurship, judged on how you think on your feet — which is the same skill an MMI interview station tests, five years early.',
     prepWeeks: 8,
     requires: { wantsLeadership: true },
@@ -461,6 +470,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'entry-fee',
     format: 'in-person',
     url: 'https://nhseb.unc.edu/',
+    opportunityId: 'national-high-school-ethics-bowl',
     why: 'Teams reason through real ethical cases — a great many of them medical — and are scored on whether they engage the other side honestly rather than on whether they win. It is the closest thing in high school to what a medical ethics interview actually asks of you.',
     prepWeeks: 12,
     steps: [
@@ -484,6 +494,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'entry-fee',
     format: 'virtual',
     url: 'https://www.artandwriting.org/',
+    opportunityId: 'scholastic-art-writing-awards',
     why: 'The oldest and most recognized writing award open to American teenagers, and a National Medal is one of the few honours in this whole catalog an admissions reader will know without being told what it is.',
     prepWeeks: 6,
     steps: [
@@ -530,6 +541,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'free',
     format: 'virtual',
     url: 'https://www.nytimes.com/spotlight/learning-contests',
+    opportunityId: 'nyt-stem-writing-contest',
     why: 'Explain something scientific to a general reader in 500 words. Free, quick, and it is a direct rehearsal for the hardest part of medicine that nobody practises: telling a frightened person what is happening to them in words they can hold on to.',
     prepWeeks: 2,
     steps: [
@@ -553,6 +565,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'free',
     format: 'virtual',
     url: 'https://www.jfklibrary.org/learn/education/profile-in-courage-essay-contest',
+    opportunityId: 'jfk-profile-in-courage-essay',
     why: 'A researched essay about a political act of courage, with a real scholarship attached and a small enough field that a careful entry has a genuine chance — and public health policy is squarely in scope.',
     prepWeeks: 8,
     steps: [
@@ -645,6 +658,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'free',
     format: 'virtual',
     url: 'https://aynrand.org/students/essay-contests/',
+    opportunityId: 'ayn-rand-institute-essay-contests',
     why: 'A free essay contest on a set novel with an unusually large number of prizes relative to entries — worth an afternoon for a student who wants a writing award on the record without a research project behind it.',
     prepWeeks: 3,
     steps: [
@@ -691,6 +705,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'free',
     format: 'in-person',
     url: 'https://www.vfw.org/community/youth-and-education/youth-scholarships',
+    opportunityId: 'vfw-voice-of-democracy',
     why: 'A recorded three-minute essay judged locally first, which means a real scholarship decided by a small local field rather than a national one — and the recording itself is speaking practice you will use at interview.',
     prepWeeks: 4,
     steps: [
@@ -716,6 +731,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'entry-fee',
     format: 'in-person',
     url: 'https://www.speechanddebate.org/',
+    opportunityId: 'national-speech-debate-association',
     why: 'Sustained competitive speaking is the single most transferable activity on this list: every medical school interview, every case presentation and every difficult conversation with a patient is the same skill under a different name.',
     prepWeeks: 20,
     requires: { wantsCompetition: true },
@@ -763,6 +779,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'free',
     format: 'hybrid',
     url: 'https://www.councilforeconed.org/national-economics-challenge/',
+    opportunityId: 'national-economics-challenge',
     why: 'Health economics is most of why the American health system is the way it is, and this is the only competition on the list that touches it — useful for anyone whose interest in medicine includes why care costs what it does.',
     prepWeeks: 8,
     steps: [
@@ -786,6 +803,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'entry-fee',
     format: 'in-person',
     url: 'https://www.usad.org/',
+    opportunityId: 'us-academic-decathlon',
     why: 'Ten events across science, literature, maths, art, music, economics, essay, speech and interview — including a scored interview, which nothing else at this level gives you a rehearsed reason to practise.',
     prepWeeks: 20,
     steps: [
@@ -878,6 +896,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'entry-fee',
     format: 'in-person',
     url: 'https://www.nle.org/',
+    opportunityId: 'national-latin-exam',
     why: 'Medical terminology is Latin and Greek with the serial numbers filed off, and a gold medal here is a real, cheap, nationally-scored award for a student already taking the course.',
     prepWeeks: 4,
     steps: [
@@ -903,6 +922,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'entry-fee',
     format: 'in-person',
     url: 'https://www.firstinspires.org/robotics/frc',
+    opportunityId: 'first-robotics-competition',
     why: 'The largest engineering commitment available to a high schooler, and the one whose scholarship pool is genuinely enormous — worth it for a student heading toward biomedical engineering, and honestly a poor use of a year for one who is not.',
     prepWeeks: 12,
     steps: [
@@ -926,6 +946,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'entry-fee',
     format: 'in-person',
     url: 'https://www.roboticseducation.org/vex-robotics-competition-high-school/',
+    opportunityId: 'vex-robotics-competition',
     why: 'A far lower barrier than FIRST for the same kind of evidence — smaller teams, smaller robots, smaller budgets, and tournaments most weekends of the season rather than one build window.',
     prepWeeks: 10,
     steps: [
@@ -949,6 +970,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'free',
     format: 'virtual',
     url: 'https://zerorobotics.mit.edu/',
+    opportunityId: 'zero-robotics',
     why: 'You write control code for satellites and the finalists\' programs are run aboard the International Space Station — free, entirely remote, and one of the few competitions whose final round is genuinely unforgettable.',
     prepWeeks: 8,
     steps: [
@@ -972,6 +994,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'free',
     format: 'virtual',
     url: 'https://usaco.org/',
+    opportunityId: 'usa-computing-olympiad',
     why: 'Free, from home, four contests a season, and you promote through Bronze, Silver, Gold and Platinum on your own results — a self-paced ladder with a public rank, which is rare and useful for a computational biology or informatics direction.',
     prepWeeks: 6,
     steps: [
@@ -1018,6 +1041,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'entry-fee',
     format: 'virtual',
     url: 'https://www.uscyberpatriot.org/',
+    opportunityId: 'cyberpatriot',
     why: 'Health records are the most-breached category of personal data in the country, and this is the only competition here that touches how they are actually protected — a genuinely distinctive angle for a health informatics direction.',
     prepWeeks: 8,
     steps: [
@@ -1041,6 +1065,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'free',
     format: 'virtual',
     url: 'https://www.technovation.org/',
+    opportunityId: 'technovation-girls',
     why: 'Build an app that solves a community problem, with a mentor and a full curriculum provided free — health access problems are among the most common winning submissions, and the finished app is something you can actually show someone.',
     prepWeeks: 16,
     steps: [
@@ -1064,6 +1089,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'free',
     format: 'virtual',
     url: 'https://www.nasa.gov/stem/nextgenstem/moretothemoon/app-development-challenge.html',
+    opportunityId: 'nasa-app-development-challenge',
     why: 'A short, well-scoped NASA-run coding challenge with a real deliverable and no travel — a good first competitive programming project for a student who would find USACO discouraging.',
     prepWeeks: 8,
     steps: [
@@ -1160,6 +1186,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'entry-fee',
     format: 'hybrid',
     url: 'https://www.conradchallenge.org/',
+    opportunityId: 'conrad-challenge',
     why: 'An innovation competition with a dedicated Health & Nutrition category, staged across a whole year from a two-page pitch to a full commercial plan — the structure teaches you to develop an idea rather than just have one.',
     prepWeeks: 14,
     steps: [
@@ -1183,6 +1210,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'free',
     format: 'hybrid',
     url: 'https://diamondchallenge.org/',
+    opportunityId: 'diamond-challenge',
     why: 'Two separate tracks — a business concept and a social innovation — and the social track is where a genuine idea about health access belongs. Free to enter, with real funding attached.',
     prepWeeks: 10,
     steps: [
@@ -1206,6 +1234,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'free',
     format: 'virtual',
     url: 'https://www.davidsongifted.org/gifted-programs/fellows-scholarship/',
+    opportunityId: 'davidson-fellows',
     why: 'A scholarship of up to $50,000 for a single significant piece of work — a research project, an invention, a body of writing — judged on the work itself rather than on grades or scores. Extremely competitive, and the application forces you to articulate what you actually did.',
     prepWeeks: 16,
     requires: { wantsResearch: true },
@@ -1276,6 +1305,7 @@ export const COMPETITIONS_EXPANSION = [
     cost: 'free',
     format: 'in-person',
     url: 'https://envirothon.org/',
+    opportunityId: 'envirothon',
     why: 'A five-station outdoor field competition on soils, water, forestry, wildlife and a current environmental issue — environmental health is a real and under-applied route into medicine, and this is its competition.',
     prepWeeks: 10,
     steps: [
