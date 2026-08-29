@@ -963,7 +963,7 @@ for (const g of READY.ROADMAP_GATES) {
   assert(`gate "${g.id}" is answerable today`, typeof g.ok === 'function');
 }
 assert('the gate list stays short enough to be read', READY.ROADMAP_GATES.length <= 6,
-  `${READY.ROADMAP_GATES.length} gates — onboarding already asks thirty questions and the intake thirteen`);
+  `${READY.ROADMAP_GATES.length} gates — onboarding already asks thirty questions and the intake fifteen`);
 {
   // A gate pointing at a tab that does not exist sends the student to Home,
   // which reads as the app losing track of what it just asked them to do.
@@ -1005,7 +1005,7 @@ assert('the gate list stays short enough to be read', READY.ROADMAP_GATES.length
     loading.checklist.filter((c) => c.kind === 'portfolio').every((c) => c.state === 'loading'));
   assert('and a loading gate does not block the build', loading.ready);
 }
-assert('the tab checks readiness before asking thirteen questions, not after',
+assert('the tab checks readiness before asking fifteen questions, not after',
   tabSrc.indexOf('computeRoadmapReadiness') !== -1
   && tabSrc.indexOf('readiness.ready') < tabSrc.indexOf('<RoadmapIntake'),
   'finding out a roadmap cannot be built AFTER the intake is the app wasting a student\'s time and then blaming them for it');

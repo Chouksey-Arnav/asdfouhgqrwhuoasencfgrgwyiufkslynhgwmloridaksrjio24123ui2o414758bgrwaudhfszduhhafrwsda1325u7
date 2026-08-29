@@ -24,7 +24,7 @@ import { resolveZip } from '../../lib/geo/zip';
 // Ten of the fifteen arrive already answered from the user record and the
 // Portfolio. A prefilled question shows its proposed answer selected, with a
 // small note saying where it came from, so answering it is one tap of
-// confirmation rather than a decision. In practice this turns thirteen questions
+// confirmation rather than a decision. In practice this turns fifteen questions
 // into about six real ones — while still showing the student every guess we
 // made, which is the part that keeps a wrong guess from silently becoming a
 // wrong roadmap.

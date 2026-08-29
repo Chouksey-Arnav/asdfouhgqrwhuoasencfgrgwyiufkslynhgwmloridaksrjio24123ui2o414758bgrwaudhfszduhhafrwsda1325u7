@@ -10235,7 +10235,18 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     commonapp:()=><CommonAppMirror
       application={commonApp.application} sync={commonApp.sync} actions={commonApp.actions}
       loading={!portLoaded||portSnapLoading} isMobile={isMobile}
-      onNavigate={(src)=>{ if(src?.tab==='portfolio') goPortfolio(src.section||src.view); else goAnywhere(src.tab, src.view); }}/>,
+      // Set the view and focus the section separately rather than pushing the section id through
+      // goPortfolio. That helper resolves RETIRED tab ids ('essays' → applying:essays) and passes
+      // anything it does not recognize straight to setPortfolioView — so a live section id that is
+      // not also an old tab id, like the opportunities finder's 'find', would have been set as a
+      // portfolio view that does not exist and quietly landed the student on Overview.
+      onNavigate={(src)=>{
+        if(!src?.tab) return;
+        if(src.tab!=='portfolio') return goAnywhere(src.tab, src.view);
+        setTab('portfolio');
+        if(src.view) setPortfolioView(src.view);
+        if(src.view&&src.section) focusPortfolioSection(src.view, src.section);
+      }}/>,
     resume:()=><ActivitiesResumePanel accent={portC.resume} user={user} gradeLabel={gradeLabel} isMobile={isMobile}
       mirrorBadge={commonAppBadgeFor('resume')}
       portfolioSnapshot={portSnapshot} pathwayLabel={PATHS[eSpec]?.label||null}

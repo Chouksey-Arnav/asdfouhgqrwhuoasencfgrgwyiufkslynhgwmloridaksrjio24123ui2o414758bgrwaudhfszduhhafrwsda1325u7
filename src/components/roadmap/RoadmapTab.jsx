@@ -56,7 +56,7 @@ import { dayKey, daysBetween } from '../../lib/timeline';
 //   seasons  — the strategy, quarter by quarter, with the items inside each.
 //   list     — everything, filterable. The reference view for someone who knows
 //              what they are looking for.
-//   intake   — the thirteen answers, editable, because the roadmap is only as
+//   intake   — the fifteen answers, editable, because the roadmap is only as
 //              good as its inputs and those change.
 //
 // ── What this tab is NOT allowed to do ──────────────────────────────────────
@@ -233,7 +233,7 @@ export default function RoadmapTab({
   const balance = useMemo(() => (roadmap ? (roadmap.balance || validateSlate(roadmap)) : null), [roadmap]);
 
   // ── Can a roadmap usefully be built for this student yet? ──────────────────
-  // Checked before the intake rather than after it: asking thirteen questions
+  // Checked before the intake rather than after it: asking fifteen questions
   // and THEN saying "actually we cannot build this" would be the worst possible
   // ordering, and it is the ordering you get by default if the gate lives next
   // to the generator. See src/lib/roadmap/readiness.js for why each gate is
@@ -463,7 +463,7 @@ export default function RoadmapTab({
 
   // ── The gate stands in front of the FIRST build, and nothing else ─────────
   // In front, not behind: a student who has not told us their grade cannot be
-  // given a year, and finding that out after thirteen questions would be the app
+  // given a year, and finding that out after fifteen questions would be the app
   // wasting their time and then blaming them for it.
   //
   // And only the first build. Once a roadmap exists the gate never appears

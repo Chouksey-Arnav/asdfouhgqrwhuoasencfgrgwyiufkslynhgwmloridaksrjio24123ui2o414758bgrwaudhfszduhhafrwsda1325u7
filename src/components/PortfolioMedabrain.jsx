@@ -96,7 +96,7 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
       } catch { /* the prompt is still complete without it */ }
       // Their twelve-month Roadmap, if they have built one. This specialist gets asked "what
       // should I apply to" more than any other surface in the app — which is precisely the
-      // question the Roadmap tab has already answered in detail after a thirteen-question
+      // question the Roadmap tab has already answered in detail after a fifteen-question
       // intake. Without this the two would offer the same student two different years.
       let roadmapSummary = null;
       try { roadmapSummary = summarizeRoadmapForPrompt(user?.roadmap); } catch { /* optional */ }

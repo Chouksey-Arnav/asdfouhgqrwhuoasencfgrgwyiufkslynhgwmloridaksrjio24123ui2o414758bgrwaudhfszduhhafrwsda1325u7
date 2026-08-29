@@ -52,7 +52,7 @@
 // why they are worth the four minutes.
 //
 // ── Prefill is a first-class feature, not a convenience ──────────────────────
-// Nine of the thirteen carry a `prefill` that reads the user record and the
+// Ten of the fifteen carry a `prefill` that reads the user record and the
 // Portfolio and proposes an answer. A prefilled question renders as a confirmation
 // ("we think this is you — change it if not") rather than a blank, which is
 // faster to answer AND demonstrably reads as the app knowing them. `prefill`
