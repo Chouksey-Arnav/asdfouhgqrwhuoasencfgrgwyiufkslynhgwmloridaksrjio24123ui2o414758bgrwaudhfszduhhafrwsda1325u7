@@ -28,6 +28,8 @@ import {
   Radar as RadarIcon,
   // Aliased for the same reason: `Map` is a JavaScript global this file uses.
   Map as MapIcon,
+  // Medabrain's named modes (src/lib/medabrainModes.js) and the equity shelf.
+  HelpCircle, PenLine, KeyRound,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck, Layers, Crown, Compass };
@@ -226,7 +228,7 @@ import TrackedPanel from './components/portfolio/TrackedPanel';
 import Disclosure, { HelpNote } from './components/ui/Disclosure';
 import NextStepsCard from './components/portfolio/NextStepsCard';
 import { buildNextSteps } from './lib/portfolioNextSteps';
-import { goalsForWeek } from './lib/weeklyGoals';
+import { goalsForWeek, measureWeek, METRIC_BY_ID, daysLeftInWeek } from './lib/weeklyGoals';
 import QuizPlanToday from './components/QuizPlanToday';
 import {
   summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch, typeMatch, getTodayPlanEntry, getNextPlanDay, getPlanStreak,
@@ -261,6 +263,16 @@ import { buildInsights } from './lib/insights';
 // computePlanReadiness is the Plans generator's own bar, read by the unlock ladder so that
 // tab opens only once it can actually build something — see the `planReady` signal below.
 import { buildCoachSystemPrompt, buildOnboardingRecap, computeOnboardingCompleteness, computePlanReadiness } from './lib/studentProfile';
+// ── Modes, deep context, and the safety layer ───────────────────────────────
+// The three things that turn the chat tab from a text box into a coach: named
+// modes instead of a blank prompt (medabrainModes), the measured record shaped
+// into sentences the model can quote (coachContext), and a dedicated
+// classification pass on every message the student sends (safety/*).
+import { MEDABRAIN_MODES, FREE_MODE, modeById, buildModeBlock, equityStarters } from './lib/medabrainModes';
+import { summarizeQuizTopics, summarizeHoursByCategory, summarizeSavedPrograms, summarizeWeeklyGoal, summarizeDeadlines, buildDeepContextBlock } from './lib/coachContext';
+import { runSafetyPass } from './lib/safety/pass';
+import { loadCrisisResources } from './lib/safety/resources';
+import CrisisResourceCard from './components/safety/CrisisResourceCard';
 import { buildNotesDigest, buildHighlightsDigest } from './lib/lessonMemory';
 import {
   C, catMeta, tint, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill,
@@ -2137,6 +2149,18 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [activeThreadId,setActiveThreadId]=useState(null);
   const [threadsLoading,setThreadsLoading]=useState(true);
   const [coachSidebarOpen,setCoachSidebarOpen]=useState(false); // mobile-only slide-over
+  // Which named mode the chat is in (src/lib/medabrainModes.js). 'free' is the
+  // old blank-box behavior and stays available — the modes are a front door, not
+  // a cage. Deliberately NOT persisted: a mode is about what the student is
+  // doing in the next ten minutes, and reopening the app three days later in
+  // "review my essay's structure" would be the app remembering the wrong thing.
+  const [coachMode,setCoachMode]=useState('free');
+  // The safety tier of the message currently being answered. Held in a ref
+  // rather than in state because requestAIResponse reads it during the same tick
+  // it is written, and a state update would not have landed yet — a one-render
+  // lag here means the crisis guidance misses the exact turn it was for.
+  const safetyTierRef=useRef(null);
+  const [crisisConfig,setCrisisConfig]=useState(null);
   const [renamingThreadId,setRenamingThreadId]=useState(null);
   const [renameDraft,setRenameDraft]=useState('');
   // Which of Medabrain's three model tiers answered the most-recent message — same idea as Claude's
@@ -4815,13 +4839,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // `purpose` selects which Medabrain subsystem key-pool the server routes this call through
   // (coach/interview/portfolio/prep/plan — see api/groq.js). Defaults to the head coach so every
   // existing caller is unchanged; portfolio/prep/plan features pass their own purpose.
-  async function callGroqAI(sys, msg, toks = 700, hist = null, tier = 'guide', purpose = 'coach') {
+  // `extra` carries the per-request fields the server reads directly — today
+  // only `safetyTier`, which lets api/groq.js append its own crisis instruction
+  // rather than trusting a client-assembled system prompt to still contain one
+  // (see the SERVER_CRISIS_GUARDRAIL note in that file).
+  async function callGroqAI(sys, msg, toks = 700, hist = null, tier = 'guide', purpose = 'coach', extra = {}) {
     let r, d;
     try {
       r = await fetch('/api/groq', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ system: sys, message: msg, messages: hist, maxTokens: toks, tier, purpose }),
+        body: JSON.stringify({ system: sys, message: msg, messages: hist, maxTokens: toks, tier, purpose, ...extra }),
       });
     } catch {
       throw new Error("Couldn't reach Medabrain — check your connection and try again.");
@@ -4980,6 +5008,54 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     return()=>{cancelled=true;};
   },[dbReady,user?.masterPlan?.windowBuiltFor,user?.masterPlan?.daysGeneratedThrough,user?.specialty]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // The crisis-resource config (public/safety-resources.json), fetched once so
+  // the numbers the coach says out loud and the numbers on the card come from
+  // the same place. Null until it lands; every consumer falls back to the
+  // compiled-in defaults, so nothing waits on this.
+  useEffect(()=>{
+    let alive=true;
+    loadCrisisResources().then(cfg=>{ if(alive)setCrisisConfig(cfg); }).catch(()=>{});
+    return()=>{alive=false;};
+  },[]);
+
+  // The weekly goal, with its real numbers — targets the student set, against
+  // what they have actually done this week. Medabrain needs both halves: the
+  // academic-stress response is "your goal is 6 clinical hours and you're at 1;
+  // want to make it 2 this week?", and neither number can be invented.
+  const weeklyGoalRows=useMemo(()=>{
+    try{
+      const targets=goalsForWeek(user)||{};
+      const measured=portSnapshot?measureWeek(portSnapshot):{};
+      return Object.entries(targets).map(([id,target])=>{
+        const metric=METRIC_BY_ID[id];
+        if(!metric)return null;
+        return { id, label:metric.short||metric.label, unit:metric.unitShort||metric.unit||'', target:Number(target)||0, current:Number(measured[id])||0 };
+      }).filter(Boolean);
+    }catch{ return []; }
+  },[user,portSnapshot]);
+
+  // ── The deep context block ─────────────────────────────────────────────────
+  // Recomputed only when the underlying rows change, because it walks the whole
+  // quiz history and the whole tracker and is then serialized into the prompt on
+  // every single turn. See src/lib/coachContext.js for why each of these five is
+  // prose rather than an object.
+  const coachDeepContext=useMemo(()=>{
+    try{
+      return buildDeepContextBlock({
+        quizTopics:summarizeQuizTopics(qHistory,ALL_QUIZZES),
+        hoursByCategory:summarizeHoursByCategory({
+          clinicalHours:clinicalHoursEntries||[],
+          activities:portActivities||[],
+          research:portSnapshot?.research||[],
+        }),
+        savedPrograms:summarizeSavedPrograms(trackedSummary?.items||[]),
+        weeklyGoal:summarizeWeeklyGoal(weeklyGoalRows,{daysLeft:daysLeftInWeek()}),
+        deadlines:summarizeDeadlines(upcomingDeadlines||[]),
+      });
+    }catch{ return ''; }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[qHistory,clinicalHoursEntries,portActivities,portSnapshot,trackedSummary,weeklyGoalRows,upcomingDeadlines]);
+
   async function requestAIResponse(history,threadId,chatCountForAchievements=aiChatCount){
     setCLoad(true);
     try{
@@ -5014,14 +5090,26 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         paceText,
         feedbackSummary:feedbackSummary.promptText,
         parallelPathwaysSummary:isParallel?parallelSummary:null,
+        deepContext:coachDeepContext,
+        modeBlock:buildModeBlock(coachMode),
+        // Empty on almost every turn. When the classifier fired on the message
+        // being answered, this is what suspends the demanding-mentor stance and
+        // replaces it with acknowledge-first — see src/lib/safety/prompts.js.
+        safetyBlock:safetyTierRef.current?.block||'',
       });
       const lastUser=[...history].reverse().find(m=>m.role==='user');
-      // Honor a pinned model; otherwise let Medabrain auto-route this message.
-      const tier=coachModelPref==='auto'?classifyCoachTier(lastUser?.content||''):coachModelPref;
+      const mode=modeById(coachMode);
+      // A mode may pin a tier (essay work and career questions want depth, a
+      // quiz turn does not); otherwise honor a pinned model, otherwise let
+      // Medabrain auto-route this message.
+      const tier=mode.tier||(coachModelPref==='auto'?classifyCoachTier(lastUser?.content||''):coachModelPref);
       setCoachTier(tier);
       // 1600 (up from 700): a full breakdown or plan-style reply routinely ran past 700 tokens and
       // got cut off mid-sentence. api/groq.js's per-purpose ceiling for 'coach' was raised to match.
-      const r=await callGroqAI(sysPrompt,lastUser?.content||'',1600,history.filter(m=>m.role!=='error'),tier);
+      // The mode's purpose — not always 'coach' — is what puts essay mode behind
+      // the server-side prose guard rather than behind its prompt alone.
+      const r=await callGroqAI(sysPrompt,lastUser?.content||'',1600,history.filter(m=>m.role!=='error'),tier,mode.purpose||'coach',
+        safetyTierRef.current?.safetyTier?{safetyTier:safetyTierRef.current.safetyTier}:{});
       setCoachTierCounts(c=>({...c,[tier]:(c[tier]||0)+1}));
       setMsgs(m=>[...m,{role:'assistant',content:r}]);
       if(threadId){ DB.addCoachMessage(threadId,'assistant',r).catch(console.error); bumpThreadLocally(threadId); }
@@ -5056,6 +5144,25 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     setMsgs(next);setCi('');
     DB.addCoachMessage(threadId,'user',message).catch(console.error);
     bumpThreadLocally(threadId);
+
+    // ── The safety pass ──────────────────────────────────────────────────────
+    // Runs BEFORE the coach call and is awaited, because its result changes what
+    // the coach is told to do on this exact turn — a detection that lands one
+    // message late is a detection that missed. The cost is bounded: the
+    // deterministic screen is free and synchronous, and the model half only runs
+    // on the genuinely ambiguous band (see needsModelPass in
+    // src/lib/safety/classifier.js), so an ordinary "explain glycolysis" pays
+    // nothing at all.
+    //
+    // Everything here fails open toward safety and never toward an error the
+    // student has to deal with: if the whole assessment throws, the turn
+    // proceeds as an ordinary one rather than failing.
+    // One call: classify, arm the resource card, log the event to the internal
+    // review queue (timestamp, user and severity — never a word of what was
+    // said, and no parent notified by it or by anything downstream of it), and
+    // produce the block that reshapes this turn's system prompt.
+    const safety=await runSafetyPass(message,{surface:'coach',crisisConfig});
+    safetyTierRef.current=safety.block?safety:null;
     const newCount=aiChatCount+1;setAiChatCount(newCount);logEvent('coach_message_sent',threadId);saveUser(applyPlanAutoComplete({...user,aiChatCount:newCount},typeMatch('coach')));bumpWeeklyCoachCount(getIsoWeekKey());
     await requestAIResponse(next,threadId,newCount);
   }
@@ -6781,7 +6888,39 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   }
 
   // ── AI COACH ─────────────────────────────────────────────────────────────────
-  const COACH_ICONS = { FlaskConical, Compass, Sparkles };
+  const COACH_ICONS = { FlaskConical, Compass, Sparkles, Lightbulb, HelpCircle, CalendarDays, PenLine, Stethoscope, MessageCircle, KeyRound };
+  // ── The mode picker ────────────────────────────────────────────────────────
+  // Rendered large in the empty state (where an unprompted student needs to be
+  // told what this thing is for) and as a compact row above the composer once a
+  // conversation is running (where it is a control, not an invitation).
+  // Switching mid-thread is allowed and deliberately does not clear the thread:
+  // a student who has been explaining a concept and now wants to be quizzed on
+  // it is describing one continuous piece of work.
+  function ModePicker({compact=false}){
+    const active=modeById(coachMode);
+    const options=[FREE_MODE,...MEDABRAIN_MODES];
+    return(
+      <div role="group" aria-label="What do you want help with?" style={{display:'flex',gap:8,flexWrap:compact?'nowrap':'wrap',overflowX:compact?'auto':'visible',paddingBottom:compact?4:0}}>
+        {options.map(m=>{
+          const Ic=COACH_ICONS[m.icon]||Sparkles;
+          const on=m.id===active.id;
+          return(
+            <motion.button key={m.id} whileTap={{scale:.97}} onClick={()=>{setCoachMode(m.id);play('click');}}
+              aria-pressed={on} title={m.blurb}
+              style={{display:'inline-flex',alignItems:'center',gap:6,flexShrink:0,
+                padding:compact?'4px 12px':'8px 12px',borderRadius:compact?8:12,cursor:'pointer',
+                border:`1px solid ${on?tint(C.violet,0.45):C.b1}`,
+                background:on?tint(C.violet,0.16):C.surf2,
+                color:on?C.t1:C.t3,fontSize:compact?11.5:12.5,fontWeight:on?700:600,fontFamily:C.FB,
+                transition:CONTROL_TRANSITION}}>
+              <Ic size={compact?12:13} color={on?C.violetL:C.t4}/>
+              {m.label}
+            </motion.button>
+          );
+        })}
+      </div>
+    );
+  }
   // Builds a "For you right now" group from the same profile signals already
   // fed into buildCoachSystemPrompt (weakest category, due cards, stated
   // goal) so the starter prompts a student actually sees are
@@ -6794,9 +6933,27 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     if(dueCards>0)personal.push(`Quiz me out loud on my ${dueCards} due flashcard${dueCards===1?'':'s'} instead of the review screen`);
     const goalLabel=GOAL_OPTIONS.find(o=>o.value===user?.goal)?.label;
     if(goalLabel)personal.push(`My goal is "${goalLabel}" — what's the single highest-leverage thing I should do this week?`);
-    if(!personal.length)return QUICK_P_GROUPS;
-    return [{label:'For you right now',icon:'Sparkles',prompts:personal.slice(0,3)},...QUICK_P_GROUPS];
-  },[secAvgs,cats3,user,dueCards]);
+    // The mode's own starters come first when one is picked: the student just
+    // told the app what they want, and answering that with the generic shelf
+    // would be the interface ignoring them.
+    const mode=modeById(coachMode);
+    const modeGroup=mode.starters?.length
+      ?[{label:mode.label,icon:mode.icon,prompts:mode.starters}]
+      :[];
+    // ── The equity shelf ─────────────────────────────────────────────────────
+    // Questions a student with a physician in the family already knows to ask.
+    // Shown to everyone, always — see the header of src/lib/medabrainModes.js
+    // for why targeting these at "students who need them" would be both
+    // unreliable and insulting. Seeded on the account so the three a student
+    // sees are stable within a session rather than reshuffling on every render.
+    const equityGroup={
+      label:'Questions nobody told you to ask',
+      icon:'KeyRound',
+      prompts:equityStarters(3,(user?.id?String(user.id).length:0)+(user?.name?user.name.length:0)+aiChatCount),
+    };
+    const personalGroup=personal.length?[{label:'For you right now',icon:'Sparkles',prompts:personal.slice(0,3)}]:[];
+    return [...modeGroup,...personalGroup,equityGroup,...(modeGroup.length?[]:QUICK_P_GROUPS)];
+  },[secAvgs,cats3,user,dueCards,coachMode,aiChatCount]);
   function TypingDots(){
     return(
       <div style={{display:'flex',alignItems:'center',gap:4,padding:'4px 4px'}}>
@@ -7046,15 +7203,29 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 </div>
               </div>
             </div>
-            {personalizedQuickPrompts().map(group=>{const GIc=COACH_ICONS[group.icon];const personal=group.label==='For you right now';return(
+            {/* The front door. An empty box is an exam question with no prompt
+                for a fifteen-year-old — see src/lib/medabrainModes.js. */}
+            <div style={{marginBottom:16}}>
+              <div style={{...R({gap:8}),marginBottom:8}}>
+                <Sparkles size={12} color={C.violetL}/><span style={lbl({marginBottom:0})}>What do you want help with?</span>
+              </div>
+              <ModePicker/>
+              <div style={{fontSize:11.5,color:C.t4,lineHeight:1.5,marginTop:8}}>{modeById(coachMode).blurb}</div>
+            </div>
+            {personalizedQuickPrompts().map(group=>{const GIc=COACH_ICONS[group.icon]||Sparkles;const personal=group.label==='For you right now';const equity=group.icon==='KeyRound';return(
               <div key={group.label} style={{marginBottom:16}}>
                 <div style={{...R({gap:4}),marginBottom:8}}>
-                  <GIc size={12} color={personal?C.amberL:C.t3}/><span style={{...lbl({marginBottom:0}),color:personal?C.amberL:undefined}}>{group.label}</span>
+                  <GIc size={12} color={personal?C.amberL:equity?C.tealL||C.teal:C.t3}/><span style={{...lbl({marginBottom:0}),color:personal?C.amberL:equity?C.tealL||C.teal:undefined}}>{group.label}</span>
                 </div>
+                {equity&&(
+                  <div style={{fontSize:11.5,color:C.t4,lineHeight:1.5,marginBottom:8}}>
+                    The questions students with a doctor in the family already know to ask. You should have them too.
+                  </div>
+                )}
                 <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(auto-fill,minmax(240px,1fr))',gap:8}}>
                   {group.prompts.map((p,i)=>(
                     <motion.button key={i} whileHover={reducedMotion?undefined:{y:-2}} whileTap={{scale:.98}} onClick={()=>sendChat(p)}
-                      style={{textAlign:'left',padding:'12px 12px',borderRadius:12,border:`1px solid ${personal?tint(C.amber,0.3):C.b1}`,background:personal?C.amberDim:C.surf2,color:C.t2,fontSize:12.5,lineHeight:1.5,fontFamily:C.FB,cursor:'pointer',transition:'background .15s,border-color .15s'}}>
+                      style={{textAlign:'left',padding:'12px 12px',borderRadius:12,border:`1px solid ${personal?tint(C.amber,0.3):equity?tint(C.teal,0.3):C.b1}`,background:personal?C.amberDim:equity?tint(C.teal,0.07):C.surf2,color:C.t2,fontSize:12.5,lineHeight:1.5,fontFamily:C.FB,cursor:'pointer',transition:'background .15s,border-color .15s'}}>
                       {p}
                     </motion.button>
                   ))}
@@ -7102,9 +7273,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
         {/* ── Composer — pinned to the bottom of the panel ─────────────────── */}
         <div style={{flexShrink:0,paddingTop:12}}>
+          {/* Support resources. Sits ABOVE the composer, not in the thread,
+              because a message scrolls away and this must not — see
+              src/components/safety/CrisisResourceCard.jsx. Renders nothing
+              until something has armed it. */}
+          <div style={{marginBottom:12}}><CrisisResourceCard isMobile={isMobile} compact/></div>
+          {msgs.length>0&&<div style={{marginBottom:8}}><ModePicker compact/></div>}
           <div style={R({gap:isMobile?6:10,alignItems:'flex-end'})}>
             <label htmlFor="msp-coach-input" className="msp-sr-only">Ask Medabrain a question</label>
-            <textarea id="msp-coach-input" style={{...inp({resize:'none',minHeight:isMobile?44:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:12,padding:'8px 12px'}),flex:1,opacity:coachRequestsRemaining<=0?.5:1}} placeholder={isMobile?"Ask Medabrain anything…":"Ask Medabrain anything — a concept, a college, a deadline, a plan…"} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={coachRequestsRemaining<=0}/>
+            <textarea id="msp-coach-input" style={{...inp({resize:'none',minHeight:isMobile?44:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:12,padding:'8px 12px'}),flex:1,opacity:coachRequestsRemaining<=0?.5:1}} placeholder={isMobile?(coachMode==='free'?"Ask Medabrain anything…":modeById(coachMode).placeholder):modeById(coachMode).placeholder} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={coachRequestsRemaining<=0}/>
             <motion.button whileHover={reducedMotion?undefined:{scale:1.05}} whileTap={{scale:.95}} aria-label="Send message" style={{...btn(C.violetGrad,{padding:isMobile?'0 16px':'0 22px',height:isMobile?44:52,flexShrink:0,borderRadius:12,boxShadow:`0 4px 16px ${tint(C.violet,0.35)}`,opacity:cLoad||coachRequestsRemaining<=0?.6:1}),display:'inline-flex',alignItems:'center',justifyContent:'center'}} onClick={()=>sendChat(ci)} disabled={cLoad||coachRequestsRemaining<=0}>
               {cLoad?<RefreshCw size={isMobile?16:19} className="spin"/>:<ArrowUp size={isMobile?16:19}/>}
             </motion.button>
