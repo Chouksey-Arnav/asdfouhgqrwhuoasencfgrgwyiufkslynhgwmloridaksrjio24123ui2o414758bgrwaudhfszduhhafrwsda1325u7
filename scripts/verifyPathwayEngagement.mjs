@@ -101,7 +101,13 @@ assert('Smart Mix shuffles rather than sorting by FSRS state',
 assert('every Smart Mix entry point re-rolls the seed (goes through startSmartMix)',
   (app.match(/setAD\(\{name:'Smart Mix',builtin:true,smartMix:true\}\)/g) || []).length === 1,
   'a second entry point sets the deck directly and would reuse the previous order');
-assert('the deck memo depends on the seed', /\},\[activeDeck,cDecks,studyMode,allDecksList,cardsForDeck,smartMixSeed\]\)/.test(app));
+// The property being guarded is that `smartMixSeed` is in the memo's dependency
+// list — without it, re-rolling the seed doesn't re-deal the cards and "a fresh
+// order every time" silently stops being true. The list itself is allowed to grow
+// (Today's session added `todaySession` to it), so this matches the deps that
+// matter rather than the exact array.
+assert('the deck memo depends on the seed',
+  /\},\[activeDeck,cDecks,studyMode,allDecksList,cardsForDeck,smartMixSeed[,\]]/.test(app));
 assert('Smart Mix is offered whenever there are any cards, not only when something is due',
   /\{allCards\.length>0&&\(\s*<motion\.div[^]*?onClick=\{startSmartMix\}/.test(app));
 

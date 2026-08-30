@@ -28,6 +28,7 @@ import {
   Radar as RadarIcon,
   // Aliased for the same reason: `Map` is a JavaScript global this file uses.
   Map as MapIcon,
+  Camera, Calendar,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck, Layers, Crown, Compass };
@@ -168,13 +169,32 @@ import LessonAudioPlayer from './components/LessonAudioPlayer';
 import { buildArticleSegments } from './lib/lessonAudio';
 import {
   buildVerificationQuiz, describeVerificationQuiz, getAttemptCount, recordAttempt, clearAttempts,
-  VERIFY_PASS_PCT,
+  VERIFY_PASS_PCT, thresholdFor,
 } from './lib/quizPersonalization';
+import { buildVerificationPolicy, describeThreshold, TIER_LABELS } from './data/quizzes/verificationPolicy';
+import {
+  analyzeAttempt, recordMiss, clearMisses, markServed, servedStems, clearServed,
+  buildReexplainPrompt, missedConcepts, allMissedConcepts,
+} from './lib/quizRecovery';
+import {
+  dueRechecks, pickRecheckItems, itemCountForStage, applyRecheck, recheckHeld, needsReviewCopy,
+} from './lib/verificationSchedule';
+import { isApplied } from './lib/quizItemMix';
+import NotYetPanel from './components/quiz/NotYetPanel';
 import LessonNotesPanel from './components/LessonNotesPanel';
 import PaceGoalCard from './components/PaceGoalCard';
 import LessonDifficultyCheck from './components/LessonDifficultyCheck';
 import { computePaceStatus, describePace, paceHeadline, paceTone, formatPaceDate } from './lib/paceGoal';
 import { seededShuffle, newShuffleSeed } from './lib/shuffle';
+import { buildSession, describeSession, normalizeCap, DEFAULT_DAILY_CAP, CAP_RANGE } from './lib/flashcards/session';
+import { useOnlineStatus, OFFLINE_COPY } from './lib/flashcards/offline';
+import { cardsFromImage, makeCard, isDuplicateCard, OCR_DOWNLOAD_NOTE, hasNativeTextDetection } from './lib/flashcards/capture';
+import { VOCAB_TRACK, VOCAB_TRACK_BLURB } from './data/flashcards/vocabularyDecks';
+import CardComposer from './components/flashcards/CardComposer';
+import { withTradeoffs } from './data/diagnosticTradeoffs';
+import { canTake, driftSeries, retakeBlockedCopy } from './lib/diagnosticHistory';
+import DiagnosticDrift from './components/diagnostic/DiagnosticDrift';
+import RealityCheckCard from './components/diagnostic/RealityCheckCard';
 import { summarizeLessonFeedback, FEEDBACK_LABELS } from './lib/lessonFeedback';
 import { logLessonFeedback } from './lib/lessonFeedbackApi';
 import OpportunitiesPanel from './components/portfolio/OpportunitiesPanel';
@@ -304,6 +324,17 @@ const deckCatMeta = (cat) => {
 function shuffleArr(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
 const TOTAL_QUESTIONS = ALL_QUIZZES.reduce((n,q)=>n+q.qs.length,0);
+
+// lessonId -> {tier, threshold}. Derived once at module load from the authored
+// unit stages (data/quizzes/verificationPolicy.js) rather than stamped on every
+// lesson by hand: foundations at 70, lessons later content builds on at 80, and
+// exploratory career-browsing content not gated at all. `threshold` is null for
+// the ungated tier and every reader must treat that as "no gate" — defaulting
+// it back to 70 would reintroduce the exact quiz-the-exploration failure the
+// policy exists to remove.
+const VERIFY_POLICY = buildVerificationPolicy(PATHS);
+const tierOf = lessonId => VERIFY_POLICY.get(lessonId)?.tier || 'foundation';
+const thresholdOf = lessonId => thresholdFor(lessonId, VERIFY_POLICY);
 function scrambleQuiz(quiz){
   const qs = quiz.qs;
   const shuffled = shuffleArr(qs);
@@ -642,6 +673,10 @@ function Dot({state='locked'}){
     verified:{bg:C.green,Ic:ShieldCheck,c:'#fff',sz:12},
     done:{bg:C.green,Ic:Check,c:'#fff',sz:12},
     studying:{bg:'transparent',Ic:BookOpen,c:C.amberL,brd:C.amberL,sz:10},
+    // Was verified, a spaced re-check didn't hold. Deliberately drawn as a soft
+    // refresh mark in the same family as "studying" rather than as a failure
+    // color — the material needs a pass, the student didn't do anything wrong.
+    review:{bg:'transparent',Ic:RefreshCw,c:C.violetL||C.blueL,brd:C.violetL||C.blueL,sz:10},
     available:{bg:'transparent',Ic:Circle,c:C.blueL,brd:C.blueL,sz:8},
     locked:{bg:'transparent',Ic:Lock,c:C.t4,brd:C.t4,sz:10},
   };
@@ -845,6 +880,10 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
   onContinueLater,                        // save my spot and let me go
   feedbackSlot=null,                      // <LessonDifficultyCheck/>, owned by App
   reviewMode=false,
+  // ── Per-lesson verification policy (data/quizzes/verificationPolicy.js) ──
+  // `threshold` is null for an exploratory lesson, which has no gate at all.
+  threshold=VERIFY_PASS_PCT,
+  tier='foundation',
 }){
   const content = LESSON_CONTENT[lesson.id];
   const videoId = content?.video?.ytId || extractYouTubeId(lesson.url);
@@ -1026,16 +1065,40 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
             </div>
           )}
 
-          {step==='quiz'&&(
+          {/* An exploratory lesson is not gated at all — quizzing browse-and-decide
+              content teaches a student to read for the quiz instead of reading to
+              explore. So this step says so plainly and offers a finish button, not
+              a test. See data/quizzes/verificationPolicy.js. */}
+          {step==='quiz'&&threshold===null&&(
+            <div style={CC({gap:16,alignItems:'center',textAlign:'center',paddingTop:20})}>
+              <div style={{width:64,height:64,borderRadius:16,background:`${C.blue}18`,border:`1px solid ${C.blue}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><Compass size={28} color={C.blue}/></div>
+              <h3 style={{fontSize:m?18:21,fontWeight:800,color:C.t1,fontFamily:C.FD,margin:0}}>Nothing to pass here</h3>
+              <p style={{fontSize:13,color:C.t2,lineHeight:1.55,maxWidth:440,margin:0}}>
+                "{lesson.title}" is here for you to look around in, so it isn’t graded. If we quizzed it,
+                you’d start reading it hunting for the five facts likely to be on the quiz — which is the
+                opposite of what a lesson like this is for.
+              </p>
+              <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(accentGrad(accent),{padding:'12px 28px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={onStartQuiz}>Mark as explored<ArrowRight size={15}/></motion.button>
+            </div>
+          )}
+          {step==='quiz'&&threshold!==null&&(
             <div style={CC({gap:16,alignItems:'center',textAlign:'center',paddingTop:20})}>
               <div style={{width:64,height:64,borderRadius:16,background:`${C.green}18`,border:`1px solid ${C.green}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><ShieldCheck size={28} color={C.green}/></div>
               <h3 style={{fontSize:m?18:21,fontWeight:800,color:C.t1,fontFamily:C.FD,margin:0}}>Ready to verify this lesson?</h3>
-              <p style={{fontSize:13,color:C.t2,lineHeight: 1.55,maxWidth:420,margin:0}}>Pass the quiz at {VERIFY_PASS_PCT}% or higher to mark "{lesson.title}" verified — this is the only thing that actually counts toward unit and pathway mastery. The bar is the same {VERIFY_PASS_PCT}% for every student; the questions are not.</p>
+              {/* The bar varies by LESSON now, not by student — 70 for foundations, 80 where
+                  later lessons build on this one. Two students on this lesson still face the
+                  identical bar, which is the fairness property that ever mattered. */}
+              <p style={{fontSize:13,color:C.t2,lineHeight: 1.55,maxWidth:440,margin:0}}>Pass the quiz at {threshold}% or higher to mark "{lesson.title}" verified — this is the only thing that actually counts toward unit and pathway mastery. {describeThreshold(tier)} Every student on this lesson gets the same bar; the questions are not the same.</p>
+              {tier==='gateway'&&<div style={{...pill(C.amberDim,C.amberL,{fontSize:11}),display:'inline-flex',alignItems:'center',gap:4}}><Milestone size={12}/>{TIER_LABELS.gateway}</div>}
               {/* Says out loud that the draw is per-student — the personalization is real
                   (lib/quizPersonalization.js) but invisible unless we name it. */}
-              {quizBlurb&&<div style={{fontSize:11.5,color:C.t3,lineHeight: 1.55,maxWidth:420}}>{quizBlurb}</div>}
-              {pathwayEntry?.quizScore!=null&&!isVerified&&<div style={{...pill(C.roseDim,C.rose,{fontSize:11})}}>Last attempt: {pathwayEntry.quizScore}% — try again below</div>}
-              <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(`linear-gradient(135deg,${C.green},#059669)`,{padding:'12px 28px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={onStartQuiz}>{pathwayEntry?.quizScore!=null?'Try Again':'Start Verification Quiz'}<ArrowRight size={15}/></motion.button>
+              {quizBlurb&&<div style={{fontSize:11.5,color:C.t3,lineHeight: 1.55,maxWidth:440}}>{quizBlurb}</div>}
+              {/* The old pill here read "Last attempt: 43% — try again below", in rose, on the
+                  screen the student sees every time they open the lesson. That is a failure
+                  put on permanent display, which is exactly what makes a teenager stop opening
+                  the app. The attempt is now framed as work already done toward this. */}
+              {pathwayEntry?.quizScore!=null&&!isVerified&&<div style={{...pill(C.blueDim,C.blueL,{fontSize:11})}}>You’ve had a run at this one — the next set is different</div>}
+              <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(`linear-gradient(135deg,${C.green},#059669)`,{padding:'12px 28px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={onStartQuiz}>{pathwayEntry?.quizScore!=null?'Try a different set':'Start Verification Quiz'}<ArrowRight size={15}/></motion.button>
             </div>
           )}
 
@@ -1148,7 +1211,9 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
     if(sel===null||conf)return;
     const ok=sel===q.ans;
     if(ok){scoreRef.current++;play('correct');}else play('wrong');
-    setAnswers(a=>[...a,{q:q.q,choices:q.ch,sel,correct:q.ans,exp:q.exp,ok}]);
+    // `concept` and `kind` ride along so the recovery flow can name what was
+    // missed instead of replaying the questions — see lib/quizRecovery.js.
+    setAnswers(a=>[...a,{q:q.q,choices:q.ch,sel,correct:q.ans,exp:q.exp,ok,concept:q.concept||null,kind:q.kind||null}]);
     setConf(true);
   }
   function next(){if(qi<tot-1){setQi(i=>i+1);setSel(null);setConf(false);}else setPhase('review');}
@@ -1165,7 +1230,7 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
           <div style={{fontSize:13,color:C.t2}}>{quiz.title}</div>
           {!readonly&&<div style={{fontSize:11,color:C.t3,marginTop:4,fontFamily:C.FM,display:'inline-flex',alignItems:'center',gap:4}}><Timer size={11}/>{fmtT(elapsed)} elapsed</div>}
           <div style={R({justifyContent:'center',gap:8,marginTop:20})}>
-            <button style={{...btn(accentGrad(sc)),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>onFinish(scoreRef.current,tot)}>Save & exit<ArrowRight size={15}/></button>
+            <button style={{...btn(accentGrad(sc)),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>onFinish(scoreRef.current,tot,answers)}>Save & exit<ArrowRight size={15}/></button>
             <button style={{...btnG(),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>exportQuizResult(quiz,answers,scoreRef.current,tot)}><FileDown size={14}/>Export PDF</button>
           </div>
         </div>
@@ -1398,6 +1463,22 @@ function NewDeckModal({onCreate,onClose,m=false}){
 // per-pathway write on completion — unit mastery, milestone nudges, the completion badge —
 // has to ask the lesson rather than assume `user.specialty`.
 const LESSON_PATHWAY = buildLessonPathwayIndex(PATHS);
+// The diagnostic's question list, with the forced trade-off items folded in after
+// the warm-up preference questions. Preference items have a low ceiling — everyone
+// says yes to helping people — so the items that actually separate MD from PA from
+// RN are the ones where every answer costs something. See
+// data/diagnosticTradeoffs.js.
+const DIAG_QUESTIONS = withTradeoffs(DIAG_QS);
+// lessonId -> {lesson, unit}. Needed wherever a stored row names a lesson but not
+// its unit — the spaced re-verification schedule (verifications) is stored per
+// lesson id and has to resolve back to real content to open a check.
+const LESSON_INDEX = (()=>{
+  const m=new Map();
+  Object.values(PATHS).forEach(p=>(p.units||[]).forEach(unit=>(unit.lessons||[]).forEach(lesson=>{
+    if(!m.has(lesson.id))m.set(lesson.id,{lesson,unit});
+  })));
+  return m;
+})();
 // Roadmap item key → icon + accent, used by the Portfolio Class Year Roadmap.
 const ROADMAP_ICONS = {
   diagnostic:{Ic:Compass,color:C.blue}, flashcards:{Ic:Layers3,color:C.violet}, quiz:{Ic:Layers,color:C.green},
@@ -1682,6 +1763,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // open/closed state survives a student entering or exiting a lesson, instead of resetting.
   const [prepBrainOpen, setPrepBrainOpen] = useState(false);
   const [prepBrainMessages, setPrepBrainMessages] = useState([]);
+  // A question the app drops into Medabrain's box on the student's behalf — set by the
+  // "not yet" recovery screen with the concepts they actually missed. Never auto-sent.
+  const [prepBrainPrefill, setPrepBrainPrefill] = useState('');
   // The SAT tab used to lift its own Medabrain conversation up here for the same
   // reason Prep's is lifted. It is gone with the seal (src/lib/betaFlags.js):
   // SatTab is passed a permanently-closed panel and an empty thread, because a
@@ -2016,6 +2100,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
   // ── Diagnostic ──────────────────────────────────────────────────────────────
   const [dStep,setDS]=useState(0);const [dAns,setDA]=useState([]);const [dDone,setDD]=useState(false);const [dRes,setDR]=useState(null);const [dCats,setDCats]=useState(null);const [dWhy,setDWhy]=useState(null);
+  // Every diagnostic result this student has ever produced (Dexie `diagnosticRuns`),
+  // oldest first. Drives the retake-per-semester rule and the drift chart.
+  const [diagRuns,setDiagRuns]=useState([]);
   const [dIntro,setDIntro]=useState(true); // show pathway overview + manual selection before the diagnostic quiz starts
 
   // ── Quiz ────────────────────────────────────────────────────────────────────
@@ -2023,6 +2110,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // Set when a quiz is launched from a pathway lesson's "Verify" button (rather than the Quiz
   // Library) so finishQuiz() knows to grade it as a verification attempt instead of a plain quiz.
   const [verifyCtx,setVerifyCtx]=useState(null); // { lesson, unit }
+  // The recovery screen after a miss — see components/quiz/NotYetPanel.jsx for why a
+  // miss now routes somewhere instead of leaving a lesson quietly unverified.
+  const [notYet,setNotYet]=useState(null); // { lesson, unit, analysis, pct, threshold }
+  // Set when a 2–3 item spaced re-check is running rather than a full attempt.
+  const [recheckCtx,setRecheckCtx]=useState(null); // { row, lesson, unit, stage }
+  // Verification schedule rows (Dexie `verifications`), loaded alongside the pathway.
+  const [verifications,setVerifications]=useState([]);
 
   // ══ BROWSER HISTORY ═══════════════════════════════════════════════════════════
   // Everything above is navigation state; this is what makes the browser's back and
@@ -2259,6 +2353,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     setSmartMixSeed(newShuffleSeed());
     setCIdx(0);setFlip(false);
   },[]);
+  // Today's session — the capped, prioritized, interleaved queue. Kept separate from
+  // Smart Mix on purpose: Smart Mix is "the whole library, shuffled", which is a
+  // browsing mode. This is the scheduled one, and it is the one that has to have an
+  // end to it.
+  const startTodaySession=useCallback(()=>{
+    setAD({name:"Today's session",builtin:true,todaySession:true});
+    setStudyMode('all');
+    setCIdx(0);setFlip(false);
+    setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});
+  },[]);
   const startSmartMix=useCallback(()=>{
     rerollSmartMix();
     setAD({name:'Smart Mix',builtin:true,smartMix:true});
@@ -2273,6 +2377,18 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // assignment, so landing on a real "here's what you're about to study, hit Start" screen first
   // reads as a considered session instead of an abrupt jump-scare into flashcards.
   const [planDeckPending,setPlanDeckPending]=useState(null); // {name,builtin,smartMix} | null
+  // ── Today's session (lib/flashcards/session.js) ─────────────────────────────
+  // The capped, importance-prioritized, confidence-interleaved queue. Distinct from
+  // Smart Mix, which is "every card, shuffled" and deliberately uncapped.
+  // Flashcards are the one feature that works perfectly with no connection; this is
+  // what lets the UI say so rather than leaving the student to guess.
+  const isOnline=useOnlineStatus();
+  const [reviewedToday,setReviewedToday]=useState(0);       // against the daily cap
+  const [lastCardReviewAt,setLastCardReviewAt]=useState(null); // for backlog detection
+  const [cardCreateOpen,setCardCreateOpen]=useState(false); // the "add my own card" sheet
+  const [ocrBusy,setOcrBusy]=useState(false);
+  const [ocrPct,setOcrPct]=useState(0);
+  const [ocrResult,setOcrResult]=useState(null); // {cards, text, dataUrl, engine}
   const [genCount,setGenCount]=useState(20);
   const [genCountInput,setGenCountInput]=useState('20'); // raw text of the count field, so typing isn't clobbered mid-edit
   const [genCountMode,setGenCountMode]=useState('auto'); // 'auto' (content decides the count) | 'manual' (genCount)
@@ -2405,6 +2521,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       if(u&&!u.email&&account?.email){ u.email=account.email; DB.saveUser(u).catch(()=>{}); }
       if(u){setUser_(u);setAiChatCount(u.aiChatCount||0);setInterviewCount(u.interviewCount||0);}
       setPathway_(pw||{});
+      // The spaced re-verification schedule (Dexie `verifications`). Loaded off the
+      // critical path — a missing schedule degrades to "no checks due", never to a
+      // broken pathway view.
+      DB.getVerifications().then(rows=>setVerifications(rows||[])).catch(console.error);
+      DB.getDiagnosticRuns().then(rows=>setDiagRuns(rows||[])).catch(console.error);
+      // How much of today's card cap is already spent, and when the student last
+      // reviewed anything — the two inputs the session builder needs to tell a
+      // normal day apart from a return after two weeks away.
+      const startOfToday=new Date(); startOfToday.setHours(0,0,0,0);
+      DB.getCardReviewsSince(startOfToday.getTime()).then(n=>setReviewedToday(n||0)).catch(console.error);
+      DB.getLastCardReviewAt().then(setLastCardReviewAt).catch(console.error);
       setQScores_(qs||{});
       setQHistory(qh||[]);
       // Merge built-in decks with custom decks from DB
@@ -2879,7 +3006,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // presence in `pathway` is still enough, matching the original self-report behavior.
   const isLessonComplete = useCallback((lesson,entry)=>{
     if(!entry)return false;
-    if(lesson.quizIds?.length)return !!entry.verified;
+    // An exploratory lesson has no gate (verificationPolicy.js) — reading it IS
+    // completing it, and requiring a quiz pass here would relock content the
+    // policy deliberately ungated.
+    if(thresholdOf(lesson.id)===null)return true;
+    // `everVerified`, not `verified`: a lesson that slipped back to needs-review
+    // after a spaced re-check must not relock the three units the student has
+    // already worked past. The shield gets honest (see lessonState below); the
+    // student's place in the pathway does not move.
+    if(lesson.quizIds?.length)return !!entry.verified||!!entry.everVerified;
     return true;
   },[]);
   const saveQuizScore = useCallback(async(quizId,score)=>{ setQScores_(q=>({...q,[quizId]:score})); await DB.saveQuizScore(quizId,score); const h=await DB.getQuizHistory(); setQHistory(h); },[]);
@@ -3724,14 +3859,31 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // "Physician (MD/DO)" in blue is simply wrong. (Lesson ids are unique across pathways, which
   // is what makes the lookup unambiguous — guarded by verifyParallelPathways.mjs.)
   const pathwayKeyOf = useCallback((lesson)=>(lesson?.id&&LESSON_PATHWAY.get(lesson.id))||eSpec,[eSpec]);
+  // The single most-overdue spaced re-check, or null. Deliberately ONE at a time:
+  // a returning student handed a list of six checks reads it as a backlog and
+  // does none of them, which is the same failure mode the flashcard daily cap
+  // exists to prevent (lib/flashcards/session.js).
+  const dueRecheck = useMemo(()=>{
+    const row=dueRechecks(verifications)[0];
+    if(!row)return null;
+    const entry=LESSON_INDEX.get(row.lessonId);
+    if(!entry)return null;
+    return {row,items:row.items,lesson:entry.lesson,unit:entry.unit};
+  },[verifications]);
   const pathwayOf = useCallback((lesson)=>PATHS[pathwayKeyOf(lesson)]||curPath,[pathwayKeyOf,curPath]);
   const unitM = (unit)=>unit?.lessons?.length?Math.round(unit.lessons.filter(l=>isLessonComplete(l,pathway[l.id])).length/unit.lessons.length*100):0;
-  // States: 'verified' (quiz passed), 'done' (legacy self-report, no curated quiz on this lesson),
-  // 'studying' (opened but not yet verified — does NOT unlock the next unit), 'available', 'locked'.
+  // States: 'verified' (quiz passed), 'review' (was verified, a spaced re-check didn't
+  // hold — see verificationSchedule.js), 'done' (legacy self-report or an ungated
+  // exploratory lesson), 'studying' (opened but not yet verified — does NOT unlock the
+  // next unit), 'available', 'locked'.
   const lessonState = (lesson,ui,units)=>{
     const entry=pathway[lesson.id];
     if(entry){
-      if(lesson.quizIds?.length)return entry.verified?'verified':'studying';
+      if(thresholdOf(lesson.id)===null)return'done';
+      if(lesson.quizIds?.length){
+        if(entry.verified)return'verified';
+        return entry.needsReview?'review':'studying';
+      }
       return'done';
     }
     if(ui===0)return'available';
@@ -5189,8 +5341,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // Smart Mix pulls due cards from several decks into one session, so a card's real home
     // deck (where the FSRS update actually needs to be written back) isn't necessarily
     // activeDeck itself — see the _srcDeck/_srcBuiltin tags added when building that pool below.
-    const deckName=activeDeck.smartMix?currentCard._srcDeck:activeDeck.name;
-    const deckIsBuiltin=activeDeck.smartMix?currentCard._srcBuiltin:activeDeck.builtin;
+    // Both cross-deck modes (Smart Mix and Today's session) tag each pooled card with
+    // where it actually lives, because that is where its FSRS update has to be written.
+    const pooled=activeDeck.smartMix||activeDeck.todaySession;
+    const deckName=pooled?currentCard._srcDeck:activeDeck.name;
+    const deckIsBuiltin=pooled?currentCard._srcBuiltin:activeDeck.builtin;
     const allDeckCards=[...cardsForDeck(deckName,deckIsBuiltin)];
     const idx=allDeckCards.findIndex(c=>c.front===currentCard.front&&c.back===currentCard.back);
     if(idx>=0)allDeckCards[idx]=updated;
@@ -5200,6 +5355,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     await saveDeck(deckName,allDeckCards);
     await DB.recordCardReview(currentCard.id||cIdx);
     const newTotal=totalReviews+1;setTotalReviews(newTotal);
+    // Kept in sync so the daily cap is a genuine daily budget across sessions, not a
+    // per-session one that resets every time the student re-enters the deck.
+    setReviewedToday(n=>n+1);
+    setLastCardReviewAt(Date.now());
     checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,newTotal,mastery,aiChatCount);
 
     // ── Combo streak + XP: the dopamine loop for card review ──────────────────
@@ -5532,30 +5691,104 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // the questions drawn from it, and their order are all derived from this student's onboarding
   // profile, pathway and attempt number (lib/quizPersonalization.js). Same 70% bar for everyone.
   function openVerifyQuiz(lesson,unit){
+    // An exploratory lesson has no gate at all (verificationPolicy.js). Quizzing
+    // browse-and-decide content trains a student to read for the quiz instead of
+    // reading to explore, which undercuts the whole point of the pathway — so
+    // finishing it is finishing it, and there is nothing to pass.
+    if(thresholdOf(lesson.id)===null){ markLessonExplored(lesson,unit); return; }
     const attempt=getAttemptCount(lesson.id);
     // Personalized against the lesson's OWN pathway, matching the blurb the player showed.
-    const quiz=buildVerificationQuiz(lesson,ALL_QUIZZES,{user,pathwayKey:pathwayKeyOf(lesson),attempt});
+    // `excludeStems` is what makes a retry a genuinely different quiz rather than a
+    // second run at an answer key the student has now seen once.
+    const quiz=buildVerificationQuiz(lesson,ALL_QUIZZES,{
+      user,pathwayKey:pathwayKeyOf(lesson),attempt,excludeStems:servedStems(lesson.id),
+    });
     if(!quiz){toast.error('No verification quiz found for this lesson yet.');return;}
     recordAttempt(lesson.id);
+    markServed(lesson.id,quiz.qs);
     logEvent('quiz_attempt',lesson.id);
+    setNotYet(null);
     setVerifyCtx({lesson,unit});
     setAQ(quiz);
     play('click');
   }
 
+  // Completing an ungated (exploratory) lesson. It still counts as done and still
+  // credits the streak — reading it was the work — it simply never carried a score.
+  async function markLessonExplored(lesson,unit){
+    await DB.setLessonDone(lesson.id);
+    setPathway_(pw=>({...pw,[lesson.id]:{...(pw[lesson.id]||{}),completedAt:Date.now(),studying:false}}));
+    setLessonStep('complete');
+    creditStreak('lesson_verified',{silent:true}).catch(console.error);
+    toast.success(`"${lesson.title}" marked as explored. Nothing to pass here — that one was for looking around.`,{icon:<Compass size={16}/>,duration:3800});
+  }
+
+  // ── Spaced re-verification ─────────────────────────────────────────────────
+  // A 2–3 item check at ~30 and ~90 days, drawn toward the concepts this student
+  // wobbled on when they first passed. Opened from the Pathway view's prompt;
+  // never forced, never announced to anyone.
+  function openRecheck(row,lesson,unit){
+    const bank=ALL_QUIZZES.find(q=>(lesson.quizIds||[]).includes(q.id));
+    if(!bank){toast.error('No quiz bank for this lesson.');return;}
+    const items=pickRecheckItems(bank,{
+      count:itemCountForStage(row.stage+1),
+      recentStems:servedStems(lesson.id),
+      weakConcepts:missedConcepts(lesson.id).map(m=>m.concept),
+      isApplied,
+    });
+    if(!items.length){toast.error('Nothing to check on this lesson yet.');return;}
+    setRecheckCtx({row,lesson,unit,stage:row.stage+1});
+    setAQ({...bank,qs:items,preScrambled:true,title:`${lesson.title} — quick check`});
+    play('click');
+  }
+
   // ── Quiz finish ───────────────────────────────────────────────────────────────
-  async function finishQuiz(score,total){
+  async function finishQuiz(score,total,answers=[]){
     const pct=total>0?Math.round((score/total)*100):0;
+    // ── Spaced re-check (2–3 items) ────────────────────────────────────────────
+    // Deliberately quiet in both directions: holding it produces one small
+    // confirmation, and losing it produces nothing at all beyond the lesson
+    // moving back to needs-review and its concepts entering the card queue. A
+    // second failure screen for a check the student didn't ask for would be the
+    // opposite of the point.
+    if(recheckCtx){
+      const {row,lesson,stage}=recheckCtx;
+      const held=recheckHeld(score,total);
+      const analysis=analyzeAttempt(answers,lesson);
+      const next=applyRecheck(row,{stage,correct:score,total,missedConcepts:analysis.byConcept.map(c=>c.concept)});
+      await DB.putVerification(next);
+      if(!held){
+        await DB.markLessonNeedsReview(lesson.id);
+        recordMiss(lesson.id,analysis);
+        setPathway_(pw=>({...pw,[lesson.id]:{...(pw[lesson.id]||{}),verified:false,needsReview:true,everVerified:true}}));
+        const copy=needsReviewCopy(lesson.title);
+        toast(copy.body,{icon:<RefreshCw size={15}/>,duration:5200});
+      } else {
+        toast.success(`Still solid on "${lesson.title}".`,{icon:<ShieldCheck size={15}/>,duration:2600});
+      }
+      setVerifications(await DB.getVerifications());
+      setRecheckCtx(null);
+      setAQ(null);
+      return;
+    }
     if(verifyCtx){
       const {lesson,unit}=verifyCtx;
-      const passed=pct>=VERIFY_PASS_PCT;
+      const threshold=thresholdOf(lesson.id)??VERIFY_PASS_PCT;
+      const passed=pct>=threshold;
       if(passed){
-        await DB.verifyLesson(lesson.id,pct);
+        await DB.verifyLesson(lesson.id,pct,{threshold,tier:tierOf(lesson.id)});
+        // A pass closes the recovery series too: the served-item exclusion and the
+        // missed-concept log both exist to get the student TO this moment, and
+        // carrying them forward would make a voluntary re-take months from now
+        // start from a depleted bank against concepts they've since cleared.
+        clearServed(lesson.id);
+        clearMisses(lesson.id);
+        DB.getVerifications().then(setVerifications).catch(console.error);
         // Passing closes the attempt series — a student who comes back to re-take this lesson
         // later starts from the best-fit bank again rather than deep in the retry rotation.
         clearAttempts(lesson.id);
         logEvent('unit_lesson_verified',lesson.id);
-        setPathway_(pw=>({...pw,[lesson.id]:{completedAt:Date.now(),verified:true,quizScore:pct,studying:false}}));
+        setPathway_(pw=>({...pw,[lesson.id]:{completedAt:Date.now(),verified:true,quizScore:pct,studying:false,everVerified:true,needsReview:false}}));
         const { finalXP, tier } = awardBoostedXP(15); // 10 XP already awarded on Study — verifying tops the lesson up to the usual 25 XP baseline
         const xpBeforeAward=user?.xp||0;
         const bumpedUser={...user,xp:xpBeforeAward+finalXP};
@@ -5636,7 +5869,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           nextLesson:upNext,
         });
       } else {
-        toast(pickNudge(pct>=65?'quiz_close_miss':'quiz_fail',{lesson:lesson.title,pct}),{icon:<RefreshCw size={14}/>,duration:4000});
+        // ── A miss routes somewhere ──────────────────────────────────────────
+        // The old behavior here was a four-second toast and a return to the same
+        // screen with the same button. See components/quiz/NotYetPanel.jsx for
+        // why that specific nothing is a retention problem rather than a copy
+        // problem. The analysis names the concepts; the panel offers the
+        // re-explanation and a genuinely different quiz.
+        const analysis=analyzeAttempt(answers,lesson);
+        recordMiss(lesson.id,analysis);
+        setNotYet({lesson,unit,analysis,pct,threshold});
       }
       setVerifyCtx(null);
       setAQ(null);
@@ -5666,14 +5907,29 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
   // ── Diagnostic ────────────────────────────────────────────────────────────────
   function finalizeDiag(answers){
-    const { top, ranked, vector, scored } = scorePathways(answers);
+    const { top, ranked, vector, scored, picks } = scorePathways(answers,{questions:DIAG_QUESTIONS});
+    // `picks` — the student's own answers — is what lets the result be EXPLAINED
+    // rather than only scored. A black-box number is the credibility problem with
+    // every career quiz ever written; naming the two or three answers that drove
+    // the ranking turns it into something the student will repeat to a parent.
+    const why=explainMatch(vector, top, { scored, picks });
     setDR(top);
     setDCats(ranked.filter(k=>k!==top).slice(0,2)); // top 2 alternates, shown as "you might also fit"
-    setDWhy(explainMatch(vector, top, { scored })); // reasoning behind the match, not just the label
+    setDWhy(why);
     setDD(true);
-    logEvent('pathway_diagnostic_completed',top);
     refreshRecentActivity();
-    saveUser({...user,diagnosticResult:top});
+    // EVERY result is kept, not just the latest. A fourteen-year-old's answer is
+    // not a mistake the seventeen-year-old corrects — the difference between them
+    // is the most interesting thing this app can know about a student, and it is
+    // real essay material four years from now. See lib/diagnosticHistory.js.
+    DB.addDiagnosticRun({
+      top, ranked,
+      scored: scored.map(s=>({key:s.key,score:s.score})),
+      vector,
+      narrative: why.narrative||'',
+      patterns: (why.patterns||[]).map(p=>({text:p.text,theme:p.theme,type:p.type})),
+    }).then(()=>DB.getDiagnosticRuns()).then(rows=>setDiagRuns(rows||[])).catch(console.error);
+    saveUser({...user,diagnosticResult:top,lastDiagnosticAt:Date.now()});
   }
 
   // ── Search indexes (memoized) ─────────────────────────────────────────────────
@@ -5836,15 +6092,48 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // due-filter shrinks the pool to a handful once a student is caught up, and the sort makes
   // consecutive sessions replay the same ordering. Per-deck study still honors both (below),
   // so the scheduled path is intact for anyone who wants it.
+  // ── Today's session ─────────────────────────────────────────────────────────
+  // Cards carry `_srcDeck`/`_srcBuiltin` for the same reason Smart Mix's do: a card
+  // pulled into a cross-deck session still has to write its FSRS update back to the
+  // deck it actually lives in (see rateCard).
+  const dailyCap = normalizeCap(user?.cardDailyCap ?? DEFAULT_DAILY_CAP);
+  // Concepts belonging to lessons that slipped back to needs-review after a spaced
+  // re-check. These are the single highest-value cards in the library — demonstrably
+  // learnable once, demonstrably fading now — so they outrank everything else in the
+  // capped queue (lib/flashcards/session.js importanceOf).
+  // Two sources, both of them "this student demonstrably could do it and now can't":
+  // concepts from a lesson whose spaced re-check didn't hold, and concepts they
+  // missed on a verification attempt they haven't yet passed. Those are the highest-
+  // value cards the engine will ever be handed, which is the whole point of making
+  // "verified" a claim with a maintenance schedule behind it.
+  const reviewConcepts = useMemo(()=>{
+    const set=new Set();
+    verifications.filter(v=>v.needsReview).forEach(v=>(v.reviewConcepts||[]).forEach(c=>set.add(String(c).toLowerCase())));
+    allMissedConcepts().forEach(m=>set.add(String(m.concept).toLowerCase()));
+    return set;
+    // `notYet` is in the deps because clearing the recovery screen is the moment a
+    // fresh set of missed concepts has finished being written.
+  },[verifications,notYet]);
+  const todaySession = useMemo(()=>{
+    const pool=allDecksList.flatMap(d=>d.cards.map(c=>({...c,_srcDeck:d.name,_srcBuiltin:d.builtin})));
+    return buildSession(pool,{cap:dailyCap,reviewedToday,lastStudyAt:lastCardReviewAt,reviewConcepts});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[allDecksList,dailyCap,reviewedToday,lastCardReviewAt,reviewConcepts]);
+
   const deckCards = useMemo(()=>{
     if(!activeDeck)return[];
+    // Today's session: capped, prioritized by importance rather than due date, and
+    // interleaved with cards the student already knows so it doesn't open or close
+    // on a wall of their weakest material. See lib/flashcards/session.js for why
+    // each of those three is load-bearing.
+    if(activeDeck.todaySession)return todaySession.queue;
     if(activeDeck.smartMix){
       const pool=allDecksList.flatMap(d=>d.cards.map(c=>({...c,_srcDeck:d.name,_srcBuiltin:d.builtin})));
       return seededShuffle(pool,smartMixSeed);
     }
     const cards=cardsForDeck(activeDeck.name,activeDeck.builtin);
     return studyMode==='due'?sortForStudy(getDueCards(cards)):cards;
-  },[activeDeck,cDecks,studyMode,allDecksList,cardsForDeck,smartMixSeed]);
+  },[activeDeck,cDecks,studyMode,allDecksList,cardsForDeck,smartMixSeed,todaySession]);
 
   const currentCard = deckCards[cIdx];
 
@@ -5917,7 +6206,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const key=`${activeDeck.name}:${sessionStats.startedAt}`;
     if(planAutoDeckRef.current===key)return;
     planAutoDeckRef.current=key;
-    const ids=activeDeck.smartMix?[...new Set([...deckCards.map(c=>c._srcDeck).filter(Boolean),'Smart Mix'])]:[activeDeck.name];
+    const ids=(activeDeck.smartMix||activeDeck.todaySession)?[...new Set([...deckCards.map(c=>c._srcDeck).filter(Boolean),'Smart Mix'])]:[activeDeck.name];
     if(!ids.length)return;
     const newUser=applyPlanAutoComplete(user,resourceMatch('deck',ids));
     if(newUser!==user)saveUser(newUser);
@@ -6194,7 +6483,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <p style={{color:C.t3,maxWidth:480,margin:'0 auto 28px',lineHeight: 1.55,fontSize:12}}>Starting this pathway loads {totalLessons} lessons across {(path?.units||[]).length} units, sequenced around the content most relevant to {path?.label}.</p>
           <div style={R({justifyContent:'center',gap:12})}>
             <button style={{...btn(path?.gradient||C.blueGrad,{padding:'12px 32px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>{enrollPath(dRes);setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathways');}}>Accept & start pathway<ChevronRight size={16}/></button>
-            <button style={{...btnG({padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setDD(false);setDS(0);setDA([]);}}><RefreshCw size={13}/>Retake</button>
+            {/* Retakes are once per semester. That reads like a restriction and is
+                actually what makes the record below mean anything: a drift chart of
+                results somebody re-rolled until they liked one shows nothing. See
+                lib/diagnosticHistory.js. */}
+            <button style={{...btnG({padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>{
+              const check=canTake(diagRuns);
+              if(!check.allowed){const c=retakeBlockedCopy(check);toast(c.body,{icon:<Calendar size={15}/>,duration:6500});return;}
+              setDD(false);setDS(0);setDA([]);
+            }}><RefreshCw size={13}/>Retake</button>
           </div>
         </motion.div>
 
@@ -6202,6 +6499,29 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             votes, see diagnosticEngine.js), not just a bare label the student has to trust. */}
         <div style={glass({padding:16,borderLeft:`3px solid ${path?.accent||C.cyan}55`,background:`linear-gradient(120deg,${path?.accent||C.cyan}08,transparent 45%)`})}>
           <SectionTitle icon={Lightbulb} color={accentText(path?.accent||C.cyanL)}>Why {path?.label}</SectionTitle>
+          {/* The result explained, in the student's own answers. This paragraph is
+              the whole difference between a career quiz and self-knowledge: a bare
+              score could have said anything, and teenagers know it. Naming the two
+              or three answers that actually moved the ranking — and what got pushed
+              below it — is what makes this repeatable to a parent. */}
+          {dWhy?.narrative&&(
+            <p style={{fontSize:13.5,color:C.t1,lineHeight:1.7,margin:'0 0 12px',maxWidth:620}}>{dWhy.narrative}</p>
+          )}
+          {dWhy?.patterns?.length>0&&(
+            <div style={{...CC({gap:8}),marginBottom:12}}>
+              {dWhy.patterns.map((p,i)=>(
+                <div key={i} style={{...glass2({padding:'12px 12px'}),display:'flex',gap:8,alignItems:'flex-start'}}>
+                  <Check size={13} color={accentText(path?.accent||C.cyanL)} style={{flexShrink:0,marginTop:4}}/>
+                  <div style={{minWidth:0}}>
+                    <div style={{fontSize:12.5,color:C.t1,lineHeight:1.55}}>“{p.text}”</div>
+                    {/* On a trade-off item, what they gave up is as informative as what
+                        they picked — and it is the half nobody ever shows them. */}
+                    {p.costs&&<div style={{fontSize:11.5,color:C.t3,marginTop:4,lineHeight:1.5}}>You gave up: {p.costs}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           {dWhy?.reasons?.length>0?(
             <div style={CC({gap:8})}>
               <p style={{fontSize:12.5,color:C.t2,lineHeight: 1.55,margin:0}}>Your answers leaned toward:</p>
@@ -6223,9 +6543,18 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           )}
         </div>
 
+        {/* The numbers nobody gives a fifteen-year-old: years, cost, exams,
+            competitiveness, the actual day, and why people leave. Placed directly
+            under the match, before the "accept this pathway" decision has settled —
+            a reality check shown after the choice is a footnote. */}
+        <RealityCheckCard pathwayKey={dRes} accent={accentText(path?.accent||C.blue)} m={isMobile}/>
+
+        {/* How this has moved across every result they've ever taken. */}
+        {diagRuns.length>0&&<DiagnosticDrift series={driftSeries(diagRuns)} paths={PATHS} m={isMobile}/>}
+
         <div style={{...glass({padding:12}),display:'flex',alignItems:'center',gap:8,background:'rgba(255,255,255,0.02)'}}>
           <Milestone size={14} color={C.t3}/>
-          <span style={{fontSize:12,color:C.t3}}>Interests shift as you learn more — it's worth retaking this diagnostic every few months to confirm your pathway still fits.</span>
+          <span style={{fontSize:12,color:C.t3}}>Interests genuinely shift between fourteen and seventeen. Retake this once a semester — every result is kept, and four years of them is a real record of how you got here.</span>
         </div>
         {alternates.length>0&&<div style={glass({padding:16})}>
           <SectionTitle icon={Sparkles} color={C.violetL}>You Might Also Fit</SectionTitle>
@@ -6265,7 +6594,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             eyebrow="Pathway diagnostic" title="Find your pathway"
             sub={`Every pathway below sequences the same core SAT/ACT prep — math, reading/writing, and science — around the units and quizzes most relevant to a specific health career, so studying also builds toward the path you're most likely to pursue. Take the diagnostic for a recommendation, or read through the pathways yourself and pick one directly. You can always switch later.`}
             stats={[
-              {value:DIAG_QS.length,label:'questions'},
+              {value:DIAG_QUESTIONS.length,label:'questions'},
               {value:'~6',label:'min',color:C.blue},
               {value:Object.keys(PATHS).length,label:'pathways',color:C.violet},
             ]}/>
@@ -6274,7 +6603,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <div style={{position:'relative',width:56,height:56,borderRadius:16,background:C.oceanGrad,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 8px 22px ${C.cyan}40`}}><Compass size={26} color="#fff"/></div>
             <div style={{position:'relative',flex:1,minWidth:220}}>
               <div style={{fontSize:15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',fontWeight:800,color:C.t1,fontFamily:C.FD}}>Not sure which fits? Take the diagnostic.</div>
-              <div style={{fontSize:12,color:C.t2,marginTop:4}}>{DIAG_QS.length} questions about how you think, what actually interests you, and what these careers look like day to day — takes about 6 minutes.</div>
+              <div style={{fontSize:12,color:C.t2,marginTop:4}}>{DIAG_QUESTIONS.length} questions about how you think, what actually interests you, and what these careers look like day to day — takes about 6 minutes.</div>
             </div>
             <div style={{position:'relative',display:'flex',flexDirection:'column',gap:8,flexShrink:0}}>
               <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(C.oceanGrad,{fontSize:13,padding:'12px 24px',boxShadow:`0 6px 18px ${C.cyan}35,inset 0 1px 0 rgba(255,255,255,0.15)`}),display:'inline-flex',alignItems:'center',gap:8,position:'relative'}} onClick={()=>setDIntro(false)}>Start diagnostic<ChevronRight size={15}/></motion.button>
@@ -6305,29 +6634,29 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       );
     }
 
-    const q=DIAG_QS[dStep];if(!q)return null;
+    const q=DIAG_QUESTIONS[dStep];if(!q)return null;
     return(
       <div style={CC({gap:20})}>
         <div style={R()}>
           <div>
             <div style={{...lbl(),color:C.cyanL}}>Pathway Diagnostic</div>
-            <h2 style={{fontSize:24, lineHeight: 'calc(1.32 * var(--msp-line-scale))',fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing: 'calc(-0.47px + var(--msp-letter-spacing))',margin:0}}>Question {dStep+1} <span style={{color:C.t3,fontWeight:400}}>of {DIAG_QS.length}</span></h2>
+            <h2 style={{fontSize:24, lineHeight: 'calc(1.32 * var(--msp-line-scale))',fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing: 'calc(-0.47px + var(--msp-letter-spacing))',margin:0}}>Question {dStep+1} <span style={{color:C.t3,fontWeight:400}}>of {DIAG_QUESTIONS.length}</span></h2>
             {/* Step dots — answered steps fill cyan, current step glows, the rest stay dim */}
             <div style={R({gap:4,marginTop:8})}>
-              {DIAG_QS.map((_,i)=>(
+              {DIAG_QUESTIONS.map((_,i)=>(
                 <span key={i} style={{width:i===dStep?16:6,height:6,borderRadius:4,background:i<dStep?C.cyan:i===dStep?C.cyanL:C.s4,boxShadow:i===dStep?`0 0 8px ${C.cyan}80`:'none',transition: CONTROL_TRANSITION}}/>
               ))}
             </div>
           </div>
-          <div style={{marginLeft:'auto'}}><Arc pct={(dStep/DIAG_QS.length)*100} size={52} stroke={4} color={C.cyan} label={`${dStep+1}/${DIAG_QS.length}`}/></div>
+          <div style={{marginLeft:'auto'}}><Arc pct={(dStep/DIAG_QUESTIONS.length)*100} size={52} stroke={4} color={C.cyan} label={`${dStep+1}/${DIAG_QUESTIONS.length}`}/></div>
         </div>
-        <Bar pct={(dStep/DIAG_QS.length)*100} color={C.cyan} h={3} glow/>
+        <Bar pct={(dStep/DIAG_QUESTIONS.length)*100} color={C.cyan} h={3} glow/>
         <motion.div key={dStep} initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} style={{...glass({padding:28,borderLeft:`3px solid ${C.cyan}55`,background:`linear-gradient(160deg,${C.cyan}08,transparent 50%)`})}}>
           <p style={{fontSize:16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))',fontWeight:600,lineHeight: 1.5,marginBottom:20,color:C.t1,fontFamily:C.FB}}>{q.q}</p>
           <div style={CC({gap:8})}>
             {q.ch.map((ch,ci)=>(
               <motion.div key={ci} whileHover={{background:C.cyanDim,borderColor:`${C.cyan}45`,x:3}} whileTap={{scale:.98}}
-                onClick={()=>{const next=[...dAns,ci];setDA(next);play('select');if(dStep<DIAG_QS.length-1)setDS(s=>s+1);else finalizeDiag(next);}}
+                onClick={()=>{const next=[...dAns,ci];setDA(next);play('select');if(dStep<DIAG_QUESTIONS.length-1)setDS(s=>s+1);else finalizeDiag(next);}}
                 style={{...glass2({padding:'16px 16px',cursor:'pointer',transition: CONTROL_TRANSITION}),display:'flex',alignItems:'center',gap:12}}>
                 <span style={{width:28,height:28,borderRadius:8,background:`${C.cyan}12`,border:`1px solid ${C.cyan}30`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:C.cyanL,flexShrink:0,fontFamily:C.FM}}>{String.fromCharCode(65+ci)}</span>
                 <span style={{fontSize:14,color:C.t1,fontFamily:C.FB}}>{ch.text}</span>
@@ -6373,6 +6702,25 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           onAdd={openPathwayManager}
           m={isMobile} reducedMotion={reducedMotion}
         />
+        {/* ── Spaced re-verification prompt ─────────────────────────────────────
+            A 2–3 item check on a lesson verified ~30 or ~90 days ago. Offered, never
+            forced, and never announced anywhere else: this is what stops "verified"
+            from decaying into "passed a quiz once, in October". See
+            lib/verificationSchedule.js. */}
+        {dueRecheck&&(
+          <div style={{...glass({padding:'16px',background:`linear-gradient(135deg,${C.violetDim},transparent 70%)`,border:`1px solid ${C.violet}2E`}),display:'flex',gap:16,alignItems:'flex-start',flexWrap:'wrap'}}>
+            <RefreshCw size={18} color={C.violetL} style={{flexShrink:0,marginTop:4}}/>
+            <div style={{flex:1,minWidth:220}}>
+              <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Quick check: {dueRecheck.lesson.title}</div>
+              <div style={{fontSize:12.5,color:C.t2,marginTop:4,lineHeight:1.55}}>
+                You verified this {Math.round((Date.now()-dueRecheck.row.verifiedAt)/86400000)} days ago. {dueRecheck.items} question{dueRecheck.items===1?'':'s'}, under a minute — it’s what keeps “verified” meaning something rather than “passed a quiz once”.
+              </div>
+            </div>
+            <div style={R({gap:8,flexShrink:0})}>
+              <button style={btn(accentGrad(C.violet),{fontSize:12,padding:'8px 16px'})} onClick={()=>openRecheck(dueRecheck.row,dueRecheck.lesson,dueRecheck.unit)}>Take the check</button>
+            </div>
+          </div>
+        )}
         {/* The diagnostic, re-offered once to a student who skipped it — as an invitation, not
             a nag. The framing is the true and useful one: the diagnostic's real value to
             somebody who already knows their pathway is the SECOND pathway it surfaces, not a
@@ -7154,8 +7502,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All decks</button>
           <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{...glass({padding:40,textAlign:'center'})}}>
             <motion.div initial={{scale:.6,rotate:-10}} animate={{scale:1,rotate:0}} transition={{type:'spring',stiffness:260,damping:14}} style={{marginBottom:16,display:'flex',justifyContent:'center'}}><PartyPopper size={44} color={C.green}/></motion.div>
-            <div style={{fontSize:18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))',fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:8}}>{activeDeck.smartMix?'Smart Mix complete!':studyMode==='due'?'All due cards reviewed!':'Deck complete!'}</div>
-            <div style={{fontSize:14,color:C.t2,marginBottom:sessionTotal>0?20:24}}>{activeDeck.smartMix?`You went through all ${deckCards.length} cards in your library. Start it again and they'll come back in a completely different order.`:studyMode==='due'?'Check back later for more cards to review.':'You have reviewed all cards in this deck.'}</div>
+            <div style={{fontSize:18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))',fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:8}}>{activeDeck.todaySession?"That's today, done.":activeDeck.smartMix?'Smart Mix complete!':studyMode==='due'?'All due cards reviewed!':'Deck complete!'}</div>
+            {/* The finish line, honored. A student who was told "24 cards today" and did
+                24 gets told they finished — not handed the deferred backlog as a next
+                task, which would make the cap a lie and the finish line meaningless. */}
+            <div style={{fontSize:14,color:C.t2,marginBottom:sessionTotal>0?20:24}}>{activeDeck.todaySession?(todaySession.deferred>0?`You cleared today's session. ${todaySession.deferred} more are scheduled for tomorrow — that's the plan working, not a backlog.`:`You cleared everything due. Nothing else is scheduled until tomorrow.`):activeDeck.smartMix?`You went through all ${deckCards.length} cards in your library. Start it again and they'll come back in a completely different order.`:studyMode==='due'?'Check back later for more cards to review.':'You have reviewed all cards in this deck.'}</div>
             {sessionTotal>0&&(<>
               <div style={{...G(4,10,{},isMobile),marginBottom:12,maxWidth:460,marginLeft:'auto',marginRight:'auto'}}>
                 <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))',fontWeight:800,color:C.t1,fontFamily:C.FD}}>{sessionTotal}</div><div style={{fontSize:9,color:C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',marginTop:4}}>Reviewed</div></div>
@@ -7169,16 +7520,18 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               </div>
             </>)}
             <div style={R({justifyContent:'center',gap:8})}>
-              {!activeDeck.smartMix&&studyMode==='due'&&<button style={btn()} onClick={()=>setStudyMode('all')}>Browse all cards</button>}
+              {!activeDeck.smartMix&&!activeDeck.todaySession&&studyMode==='due'&&<button style={btn()} onClick={()=>setStudyMode('all')}>Browse all cards</button>}
               {activeDeck.smartMix&&<button style={btn(C.sunsetGrad)} onClick={startSmartMix}>Shuffle again</button>}
-              {activeDeck.smartMix
+              {activeDeck.todaySession
+                ?<button style={btnG()} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}>Back to Decks</button>
+                :activeDeck.smartMix
                 ?<button style={btnG()} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}>Back to Decks</button>
                 :<button style={btnG()} onClick={()=>{setCIdx(0);setFlip(false);setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>Study Again</button>}
             </div>
           </motion.div>
         </div>
       );}
-      const dueCount=activeDeck.smartMix?deckCards.length:getDueCards(cardsForDeck(activeDeck.name,activeDeck.builtin)).length;
+      const dueCount=(activeDeck.smartMix||activeDeck.todaySession)?deckCards.length:getDueCards(cardsForDeck(activeDeck.name,activeDeck.builtin)).length;
       return(
         <div style={CC({gap:16})}>
           <div style={R()}>
@@ -7197,17 +7550,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 </AnimatePresence>
               </div>
               <div style={{fontSize:11,color:C.t3,fontFamily:C.FM,marginTop:4}}>
-                {cIdx+1} / {deckCards.length}{activeDeck.smartMix?` · shuffled${currentCard?._srcDeck?` · from ${currentCard._srcDeck}`:''}`:` · ${dueCount} due`}{sessionTotal>0?` · ${sessionTotal} reviewed · +${sessionStats.xp} XP`:''}
+                {cIdx+1} / {deckCards.length}{activeDeck.todaySession?` · today's session${currentCard?._srcDeck?` · from ${currentCard._srcDeck}`:''}`:activeDeck.smartMix?` · shuffled${currentCard?._srcDeck?` · from ${currentCard._srcDeck}`:''}`:` · ${dueCount} due`}{sessionTotal>0?` · ${sessionTotal} reviewed · +${sessionStats.xp} XP`:''}
               </div>
             </div>
             <div style={R({gap:4})}>
               {/* Re-deals the whole library from card 1 without leaving the session — the escape
                   hatch for "I've seen this run, give me a different one". */}
               {activeDeck.smartMix&&<button title="Deal all cards again in a brand-new order" style={{...btnSm(C.s4,{color:C.t2,fontSize:11}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>{rerollSmartMix();play('click');}}><Shuffle size={11}/>Reshuffle</button>}
-              {!activeDeck.smartMix&&<button style={btnSm(studyMode==='due'?C.sunsetGrad:C.s4,{fontSize:11,color:studyMode==='due'?'#fff':C.t2,border:`1px solid ${studyMode==='due'?'transparent':C.b1}`,boxShadow:studyMode==='due'?`0 3px 10px ${C.amber}30`:'none'})} onClick={()=>{setStudyMode('due');setCIdx(0);setFlip(false);}}>Due ({dueCount})</button>}
-              {!activeDeck.smartMix&&<button style={btnSm(studyMode==='all'?C.sunsetGrad:C.s4,{fontSize:11,color:studyMode==='all'?'#fff':C.t2,border:`1px solid ${studyMode==='all'?'transparent':C.b1}`,boxShadow:studyMode==='all'?`0 3px 10px ${C.amber}30`:'none'})} onClick={()=>{setStudyMode('all');setCIdx(0);setFlip(false);}}>All</button>}
-              {!activeDeck.builtin&&<button style={btnSm(C.s4,{color:C.t2,fontSize:11})} onClick={()=>setManageDeck(activeDeck.name)}>Manage</button>}
-              {!activeDeck.builtin&&<button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:11})} onClick={()=>{deleteDeck_(activeDeck.name);setAD(null);toast('Deck deleted');}}>Delete</button>}
+              {!activeDeck.smartMix&&!activeDeck.todaySession&&<button style={btnSm(studyMode==='due'?C.sunsetGrad:C.s4,{fontSize:11,color:studyMode==='due'?'#fff':C.t2,border:`1px solid ${studyMode==='due'?'transparent':C.b1}`,boxShadow:studyMode==='due'?`0 3px 10px ${C.amber}30`:'none'})} onClick={()=>{setStudyMode('due');setCIdx(0);setFlip(false);}}>Due ({dueCount})</button>}
+              {!activeDeck.smartMix&&!activeDeck.todaySession&&<button style={btnSm(studyMode==='all'?C.sunsetGrad:C.s4,{fontSize:11,color:studyMode==='all'?'#fff':C.t2,border:`1px solid ${studyMode==='all'?'transparent':C.b1}`,boxShadow:studyMode==='all'?`0 3px 10px ${C.amber}30`:'none'})} onClick={()=>{setStudyMode('all');setCIdx(0);setFlip(false);}}>All</button>}
+              {!activeDeck.builtin&&!activeDeck.todaySession&&<button style={btnSm(C.s4,{color:C.t2,fontSize:11})} onClick={()=>setManageDeck(activeDeck.name)}>Manage</button>}
+              {!activeDeck.builtin&&!activeDeck.todaySession&&<button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:11})} onClick={()=>{deleteDeck_(activeDeck.name);setAD(null);toast('Deck deleted');}}>Delete</button>}
             </div>
           </div>
           <Bar pct={((cIdx+1)/deckCards.length)*100} color={accent} h={3} glow/>
@@ -7278,8 +7631,26 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       <div style={CC({gap:20})}>
         <PanelHero tourTag="prep-deep-flashcards" icon={Layers3} color={C.amber} color2={C.rose} m={isMobile}
           eyebrow="Flashcards" title="Study decks"
-          sub="Scheduled with FSRS. Study what's due, or build a deck from your notes."
-          right={<button style={{...btn(C.sunsetGrad,{fontSize:12,padding:'8px 16px',boxShadow:`0 4px 14px ${C.amber}35`}),display:'inline-flex',alignItems:'center',gap:4}} onClick={()=>setNewDeckOpen(true)}><Plus size={14}/>New deck</button>}/>
+          sub="Scheduled with FSRS. Study what's due, make your own cards, or photograph a page and turn it into a deck."
+          right={<div style={R({gap:8,flexWrap:'wrap'})}>
+            <button style={{...btnG({fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>{setCardCreateOpen(true);setOcrResult(null);}}><Camera size={14}/>Add my own cards</button>
+            <button style={{...btn(C.sunsetGrad,{fontSize:12,padding:'8px 16px',boxShadow:`0 4px 14px ${C.amber}35`}),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>setNewDeckOpen(true)}><Plus size={14}/>New deck</button>
+          </div>}/>
+
+        {/* Offline, said out loud. Flashcards genuinely work with no connection — the
+            decks are precached, FSRS runs locally, every review is an IndexedDB write
+            that syncs later. An app that silently works offline and one that looks
+            broken offline are the same app to a student who doesn't know which they
+            have, and the second one gets closed. See lib/flashcards/offline.js. */}
+        {!isOnline&&(
+          <div style={{...glass({padding:'16px 16px',background:`linear-gradient(135deg,${C.tealDim||C.blueDim},transparent 70%)`,border:`1px solid ${(C.teal||C.blue)}30`}),display:'flex',gap:12,alignItems:'flex-start'}}>
+            <CloudOff size={17} color={C.tealL||C.blueL} style={{flexShrink:0,marginTop:4}}/>
+            <div>
+              <div style={{fontSize:13,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{OFFLINE_COPY.badge}</div>
+              <div style={{fontSize:12.5,color:C.t2,marginTop:4,lineHeight:1.55}}>{OFFLINE_COPY.body}</div>
+            </div>
+          </div>
+        )}
 
         {/* Overview stats */}
         <div style={G(4,12,{},isMobile)}>
@@ -7295,6 +7666,68 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             the same cards in the same stability-sorted order. Interleaving the whole library in
             a genuinely fresh order is the thing this surface is actually for; the per-deck Due
             filter is still there for anyone who wants the scheduled subset. */}
+        {/* ── Today's session ────────────────────────────────────────────────────
+            The queue with an end to it. Three things this fixes, all of them the
+            classic ways spaced repetition loses a teenager (see
+            lib/flashcards/session.js):
+              • It is CAPPED, so returning after two weeks shows a session, not a
+                four-hundred-card debt — the number is what does the damage, not
+                the cards.
+              • It is prioritized by IMPORTANCE, not due date, so what survives the
+                cap is what is actually worth rescuing.
+              • It INTERLEAVES cards they already know, opening and closing on
+                something they can do. A deck built purely from your mistakes is a
+                deck of your weakest material exclusively, and that is demoralizing
+                in a way that has nothing to do with how much you're learning. */}
+        {todaySession.finishLine>0&&(
+          <motion.div whileHover={{y:-2}} style={{...glass({padding:16}),display:'flex',alignItems:'center',gap:16,flexWrap:'wrap',background:`linear-gradient(135deg,${C.violet}16,transparent)`,border:`1px solid ${C.violet}35`,cursor:'pointer'}}
+            onClick={startTodaySession}>
+            <div style={{width:44,height:44,borderRadius:12,flexShrink:0,background:C.violetDim,border:`1px solid ${C.violet}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><Target size={20} color={C.violetL}/></div>
+            <div style={{flex:1,minWidth:200}}>
+              <div style={{fontSize:15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',fontWeight:800,color:C.t1,fontFamily:C.FD}}>{describeSession(todaySession).headline}</div>
+              <div style={{fontSize:12,color:C.t2,marginTop:4,lineHeight:1.55}}>{describeSession(todaySession).sub}</div>
+            </div>
+            <span style={{...btn(accentGrad(C.violet),{fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',gap:8}}>Start<ChevronRight size={13}/></span>
+          </motion.div>
+        )}
+        {/* The cap is the student's to set, within a range. The floor exists because a
+            cap of 3 is a way to never learn anything; the ceiling exists because a cap
+            of 500 is the four-hundred-card wall with extra steps. */}
+        {allCards.length>0&&(
+          <div style={{...R({gap:12,flexWrap:'wrap'}),fontSize:11.5,color:C.t3,paddingLeft:4}}>
+            <span>Cards per day</span>
+            <input type="range" min={CAP_RANGE.min} max={CAP_RANGE.max} step={5} value={dailyCap}
+              aria-label="Cards per day"
+              onChange={e=>saveUser({...user,cardDailyCap:normalizeCap(e.target.value)})}
+              style={{width:150}}/>
+            <span style={{fontFamily:C.FM,color:C.t2,fontWeight:700}}>{dailyCap}</span>
+            <span>· {reviewedToday} done today</span>
+          </div>
+        )}
+
+        {/* The vocabulary track. Put in front of the deck list rather than buried in
+            it because it is the only thing in this app a ninth grader can learn in a
+            few weeks and then actually demonstrate to somebody — see
+            data/flashcards/vocabularyDecks.js. */}
+        <div style={{...glass({padding:16,background:`linear-gradient(135deg,${C.cyanDim},transparent 70%)`,border:`1px solid ${C.cyan}2A`})}}>
+          <SectionTitle icon={Stethoscope} color={C.cyanL} extra={{marginBottom:8}}>Speak the language</SectionTitle>
+          <div style={{fontSize:12.5,color:C.t2,lineHeight:1.6,marginBottom:12,maxWidth:640}}>{VOCAB_TRACK_BLURB}</div>
+          <div style={R({gap:8,flexWrap:'wrap'})}>
+            {VOCAB_TRACK.filter(n=>FLASH_DECKS[n]).map((name,i)=>{
+              const cards=cardsForDeck(name,true);
+              const due=getDueCards(cards).length;
+              return(
+                <button key={name} style={{...glass2({padding:'12px 16px',cursor:'pointer',textAlign:'left',border:`1px solid ${C.cyan}22`}),display:'inline-flex',alignItems:'center',gap:8}}
+                  onClick={()=>{setAD({name,builtin:true});setStudyMode(due>0?'due':'all');setCIdx(0);setFlip(false);setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>
+                  <span style={{fontSize:10,fontWeight:800,color:C.cyanL,fontFamily:C.FM}}>{i+1}</span>
+                  <span style={{fontSize:12.5,fontWeight:600,color:C.t1}}>{name}</span>
+                  <span style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{due>0?`${due} due`:`${cards.length}`}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {allCards.length>0&&(
           <motion.div whileHover={{y:-2}} style={{...glass({padding:16}),display:'flex',alignItems:'center',gap:16,flexWrap:'wrap',background:`linear-gradient(135deg,${C.amber}14,transparent)`,border:`1px solid ${C.amber}30`,cursor:'pointer'}}
             onClick={startSmartMix}>
@@ -7487,6 +7920,20 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             m={isMobile}
           />}
         </AnimatePresence>
+        {/* The student's own cards — typed, or read off a photo of the page they're
+            studying from. See components/flashcards/CardComposer.jsx. */}
+        <CardComposer
+          open={cardCreateOpen} onClose={()=>setCardCreateOpen(false)} m={isMobile}
+          deckNames={Object.keys(cDecks).filter(n=>!builtinDeckNames.has(n))}
+          existingCards={[]}
+          onAddCards={async(deckName,cards)=>{
+            // Appended, never replacing: a student adding three cards to a deck they
+            // built last week must not lose last week's twenty.
+            const existing=cardsForDeck(deckName,builtinDeckNames.has(deckName))||[];
+            await saveDeck(deckName,[...existing,...cards]);
+            toast.success(`${cards.length} card${cards.length===1?'':'s'} added to "${deckName}".`,{icon:<Layers3 size={16}/>});
+          }}
+        />
       </div>
     );
   }
@@ -7597,7 +8044,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           </div>
           <div style={{flex: 1, minWidth: 200}}>
             <div style={{fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>My Study Journey</div>
-            <div style={{fontSize: 18, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 4}}>E-Library Workspace</div>
+            <div style={{fontSize: 18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 4}}>E-Library Workspace</div>
             {/* Progress Bar */}
             <div style={{marginTop: 8, width: '100%', height: 6, borderRadius: 4, background: C.s4, overflow: 'hidden', position: 'relative'}}>
               <motion.div initial={{width: 0}} animate={{width: `${pct}%`}} transition={{duration: 0.6}} style={{position: 'absolute', left: 0, top: 0, height: '100%', background: C.auroraGrad, boxShadow: `0 0 10px ${C.violet}60`}} />
@@ -7605,15 +8052,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           </div>
           <div style={{display: 'flex', gap: 16, flexWrap: 'wrap'}}>
             <div style={{textAlign: 'center', minWidth: 70}}>
-              <div style={{fontSize: 18, fontWeight: 800, fontFamily: C.FM, color: C.t1}}>{ELIB.length}</div>
+              <div style={{fontSize: 18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))', fontWeight: 800, fontFamily: C.FM, color: C.t1}}>{ELIB.length}</div>
               <div style={{fontSize: 9, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginTop: 4}}>Total</div>
             </div>
             <div style={{textAlign: 'center', minWidth: 70}}>
-              <div style={{fontSize: 18, fontWeight: 800, fontFamily: C.FM, color: C.amberL}}>{savedCount}</div>
+              <div style={{fontSize: 18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))', fontWeight: 800, fontFamily: C.FM, color: C.amberL}}>{savedCount}</div>
               <div style={{fontSize: 9, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginTop: 4}}>Saved</div>
             </div>
             <div style={{textAlign: 'center', minWidth: 70}}>
-              <div style={{fontSize: 18, fontWeight: 800, fontFamily: C.FM, color: C.greenL}}>{completedCount}</div>
+              <div style={{fontSize: 18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))', fontWeight: 800, fontFamily: C.FM, color: C.greenL}}>{completedCount}</div>
               <div style={{fontSize: 9, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginTop: 4}}>Studied</div>
             </div>
           </div>
@@ -9779,6 +10226,38 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     );
   }
 
+  // ═══ "NOT YET" RECOVERY FULLSCREEN ═════════════════════════════════════════════
+  // Takes the screen for the same reason the lesson-complete overlay does: this is
+  // the moment that decides whether a student comes back, and a corner toast is the
+  // wrong weight for it. Rendered ahead of the quiz branch so finishing an attempt
+  // hands off cleanly from QuizEngine into recovery.
+  if(notYet){
+    const {lesson,unit,analysis,pct,threshold}=notYet;
+    const nyAccent=accentText(pathwayOf(lesson)?.accent||C.blue);
+    return(
+      <ErrorBoundary>
+        <div style={{minHeight:'var(--msp-vh)',width:'100%',flex:1,background:`radial-gradient(ellipse 90% 55% at 50% -10%,${nyAccent}14 0%,transparent 60%),${C.bg}`,color:C.t1,fontFamily:C.FB}}>
+          <Toaster position="top-right"/>
+          <NotYetPanel
+            lesson={lesson} analysis={analysis} pct={pct} threshold={threshold} m={isMobile}
+            onClose={()=>setNotYet(null)}
+            onReread={()=>{ setNotYet(null); setLessonStep(LESSON_CONTENT[lesson.id]?.article?'article':'overview'); }}
+            onRetry={()=>{ setNotYet(null); openVerifyQuiz(lesson,unit); }}
+            onReexplain={(concepts)=>{
+              // Straight into the lesson-grounded Prep Medabrain with a prompt that names
+              // exactly these concepts and tells it not to restate the lesson — the thing
+              // they just didn't learn from.
+              setNotYet(null);
+              setPrepBrainPrefill(buildReexplainPrompt(lesson,concepts));
+              setPrepBrainOpen(true);
+              if(!activeLesson)setActiveLesson({lesson,unit});
+            }}
+          />
+        </div>
+      </ErrorBoundary>
+    );
+  }
+
   // ═══ ACTIVE QUIZ FULLSCREEN ════════════════════════════════════════════════════
   if(aQuiz){
     // A verification quiz belongs to the lesson that launched it, so it wears that lesson's
@@ -9832,7 +10311,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           hasNextLesson={!!nextInfo}
           accent={lAccent} m={isMobile}
           highlights={lessonHighlights} onAddHighlight={addLessonHighlight} onRemoveHighlight={removeLessonHighlight}
-          quizBlurb={describeVerificationQuiz(buildVerificationQuiz(lesson,ALL_QUIZZES,{user,pathwayKey:lPathKey,attempt:getAttemptCount(lesson.id)}))}
+          quizBlurb={thresholdOf(lesson.id)===null?'':describeVerificationQuiz(buildVerificationQuiz(lesson,ALL_QUIZZES,{user,pathwayKey:lPathKey,attempt:getAttemptCount(lesson.id),excludeStems:servedStems(lesson.id)}))}
+          threshold={thresholdOf(lesson.id)} tier={tierOf(lesson.id)}
           confirms={lessonConfirms} onConfirmStep={confirmLessonStep} onContinueLater={continueLessonLater}
           reviewMode={reviewMode}
           feedbackSlot={
@@ -9852,6 +10332,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <PrepMedabrain
           open={prepBrainOpen} onOpenChange={setPrepBrainOpen}
           messages={prepBrainMessages} onMessagesChange={setPrepBrainMessages}
+          prefill={prepBrainPrefill} onPrefillConsumed={()=>setPrepBrainPrefill("")}
           user={user} pathwayLabel={lPath?.label} gradeLabel={gradeLabel}
           accent={lAccent} isMobile={isMobile}
           lesson={lesson} unit={unit}
@@ -9948,6 +10429,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <PrepMedabrain
           open={prepBrainOpen} onOpenChange={setPrepBrainOpen}
           messages={prepBrainMessages} onMessagesChange={setPrepBrainMessages}
+          prefill={prepBrainPrefill} onPrefillConsumed={()=>setPrepBrainPrefill("")}
           user={user} pathwayLabel={curPath?.label} gradeLabel={gradeLabel}
           accent={pA} isMobile={isMobile}
           units={(curPath?.units||[]).map(u=>({ title:u.title, done:(u.lessons||[]).filter(l=>isLessonComplete(l,pathway[l.id])).length, total:(u.lessons||[]).length }))}
@@ -10162,7 +10644,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <div style={{position:'relative',width:56,height:56,borderRadius:16,background:C.oceanGrad,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 8px 22px ${C.cyan}40`}}><Compass size={26} color="#fff"/></div>
             <div style={{position:'relative',flex:1,minWidth:220}}>
               <div style={{fontSize:15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',fontWeight:800,color:C.t1,fontFamily:C.FD}}>Not sure which fits? Take the diagnostic.</div>
-              <div style={{fontSize:12,color:C.t2,marginTop:4}}>{DIAG_QS.length} questions about how you think, what actually interests you, and what these careers look like day to day — takes about 6 minutes.</div>
+              <div style={{fontSize:12,color:C.t2,marginTop:4}}>{DIAG_QUESTIONS.length} questions about how you think, what actually interests you, and what these careers look like day to day — takes about 6 minutes.</div>
             </div>
             <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(C.oceanGrad,{fontSize:13,padding:'12px 24px',boxShadow:`0 6px 18px ${C.cyan}35,inset 0 1px 0 rgba(255,255,255,0.15)`}),display:'inline-flex',alignItems:'center',gap:8,flexShrink:0,position:'relative'}} onClick={()=>{setDD(false);setDS(0);setDA([]);setDIntro(false);goPrep('diagnostic');}}>Start diagnostic<ChevronRight size={15}/></motion.button>
           </motion.div>

@@ -51,6 +51,13 @@ export default function PrepMedabrain({
   // One line describing every pathway this student is running at once (null when they're on
   // just one). See lib/pathwayEnrollment.js — `pathwayLabel` above is only the focused one.
   parallelPathwaysSummary = null,
+  // A question the app wants asked on the student's behalf — today, the targeted
+  // re-explanation after a missed verification quiz (see lib/quizRecovery.js).
+  // It is DROPPED INTO THE BOX rather than sent: the student presses send, so the
+  // conversation is still theirs and they can edit the question first. Auto-sending
+  // would make the panel open mid-answer to a question they never chose to ask.
+  prefill = '',
+  onPrefillConsumed = null,
 }) {
   const [input, setInput] = React.useState('');
   const [loading, setLoading] = React.useState(false);
@@ -58,6 +65,18 @@ export default function PrepMedabrain({
   const lastSendRef = useRef(0);
 
   function toggleOpen() { onOpenChange(!open); }
+
+  useEffect(() => {
+    if (!prefill) return;
+    setInput(prefill);
+    onPrefillConsumed?.();
+    // Focus lands on the box so the student's next keystroke edits the question
+    // rather than going nowhere.
+    requestAnimationFrame(() => {
+      document.querySelector('[data-prep-brain-input]')?.focus();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefill]);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
@@ -194,6 +213,7 @@ export default function PrepMedabrain({
 
               <form onSubmit={e => { e.preventDefault(); send(); }} style={{ padding: 12, borderTop: `1px solid ${C.b1}`, display: 'flex', gap: 8, flexShrink: 0 }}>
                 <input
+                  data-prep-brain-input
                   value={input} onChange={e => setInput(e.target.value)}
                   placeholder={lesson ? 'Ask about this lesson…' : 'Ask about your pathway…'} disabled={loading}
                   style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.b2}`, borderRadius: 8, padding: '8px 12px', color: C.t1, fontSize: 13, fontFamily: C.FB }}
