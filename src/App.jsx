@@ -37,6 +37,12 @@ import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
 import { PATHS, FLASH_DECKS, SCHOOL_DATA, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP, DECK_CATEGORY_ORDER, getDeckCategory, UNIT_STAGES, isUnitTimelyFor } from './data/constants';
 import BandPreview, { BandPreviewTag, BandPreviewBanner } from './components/BandPreview';
+import FourYearMap from './components/prep/FourYearMap';
+import CoursePlannerPanel from './components/prep/CoursePlannerPanel';
+import CertificationExplorer from './components/prep/CertificationExplorer';
+import { buildFourYearMap, FOUNDATION_TIER, tierBannerText } from './lib/fourYearMap';
+import { emptyPlan } from './lib/coursePlanner';
+import { typicalAgeForGrade } from './lib/credentials';
 import { LESSON_CONTENT } from './data/lessonContent';
 import { rankQuizzes, getMedabrainPickPrompt, medabrainPicksProgress, MEDABRAIN_PICKS_UNLOCK_AT } from './lib/recommend';
 import { scorePathways, explainMatch } from './lib/diagnosticEngine';
@@ -115,7 +121,7 @@ import { exportQuizResult, exportFlashDeck, exportPathwayCertificate } from './l
 import { ACHIEVEMENTS, checkAchievements, PATHWAY_KEYS } from './lib/achievements';
 import CollegeListPanel from './components/CollegeListPanel';
 import AdmissionCalculatorPanel from './components/portfolio/admissions/AdmissionCalculatorPanel';
-import { resetIntakeCache, derivePortfolioSignals, deriveApplicantFromPortfolio, buildApplicant, assessCompleteness, unpackIntake } from './lib/admissions';
+import { resetIntakeCache, derivePortfolioSignals, deriveApplicantFromPortfolio, buildApplicant, assessCompleteness, unpackIntake, loadIntake, saveIntake, flushIntake } from './lib/admissions';
 import { computeMedEx, loadSeals, sealIfNeeded, planSeal, readMirror, resetMedexCache } from './lib/medex';
 import MedExHomeCard from './components/medex/MedExHomeCard';
 import MedExPanel from './components/medex/MedExPanel';
@@ -2951,6 +2957,55 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // the page opens on the student's own work rather than on ten choices — the wall of options
   // this app deliberately keeps tearing down.
   const [pathwayManagerOpen,setPathwayManagerOpen]=useState(false);
+  // ── The four-year map's selected shelf ──────────────────────────────────────
+  // null means "follow the student's own year", which is what almost everyone
+  // wants and what a returning student should get without touching anything. A
+  // non-null value means they deliberately went to look at another year, and it
+  // is deliberately NOT persisted: reading ahead into senior year in March
+  // should not be where the app leaves them in April.
+  const [mapTier,setMapTier]=useState(null);
+  // ── The course plan ─────────────────────────────────────────────────────────
+  // Local-only, on purpose and for now. It is a planning scratchpad rather than
+  // a record of anything that happened, it is worthless on another device
+  // without the rest of the account, and the one piece of it that genuinely has
+  // to reach the server — the rigor counts — travels through the admissions
+  // intake, which already has a row, a schema and a debounced writer.
+  const [coursePlan,setCoursePlan_]=useState(()=>{
+    try{ const raw=localStorage.getItem('msp_coursePlan'); return raw?JSON.parse(raw):emptyPlan(); }
+    catch{ return emptyPlan(); }
+  });
+  const [rigorApplied,setRigorApplied]=useState(false);
+  // The same key the Portfolio's credential picker already uses, deliberately.
+  // A student's state is one fact about them, and asking for it twice in two
+  // places — then showing them their state's name for a credential on one screen
+  // and the national name on the other — is the exact inconsistency the state
+  // naming work existed to remove.
+  const [credentialState,setCredentialState_]=useState(()=>{
+    try{ return localStorage.getItem('credentialStateCode')||''; }catch{ return ''; }
+  });
+  const setCredentialState=useCallback((code)=>{
+    setCredentialState_(code);
+    try{ if(code) localStorage.setItem('credentialStateCode',code); }catch{ /* private mode; it holds for the session */ }
+  },[]);
+  const setCoursePlan=useCallback((next)=>{
+    setCoursePlan_(next);
+    setRigorApplied(false); // the plan moved, so what the calculator holds is now behind
+    try{ localStorage.setItem('msp_coursePlan',JSON.stringify(next)); }catch{ /* private mode; the plan still works this session */ }
+  },[]);
+  // One input, two outputs: the courses the student typed become the calculator's
+  // `rigorCounts`/`rigorOffered` answers rather than being asked for a second
+  // time in different words. The calculator owns that store, so this merges into
+  // whatever is already there rather than replacing the intake.
+  const applyPlanRigor=useCallback(async(rigor)=>{
+    try{
+      const intake=await loadIntake();
+      const answers={...(intake.answers||{}), rigorCounts:{ap:rigor.ap,ib:rigor.ib,honors:rigor.honors,dualEnrollment:rigor.dualEnrollment}};
+      if(rigor.offeredAdvanced!=null) answers.rigorOffered=rigor.offeredAdvanced;
+      saveIntake({answers,programRounds:intake.programRounds||{}});
+      await flushIntake();
+      setRigorApplied(true);
+    }catch(err){ console.error('Could not send course rigor to the calculator:',err); }
+  },[]);
   // Expanding the catalog is useless if it opens below the fold — the "Add pathway" affordances
   // scattered around the app all route through here so the student actually lands on it.
   const openPathwayManager = useCallback(()=>{
@@ -3735,6 +3790,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       return'done';
     }
     if(ui===0)return'available';
+    // The foundations tier sits behind nothing. Course strategy and credentials
+    // are decisions with an external deadline — a course selection sheet is due
+    // whether or not the student has finished three biology units — so these
+    // units carry `openAlways` and are exempt from the sequential gate. Every
+    // other unit's gating is untouched (see the note beside FOUNDATION_UNITS in
+    // data/constants.js for why they are appended rather than prepended).
+    if(units[ui]?.openAlways)return'available';
     const prev=units[ui-1];
     if(!prev)return'available';
     return prev.lessons.every(l=>isLessonComplete(l,pathway[l.id]))?'available':'locked';
@@ -6346,6 +6408,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // ── PATHWAY ───────────────────────────────────────────────────────────────────
   function tPath(){
     const units=curPath?.units||[];
+    // ── The four-year map ────────────────────────────────────────────────────
+    // Same units, grouped into five shelves. `isDone` is INJECTED rather than
+    // reimplemented in the map module, because "complete" here means "verified
+    // if it has a quiz" and a second copy of that rule is a second chance to be
+    // wrong about a student's progress.
+    const fourYear=buildFourYearMap(units,{
+      pathwayKey:eSpec,
+      gradeStage:effGrade,
+      isDone:(l)=>isLessonComplete(l,pathway[l.id]),
+    });
+    const activeTier=fourYear.byId[mapTier]||fourYear.byId[fourYear.defaultTier]||fourYear.tiers[0];
+    // The units on the selected shelf, carrying their ORIGINAL index — the one
+    // lessonState() gates on. Filtering for display must never renumber them,
+    // or a unit would read available on one shelf and not on another.
+    const shelfUnits=activeTier?activeTier.units:units.map((u,i)=>({unit:u,index:i,basis:'tagged'}));
     // Dropping every pathway is a legitimate state (it's how a student clears the decks and
     // starts over), so it gets a real screen rather than silently falling back to Exploring.
     if(activePathways.length===0){
@@ -6493,7 +6570,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             />
           );
         })()}
-        {units.map((unit,ui)=>{
+        {/* The year rail. It changes which units are on screen and nothing else —
+            sequencing, unlocking and every lesson's own state are computed below
+            exactly as they were before it existed. */}
+        <FourYearMap
+          map={fourYear} selected={activeTier?.id} onSelect={setMapTier}
+          accent={accent} gradeLabel={gradeLabel} m={isMobile} reducedMotion={reducedMotion}
+        />
+        {shelfUnits.map(({unit,index:ui,basis})=>{
           const p=unitM(unit);const done=p===100;const ucm=catMeta(unit.quizCat);
           // Grade personalization — the deep tracks (physician/nursing/PA/exploring) tag each
           // unit with the class years it's genuinely best timed for. This only ever *labels*:
@@ -6506,7 +6590,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           // with no explanation. When the unit isn't reachable yet the badge says so and names
           // what stands between them and it, instead of pointing at a wall.
           const stageMeta=unit.stage?UNIT_STAGES[unit.stage]:null;
-          const reachable=ui===0||(units[ui-1]?.lessons||[]).every(l=>isLessonComplete(l,pathway[l.id]));
+          const reachable=unit.openAlways||ui===0||(units[ui-1]?.lessons||[]).every(l=>isLessonComplete(l,pathway[l.id]));
           const timely=isUnitTimelyFor(unit,effGrade)&&!done;
           // The unit's recommended BAND, derived from the gradeFocus it already declares — one
           // tag, no second list to keep in sync. Out-of-band units are marked and left out of the
@@ -6535,7 +6619,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               {/* Motivation boost: turn "the next unit is locked" into a concrete, encouraging
                   countdown instead of just a dimmed lock icon — a visible, achievable next step
                   keeps momentum going into the next section of the pathway. */}
-              {!done&&units[ui+1]&&(()=>{
+              {/* …except where there is nothing to unlock. The foundations tier is
+                  open from the start and does not gate the unit after it, so this
+                  nudge would be making a promise the sequencing does not keep. */}
+              {!done&&units[ui+1]&&!unit.openAlways&&!units[ui+1].openAlways&&(()=>{
                 const remaining=unit.lessons.filter(l=>!isLessonComplete(l,pathway[l.id])).length;
                 return(
                   <div style={{...glass2({padding:'8px 12px',marginBottom:16,background:`${accent}0a`,border:`1px solid ${accent}22`}),display:'flex',alignItems:'center',gap:8}}>
@@ -6590,6 +6677,31 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   );
                 })}
               </div>
+              {/* The tool that belongs to this unit, inline. A student who has just
+                  read "most nursing programs want statistics, not calculus" wants
+                  to look at their own four years right now; putting the planner
+                  three tabs away converts that impulse into an intention, and
+                  intentions do not survive a navigation. */}
+              {unit.tool==='coursePlanner'&&(
+                <div style={{...glass2({padding:isMobile?12:16,marginTop:16,background:`${accent}08`,border:`1px solid ${accent}26`})}}>
+                  <CoursePlannerPanel
+                    plan={coursePlan} onPlanChange={setCoursePlan}
+                    pathways={activePathways} gradeStage={effGrade}
+                    accent={accent} m={isMobile}
+                    onApplyRigor={applyPlanRigor} rigorApplied={rigorApplied}
+                  />
+                </div>
+              )}
+              {unit.tool==='certifications'&&(
+                <div style={{...glass2({padding:isMobile?12:16,marginTop:16,background:`${accent}08`,border:`1px solid ${accent}26`})}}>
+                  <CertificationExplorer
+                    stateCode={credentialState} onStateChange={setCredentialState}
+                    age={typicalAgeForGrade(effGrade)}
+                    pathwayKey={eSpec} pathwayLabel={curPath?.label||''}
+                    accent={accent} m={isMobile}
+                  />
+                </div>
+              )}
             </motion.div>
           );
         })}
