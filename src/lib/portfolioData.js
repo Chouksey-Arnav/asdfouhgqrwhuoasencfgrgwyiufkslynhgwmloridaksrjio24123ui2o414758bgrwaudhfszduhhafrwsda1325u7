@@ -36,6 +36,11 @@ const RESOURCE_MAP = {
   // was created to end.
   test_scores: 'testScores',
   admission_intake: 'admissionIntake',
+  // The Narrative Method Engine's inputs and kept readings
+  // (supabase/migrations/0023_narrative_engine.sql). Fetched with the rest of
+  // the snapshot so the panel costs no extra round trip.
+  narrative_profile: 'narrativeProfile',
+  narrative_runs: 'narrativeRuns',
   // The MedEx Score's weekly seals. In the shared snapshot because the score is
   // computed from these same rows — fetching the history separately would mean
   // the Home card and the breakdown panel could seal against two different
