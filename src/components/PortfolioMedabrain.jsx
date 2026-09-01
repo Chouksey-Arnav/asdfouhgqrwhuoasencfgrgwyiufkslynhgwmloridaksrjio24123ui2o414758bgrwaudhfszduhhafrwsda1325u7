@@ -5,6 +5,10 @@ import { Brain, X, Send, Loader2, RotateCcw, Check, MapPin } from 'lucide-react'
 import { C, glass, tint } from '../lib/theme';
 import { listItems } from '../lib/dataApi';
 import { buildPortfolioSystemPrompt } from '../lib/studentProfile';
+// The safety pass runs on every chat surface, not only the head coach — a student
+// in trouble does not pick the tab we thought of. See src/lib/safety/pass.js.
+import { runSafetyPass } from '../lib/safety/pass';
+import CrisisResourceCard from './safety/CrisisResourceCard';
 import { buildTimeline, summarizeTimelineForPrompt } from '../lib/timeline';
 import { summarizeRoadmapForPrompt } from '../lib/roadmap/model';
 import { renderMarkdown } from '../lib/renderMarkdown';
@@ -99,6 +103,7 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
       // intake. Without this the two would offer the same student two different years.
       let roadmapSummary = null;
       try { roadmapSummary = summarizeRoadmapForPrompt(user?.roadmap); } catch { /* optional */ }
+      const safety = await runSafetyPass(trimmed, { surface: 'portfolio' });
       const sys = buildPortfolioSystemPrompt({
         user, pathwayLabel, gradeLabel,
         colleges: portfolioData?.colleges || [], essays: portfolioData?.essays || [],
@@ -108,6 +113,7 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
         recommenders: portfolioData?.recommenders || [], testScores: portfolioData?.testScores || [],
         awards: portfolioData?.awards || [], gpaEntries: portfolioData?.gpaEntries || [],
         recentActivitySummary, timelineSummary, roadmapSummary,
+        safetyBlock: safety.block,
       });
       const res = await fetch('/api/groq', {
         method: 'POST',
@@ -116,7 +122,10 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
         // routinely runs past 800 tokens once formatting is included, and a reply cut mid-sentence
         // reads as broken rather than as a length limit. See api/groq.js's per-purpose ceiling,
         // which was also raised so this isn't silently reclamped server-side.
-        body: JSON.stringify({ system: sys, messages: nextMsgs.slice(-10), purpose: 'portfolio', maxTokens: 1600 }),
+        body: JSON.stringify({
+          system: sys, messages: nextMsgs.slice(-10), purpose: 'portfolio', maxTokens: 1600,
+          ...(safety.safetyTier ? { safetyTier: safety.safetyTier } : {}),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || `Medabrain error (${res.status})`);
@@ -306,6 +315,11 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
               </div>
 
               {/* Composer */}
+
+              {/* Support resources, above the composer rather than in the thread —
+                  a message scrolls away and this must not. Renders nothing until
+                  the safety pass has armed it. */}
+              <div style={{ padding: '0 12px', flexShrink: 0 }}><CrisisResourceCard compact /></div>
               <form onSubmit={e => { e.preventDefault(); send(); }} style={{ padding: 12, borderTop: `1px solid ${C.b1}`, display: 'flex', gap: 8, flexShrink: 0 }}>
                 <input
                   value={input} onChange={e => setInput(e.target.value)}

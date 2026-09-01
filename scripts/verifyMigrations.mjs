@@ -97,6 +97,12 @@ const EXPECTED_TABLES = [
   'reflection_entries',
   'research_experience', 'reward_claims',
   'roadmap_revisions', 'roadmaps',
+  // The internal safety review queue — one row per Medabrain safety detection,
+  // carrying who/when/how severe and no conversation content whatsoever. Its own
+  // table because it is the one record of a coach conversation that exists at
+  // all, and because nothing in api/parent/* may ever join to it. See
+  // supabase/migrations/0023_safety_events.sql.
+  'safety_events',
   'scholarships', 'sessions', 'skills_certifications',
   'student_quests',
   'test_scores',
