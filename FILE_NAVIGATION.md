@@ -1,0 +1,790 @@
+# MedSchoolPrep — Ultra-Fast File Navigation & Repository Directory Index
+
+Welcome to the **MedSchoolPrep File Navigation Ledger**. This document is specifically structured for AI agents (Claude, Jules, GPT) and developers to locate files instantly, minimize token consumption, and execute code modifications with zero guesswork.
+
+---
+
+## ⚡ Task-to-File Quick Lookup Matrix
+
+When assigned a specific task, jump directly to the relevant files listed below:
+
+| Task / Feature Domain | Primary UI Component | Core Logic / Engine | Data Catalog / Migration | Automated Audit Script |
+| :--- | :--- | :--- | :--- | :--- |
+| **SAT Desmos Calculator** | `src/components/sat/DesmosCalculator.jsx`, `DesmosSurface.jsx` | `src/lib/sat/desmos.js`, `desmosSeed.js` | `src/data/sat/reference.js` | `scripts/verifySatDesmos.mjs` |
+| **SAT Adaptive Testing & Scoring** | `src/components/sat/SatFullTestPanel.jsx`, `SatScoreReport.jsx` | `src/lib/sat/adaptive.js`, `baseline.js` | `src/data/sat/forms.js`, `scoring.js` | `scripts/verifySatForms.mjs`, `verifySatScoring.mjs` |
+| **SAT Question Bank & AI Practice** | `src/components/sat/SatLibraryPanel.jsx`, `SatPracticePanel.jsx` | `src/lib/sat/aiPractice.js`, `selector.js` | `src/data/sat/questions/index.js` | `scripts/auditSatBank.mjs`, `verifySatLibrary.mjs` |
+| **Pathway Lessons & Audio** | `src/components/PrepMedabrain.jsx`, `HighlightableArticle.jsx` | `src/lib/lessonAudio.js`, `lessonFeedback.js` | `src/data/lessonContent/index.js` | `scripts/auditLessonsCompleteness.mjs` |
+| **Verification Quizzes** | `src/components/QuizRecommendationsPanel.jsx` | `src/lib/quizPersonalization.js` | `src/data/quizzes/index.js` | `scripts/auditQuizBankBalance.mjs` |
+| **Common App Resume & Activities** | `src/components/ActivitiesResumePanel.jsx` | `src/lib/commonApp.js`, `activityIntel.js` | `src/data/constants.js` | `scripts/verifyResumeBuilder.mjs` |
+| **Portfolio Milestones & Roadmaps** | `src/components/PortfolioMilestones.jsx`, `PlansTab.jsx` | `src/lib/roadmap/generator.js`, `timeline.js` | `supabase/migrations/0015_roadmaps.sql` | `scripts/verifyTimeline.mjs`, `verifyRoadmap.mjs` |
+| **College & Scholarship Database** | `src/components/CollegeListPanel.jsx`, `ScholarshipDatabase.jsx` | `src/lib/collegeRecommend.js`, `scholarshipResearch.js` | `src/data/scholarships.js`, `opportunities.js` | `scripts/verifyOpportunities.mjs`, `verifyMedicalScholarships.mjs` |
+| **Mock Voice Interview Simulator** | `src/components/LiveVoiceInterview.jsx`, `InterviewPrepPanel.jsx` | `src/lib/speech.js`, `interviewScore.js` | `src/data/interviewQuestions.js`, `mmiCasperQuestions.js` | `scripts/verifyInterviewRealism.mjs` |
+| **Parent Dashboard & Guarding** | `src/components/parent/ParentApp.jsx` | `src/lib/parentApi.js`, `parentDigest.js` | `supabase/migrations/0006_parent_dashboard.sql` | `scripts/verifyParentDashboard.mjs`, `verifyParentClaimFlow.mjs` |
+| **Earned Streaks & Gamification** | `src/components/StreakHeatmap.jsx`, `RewardChest.jsx` | `src/lib/streak.js`, `gamification.js` | `supabase/migrations/0004_reward_and_counter_sync.sql` | `scripts/verifyStreak.mjs` |
+| **Medabrain AI Coaching & Groq** | `src/components/MedabrainLauncher.jsx` | `api/groq.js`, `src/lib/studentProfile.js` | `GROQ_SETUP.md` | `scripts/verifyMedabrainModes.mjs` |
+| **Offline DB & Flashcard Engine** | `src/lib/db.js` | `src/lib/fsrs.js`, `src/lib/flashcards/engine.js` | `src/lib/flashcards/extractors/facts.js` | `scripts/verifyTracking.mjs` |
+| **URL Routing & Subnav Views** | `src/App.jsx` | `src/lib/routes.js`, `useAppRouter.js` | `src/lib/seoRoutes.js` | `scripts/verifyRouting.mjs` |
+| **Design System & Theme Tokens** | `src/components/AppearanceSettings.jsx` | `src/lib/theme.js`, `src/lib/tokens/semantic.js` | `docs/DESIGN_TOKENS.md` | `scripts/verifyDesignTokens.mjs`, `verifyPaletteContrast.mjs` |
+| **Legal, COPPA & Privacy** | `src/components/legal/LegalPage.jsx` | `src/lib/ageGate.js`, `src/legal/legalConfig.js` | `src/legal/terms.js`, `privacy.js` | `scripts/verifyLegal.mjs` |
+
+---
+
+## 📂 Master Directory & File Catalog
+
+Below is the complete, itemized inventory of **every single file in the repository** (722 total files).
+
+
+### 1. Root Configuration & System Infrastructure
+
+- `AGENTS.md` — Primary operational guide, rules, and navigation manual for AI agents (Claude/Jules).
+- `DEVELOPMENT.md` — High-level workspace setup and local development guide.
+- `Dockerfile` — Docker container build definition for VPS deployment.
+- `FILE_NAVIGATION.md` — Master token-saving directory index and exhaustive file-by-file navigation map.
+- `GROQ_SETUP.md` — Guide for configuring purpose-scoped Groq API keys across model tiers.
+- `README.md` — Complete single source of truth for platform architecture, environment vars, and file mapping.
+- `cspell.json` — CSpell dictionary configuration enforcing American English spelling standards.
+- `index.html` — SPA entry HTML document. Loads Google AdSense asynchronously and mounts `#root`.
+- `package-lock.json` — Npm lockfile locking exact dependency tree versions.
+- `package.json` — Defines project metadata, dependencies, and npm run script mappings for testing and auditing.
+- `possible lawsuits.md` — Complete regulatory compliance, legal, privacy, and trademark risk audit.
+- `server.js` — Express production backend for Coolify/VPS hosting. Serves static files and mounts API routes.
+- `src/App.jsx` — Core application shell, navigation bar, sub-tabs, global overlays, and IndexedDB context.
+- `src/index.css` — Global CSS importing Tailwind, KaTeX styles, and theme variables.
+- `src/main.jsx` — React entry point mounting `App.jsx` into document DOM.
+- `techstack.md` — Detailed technical specification on architecture, database schemas, and FSRS algorithms.
+- `vercel.json` — Vercel serverless configuration, headers, and SPA routing rewrites.
+- `vite.config.js` — Vite bundler configuration, PWA options, build targets, and SPA fallback exclusions.
+
+### 2. Backend Serverless API (`api/...`)
+
+- `api/_lib/aiProviders.js` — Configures AI model providers and fallback mechanisms for API endpoints.
+- `api/_lib/essayProseGuard.js` — Server-side prose guard enforcing essay integrity and blocking ghostwriting.
+- `api/_lib/mailer.js` — Nodemailer SMTP mail transporter utilizing Brevo credentials.
+- `api/_lib/otp.js` — Generates and validates transient secure OTP tokens.
+- `api/_lib/parentLinks.js` — Generates secure parent-student invitation tokens.
+- `api/_lib/parentProfile.js` — Validates and parses guardian identity declarations.
+- `api/_lib/parentSummary.js` — Strict privacy allowlist serializer filtering student data for parent view.
+- `api/_lib/password.js` — PBKDF2 salt and password hashing utilities.
+- `api/_lib/questCatalog.js` — Catalog of daily and weekly study quest definitions.
+- `api/_lib/resources.js` — Shared database table mappings for data exports and account deletions.
+- `api/_lib/serializeUser.js` — Filters out sensitive database fields from user API responses.
+- `api/_lib/session.js` — Manages server session cookies and auth tokens.
+- `api/_lib/supabaseAdmin.js` — Instantiates administrative Supabase client using service role key.
+- `api/_lib/verificationToken.js` — Generates secure verification tokens for signup and password reset.
+- `api/auth/account.js` — Auth endpoint: handles `account` functionality.
+- `api/auth/complete-signup.js` — Auth endpoint: handles `complete-signup` functionality.
+- `api/auth/google.js` — Auth endpoint: handles `google` functionality.
+- `api/auth/login.js` — Auth endpoint: handles `login` functionality.
+- `api/auth/logout.js` — Auth endpoint: handles `logout` functionality.
+- `api/auth/me.js` — Auth endpoint: handles `me` functionality.
+- `api/auth/reset-password.js` — Auth endpoint: handles `reset-password` functionality.
+- `api/auth/send-otp.js` — Auth endpoint: handles `send-otp` functionality.
+- `api/auth/verify-otp.js` — Auth endpoint: handles `verify-otp` functionality.
+- `api/data/[resource].js` — Dynamic RESTful API endpoint managing CRUD operations on user database tables.
+- `api/groq.js` — Core Medabrain AI router classifying model tiers (Scout, Guide, Sage, Oracle) and querying Groq.
+- `api/lesson-feedback.js` — Captures student ratings and feedback on pathway lessons.
+- `api/master-plan.js` — Generates Oracle-model master study roadmaps server-side.
+- `api/parent/accept.js` — Parent dashboard endpoint: handles `accept` guardian workflows.
+- `api/parent/claim.js` — Parent dashboard endpoint: handles `claim` guardian workflows.
+- `api/parent/links.js` — Parent dashboard endpoint: handles `links` guardian workflows.
+- `api/parent/messages.js` — Parent dashboard endpoint: handles `messages` guardian workflows.
+- `api/parent/profile.js` — Parent dashboard endpoint: handles `profile` guardian workflows.
+- `api/parent/quests.js` — Parent dashboard endpoint: handles `quests` guardian workflows.
+- `api/parent/summary.js` — Parent dashboard endpoint: handles `summary` guardian workflows.
+- `api/progress-sync.js` — Synchronizes client Dexie IndexedDB state with Supabase storage.
+- `api/reward-claim.js` — Transactional endpoint claiming gamification XP and preventing duplicate claims.
+- `api/roadmap.js` — Generates multi-year college prep roadmaps.
+- `api/safety-event.js` — Logs safety events and content moderation triggers.
+- `api/send-email.js` — Transactional email dispatcher using Nodemailer and Brevo SMTP.
+
+### 3. Application Shell, Core State & Shared Libraries (`src/lib/...`)
+
+- `src/lib/a11y.js` — Shared frontend library utility for `a11y`.
+- `src/lib/academicIntel.js` — Shared frontend library utility for `academicIntel`.
+- `src/lib/achievements.js` — Shared frontend library utility for `achievements`.
+- `src/lib/activityIntel.js` — Shared frontend library utility for `activityIntel`.
+- `src/lib/admissions/academicFit.js` — Admissions modeling module handling `academicFit`.
+- `src/lib/admissions/gates.js` — Admissions modeling module handling `gates`.
+- `src/lib/admissions/index.js` — Admissions modeling module handling `index`.
+- `src/lib/admissions/intake.js` — Admissions modeling module handling `intake`.
+- `src/lib/admissions/interviewFormats.js` — Admissions modeling module handling `interviewFormats`.
+- `src/lib/admissions/model.js` — Admissions modeling module handling `model`.
+- `src/lib/admissions/portfolioFit.js` — Admissions modeling module handling `portfolioFit`.
+- `src/lib/admissions/round.js` — Admissions modeling module handling `round`.
+- `src/lib/admissions/store.js` — Admissions modeling module handling `store`.
+- `src/lib/ageGate.js` — Shared frontend library utility for `ageGate`.
+- `src/lib/aiCache.js` — Shared frontend library utility for `aiCache`.
+- `src/lib/aiFlashcards.js` — Shared frontend library utility for `aiFlashcards`.
+- `src/lib/aiPolicy.js` — Shared frontend library utility for `aiPolicy`.
+- `src/lib/applicationStrength.js` — Shared frontend library utility for `applicationStrength`.
+- `src/lib/authApi.js` — Shared frontend library utility for `authApi`.
+- `src/lib/autoDeadlines.js` — Shared frontend library utility for `autoDeadlines`.
+- `src/lib/betaFlags.js` — Shared frontend library utility for `betaFlags`.
+- `src/lib/casperScore.js` — Shared frontend library utility for `casperScore`.
+- `src/lib/celebrate.js` — Shared frontend library utility for `celebrate`.
+- `src/lib/coachContext.js` — Shared frontend library utility for `coachContext`.
+- `src/lib/collegeRecommend.js` — Shared frontend library utility for `collegeRecommend`.
+- `src/lib/combinedDegree.js` — Shared frontend library utility for `combinedDegree`.
+- `src/lib/commonApp.js` — Shared frontend library utility for `commonApp`.
+- `src/lib/contentSearch.js` — Shared frontend library utility for `contentSearch`.
+- `src/lib/cosmetics.js` — Shared frontend library utility for `cosmetics`.
+- `src/lib/credentials.js` — Shared frontend library utility for `credentials`.
+- `src/lib/dailyCheckin.js` — Shared frontend library utility for `dailyCheckin`.
+- `src/lib/dailyQuests.js` — Shared frontend library utility for `dailyQuests`.
+- `src/lib/dataApi.js` — Shared frontend library utility for `dataApi`.
+- `src/lib/dateUtils.js` — Shared frontend library utility for `dateUtils`.
+- `src/lib/db.js` — Shared frontend library utility for `db`.
+- `src/lib/diagnosticEngine.js` — Shared frontend library utility for `diagnosticEngine`.
+- `src/lib/entitlements.js` — Shared frontend library utility for `entitlements`.
+- `src/lib/essayCritique.js` — Shared frontend library utility for `essayCritique`.
+- `src/lib/essayCritiquePasses.js` — Shared frontend library utility for `essayCritiquePasses`.
+- `src/lib/essayMode.js` — Shared frontend library utility for `essayMode`.
+- `src/lib/essayVersions.js` — Shared frontend library utility for `essayVersions`.
+- `src/lib/eventLog.js` — Shared frontend library utility for `eventLog`.
+- `src/lib/exportPDF.js` — Shared frontend library utility for `exportPDF`.
+- `src/lib/featureUnlock.js` — Shared frontend library utility for `featureUnlock`.
+- `src/lib/flashcards/aiPolish.js` — Flashcard scheduling and extraction engine module (`aiPolish.js`).
+- `src/lib/flashcards/engine.js` — Flashcard scheduling and extraction engine module (`engine.js`).
+- `src/lib/flashcards/extractors/acronyms.js` — Local NLP fact extractor: isolates `acronyms` patterns from student notes.
+- `src/lib/flashcards/extractors/cloze.js` — Local NLP fact extractor: isolates `cloze` patterns from student notes.
+- `src/lib/flashcards/extractors/comparisons.js` — Local NLP fact extractor: isolates `comparisons` patterns from student notes.
+- `src/lib/flashcards/extractors/facts.js` — Local NLP fact extractor: isolates `facts` patterns from student notes.
+- `src/lib/flashcards/extractors/lists.js` — Local NLP fact extractor: isolates `lists` patterns from student notes.
+- `src/lib/flashcards/extractors/misconceptions.js` — Local NLP fact extractor: isolates `misconceptions` patterns from student notes.
+- `src/lib/flashcards/extractors/numeric.js` — Local NLP fact extractor: isolates `numeric` patterns from student notes.
+- `src/lib/flashcards/extractors/process.js` — Local NLP fact extractor: isolates `process` patterns from student notes.
+- `src/lib/flashcards/rank.js` — Flashcard scheduling and extraction engine module (`rank.js`).
+- `src/lib/flashcards/segment.js` — Flashcard scheduling and extraction engine module (`segment.js`).
+- `src/lib/flashcards/text.js` — Flashcard scheduling and extraction engine module (`text.js`).
+- `src/lib/fsrs.js` — Shared frontend library utility for `fsrs`.
+- `src/lib/gamification.js` — Shared frontend library utility for `gamification`.
+- `src/lib/gradeBand.js` — Shared frontend library utility for `gradeBand`.
+- `src/lib/healthEssays.js` — Shared frontend library utility for `healthEssays`.
+- `src/lib/http.js` — Shared frontend library utility for `http`.
+- `src/lib/icsExport.js` — Shared frontend library utility for `icsExport`.
+- `src/lib/insights.js` — Shared frontend library utility for `insights`.
+- `src/lib/interviewFeedback.js` — Shared frontend library utility for `interviewFeedback`.
+- `src/lib/interviewIntent.js` — Shared frontend library utility for `interviewIntent`.
+- `src/lib/interviewPanel.js` — Shared frontend library utility for `interviewPanel`.
+- `src/lib/interviewReply.js` — Shared frontend library utility for `interviewReply`.
+- `src/lib/interviewScore.js` — Shared frontend library utility for `interviewScore`.
+- `src/lib/lessonAudio.js` — Shared frontend library utility for `lessonAudio`.
+- `src/lib/lessonFeedback.js` — Shared frontend library utility for `lessonFeedback`.
+- `src/lib/lessonFeedbackApi.js` — Shared frontend library utility for `lessonFeedbackApi`.
+- `src/lib/lessonMemory.js` — Shared frontend library utility for `lessonMemory`.
+- `src/lib/lessonResources.js` — Shared frontend library utility for `lessonResources`.
+- `src/lib/masterPlanGenerator.js` — Shared frontend library utility for `masterPlanGenerator`.
+- `src/lib/masterPlanStore.js` — Shared frontend library utility for `masterPlanStore`.
+- `src/lib/medabrainActions.js` — Shared frontend library utility for `medabrainActions`.
+- `src/lib/medabrainComments.jsx` — Shared frontend library utility for `medabrainCommentsx`.
+- `src/lib/medabrainModes.js` — Shared frontend library utility for `medabrainModes`.
+- `src/lib/medex/benchmark.js` — MedEx pre-med index module handling `benchmark`.
+- `src/lib/medex/index.js` — MedEx pre-med index module handling `index`.
+- `src/lib/medex/scale.js` — MedEx pre-med index module handling `scale`.
+- `src/lib/medex/score.js` — MedEx pre-med index module handling `score`.
+- `src/lib/medex/store.js` — MedEx pre-med index module handling `store`.
+- `src/lib/medex/week.js` — MedEx pre-med index module handling `week`.
+- `src/lib/milestoneSync.js` — Shared frontend library utility for `milestoneSync`.
+- `src/lib/milestoneUrgency.js` — Shared frontend library utility for `milestoneUrgency`.
+- `src/lib/mmiCircuit.js` — Shared frontend library utility for `mmiCircuit`.
+- `src/lib/mmiRubric.js` — Shared frontend library utility for `mmiRubric`.
+- `src/lib/navMap.js` — Shared frontend library utility for `navMap`.
+- `src/lib/nextThree.js` — Shared frontend library utility for `nextThree`.
+- `src/lib/noteFlashcardEngine.js` — Shared frontend library utility for `noteFlashcardEngine`.
+- `src/lib/nudges.js` — Shared frontend library utility for `nudges`.
+- `src/lib/onboardingFlow.js` — Shared frontend library utility for `onboardingFlow`.
+- `src/lib/opportunityEligibility.js` — Shared frontend library utility for `opportunityEligibility`.
+- `src/lib/opportunityMatch.js` — Shared frontend library utility for `opportunityMatch`.
+- `src/lib/paceGoal.js` — Shared frontend library utility for `paceGoal`.
+- `src/lib/parentApi.js` — Shared frontend library utility for `parentApi`.
+- `src/lib/parentDigest.js` — Shared frontend library utility for `parentDigest`.
+- `src/lib/pathwayCost.js` — Shared frontend library utility for `pathwayCost`.
+- `src/lib/pathwayEnrollment.js` — Shared frontend library utility for `pathwayEnrollment`.
+- `src/lib/personalBrief.js` — Shared frontend library utility for `personalBrief`.
+- `src/lib/planGenerator.js` — Shared frontend library utility for `planGenerator`.
+- `src/lib/portfolioCritique.js` — Shared frontend library utility for `portfolioCritique`.
+- `src/lib/portfolioData.js` — Shared frontend library utility for `portfolioData`.
+- `src/lib/portfolioDossier.js` — Shared frontend library utility for `portfolioDossier`.
+- `src/lib/portfolioNextSteps.js` — Shared frontend library utility for `portfolioNextSteps`.
+- `src/lib/programEssayPrompts.js` — Shared frontend library utility for `programEssayPrompts`.
+- `src/lib/progressSync.js` — Shared frontend library utility for `progressSync`.
+- `src/lib/questApi.js` — Shared frontend library utility for `questApi`.
+- `src/lib/quests.js` — Shared frontend library utility for `quests`.
+- `src/lib/quizPersonalization.js` — Shared frontend library utility for `quizPersonalization`.
+- `src/lib/recentActivity.js` — Shared frontend library utility for `recentActivity`.
+- `src/lib/recommend.js` — Shared frontend library utility for `recommend`.
+- `src/lib/recommenders.js` — Shared frontend library utility for `recommenders`.
+- `src/lib/renderMarkdown.js` — Shared frontend library utility for `renderMarkdown`.
+- `src/lib/rewardClaimQueue.js` — Shared frontend library utility for `rewardClaimQueue`.
+- `src/lib/rewards.js` — Shared frontend library utility for `rewards`.
+- `src/lib/roadmap/catalog.js` — Multi-year roadmap generator module handling `catalog`.
+- `src/lib/roadmap/dateAudit.js` — Multi-year roadmap generator module handling `dateAudit`.
+- `src/lib/roadmap/generator.js` — Multi-year roadmap generator module handling `generator`.
+- `src/lib/roadmap/intake.js` — Multi-year roadmap generator module handling `intake`.
+- `src/lib/roadmap/model.js` — Multi-year roadmap generator module handling `model`.
+- `src/lib/roadmap/projection.js` — Multi-year roadmap generator module handling `projection`.
+- `src/lib/roadmap/promptBudget.js` — Multi-year roadmap generator module handling `promptBudget`.
+- `src/lib/roadmap/readiness.js` — Multi-year roadmap generator module handling `readiness`.
+- `src/lib/roadmap/store.js` — Multi-year roadmap generator module handling `store`.
+- `src/lib/routes.js` — Shared frontend library utility for `routes`.
+- `src/lib/safety/cardState.js` — AI safety layer module handling `cardState`.
+- `src/lib/safety/classifier.js` — AI safety layer module handling `classifier`.
+- `src/lib/safety/log.js` — AI safety layer module handling `log`.
+- `src/lib/safety/pass.js` — AI safety layer module handling `pass`.
+- `src/lib/safety/prompts.js` — AI safety layer module handling `prompts`.
+- `src/lib/safety/resources.js` — AI safety layer module handling `resources`.
+- `src/lib/scholarshipFilters.js` — Shared frontend library utility for `scholarshipFilters`.
+- `src/lib/scholarshipNotes.js` — Shared frontend library utility for `scholarshipNotes`.
+- `src/lib/scholarshipResearch.js` — Shared frontend library utility for `scholarshipResearch`.
+- `src/lib/search.js` — Shared frontend library utility for `search`.
+- `src/lib/seo.js` — Shared frontend library utility for `seo`.
+- `src/lib/seoRoutes.js` — Shared frontend library utility for `seoRoutes`.
+- `src/lib/shuffle.js` — Shared frontend library utility for `shuffle`.
+- `src/lib/sounds.js` — Shared frontend library utility for `sounds`.
+- `src/lib/speech.js` — Shared frontend library utility for `speech`.
+- `src/lib/streak.js` — Shared frontend library utility for `streak`.
+- `src/lib/studentProfile.js` — Shared frontend library utility for `studentProfile`.
+- `src/lib/supabaseClient.js` — Shared frontend library utility for `supabaseClient`.
+- `src/lib/supplementalPrompts.js` — Shared frontend library utility for `supplementalPrompts`.
+- `src/lib/theme.js` — Shared frontend library utility for `theme`.
+- `src/lib/timeline.js` — Shared frontend library utility for `timeline`.
+- `src/lib/tokens/components.js` — Design system token module defining `components` design primitives.
+- `src/lib/tokens/motion.js` — Design system token module defining `motion` design primitives.
+- `src/lib/tokens/primitives.js` — Design system token module defining `primitives` design primitives.
+- `src/lib/tokens/semantic.js` — Design system token module defining `semantic` design primitives.
+- `src/lib/tokens/space.js` — Design system token module defining `space` design primitives.
+- `src/lib/tokens/type.js` — Design system token module defining `type` design primitives.
+- `src/lib/trackQueue.js` — Shared frontend library utility for `trackQueue`.
+- `src/lib/trackedItems.js` — Shared frontend library utility for `trackedItems`.
+- `src/lib/trackingCatalog.js` — Shared frontend library utility for `trackingCatalog`.
+- `src/lib/turnTaking.js` — Shared frontend library utility for `turnTaking`.
+- `src/lib/useAppRouter.js` — Shared frontend library utility for `useAppRouter`.
+- `src/lib/useGradeBand.jsx` — Shared frontend library utility for `useGradeBandx`.
+- `src/lib/useSearchFocus.js` — Shared frontend library utility for `useSearchFocus`.
+- `src/lib/useTrackQueue.js` — Shared frontend library utility for `useTrackQueue`.
+- `src/lib/useViewport.js` — Shared frontend library utility for `useViewport`.
+- `src/lib/viewState.js` — Shared frontend library utility for `viewState`.
+- `src/lib/viewportFit.js` — Shared frontend library utility for `viewportFit`.
+- `src/lib/voicePipeline.js` — Shared frontend library utility for `voicePipeline`.
+- `src/lib/weeklyGoals.js` — Shared frontend library utility for `weeklyGoals`.
+
+### 4. SAT Core Engine, Components & Practice Bank
+
+- `src/components/sat/DesmosCalculator.jsx` — SAT Hub React UI component (`DesmosCalculator.jsx`).
+- `src/components/sat/DesmosSurface.jsx` — SAT Hub React UI component (`DesmosSurface.jsx`).
+- `src/components/sat/SatAnnotatableText.jsx` — SAT Hub React UI component (`SatAnnotatableText.jsx`).
+- `src/components/sat/SatBaselinePanel.jsx` — SAT Hub React UI component (`SatBaselinePanel.jsx`).
+- `src/components/sat/SatBetaCover.jsx` — SAT Hub React UI component (`SatBetaCover.jsx`).
+- `src/components/sat/SatDiagnosticPanel.jsx` — SAT Hub React UI component (`SatDiagnosticPanel.jsx`).
+- `src/components/sat/SatFullTestPanel.jsx` — SAT Hub React UI component (`SatFullTestPanel.jsx`).
+- `src/components/sat/SatLibraryPanel.jsx` — SAT Hub React UI component (`SatLibraryPanel.jsx`).
+- `src/components/sat/SatMedabrain.jsx` — SAT Hub React UI component (`SatMedabrain.jsx`).
+- `src/components/sat/SatOverviewPanel.jsx` — SAT Hub React UI component (`SatOverviewPanel.jsx`).
+- `src/components/sat/SatPracticePanel.jsx` — SAT Hub React UI component (`SatPracticePanel.jsx`).
+- `src/components/sat/SatQuestionPlayer.jsx` — SAT Hub React UI component (`SatQuestionPlayer.jsx`).
+- `src/components/sat/SatReferenceSheet.jsx` — SAT Hub React UI component (`SatReferenceSheet.jsx`).
+- `src/components/sat/SatReviewLogPanel.jsx` — SAT Hub React UI component (`SatReviewLogPanel.jsx`).
+- `src/components/sat/SatScoreReport.jsx` — SAT Hub React UI component (`SatScoreReport.jsx`).
+- `src/components/sat/SatSkillHeatmap.jsx` — SAT Hub React UI component (`SatSkillHeatmap.jsx`).
+- `src/components/sat/SatSkillsPanel.jsx` — SAT Hub React UI component (`SatSkillsPanel.jsx`).
+- `src/components/sat/SatStudyPlanCard.jsx` — SAT Hub React UI component (`SatStudyPlanCard.jsx`).
+- `src/components/sat/SatTab.jsx` — SAT Hub React UI component (`SatTab.jsx`).
+- `src/components/sat/SatTestPicker.jsx` — SAT Hub React UI component (`SatTestPicker.jsx`).
+- `src/components/sat/SatToolkitPanel.jsx` — SAT Hub React UI component (`SatToolkitPanel.jsx`).
+- `src/components/sat/SatToolsContext.jsx` — SAT Hub React UI component (`SatToolsContext.jsx`).
+- `src/components/sat/SatVideoRecs.jsx` — SAT Hub React UI component (`SatVideoRecs.jsx`).
+- `src/components/sat/satUi.jsx` — SAT Hub React UI component (`satUi.jsx`).
+- `src/components/sat/useSatSession.js` — SAT Hub React UI component (`useSatSession.js`).
+- `src/data/sat/forms.js` — Static data catalog module (`forms.js`).
+- `src/data/sat/questions/index.js` — Digital SAT practice question dataset module for `index` domain.
+- `src/data/sat/questions/mathAdvanced.js` — Digital SAT practice question dataset module for `mathAdvanced` domain.
+- `src/data/sat/questions/mathAdvancedB.js` — Digital SAT practice question dataset module for `mathAdvancedB` domain.
+- `src/data/sat/questions/mathAdvancedC.js` — Digital SAT practice question dataset module for `mathAdvancedC` domain.
+- `src/data/sat/questions/mathAdvancedD.js` — Digital SAT practice question dataset module for `mathAdvancedD` domain.
+- `src/data/sat/questions/mathAlgebra.js` — Digital SAT practice question dataset module for `mathAlgebra` domain.
+- `src/data/sat/questions/mathAlgebraB.js` — Digital SAT practice question dataset module for `mathAlgebraB` domain.
+- `src/data/sat/questions/mathAlgebraC.js` — Digital SAT practice question dataset module for `mathAlgebraC` domain.
+- `src/data/sat/questions/mathAlgebraD.js` — Digital SAT practice question dataset module for `mathAlgebraD` domain.
+- `src/data/sat/questions/mathGeoTrig.js` — Digital SAT practice question dataset module for `mathGeoTrig` domain.
+- `src/data/sat/questions/mathGeoTrigB.js` — Digital SAT practice question dataset module for `mathGeoTrigB` domain.
+- `src/data/sat/questions/mathGeoTrigC.js` — Digital SAT practice question dataset module for `mathGeoTrigC` domain.
+- `src/data/sat/questions/mathGeoTrigD.js` — Digital SAT practice question dataset module for `mathGeoTrigD` domain.
+- `src/data/sat/questions/mathPSDA.js` — Digital SAT practice question dataset module for `mathPSDA` domain.
+- `src/data/sat/questions/mathPSDAB.js` — Digital SAT practice question dataset module for `mathPSDAB` domain.
+- `src/data/sat/questions/mathPSDAC.js` — Digital SAT practice question dataset module for `mathPSDAC` domain.
+- `src/data/sat/questions/mathPSDAD.js` — Digital SAT practice question dataset module for `mathPSDAD` domain.
+- `src/data/sat/questions/rwConventions.js` — Digital SAT practice question dataset module for `rwConventions` domain.
+- `src/data/sat/questions/rwConventionsB.js` — Digital SAT practice question dataset module for `rwConventionsB` domain.
+- `src/data/sat/questions/rwConventionsC.js` — Digital SAT practice question dataset module for `rwConventionsC` domain.
+- `src/data/sat/questions/rwConventionsD.js` — Digital SAT practice question dataset module for `rwConventionsD` domain.
+- `src/data/sat/questions/rwCraftStructure.js` — Digital SAT practice question dataset module for `rwCraftStructure` domain.
+- `src/data/sat/questions/rwCraftStructureB.js` — Digital SAT practice question dataset module for `rwCraftStructureB` domain.
+- `src/data/sat/questions/rwCraftStructureC.js` — Digital SAT practice question dataset module for `rwCraftStructureC` domain.
+- `src/data/sat/questions/rwCraftStructureD.js` — Digital SAT practice question dataset module for `rwCraftStructureD` domain.
+- `src/data/sat/questions/rwExpression.js` — Digital SAT practice question dataset module for `rwExpression` domain.
+- `src/data/sat/questions/rwExpressionB.js` — Digital SAT practice question dataset module for `rwExpressionB` domain.
+- `src/data/sat/questions/rwExpressionC.js` — Digital SAT practice question dataset module for `rwExpressionC` domain.
+- `src/data/sat/questions/rwExpressionD.js` — Digital SAT practice question dataset module for `rwExpressionD` domain.
+- `src/data/sat/questions/rwInfoIdeas.js` — Digital SAT practice question dataset module for `rwInfoIdeas` domain.
+- `src/data/sat/questions/rwInfoIdeasB.js` — Digital SAT practice question dataset module for `rwInfoIdeasB` domain.
+- `src/data/sat/questions/rwInfoIdeasC.js` — Digital SAT practice question dataset module for `rwInfoIdeasC` domain.
+- `src/data/sat/questions/rwInfoIdeasD.js` — Digital SAT practice question dataset module for `rwInfoIdeasD` domain.
+- `src/data/sat/reference.js` — Static data catalog module (`reference.js`).
+- `src/data/sat/resources.js` — Static data catalog module (`resources.js`).
+- `src/data/sat/scoring.js` — Static data catalog module (`scoring.js`).
+- `src/data/sat/strategies.js` — Static data catalog module (`strategies.js`).
+- `src/data/sat/taxonomy.js` — Static data catalog module (`taxonomy.js`).
+- `src/data/sat/videos.js` — Static data catalog module (`videos.js`).
+- `src/lib/sat/activeTabStore.js` — SAT core engine module: handles `activeTabStore` calculations and state.
+- `src/lib/sat/adaptive.js` — SAT core engine module: handles `adaptive` calculations and state.
+- `src/lib/sat/aiPractice.js` — SAT core engine module: handles `aiPractice` calculations and state.
+- `src/lib/sat/aiQuestions.js` — SAT core engine module: handles `aiQuestions` calculations and state.
+- `src/lib/sat/aiStudyPlan.js` — SAT core engine module: handles `aiStudyPlan` calculations and state.
+- `src/lib/sat/answerBalance.js` — SAT core engine module: handles `answerBalance` calculations and state.
+- `src/lib/sat/baseline.js` — SAT core engine module: handles `baseline` calculations and state.
+- `src/lib/sat/desmos.js` — SAT core engine module: handles `desmos` calculations and state.
+- `src/lib/sat/desmosSeed.js` — SAT core engine module: handles `desmosSeed` calculations and state.
+- `src/lib/sat/errorPatterns.js` — SAT core engine module: handles `errorPatterns` calculations and state.
+- `src/lib/sat/forms.js` — SAT core engine module: handles `forms` calculations and state.
+- `src/lib/sat/learnerProfile.js` — SAT core engine module: handles `learnerProfile` calculations and state.
+- `src/lib/sat/mastery.js` — SAT core engine module: handles `mastery` calculations and state.
+- `src/lib/sat/nextAction.js` — SAT core engine module: handles `nextAction` calculations and state.
+- `src/lib/sat/projection.js` — SAT core engine module: handles `projection` calculations and state.
+- `src/lib/sat/selector.js` — SAT core engine module: handles `selector` calculations and state.
+- `src/lib/sat/shuffle.js` — SAT core engine module: handles `shuffle` calculations and state.
+- `src/lib/sat/useSatData.js` — SAT core engine module: handles `useSatData` calculations and state.
+
+### 5. Curricula, Quizzes, Opportunities & Data Catalogs (`src/data/...`)
+
+- `src/data/VIDEO_CORRECTIONS.md` — Static data catalog module (`VIDEO_CORRECTIONS.md`).
+- `src/data/admissions/programProfiles.js` — Static data catalog module (`programProfiles.js`).
+- `src/data/casperTest.js` — Static data catalog module (`casperTest.js`).
+- `src/data/checkinCalendar.js` — Static data catalog module (`checkinCalendar.js`).
+- `src/data/combinedDegreePrograms.js` — Static data catalog module (`combinedDegreePrograms.js`).
+- `src/data/constants.js` — Static data catalog module (`constants.js`).
+- `src/data/credentials/courseCompletions.js` — Static data catalog module (`courseCompletions.js`).
+- `src/data/credentials/index.js` — Static data catalog module (`index.js`).
+- `src/data/credentials/nationalCertifications.js` — Static data catalog module (`nationalCertifications.js`).
+- `src/data/credentials/portfolioSkills.js` — Static data catalog module (`portfolioSkills.js`).
+- `src/data/credentials/stateOccupational.js` — Static data catalog module (`stateOccupational.js`).
+- `src/data/credentials/types.js` — Static data catalog module (`types.js`).
+- `src/data/dailyQuestCatalog.js` — Static data catalog module (`dailyQuestCatalog.js`).
+- `src/data/elib.js` — Static data catalog module (`elib.js`).
+- `src/data/elibExpansionA.js` — Static data catalog module (`elibExpansionA.js`).
+- `src/data/elibExpansionB.js` — Static data catalog module (`elibExpansionB.js`).
+- `src/data/elibExpansionC.js` — Static data catalog module (`elibExpansionC.js`).
+- `src/data/elibExpansionD.js` — Static data catalog module (`elibExpansionD.js`).
+- `src/data/elibExpansionE.js` — Static data catalog module (`elibExpansionE.js`).
+- `src/data/elibExpansionF.js` — Static data catalog module (`elibExpansionF.js`).
+- `src/data/elibExpansionG.js` — Static data catalog module (`elibExpansionG.js`).
+- `src/data/elibExpansionH.js` — Static data catalog module (`elibExpansionH.js`).
+- `src/data/elibExpansionI.js` — Static data catalog module (`elibExpansionI.js`).
+- `src/data/elibExpansionJ.js` — Static data catalog module (`elibExpansionJ.js`).
+- `src/data/elibExpansionK.js` — Static data catalog module (`elibExpansionK.js`).
+- `src/data/elibExtra.js` — Static data catalog module (`elibExtra.js`).
+- `src/data/healthCareerScholarships.js` — Static data catalog module (`healthCareerScholarships.js`).
+- `src/data/interviewQuestions.js` — Static data catalog module (`interviewQuestions.js`).
+- `src/data/lessonContent/biomedResearch.js` — Pathway lesson content module: contains curriculum articles for `biomedResearch`.
+- `src/data/lessonContent/dentistry.js` — Pathway lesson content module: contains curriculum articles for `dentistry`.
+- `src/data/lessonContent/exploring.js` — Pathway lesson content module: contains curriculum articles for `exploring`.
+- `src/data/lessonContent/healthAdmin.js` — Pathway lesson content module: contains curriculum articles for `healthAdmin`.
+- `src/data/lessonContent/index.js` — Pathway lesson content module: contains curriculum articles for `index`.
+- `src/data/lessonContent/nursing.js` — Pathway lesson content module: contains curriculum articles for `nursing`.
+- `src/data/lessonContent/pharmacy.js` — Pathway lesson content module: contains curriculum articles for `pharmacy`.
+- `src/data/lessonContent/physicalOccupTherapy.js` — Pathway lesson content module: contains curriculum articles for `physicalOccupTherapy`.
+- `src/data/lessonContent/physician.js` — Pathway lesson content module: contains curriculum articles for `physician`.
+- `src/data/lessonContent/physicianAssistant.js` — Pathway lesson content module: contains curriculum articles for `physicianAssistant`.
+- `src/data/lessonContent/publicHealth.js` — Pathway lesson content module: contains curriculum articles for `publicHealth`.
+- `src/data/medicalScholarships.js` — Static data catalog module (`medicalScholarships.js`).
+- `src/data/mmiCasperQuestions.js` — Static data catalog module (`mmiCasperQuestions.js`).
+- `src/data/mmiStations.js` — Static data catalog module (`mmiStations.js`).
+- `src/data/nudgeBank.js` — Static data catalog module (`nudgeBank.js`).
+- `src/data/opportunities.js` — Static data catalog module (`opportunities.js`).
+- `src/data/opportunitiesExpansion.js` — Static data catalog module (`opportunitiesExpansion.js`).
+- `src/data/opportunityPrograms.js` — Static data catalog module (`opportunityPrograms.js`).
+- `src/data/opportunityProgramsExpansion.js` — Static data catalog module (`opportunityProgramsExpansion.js`).
+- `src/data/pathwayFinance.js` — Static data catalog module (`pathwayFinance.js`).
+- `src/data/questCatalog.js` — Static data catalog module (`questCatalog.js`).
+- `src/data/quizzes.js` — Static data catalog module (`quizzes.js`).
+- `src/data/quizzes/bioBiochem.js` — Verification quiz bank module for `bioBiochem` concepts.
+- `src/data/quizzes/chemPhys.js` — Verification quiz bank module for `chemPhys` concepts.
+- `src/data/quizzes/index.js` — Verification quiz bank module for `index` concepts.
+- `src/data/quizzes/lessonQuizzes.js` — Verification quiz bank module for `lessonQuizzes` concepts.
+- `src/data/quizzes/psychSoc.js` — Verification quiz bank module for `psychSoc` concepts.
+- `src/data/roadmap/anchors.js` — Static data catalog module (`anchors.js`).
+- `src/data/roadmap/awards.js` — Static data catalog module (`awards.js`).
+- `src/data/roadmap/competitions.js` — Static data catalog module (`competitions.js`).
+- `src/data/roadmap/expansion.js` — Static data catalog module (`expansion.js`).
+- `src/data/roadmap/index.js` — Static data catalog module (`index.js`).
+- `src/data/roadmap/programs.js` — Static data catalog module (`programs.js`).
+- `src/data/roadmap/schema.js` — Static data catalog module (`schema.js`).
+- `src/data/scholarships.js` — Static data catalog module (`scholarships.js`).
+- `src/data/supplementalEssays.js` — Static data catalog module (`supplementalEssays.js`).
+
+### 6. React UI Components & Workspace Views (`src/components/...`)
+
+- `src/components/AboutMePanel.jsx` — React UI component workspace (`AboutMePanel.jsx`).
+- `src/components/ActivitiesResumePanel.jsx` — React UI component workspace (`ActivitiesResumePanel.jsx`).
+- `src/components/AnimatedLogo.jsx` — React UI component workspace (`AnimatedLogo.jsx`).
+- `src/components/AppTour.jsx` — React UI component workspace (`AppTour.jsx`).
+- `src/components/AppearanceSettings.jsx` — React UI component workspace (`AppearanceSettings.jsx`).
+- `src/components/AuthGate.jsx` — React UI component workspace (`AuthGate.jsx`).
+- `src/components/BandPreview.jsx` — React UI component workspace (`BandPreview.jsx`).
+- `src/components/BrandJourney.jsx` — React UI component workspace (`BrandJourney.jsx`).
+- `src/components/CollegeAutocomplete.jsx` — React UI component workspace (`CollegeAutocomplete.jsx`).
+- `src/components/CollegeListPanel.jsx` — React UI component workspace (`CollegeListPanel.jsx`).
+- `src/components/EssayCritique.jsx` — React UI component workspace (`EssayCritique.jsx`).
+- `src/components/EssayWorkspacePanel.jsx` — React UI component workspace (`EssayWorkspacePanel.jsx`).
+- `src/components/FinancialAidHomeCard.jsx` — React UI component workspace (`FinancialAidHomeCard.jsx`).
+- `src/components/FinancialAidPanel.jsx` — React UI component workspace (`FinancialAidPanel.jsx`).
+- `src/components/GlobalCrashGuard.jsx` — React UI component workspace (`GlobalCrashGuard.jsx`).
+- `src/components/GradYearCheckIn.jsx` — React UI component workspace (`GradYearCheckIn.jsx`).
+- `src/components/HighlightableArticle.jsx` — React UI component workspace (`HighlightableArticle.jsx`).
+- `src/components/InterviewHistoryPanel.jsx` — React UI component workspace (`InterviewHistoryPanel.jsx`).
+- `src/components/InterviewPrepPanel.jsx` — React UI component workspace (`InterviewPrepPanel.jsx`).
+- `src/components/LandingPage.jsx` — React UI component workspace (`LandingPage.jsx`).
+- `src/components/LessonAudioPlayer.jsx` — React UI component workspace (`LessonAudioPlayer.jsx`).
+- `src/components/LessonDifficultyCheck.jsx` — React UI component workspace (`LessonDifficultyCheck.jsx`).
+- `src/components/LessonNotesPanel.jsx` — React UI component workspace (`LessonNotesPanel.jsx`).
+- `src/components/LiveVoiceInterview.jsx` — React UI component workspace (`LiveVoiceInterview.jsx`).
+- `src/components/MaintenanceNotice.jsx` — React UI component workspace (`MaintenanceNotice.jsx`).
+- `src/components/MedabrainLauncher.jsx` — React UI component workspace (`MedabrainLauncher.jsx`).
+- `src/components/MyPlanCard.jsx` — React UI component workspace (`MyPlanCard.jsx`).
+- `src/components/NextUnlockCard.jsx` — React UI component workspace (`NextUnlockCard.jsx`).
+- `src/components/OpportunitiesDatabase.jsx` — React UI component workspace (`OpportunitiesDatabase.jsx`).
+- `src/components/PaceGoalCard.jsx` — React UI component workspace (`PaceGoalCard.jsx`).
+- `src/components/PathwaySwitcher.jsx` — React UI component workspace (`PathwaySwitcher.jsx`).
+- `src/components/PlansTab.jsx` — React UI component workspace (`PlansTab.jsx`).
+- `src/components/PortfolioMedabrain.jsx` — React UI component workspace (`PortfolioMedabrain.jsx`).
+- `src/components/PortfolioMilestones.jsx` — React UI component workspace (`PortfolioMilestones.jsx`).
+- `src/components/PortfolioPlanWeek.jsx` — React UI component workspace (`PortfolioPlanWeek.jsx`).
+- `src/components/PrepMedabrain.jsx` — React UI component workspace (`PrepMedabrain.jsx`).
+- `src/components/PwaUpdatePrompt.jsx` — React UI component workspace (`PwaUpdatePrompt.jsx`).
+- `src/components/QuizPlanToday.jsx` — React UI component workspace (`QuizPlanToday.jsx`).
+- `src/components/QuizRecommendationsPanel.jsx` — React UI component workspace (`QuizRecommendationsPanel.jsx`).
+- `src/components/RecommendersPanel.jsx` — React UI component workspace (`RecommendersPanel.jsx`).
+- `src/components/ReturningBreakScreen.jsx` — React UI component workspace (`ReturningBreakScreen.jsx`).
+- `src/components/RewardChest.jsx` — React UI component workspace (`RewardChest.jsx`).
+- `src/components/RootErrorBoundary.jsx` — React UI component workspace (`RootErrorBoundary.jsx`).
+- `src/components/ScholarshipDatabase.jsx` — React UI component workspace (`ScholarshipDatabase.jsx`).
+- `src/components/ScholarshipResearchAdd.jsx` — React UI component workspace (`ScholarshipResearchAdd.jsx`).
+- `src/components/ScoreTrackerPanel.jsx` — React UI component workspace (`ScoreTrackerPanel.jsx`).
+- `src/components/StreakHeatmap.jsx` — React UI component workspace (`StreakHeatmap.jsx`).
+- `src/components/SupplementalEssaysCard.jsx` — React UI component workspace (`SupplementalEssaysCard.jsx`).
+- `src/components/TabContentGuard.jsx` — React UI component workspace (`TabContentGuard.jsx`).
+- `src/components/ThemeToggle.jsx` — React UI component workspace (`ThemeToggle.jsx`).
+- `src/components/TodayPlanNudge.jsx` — React UI component workspace (`TodayPlanNudge.jsx`).
+- `src/components/UnlockCelebration.jsx` — React UI component workspace (`UnlockCelebration.jsx`).
+- `src/components/VoiceConsentGate.jsx` — React UI component workspace (`VoiceConsentGate.jsx`).
+- `src/components/VoiceSelector.jsx` — React UI component workspace (`VoiceSelector.jsx`).
+- `src/components/auth/AuthShell.jsx` — Authentication UI component for `AuthShell` view.
+- `src/components/auth/ForgotPasswordView.jsx` — Authentication UI component for `ForgotPasswordView` view.
+- `src/components/auth/GoogleButton.jsx` — Authentication UI component for `GoogleButton` view.
+- `src/components/auth/LoginView.jsx` — Authentication UI component for `LoginView` view.
+- `src/components/auth/OAuthCallbackView.jsx` — Authentication UI component for `OAuthCallbackView` view.
+- `src/components/auth/SignupView.jsx` — Authentication UI component for `SignupView` view.
+- `src/components/auth/ui.jsx` — Authentication UI component for `ui` view.
+- `src/components/dashboard/DeadlineHorizon.jsx` — React UI component workspace (`DeadlineHorizon.jsx`).
+- `src/components/dashboard/FourYearArc.jsx` — React UI component workspace (`FourYearArc.jsx`).
+- `src/components/dashboard/HoursRings.jsx` — React UI component workspace (`HoursRings.jsx`).
+- `src/components/dashboard/MilestoneFlash.jsx` — React UI component workspace (`MilestoneFlash.jsx`).
+- `src/components/dashboard/NextThreeCard.jsx` — React UI component workspace (`NextThreeCard.jsx`).
+- `src/components/dashboard/ProgressDetail.jsx` — React UI component workspace (`ProgressDetail.jsx`).
+- `src/components/dashboard/SubstanceAchievements.jsx` — React UI component workspace (`SubstanceAchievements.jsx`).
+- `src/components/finance/DebtTrajectoryTable.jsx` — React UI component workspace (`DebtTrajectoryTable.jsx`).
+- `src/components/finance/HealthCareerScholarships.jsx` — React UI component workspace (`HealthCareerScholarships.jsx`).
+- `src/components/finance/MedicalScholarshipPipeline.jsx` — React UI component workspace (`MedicalScholarshipPipeline.jsx`).
+- `src/components/finance/PathwayCostCalculator.jsx` — React UI component workspace (`PathwayCostCalculator.jsx`).
+- `src/components/finance/ServiceCommitmentPrograms.jsx` — React UI component workspace (`ServiceCommitmentPrograms.jsx`).
+- `src/components/interview/CasperTypedTest.jsx` — React UI component workspace (`CasperTypedTest.jsx`).
+- `src/components/interview/DebriefCard.jsx` — React UI component workspace (`DebriefCard.jsx`).
+- `src/components/interview/MmiCircuitRunner.jsx` — React UI component workspace (`MmiCircuitRunner.jsx`).
+- `src/components/interview/StationBrief.jsx` — React UI component workspace (`StationBrief.jsx`).
+- `src/components/interview/StationClock.jsx` — React UI component workspace (`StationClock.jsx`).
+- `src/components/landing/landingVersions.js` — React UI component workspace (`landingVersions.js`).
+- `src/components/landing/v2/LandingPageV2.jsx` — React UI component workspace (`LandingPageV2.jsx`).
+- `src/components/landing/v2/dcRuntime.js` — React UI component workspace (`dcRuntime.js`).
+- `src/components/legal/LegalPage.jsx` — Legal and compliance UI component (`LegalPage.jsx`).
+- `src/components/medex/MedExChip.jsx` — React UI component workspace (`MedExChip.jsx`).
+- `src/components/medex/MedExHistoryChart.jsx` — React UI component workspace (`MedExHistoryChart.jsx`).
+- `src/components/medex/MedExHomeCard.jsx` — React UI component workspace (`MedExHomeCard.jsx`).
+- `src/components/medex/MedExPanel.jsx` — React UI component workspace (`MedExPanel.jsx`).
+- `src/components/medex/MedExRing.jsx` — React UI component workspace (`MedExRing.jsx`).
+- `src/components/medex/SealCountdown.jsx` — React UI component workspace (`SealCountdown.jsx`).
+- `src/components/onboarding/Onboarding.jsx` — Onboarding wizard UI component (`Onboarding.jsx`).
+- `src/components/onboarding/OnboardingShell.jsx` — Onboarding wizard UI component (`OnboardingShell.jsx`).
+- `src/components/onboarding/brand.jsx` — Onboarding wizard UI component (`brand.jsx`).
+- `src/components/onboarding/chapters.js` — Onboarding wizard UI component (`chapters.js`).
+- `src/components/onboarding/chart.js` — Onboarding wizard UI component (`chart.js`).
+- `src/components/onboarding/design.js` — Onboarding wizard UI component (`design.js`).
+- `src/components/onboarding/icons.jsx` — Onboarding wizard UI component (`icons.jsx`).
+- `src/components/onboarding/options.js` — Onboarding wizard UI component (`options.js`).
+- `src/components/onboarding/personalize.js` — Onboarding wizard UI component (`personalize.js`).
+- `src/components/onboarding/primitives.jsx` — Onboarding wizard UI component (`primitives.jsx`).
+- `src/components/onboarding/scenes.jsx` — Onboarding wizard UI component (`scenes.jsx`).
+- `src/components/onboarding/steps/AgeBlockedStep.jsx` — Onboarding wizard step component (`AgeBlockedStep`).
+- `src/components/onboarding/steps/BirthdateStep.jsx` — Onboarding wizard step component (`BirthdateStep`).
+- `src/components/onboarding/steps/DiagnosticOfferStep.jsx` — Onboarding wizard step component (`DiagnosticOfferStep`).
+- `src/components/onboarding/steps/FamilyStep.jsx` — Onboarding wizard step component (`FamilyStep`).
+- `src/components/onboarding/steps/FeatureShowcaseStep.jsx` — Onboarding wizard step component (`FeatureShowcaseStep`).
+- `src/components/onboarding/steps/GeneratingStep.jsx` — Onboarding wizard step component (`GeneratingStep`).
+- `src/components/onboarding/steps/GoalStep.jsx` — Onboarding wizard step component (`GoalStep`).
+- `src/components/onboarding/steps/GraduationYearStep.jsx` — Onboarding wizard step component (`GraduationYearStep`).
+- `src/components/onboarding/steps/Intro.jsx` — Onboarding wizard step component (`Intro`).
+- `src/components/onboarding/steps/PlanReadyStep.jsx` — Onboarding wizard step component (`PlanReadyStep`).
+- `src/components/onboarding/steps/PlanSummaryStep.jsx` — Onboarding wizard step component (`PlanSummaryStep`).
+- `src/components/onboarding/steps/SaveProgressStep.jsx` — Onboarding wizard step component (`SaveProgressStep`).
+- `src/components/onboarding/steps/SourceStep.jsx` — Onboarding wizard step component (`SourceStep`).
+- `src/components/onboarding/steps/SpeedStep.jsx` — Onboarding wizard step component (`SpeedStep`).
+- `src/components/onboarding/steps/emotional.jsx` — Onboarding wizard step component (`emotional`).
+- `src/components/onboarding/steps/generic.jsx` — Onboarding wizard step component (`generic`).
+- `src/components/onboarding/steps/grouped.jsx` — Onboarding wizard step component (`grouped`).
+- `src/components/parent/ConnectionsPanel.jsx` — Parent dashboard React UI component (`ConnectionsPanel.jsx`).
+- `src/components/parent/FamilyThread.jsx` — Parent dashboard React UI component (`FamilyThread.jsx`).
+- `src/components/parent/InviteScreen.jsx` — Parent dashboard React UI component (`InviteScreen.jsx`).
+- `src/components/parent/ParentApp.jsx` — Parent dashboard React UI component (`ParentApp.jsx`).
+- `src/components/parent/ParentSetup.jsx` — Parent dashboard React UI component (`ParentSetup.jsx`).
+- `src/components/parent/ParentsLanding.jsx` — Parent dashboard React UI component (`ParentsLanding.jsx`).
+- `src/components/parent/PathwayCostsPanel.jsx` — Parent dashboard React UI component (`PathwayCostsPanel.jsx`).
+- `src/components/parent/ProgressSummary.jsx` — Parent dashboard React UI component (`ProgressSummary.jsx`).
+- `src/components/parent/QuestAssignPanel.jsx` — Parent dashboard React UI component (`QuestAssignPanel.jsx`).
+- `src/components/portfolio/AiPolicyNotice.jsx` — Application portfolio React UI component (`AiPolicyNotice.jsx`).
+- `src/components/portfolio/ApplyingPanel.jsx` — Application portfolio React UI component (`ApplyingPanel.jsx`).
+- `src/components/portfolio/ClinicalHoursSection.jsx` — Application portfolio React UI component (`ClinicalHoursSection.jsx`).
+- `src/components/portfolio/CombinedDegreePanel.jsx` — Application portfolio React UI component (`CombinedDegreePanel.jsx`).
+- `src/components/portfolio/CommonAppExport.jsx` — Application portfolio React UI component (`CommonAppExport.jsx`).
+- `src/components/portfolio/CredentialsSection.jsx` — Application portfolio React UI component (`CredentialsSection.jsx`).
+- `src/components/portfolio/EssayModeChat.jsx` — Application portfolio React UI component (`EssayModeChat.jsx`).
+- `src/components/portfolio/EssayVersionHistory.jsx` — Application portfolio React UI component (`EssayVersionHistory.jsx`).
+- `src/components/portfolio/FourYearExport.jsx` — Application portfolio React UI component (`FourYearExport.jsx`).
+- `src/components/portfolio/MedabrainRead.jsx` — Application portfolio React UI component (`MedabrainRead.jsx`).
+- `src/components/portfolio/NextStepsCard.jsx` — Application portfolio React UI component (`NextStepsCard.jsx`).
+- `src/components/portfolio/OpportunitiesPanel.jsx` — Application portfolio React UI component (`OpportunitiesPanel.jsx`).
+- `src/components/portfolio/ProgramExplorer.jsx` — Application portfolio React UI component (`ProgramExplorer.jsx`).
+- `src/components/portfolio/ProgramPromptsCard.jsx` — Application portfolio React UI component (`ProgramPromptsCard.jsx`).
+- `src/components/portfolio/ProgramTiers.jsx` — Application portfolio React UI component (`ProgramTiers.jsx`).
+- `src/components/portfolio/ReflectionJournal.jsx` — Application portfolio React UI component (`ReflectionJournal.jsx`).
+- `src/components/portfolio/ResearchSection.jsx` — Application portfolio React UI component (`ResearchSection.jsx`).
+- `src/components/portfolio/SectionIntro.jsx` — Application portfolio React UI component (`SectionIntro.jsx`).
+- `src/components/portfolio/SectionScroller.jsx` — Application portfolio React UI component (`SectionScroller.jsx`).
+- `src/components/portfolio/TrackedPanel.jsx` — Application portfolio React UI component (`TrackedPanel.jsx`).
+- `src/components/portfolio/WeeklyGoalTile.jsx` — Application portfolio React UI component (`WeeklyGoalTile.jsx`).
+- `src/components/portfolio/WeeklyGoalsBoard.jsx` — Application portfolio React UI component (`WeeklyGoalsBoard.jsx`).
+- `src/components/portfolio/WhyPathwayDoc.jsx` — Application portfolio React UI component (`WhyPathwayDoc.jsx`).
+- `src/components/portfolio/admissions/AdmissionCalculatorPanel.jsx` — Application portfolio React UI component (`AdmissionCalculatorPanel.jsx`).
+- `src/components/portfolio/admissions/IntakeForm.jsx` — Application portfolio React UI component (`IntakeForm.jsx`).
+- `src/components/portfolio/admissions/ProgramResultCard.jsx` — Application portfolio React UI component (`ProgramResultCard.jsx`).
+- `src/components/quests/DailyQuestRail.jsx` — React UI component workspace (`DailyQuestRail.jsx`).
+- `src/components/quests/QuestBoard.jsx` — React UI component workspace (`QuestBoard.jsx`).
+- `src/components/quests/QuestCard.jsx` — React UI component workspace (`QuestCard.jsx`).
+- `src/components/quests/QuestChainMap.jsx` — React UI component workspace (`QuestChainMap.jsx`).
+- `src/components/quests/QuestCompleteOverlay.jsx` — React UI component workspace (`QuestCompleteOverlay.jsx`).
+- `src/components/quests/QuestHomeCard.jsx` — React UI component workspace (`QuestHomeCard.jsx`).
+- `src/components/quests/QuestPicker.jsx` — React UI component workspace (`QuestPicker.jsx`).
+- `src/components/quests/QuestStrip.jsx` — React UI component workspace (`QuestStrip.jsx`).
+- `src/components/quests/questIcons.js` — React UI component workspace (`questIcons.js`).
+- `src/components/roadmap/RoadmapAscent.jsx` — React UI component workspace (`RoadmapAscent.jsx`).
+- `src/components/roadmap/RoadmapHomeCard.jsx` — React UI component workspace (`RoadmapHomeCard.jsx`).
+- `src/components/roadmap/RoadmapIntake.jsx` — React UI component workspace (`RoadmapIntake.jsx`).
+- `src/components/roadmap/RoadmapItem.jsx` — React UI component workspace (`RoadmapItem.jsx`).
+- `src/components/roadmap/RoadmapPath.jsx` — React UI component workspace (`RoadmapPath.jsx`).
+- `src/components/roadmap/RoadmapSpine.jsx` — React UI component workspace (`RoadmapSpine.jsx`).
+- `src/components/roadmap/RoadmapTab.jsx` — React UI component workspace (`RoadmapTab.jsx`).
+- `src/components/roadmap/RoadmapTimeline.jsx` — React UI component workspace (`RoadmapTimeline.jsx`).
+- `src/components/roadmap/roadmapUi.jsx` — React UI component workspace (`roadmapUi.jsx`).
+- `src/components/roadmap/useDragScroll.js` — React UI component workspace (`useDragScroll.js`).
+- `src/components/safety/CrisisResourceCard.jsx` — React UI component workspace (`CrisisResourceCard.jsx`).
+- `src/components/streak/BoostChip.jsx` — Streak celebration UI overlay (`BoostChip.jsx`).
+- `src/components/streak/CheckInCalendar.jsx` — Streak celebration UI overlay (`CheckInCalendar.jsx`).
+- `src/components/streak/FreezeCard.jsx` — Streak celebration UI overlay (`FreezeCard.jsx`).
+- `src/components/streak/LessonCompleteOverlay.jsx` — Streak celebration UI overlay (`LessonCompleteOverlay.jsx`).
+- `src/components/streak/PathwayStreakStrip.jsx` — Streak celebration UI overlay (`PathwayStreakStrip.jsx`).
+- `src/components/streak/StreakCalendar.jsx` — Streak celebration UI overlay (`StreakCalendar.jsx`).
+- `src/components/streak/StreakHomeCard.jsx` — Streak celebration UI overlay (`StreakHomeCard.jsx`).
+- `src/components/streak/StreakLeague.jsx` — Streak celebration UI overlay (`StreakLeague.jsx`).
+- `src/components/streak/StreakPanel.jsx` — Streak celebration UI overlay (`StreakPanel.jsx`).
+- `src/components/streak/StreakRepairCard.jsx` — Streak celebration UI overlay (`StreakRepairCard.jsx`).
+- `src/components/ui/Disclosure.jsx` — Reusable primitive UI component (`Disclosure.jsx`).
+- `src/components/ui/EmptyState.jsx` — Reusable primitive UI component (`EmptyState.jsx`).
+- `src/components/ui/Loading.jsx` — Reusable primitive UI component (`Loading.jsx`).
+- `src/components/ui/MathText.jsx` — Reusable primitive UI component (`MathText.jsx`).
+- `src/components/ui/PanelHero.jsx` — Reusable primitive UI component (`PanelHero.jsx`).
+- `src/components/ui/PlanTaskStrip.jsx` — Reusable primitive UI component (`PlanTaskStrip.jsx`).
+- `src/components/ui/Portal.jsx` — Reusable primitive UI component (`Portal.jsx`).
+- `src/components/ui/SubNav.jsx` — Reusable primitive UI component (`SubNav.jsx`).
+- `src/components/ui/SuggestInput.jsx` — Reusable primitive UI component (`SuggestInput.jsx`).
+- `src/components/ui/Tooltip.jsx` — Reusable primitive UI component (`Tooltip.jsx`).
+- `src/components/ui/TrackButton.jsx` — Reusable primitive UI component (`TrackButton.jsx`).
+- `src/components/ui/TrackQueueNotice.jsx` — Reusable primitive UI component (`TrackQueueNotice.jsx`).
+- `src/components/ui/primitives.jsx` — Reusable primitive UI component (`primitives.jsx`).
+
+### 7. Legal & Compliance Data (`src/legal/...`)
+
+- `src/legal/legalConfig.js` — Single source of truth for legal entity facts, operator address, and sub-processors.
+- `src/legal/privacy.js` — Structured data array for Privacy Policy (COPPA, FERPA, CCPA, GDPR).
+- `src/legal/terms.js` — Structured data array for Terms of Service (contracting terms, arbitration, liability cap).
+
+### 8. Database Migrations (`supabase/migrations/...`)
+
+- `supabase/migrations/0000_base_schema.sql` — Database migration SQL file: `0000_base_schema.sql`.
+- `supabase/migrations/0001_portfolio_credibility_expansion.sql` — Database migration SQL file: `0001_portfolio_credibility_expansion.sql`.
+- `supabase/migrations/0002_password_auth.sql` — Database migration SQL file: `0002_password_auth.sql`.
+- `supabase/migrations/0003_progress_sync.sql` — Database migration SQL file: `0003_progress_sync.sql`.
+- `supabase/migrations/0004_reward_and_counter_sync.sql` — Database migration SQL file: `0004_reward_and_counter_sync.sql`.
+- `supabase/migrations/0005_master_plans.sql` — Database migration SQL file: `0005_master_plans.sql`.
+- `supabase/migrations/0006_parent_dashboard.sql` — Database migration SQL file: `0006_parent_dashboard.sql`.
+- `supabase/migrations/0007_backfill_activities_constraint.sql` — Database migration SQL file: `0007_backfill_activities_constraint.sql`.
+- `supabase/migrations/0008_lock_down_rpc_functions.sql` — Database migration SQL file: `0008_lock_down_rpc_functions.sql`.
+- `supabase/migrations/0009_parent_profiles.sql` — Database migration SQL file: `0009_parent_profiles.sql`.
+- `supabase/migrations/0010_parent_access.sql` — Database migration SQL file: `0010_parent_access.sql`.
+- `supabase/migrations/0011_family_messages.sql` — Database migration SQL file: `0011_family_messages.sql`.
+- `supabase/migrations/0012_lesson_feedback.sql` — Database migration SQL file: `0012_lesson_feedback.sql`.
+- `supabase/migrations/0013_master_plan_save_lock.sql` — Database migration SQL file: `0013_master_plan_save_lock.sql`.
+- `supabase/migrations/0014_quests.sql` — Database migration SQL file: `0014_quests.sql`.
+- `supabase/migrations/0015_roadmaps.sql` — Database migration SQL file: `0015_roadmaps.sql`.
+- `supabase/migrations/0016_roadmap_function_hardening.sql` — Database migration SQL file: `0016_roadmap_function_hardening.sql`.
+- `supabase/migrations/0017_admission_intake.sql` — Database migration SQL file: `0017_admission_intake.sql`.
+- `supabase/migrations/0018_credential_catalog.sql` — Database migration SQL file: `0018_credential_catalog.sql`.
+- `supabase/migrations/0019_health_pathway_portfolio.sql` — Database migration SQL file: `0019_health_pathway_portfolio.sql`.
+- `supabase/migrations/0020_recommender_asks.sql` — Database migration SQL file: `0020_recommender_asks.sql`.
+- `supabase/migrations/0021_medex_score.sql` — Database migration SQL file: `0021_medex_score.sql`.
+- `supabase/migrations/0022_write_path_repair.sql` — Database migration SQL file: `0022_write_path_repair.sql`.
+- `supabase/migrations/0023_safety_events.sql` — Database migration SQL file: `0023_safety_events.sql`.
+
+### 9. Automated Audit & Verification Scripts (`scripts/...`)
+
+- `scripts/_appResolve.mjs` — Automated audit / verification script (`_appResolve.mjs`).
+- `scripts/auditLessonsCompleteness.mjs` — Automated audit / verification script (`auditLessonsCompleteness.mjs`).
+- `scripts/auditQuizBankBalance.mjs` — Automated audit / verification script (`auditQuizBankBalance.mjs`).
+- `scripts/auditQuizBias.mjs` — Automated audit / verification script (`auditQuizBias.mjs`).
+- `scripts/auditSatBank.mjs` — Automated audit / verification script (`auditSatBank.mjs`).
+- `scripts/auditSatResources.mjs` — Automated audit / verification script (`auditSatResources.mjs`).
+- `scripts/auditSatVideos.mjs` — Automated audit / verification script (`auditSatVideos.mjs`).
+- `scripts/auditVideoIds.mjs` — Automated audit / verification script (`auditVideoIds.mjs`).
+- `scripts/checkMailerConfig.mjs` — Automated audit / verification script (`checkMailerConfig.mjs`).
+- `scripts/checkParentSchema.mjs` — Automated audit / verification script (`checkParentSchema.mjs`).
+- `scripts/designTokenBaseline.json` — Automated audit / verification script (`designTokenBaseline.json`).
+- `scripts/extractBrandLayers.mjs` — Automated audit / verification script (`extractBrandLayers.mjs`).
+- `scripts/fixQuizLengthBias.mjs` — Automated audit / verification script (`fixQuizLengthBias.mjs`).
+- `scripts/generateSitemap.mjs` — Automated audit / verification script (`generateSitemap.mjs`).
+- `scripts/indexNow.mjs` — Automated audit / verification script (`indexNow.mjs`).
+- `scripts/lib/copyStrings.mjs` — Automated audit / verification script (`copyStrings.mjs`).
+- `scripts/motionBaseline.json` — Automated audit / verification script (`motionBaseline.json`).
+- `scripts/payloadBaseline.json` — Automated audit / verification script (`payloadBaseline.json`).
+- `scripts/portLandingCanvas.mjs` — Automated audit / verification script (`portLandingCanvas.mjs`).
+- `scripts/prerenderSeo.mjs` — Automated audit / verification script (`prerenderSeo.mjs`).
+- `scripts/renderIcons.mjs` — Automated audit / verification script (`renderIcons.mjs`).
+- `scripts/spacingBaseline.json` — Automated audit / verification script (`spacingBaseline.json`).
+- `scripts/verifyA11y.mjs` — Automated audit / verification script (`verifyA11y.mjs`).
+- `scripts/verifyAdmissionModel.mjs` — Automated audit / verification script (`verifyAdmissionModel.mjs`).
+- `scripts/verifyBrandLayers.mjs` — Automated audit / verification script (`verifyBrandLayers.mjs`).
+- `scripts/verifyCombinedDegree.mjs` — Automated audit / verification script (`verifyCombinedDegree.mjs`).
+- `scripts/verifyContentSearch.mjs` — Automated audit / verification script (`verifyContentSearch.mjs`).
+- `scripts/verifyCopy.mjs` — Automated audit / verification script (`verifyCopy.mjs`).
+- `scripts/verifyCredentialDatabase.mjs` — Automated audit / verification script (`verifyCredentialDatabase.mjs`).
+- `scripts/verifyDesignTokens.mjs` — Automated audit / verification script (`verifyDesignTokens.mjs`).
+- `scripts/verifyEssayIntegrity.mjs` — Automated audit / verification script (`verifyEssayIntegrity.mjs`).
+- `scripts/verifyFamilyMessages.mjs` — Automated audit / verification script (`verifyFamilyMessages.mjs`).
+- `scripts/verifyGradeBand.mjs` — Automated audit / verification script (`verifyGradeBand.mjs`).
+- `scripts/verifyHealthPortfolio.mjs` — Automated audit / verification script (`verifyHealthPortfolio.mjs`).
+- `scripts/verifyInterviewRealism.mjs` — Automated audit / verification script (`verifyInterviewRealism.mjs`).
+- `scripts/verifyLanding.mjs` — Automated audit / verification script (`verifyLanding.mjs`).
+- `scripts/verifyLegal.mjs` — Automated audit / verification script (`verifyLegal.mjs`).
+- `scripts/verifyLessonDelivery.mjs` — Automated audit / verification script (`verifyLessonDelivery.mjs`).
+- `scripts/verifyMasterPlan.mjs` — Automated audit / verification script (`verifyMasterPlan.mjs`).
+- `scripts/verifyMedabrainModes.mjs` — Automated audit / verification script (`verifyMedabrainModes.mjs`).
+- `scripts/verifyMedex.mjs` — Automated audit / verification script (`verifyMedex.mjs`).
+- `scripts/verifyMedicalScholarships.mjs` — Automated audit / verification script (`verifyMedicalScholarships.mjs`).
+- `scripts/verifyMigrations.mjs` — Automated audit / verification script (`verifyMigrations.mjs`).
+- `scripts/verifyMotion.mjs` — Automated audit / verification script (`verifyMotion.mjs`).
+- `scripts/verifyNavSearch.mjs` — Automated audit / verification script (`verifyNavSearch.mjs`).
+- `scripts/verifyNavUnlocks.mjs` — Automated audit / verification script (`verifyNavUnlocks.mjs`).
+- `scripts/verifyNextThree.mjs` — Automated audit / verification script (`verifyNextThree.mjs`).
+- `scripts/verifyOpportunities.mjs` — Automated audit / verification script (`verifyOpportunities.mjs`).
+- `scripts/verifyOpportunityPrograms.mjs` — Automated audit / verification script (`verifyOpportunityPrograms.mjs`).
+- `scripts/verifyPaletteContrast.mjs` — Automated audit / verification script (`verifyPaletteContrast.mjs`).
+- `scripts/verifyParallelPathways.mjs` — Automated audit / verification script (`verifyParallelPathways.mjs`).
+- `scripts/verifyParallelPathwaysE2E.mjs` — Automated audit / verification script (`verifyParallelPathwaysE2E.mjs`).
+- `scripts/verifyParentClaimFlow.mjs` — Automated audit / verification script (`verifyParentClaimFlow.mjs`).
+- `scripts/verifyParentDashboard.mjs` — Automated audit / verification script (`verifyParentDashboard.mjs`).
+- `scripts/verifyPathwayEngagement.mjs` — Automated audit / verification script (`verifyPathwayEngagement.mjs`).
+- `scripts/verifyPathwayFinance.mjs` — Automated audit / verification script (`verifyPathwayFinance.mjs`).
+- `scripts/verifyPayload.mjs` — Automated audit / verification script (`verifyPayload.mjs`).
+- `scripts/verifyPortfolioE2E.mjs` — Automated audit / verification script (`verifyPortfolioE2E.mjs`).
+- `scripts/verifyPortfolioExport.mjs` — Automated audit / verification script (`verifyPortfolioExport.mjs`).
+- `scripts/verifyQuests.mjs` — Automated audit / verification script (`verifyQuests.mjs`).
+- `scripts/verifyRecommenders.mjs` — Automated audit / verification script (`verifyRecommenders.mjs`).
+- `scripts/verifyResumeBuilder.mjs` — Automated audit / verification script (`verifyResumeBuilder.mjs`).
+- `scripts/verifyRoadmap.mjs` — Automated audit / verification script (`verifyRoadmap.mjs`).
+- `scripts/verifyRoadmapDates.mjs` — Automated audit / verification script (`verifyRoadmapDates.mjs`).
+- `scripts/verifyRoadmapE2E.mjs` — Automated audit / verification script (`verifyRoadmapE2E.mjs`).
+- `scripts/verifyRouting.mjs` — Automated audit / verification script (`verifyRouting.mjs`).
+- `scripts/verifyRoutingE2E.mjs` — Automated audit / verification script (`verifyRoutingE2E.mjs`).
+- `scripts/verifySafety.mjs` — Automated audit / verification script (`verifySafety.mjs`).
+- `scripts/verifySatBaseline.mjs` — Automated audit / verification script (`verifySatBaseline.mjs`).
+- `scripts/verifySatDesmos.mjs` — Automated audit / verification script (`verifySatDesmos.mjs`).
+- `scripts/verifySatForms.mjs` — Automated audit / verification script (`verifySatForms.mjs`).
+- `scripts/verifySatGeneration.mjs` — Automated audit / verification script (`verifySatGeneration.mjs`).
+- `scripts/verifySatLibrary.mjs` — Automated audit / verification script (`verifySatLibrary.mjs`).
+- `scripts/verifySatScoring.mjs` — Automated audit / verification script (`verifySatScoring.mjs`).
+- `scripts/verifySatTab.mjs` — Automated audit / verification script (`verifySatTab.mjs`).
+- `scripts/verifySeo.mjs` — Automated audit / verification script (`verifySeo.mjs`).
+- `scripts/verifySmartSearchE2E.mjs` — Automated audit / verification script (`verifySmartSearchE2E.mjs`).
+- `scripts/verifySpacing.mjs` — Automated audit / verification script (`verifySpacing.mjs`).
+- `scripts/verifyStreak.mjs` — Automated audit / verification script (`verifyStreak.mjs`).
+- `scripts/verifyTabSwitch.mjs` — Automated audit / verification script (`verifyTabSwitch.mjs`).
+- `scripts/verifyTabSwitchE2E.mjs` — Automated audit / verification script (`verifyTabSwitchE2E.mjs`).
+- `scripts/verifyTimeline.mjs` — Automated audit / verification script (`verifyTimeline.mjs`).
+- `scripts/verifyTracking.mjs` — Automated audit / verification script (`verifyTracking.mjs`).
+- `scripts/verifyTypography.mjs` — Automated audit / verification script (`verifyTypography.mjs`).
+- `scripts/verifyViewportFit.mjs` — Automated audit / verification script (`verifyViewportFit.mjs`).
+- `scripts/verifyWeeklyGoals.mjs` — Automated audit / verification script (`verifyWeeklyGoals.mjs`).
+
+### 10. Documentation & Specifications (`docs/`, `design/`)
+
+- `design/landing-v2/MedSchoolPrep Landing.dc.html` — Design spec / prototype file (`MedSchoolPrep Landing.dc.html`).
+- `docs/DESIGN_TOKENS.md` — Documentation & specification file (`DESIGN_TOKENS.md`).
+- `docs/INTERVIEW_VOICE_PRIVACY.md` — Documentation & specification file (`INTERVIEW_VOICE_PRIVACY.md`).
+- `docs/LANDING_VERSIONS.md` — Documentation & specification file (`LANDING_VERSIONS.md`).
+- `docs/PROFILING_PLAN.md` — Documentation & specification file (`PROFILING_PLAN.md`).
+- `docs/QUIZ_ANSWER_BALANCE_PROGRESS.md` — Documentation & specification file (`QUIZ_ANSWER_BALANCE_PROGRESS.md`).
+- `docs/ROADMAP.md` — Documentation & specification file (`ROADMAP.md`).
+- `docs/ROUTING.md` — Documentation & specification file (`ROUTING.md`).
+- `docs/SAFETY_LAYER.md` — Documentation & specification file (`SAFETY_LAYER.md`).
+- `docs/SAT_BLUEPRINT_SOURCES.md` — Documentation & specification file (`SAT_BLUEPRINT_SOURCES.md`).
+- `docs/SAT_TESTS.md` — Documentation & specification file (`SAT_TESTS.md`).
+- `docs/SAT_TOOLS.md` — Documentation & specification file (`SAT_TOOLS.md`).
+- `docs/STYLE_GUIDE.md` — Documentation & specification file (`STYLE_GUIDE.md`).
+- `docs/TEST_COVERAGE_ANALYSIS.md` — Documentation & specification file (`TEST_COVERAGE_ANALYSIS.md`).
+- `docs/TRACKING.md` — Documentation & specification file (`TRACKING.md`).
+- `docs/dictionary.txt` — Documentation & specification file (`dictionary.txt`).
+- `docs/glossary.json` — Documentation & specification file (`glossary.json`).
+- `docs/portfolio-merge-inventory.md` — Documentation & specification file (`portfolio-merge-inventory.md`).
+
+### 11. Public Web Assets & Static Files (`public/`)
+
+- `public/00d297fcab004d5db3c72b90fe977416.txt` — Public static web asset (`00d297fcab004d5db3c72b90fe977416.txt`).
+- `public/ads.txt` — Public static web asset (`ads.txt`).
+- `public/apple-touch-icon.png` — Public static web asset (`apple-touch-icon.png`).
+- `public/brand/book-left.png` — Public static web asset (`book-left.png`).
+- `public/brand/book-right.png` — Public static web asset (`book-right.png`).
+- `public/brand/figure.png` — Public static web asset (`figure.png`).
+- `public/brand/head.png` — Public static web asset (`head.png`).
+- `public/brand/mark.png` — Public static web asset (`mark.png`).
+- `public/brand/star.png` — Public static web asset (`star.png`).
+- `public/brand/trail-1.png` — Public static web asset (`trail-1.png`).
+- `public/brand/trail-2.png` — Public static web asset (`trail-2.png`).
+- `public/brand/trail-3.png` — Public static web asset (`trail-3.png`).
+- `public/brand/trail-4.png` — Public static web asset (`trail-4.png`).
+- `public/favicon.png` — Public static web asset (`favicon.png`).
+- `public/icon-16.png` — Public static web asset (`icon-16.png`).
+- `public/icon-192.png` — Public static web asset (`icon-192.png`).
+- `public/icon-32.png` — Public static web asset (`icon-32.png`).
+- `public/icon-512.png` — Public static web asset (`icon-512.png`).
+- `public/icon.svg` — Public static web asset (`icon.svg`).
+- `public/llms.txt` — Public static web asset (`llms.txt`).
+- `public/logo-mark.png` — Public static web asset (`logo-mark.png`).
+- `public/logo.png` — Public static web asset (`logo.png`).
+- `public/robots.txt` — Public static web asset (`robots.txt`).
+- `public/safety-resources.json` — Public static web asset (`safety-resources.json`).
+- `public/sitemap.xml` — Public static web asset (`sitemap.xml`).
