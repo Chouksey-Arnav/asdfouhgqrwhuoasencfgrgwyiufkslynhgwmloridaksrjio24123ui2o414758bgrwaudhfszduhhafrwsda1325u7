@@ -6,10 +6,14 @@ This workspace is specifically engineered for high school and undergraduate stud
 
 This README acts as the complete, single source of truth for the entire application, containing its core architecture, system mechanisms, API routes, testing/verification engines, environment variables, and an exhaustive file directory mapping the exact purpose of **every single file in the repository**.
 
+> 💡 **AI Agent & Fast Developer Navigation:**
+> For AI coding agents (Claude, Jules, GPT) and developers seeking instant file navigation, refer directly to **[`AGENTS.md`](./AGENTS.md)** (AI operational guide & rules) and **[`FILE_NAVIGATION.md`](./FILE_NAVIGATION.md)** (exhaustive 100%-verified file-by-file directory ledger & task quick-lookup matrix).
+
 ---
 
 ## 📖 Table of Contents
-1. [Platform Core & Workspace Architecture](#platform-core--workspace-architecture)
+1. [AI Agent & File Navigation Guides](#ai-agent--file-navigation-guides)
+2. [Platform Core & Workspace Architecture](#platform-core--workspace-architecture)
 2. [Platform-Wide Systems & Engines](#platform-wide-systems--engines)
 3. [Deployments & Environment Routing](#deployments--environment-routing)
 4. [Complete Environment Variables Reference](#complete-environment-variables-reference)
@@ -22,6 +26,15 @@ This README acts as the complete, single source of truth for the entire applicat
 11. [Local Development Setup](#local-development-setup)
 12. [Branding & Legal Guidelines](#branding--legal-guidelines)
 13. [Comprehensive File Directory Mapping](#comprehensive-file-directory-mapping)
+
+---
+
+## 🤖 AI Agent & File Navigation Guides
+
+MedSchoolPrep provides dedicated, low-token navigation ledgers designed specifically for AI coding agents (Claude, Jules, Copilot) and human developers:
+
+- **[`AGENTS.md`](./AGENTS.md):** The primary operational manual for AI agents. Contains core repository directives, American English spelling standards, Coolify/VPS server mounting rules, safety boundaries, and test execution workflows.
+- **[`FILE_NAVIGATION.md`](./FILE_NAVIGATION.md):** An exhaustive, 100%-verified directory map covering **all 720+ files** in the repository. Features a **Task-to-File Quick Lookup Matrix** allowing agents to jump directly to target files for any feature without scanning irrelevant codebase sections.
 
 ---
 
@@ -369,7 +382,7 @@ The danger with a privacy policy is not that it goes missing; it is that it quie
 
 ## 📂 Comprehensive File Directory Mapping
 
-This index provides a complete, itemized mapping of **every file in the entire repository** and its exact purpose in the MedSchoolPrep ecosystem.
+This index provides a high-level mapping of primary repository files. For the complete, 100%-verified itemized directory mapping of **every single file in the entire repository** (720+ files), refer directly to **[`FILE_NAVIGATION.md`](./FILE_NAVIGATION.md)**.
 
 ### Root Configuration and Infrastructure Files
 - `package.json` — Defines project metadata, dependencies (React, Framer Motion, Dexie, ts-fsrs, Nodemailer, Express, compromise, Fuse.js, etc.), and script mappings for building, auditing, and executing the app.
