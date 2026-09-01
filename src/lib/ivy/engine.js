@@ -33,7 +33,7 @@
 // blank profile and one that flatters it.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { FREE_TIER, ENFORCE_PREMIUM, PREMIUM } from './constants.js';
+import { FREE_TIER, PREMIUM } from './constants.js';
 import {
   scoreAcademic, scoreExtracurricular, scorePersonal, scoreRecommendation,
   composeHolistic, lambdaSensitivity,

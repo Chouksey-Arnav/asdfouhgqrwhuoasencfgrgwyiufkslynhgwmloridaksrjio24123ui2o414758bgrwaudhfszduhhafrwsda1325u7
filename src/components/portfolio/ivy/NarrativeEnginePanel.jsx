@@ -33,10 +33,10 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import {
-  Compass, Loader2, RefreshCw, Save, Target, Layers, Sparkles, ShieldCheck, CalendarDays,
-  PenLine, Mic, Gauge, AlertTriangle, CheckCircle2, Info, ListChecks, Lock, TrendingUp,
+  Compass, Loader2, Save, Target, Layers, Sparkles, ShieldCheck, CalendarDays,
+  PenLine, Gauge, CheckCircle2, Info, ListChecks, Lock, TrendingUp,
 } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill, tint, accentText } from '../../../lib/theme';
+import { C, glass, glass2, btnSm, inp, lbl, CC, G, pill, tint, accentText } from '../../../lib/theme';
 import PanelHero, { SectionTitle, StatTile } from '../../ui/PanelHero';
 import Disclosure, { HelpNote, HowItWorks } from '../../ui/Disclosure';
 import { narrativeEngineTier } from '../../../lib/entitlements';
@@ -70,7 +70,7 @@ export default function NarrativeEnginePanel({
     let cancelled = false;
     loadNarrativeProfile(snapshot)
       .then(p => { if (!cancelled) setProfile(p); })
-      .catch(() => { if (!cancelled) setProfile(loadNarrativeProfile.EMPTY || emptyProfile()); })
+      .catch(() => { if (!cancelled) setProfile(emptyProfile()); })
       .finally(() => { if (!cancelled) setLoaded(true); });
     return () => { cancelled = true; };
   }, [snapshot]);
