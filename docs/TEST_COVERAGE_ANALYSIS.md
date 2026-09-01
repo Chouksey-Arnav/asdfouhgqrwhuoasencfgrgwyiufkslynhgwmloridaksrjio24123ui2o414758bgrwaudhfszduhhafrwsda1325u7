@@ -1,7 +1,7 @@
 # Test coverage analysis
 
-_Snapshot taken 2026-08-29 against `main`. Numbers are line counts and module counts, not
-statement coverage — see "Why there are no coverage percentages" below._
+_Snapshot taken against `main` at f25b824 (post-#241). Numbers are line counts and module counts,
+not statement coverage — see "Why there are no coverage percentages" below._
 
 ## 1. What the suite is today
 
@@ -78,12 +78,30 @@ imported by nothing. `mastery.js`'s own header promises "never let a number look
 than it is"; that promise (confidence falls with sample size, recency weighting, no division by
 zero on an unattempted skill) is a five-assertion test.
 
+### P1 — nothing guards the site-wide maintenance switch
+
+`src/main.jsx` has a hand-flipped `MAINTENANCE_MODE` boolean that swaps the entire application for
+`MaintenanceNotice`. Nothing in the 78-script suite mentions it. Worse, nothing in the suite *can*
+catch it: the two build-gated checks that touch a browser do not boot the app —
+`verifyViewportFit` renders a synthetic shell built from extracted CSS rules, and `prerenderSeo`
+writes static HTML from the SEO shell. So a full `npm run build`, and every CI job, passes green
+with the app replaced by a maintenance page.
+
+The check that *would* catch it exists and does not run: `verifyRoutingE2E` loads `/` and waits for
+the "Portfolio" nav link, which `MaintenanceNotice` never renders. That is the concrete cost of the
+next item.
+
+Cheapest fix, worth doing before anything else on this list: a one-line assertion in a build-gated
+script that `MAINTENANCE_MODE` is `false`, with an explicit env escape hatch for when it is
+deliberately on.
+
 ### P1 — the SAT E2E chain never runs in CI
 
 `verify:sat-e2e` (`sat-tab`, `sat-library`, `sat-tools`, `sat-generation`) is reachable from
 neither `build` nor `audit:all`, and neither are `verify:routing-e2e`, `portfolio-e2e`,
 `search-e2e`, `tab-switch-e2e`, `roadmap-e2e`, `parallel-pathways-e2e` or `next-three`. Roughly
-2,000 lines of already-written tests are dead weight. Add a nightly (or PR-label) CI job that
+2,000 lines of already-written tests are dead weight — including the only check in the repo that
+notices the app is not booting at all (see above). Add a nightly (or PR-label) CI job that
 builds once and runs the E2E chain against that build — the marginal cost is one `npx playwright
 install`, which the build job already pays.
 
@@ -129,3 +147,5 @@ likely show the executed-line coverage of `src/lib` is well under the 65%-of-mod
 4. Write the P1 specs: auth/session request-level tests, and the SAT selection/mastery engines.
 5. Put the existing E2E chain in a nightly CI job.
 6. Pin the clock in the seven wall-clock-dependent scripts.
+
+Item 0, ahead of all of these because it is one line: gate `MAINTENANCE_MODE` in the build.
