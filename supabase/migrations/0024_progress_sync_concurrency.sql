@@ -1,4 +1,4 @@
--- 0023_progress_sync_concurrency.sql
+-- 0024_progress_sync_concurrency.sql
 --
 -- Three defects in cross-device progress sync, all in the same write path, all
 -- with the same shape: the server treats one device's snapshot as the truth about

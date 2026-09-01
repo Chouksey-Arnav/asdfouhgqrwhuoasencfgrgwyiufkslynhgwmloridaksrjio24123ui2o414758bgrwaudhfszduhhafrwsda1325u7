@@ -67,7 +67,16 @@ export default defineConfig({
         // first time it is actually requested. Offline still works; it just means
         // "the parts of the app you have opened" rather than "all 2.4 MB of the MCAT
         // quiz bank, whether or not you have ever tapped Quizzes".
-        globPatterns: ['**/*.{css,html,woff2}', 'icon-*.png', 'favicon.png', 'apple-touch-icon.png', 'brand/mark.png'],
+        //
+        // safety-resources.json is named explicitly rather than swept in by a
+        // `**/*.json` glob. It is the crisis-line card's content (see
+        // src/lib/safety/resources.js), 2 kB, and the one file in this build where
+        // being unavailable has a consequence worse than a slow render. That module
+        // already falls back to compiled-in constants precisely so a student is
+        // "never offline-blocked out of a phone number" — this makes the real,
+        // editable copy available offline too, so a corrected number survives losing
+        // signal rather than silently reverting to the bundled one.
+        globPatterns: ['**/*.{css,html,woff2}', 'icon-*.png', 'favicon.png', 'apple-touch-icon.png', 'brand/mark.png', 'safety-resources.json'],
         // The three biggest files in the build, none of which any visitor needs in
         // advance and two of which nothing on a cold boot draws at all:
         //   icon.svg      1.58 MB — the mark exported with its glow art. No longer

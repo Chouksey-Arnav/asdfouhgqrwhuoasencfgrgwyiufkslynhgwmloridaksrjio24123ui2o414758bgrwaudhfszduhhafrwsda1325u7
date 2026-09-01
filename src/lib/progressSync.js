@@ -85,7 +85,7 @@ async function req(path, options = {}) {
 // ── Optimistic concurrency ───────────────────────────────────────────────────
 // The revision this device last saw the server at. Sent as the base of every push
 // so the server can refuse a write that would erase progress this device has never
-// seen — see supabase/migrations/0023_progress_sync_concurrency.sql for the whole
+// seen — see supabase/migrations/0024_progress_sync_concurrency.sql for the whole
 // account of what that fixes. null means "no base", which is only true before the
 // first pull of a session and is accepted unconditionally.
 let baseRev = null;

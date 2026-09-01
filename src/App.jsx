@@ -2535,7 +2535,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const onMerged=()=>{
       toast.success(
         (t)=>(
-          <span style={{display:'flex',alignItems:'center',gap:10}}>
+          <span style={{display:'flex',alignItems:'center',gap:8}}>
             Progress from another device is ready.
             <button
               onClick={()=>{toast.dismiss(t.id);window.location.reload();}}

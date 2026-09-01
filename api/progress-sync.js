@@ -32,7 +32,7 @@ export default async function handler(req, res) {
       // `rev` is what makes the next PUT safe: the client holds onto it and sends
       // it back as its base, so the server can tell "this device has seen the
       // current state" apart from "this device is about to overwrite work it has
-      // never seen". See supabase/migrations/0023_progress_sync_concurrency.sql.
+      // never seen". See supabase/migrations/0024_progress_sync_concurrency.sql.
       return res.status(200).json({
         data: data?.data || null,
         rev: data?.rev ?? null,
@@ -68,7 +68,7 @@ export default async function handler(req, res) {
       const baseRev = Number.isFinite(Number(body?.baseRev)) ? Number(body.baseRev) : null;
 
       // merge_progress_snapshot is a single atomic Postgres function call (see
-      // supabase/migrations/0023_progress_sync_concurrency.sql). Within one row-locked
+      // supabase/migrations/0024_progress_sync_concurrency.sql). Within one row-locked
       // transaction it checks the caller's base rev, upserts the snapshot, and additively
       // applies counterDeltas on top of the row's OWN pre-write counters — so two concurrent
       // pushes for the same user can neither race a read-then-write from this handler nor
