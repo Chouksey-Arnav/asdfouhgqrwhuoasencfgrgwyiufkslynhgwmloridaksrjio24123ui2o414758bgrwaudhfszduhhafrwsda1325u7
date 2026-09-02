@@ -1,4 +1,4 @@
--- 0023_narrative_engine.sql
+-- 0025_narrative_engine.sql
 --
 -- Storage for the Narrative Method Engine (src/lib/ivy/).
 --

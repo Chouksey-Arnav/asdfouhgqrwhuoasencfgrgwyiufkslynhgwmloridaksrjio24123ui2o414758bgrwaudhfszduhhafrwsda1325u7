@@ -27,6 +27,7 @@ import groq from './api/groq.js';
 import sendEmail from './api/send-email.js';
 import rewardClaim from './api/reward-claim.js';
 import lessonFeedback from './api/lesson-feedback.js';
+import safetyEvent from './api/safety-event.js';
 import parentLinks from './api/parent/links.js';
 import parentAccept from './api/parent/accept.js';
 import parentSummary from './api/parent/summary.js';
@@ -78,6 +79,9 @@ app.all('/api/master-plan', masterPlan);
 app.all('/api/roadmap', roadmap);
 app.all('/api/reward-claim', rewardClaim);
 app.all('/api/lesson-feedback', lessonFeedback);
+// The safety review queue's write end. See api/safety-event.js — it records that a
+// detection happened (who, when, how severe) and never what was said.
+app.all('/api/safety-event', safetyEvent);
 app.all('/api/parent/links', parentLinks);
 app.all('/api/parent/accept', parentAccept);
 app.all('/api/parent/summary', parentSummary);

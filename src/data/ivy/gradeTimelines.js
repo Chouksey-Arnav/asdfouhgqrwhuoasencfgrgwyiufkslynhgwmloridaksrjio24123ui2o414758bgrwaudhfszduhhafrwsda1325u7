@@ -43,7 +43,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // 3.1 Freshman year — strategic option maximisation.
 //
-// The organising idea: ninth grade is not about achievement, it is about not
+// The organizing idea: ninth grade is not about achievement, it is about not
 // closing doors. A student who does not reach Algebra II by tenth grade cannot
 // reach calculus by twelfth without an intervention, and nobody tells them
 // until it is a problem. That is what reverse-mapping is for.
@@ -68,14 +68,14 @@ export const FRESHMAN = {
     {
       id: 'three-commitments', weight: 'high', module: 'portfolio',
       label: 'Commit to exactly three activities — one academic, one creative or physical, one service',
-      detail: 'The three-commitment rule exists to stop the freshman résumé sprawl that produces eleven Tier 3 lines and no depth. One academic or skill-based (debate, robotics, Model UN, DECA, research club); one creative or physical (a sport, an instrument, theatre); one service you will still be doing in three years.',
+      detail: 'The three-commitment rule exists to stop the freshman résumé sprawl that produces eleven Tier 3 lines and no depth. One academic or skill-based (debate, robotics, Model UN, DECA, research club); one creative or physical (a sport, an instrument, theater); one service you will still be doing in three years.',
       metric: 'Three named commitments, each with a weekly hour count you actually keep.',
       stillWorth: 'Arriving late, the rule becomes subtractive: pick the three you would keep and let the rest lapse honestly rather than carrying nine half-attendances.',
     },
     {
       id: 'daily-reading', weight: 'medium', module: 'retention',
       label: 'Read 20 minutes a day, self-selected',
-      detail: 'Not assigned reading. The single cheapest intervention on standardised-test reading speed and on essay voice, and the only one on this list that compounds for four years.',
+      detail: 'Not assigned reading. The single cheapest intervention on standardized-test reading speed and on essay voice, and the only one on this list that compounds for four years.',
       metric: '20 minutes, most days, of something you chose.',
     },
     {
@@ -104,12 +104,12 @@ export const SOPHOMORE = {
     {
       id: 'profile-audit', weight: 'high', module: 'holistic',
       label: 'Audit the profile for its actual gaps',
-      detail: 'Run the four-category rubric and find which of academics, extracurriculars, personal qualities and recommendations is thinnest. The answer is usually "no visible impact outside the building" or "no specialised focus", and both have a two-year fix from here.',
+      detail: 'Run the four-category rubric and find which of academics, extracurriculars, personal qualities and recommendations is thinnest. The answer is usually "no visible impact outside the building" or "no specialized focus", and both have a two-year fix from here.',
       metric: 'You can name your weakest category and the one thing that would move it.',
     },
     {
       id: 'project-launch', weight: 'high', module: 'domino',
-      label: 'Launch the specialised project, using the Domino framework',
+      label: 'Launch the specialized project, using the Domino framework',
       detail: 'Not a club — a thing with an artifact. A publication, a workshop series, a prototype, an archive. Domino sequence: frustration → question → obsession, then a minimum viable action shipped to a real audience, then credibility bridges, then the academic connection, then the durable asset.',
       metric: 'Milestone M₁ (a thesis that is not a cliché) and M₂ (fifty real people) inside the school year.',
       costNote: 'Hosting is under $20 a year and libraries are free. Every Domino milestone is reachable without money; none of them is reachable without a mentor email.',
@@ -183,7 +183,7 @@ export const JUNIOR = {
     {
       id: 'cold-email', weight: 'high',
       label: 'Run a cold-email campaign for research or mentorship',
-      detail: 'Twenty specific emails beat two hundred generic ones. Each names one paper of theirs you have read, one sentence on what you can do (a skill, a dataset, hours), and asks for one thing. The response rate is single digits and that is fine — this is a numbers exercise with a personalised numerator.',
+      detail: 'Twenty specific emails beat two hundred generic ones. Each names one paper of theirs you have read, one sentence on what you can do (a skill, a dataset, hours), and asks for one thing. The response rate is single digits and that is fine — this is a numbers exercise with a personalized numerator.',
       metric: '20 sent, logged, with follow-ups dated two weeks out.',
       costNote: 'Free, and the most reliable route to Tier 2 research access for a student with no family connections in the field.',
     },
@@ -209,7 +209,7 @@ export const SENIOR_PIPELINE = [
   {
     month: 6, key: 'june', title: 'List, fit, and the first blank page',
     items: [
-      { id: 'jun-list', weight: 'high', dueDay: 30, label: 'Cut the list to 8–12 schools', detail: 'Reaches, targets and likelies chosen against your actual GPA, your major\'s competitiveness at each school, and their published score percentiles — not against reputation. Twelve is a ceiling, not a target: every added school costs supplements you will be writing in November.', metric: '8–12 schools, each labelled, each with its round and deadline recorded.' },
+      { id: 'jun-list', weight: 'high', dueDay: 30, label: 'Cut the list to 8–12 schools', detail: 'Reaches, targets and likelies chosen against your actual GPA, your major\'s competitiveness at each school, and their published score percentiles — not against reputation. Twelve is a ceiling, not a target: every added school costs supplements you will be writing in November.', metric: '8–12 schools, each labeled, each with its round and deadline recorded.' },
       { id: 'jun-fit', weight: 'high', dueDay: 30, label: 'Run the 3-layer fit check on each', detail: 'Academic fit (does the department teach what you claim to want, and can you get into those courses), environmental fit (size, setting, distance, what a Tuesday looks like), and institutional priorities (what this school is publicly trying to build right now).', metric: 'Three lines per school. A school that fails two layers comes off the list in June, not in January.' },
       { id: 'jun-email', weight: 'low', dueDay: 15, label: 'Create a dedicated application email address', detail: 'Everything routes here: portals, aid, testing, recommenders. It is also the address that will still work when your school account is disabled after graduation.', metric: 'One address, used for every account you create from here.' },
       { id: 'jun-brainstorm', weight: 'high', dueDay: 30, label: 'Start personal-statement brainstorming — from the journal, not from prompts', detail: 'Prompts are the last thing to look at. Start from specific remembered scenes, then find which prompt they answer.', metric: 'Ten candidate moments written down. Not one draft — ten moments.' },
@@ -257,7 +257,7 @@ export const SENIOR_PIPELINE = [
     month: 12, key: 'december', title: 'Submit the rest; start speaking out loud',
     items: [
       { id: 'dec-rd', weight: 'high', dueDay: 20, label: 'Submit every remaining regular-decision application', detail: 'Before the winter break, not during it. Support desks close, recommenders go away, and a 1 January deadline is functionally a 20 December one.', metric: 'All applications submitted with confirmations saved.' },
-      { id: 'dec-interview', weight: 'medium', dueDay: 31, label: 'Start mock interviews from the institutional reference document', detail: 'Interviews are an alignment check: the engine scores how closely what you say matches the theme you wrote. Practise out loud and recorded — under 180 words per minute, which is slower than nerves want.', metric: 'Three recorded practice runs; alignment above 0.80 against your written theme.' },
+      { id: 'dec-interview', weight: 'medium', dueDay: 31, label: 'Start mock interviews from the institutional reference document', detail: 'Interviews are an alignment check: the engine scores how closely what you say matches the theme you wrote. Practice out loud and recorded — under 180 words per minute, which is slower than nerves want.', metric: 'Three recorded practice runs; alignment above 0.80 against your written theme.' },
     ],
   },
 ];

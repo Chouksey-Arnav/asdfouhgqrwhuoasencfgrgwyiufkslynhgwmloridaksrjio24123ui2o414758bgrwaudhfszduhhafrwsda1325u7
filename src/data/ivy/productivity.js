@@ -37,7 +37,7 @@ export const IVY_PRODUCTIVE = {
     { id: 'plan-night-before', label: 'Write tomorrow\'s six tonight', detail: 'The decision of what matters is made when you are not under the pressure of doing it. Morning-you is a bad prioritiser and an excellent executor.' },
     { id: 'rank-strictly', label: 'Rank them 1 to 6, no ties', detail: 'A tie is a decision you have deferred to the moment you are least able to make it.' },
     { id: 'single-task', label: 'Finish #1 before opening #2', detail: 'Not "work on". Finish. The rank is worthless if the list is worked in parallel, because parallel work finishes nothing by 10pm.' },
-    { id: 'roll-over', label: 'Anything unfinished rolls to tomorrow\'s #1', detail: 'Automatic, not a judgement. A task that rolls three times is not a task, it is a project that has not been broken down — and the roll count is what tells you that.' },
+    { id: 'roll-over', label: 'Anything unfinished rolls to tomorrow\'s #1', detail: 'Automatic, not a judgment. A task that rolls three times is not a task, it is a project that has not been broken down — and the roll count is what tells you that.' },
   ],
   rollWarningAt: 3,
   rollWarning: 'This has rolled over three days. It is not a task any more. Split it into the first 20 minutes of it, and put that at #1 tomorrow.',
@@ -76,7 +76,7 @@ export const FRICTION_RULES = [
   },
   {
     id: 'visual-progress', label: 'Make progress visible',
-    detail: 'A grid of application components you colour in. Crude, and it works, because an application is 200 small things and none of them feel like progress on their own.',
+    detail: 'A grid of application components you color in. Crude, and it works, because an application is 200 small things and none of them feel like progress on their own.',
   },
   {
     id: 'environment', label: 'Design the room, not the willpower',

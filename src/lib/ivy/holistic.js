@@ -17,7 +17,7 @@
 //
 // and describes max(Sᵢ) as "the applicant's single strongest category". On a
 // scale where 1 is strongest, max() selects the WEAKEST category, not the
-// strongest. Those are opposite behaviours, and the difference is not cosmetic:
+// strongest. Those are opposite behaviors, and the difference is not cosmetic:
 // with λ = 0.7, the literal formula makes a student's worst category 70% of
 // their score, which is a well-roundedness model wearing a spike model's name.
 //
@@ -175,7 +175,7 @@ export function scoreExtracurricular(tiering = {}) {
  */
 export function scorePersonal({ authenticity = null, stakes = null } = {}) {
   if (!authenticity || authenticity.insufficient) {
-    return { key: 'personal', score: 3.5, assumed: true, available: false, notes: ['No essay long enough to read yet, so this is the scale midpoint rather than a judgement. This is the category that moves most between now and submission.'] };
+    return { key: 'personal', score: 3.5, assumed: true, available: false, notes: ['No essay long enough to read yet, so this is the scale midpoint rather than a judgment. This is the category that moves most between now and submission.'] };
   }
   const notes = [];
   const complexity = authenticity.perplexity?.value ?? 0;
@@ -188,7 +188,7 @@ export function scorePersonal({ authenticity = null, stakes = null } = {}) {
     if (stakes.smoothCurve) { score += 0.5; notes.push('An unbroken record of accomplishment with no cost attached: +0.5. This is the most common way a strong file reads flat.'); }
   }
   const cliches = authenticity.cliche?.tropes?.length || 0;
-  if (cliches >= 2) { score += 0.3; notes.push(`${cliches} recognisable narrative shapes: +0.3.`); }
+  if (cliches >= 2) { score += 0.3; notes.push(`${cliches} recognizable narrative shapes: +0.3.`); }
 
   return { key: 'personal', score: round2(inScale(score)), assumed: false, available: true, notes };
 }

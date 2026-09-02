@@ -3,7 +3,7 @@
 //
 // ── PREMIUM ROADMAP ─────────────────────────────────────────────────────────
 // A student's inputs and run history are theirs on every plan, including one
-// they have cancelled. Nothing in this file consults an entitlement, and it
+// they have canceled. Nothing in this file consults an entitlement, and it
 // must stay that way — the gate belongs at `runEngine()`, not at the store.
 // See the note in supabase/migrations/0023_narrative_engine.sql.
 // ────────────────────────────────────────────────────────────────────────────

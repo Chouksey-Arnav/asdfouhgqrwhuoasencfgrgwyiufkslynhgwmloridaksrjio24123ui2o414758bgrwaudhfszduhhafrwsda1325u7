@@ -9,7 +9,7 @@
 // Module 3 needs to place every activity in a student's list into Tier 1
 // (identity-defining), Tier 2 (signal-reinforcing) or Tier 3 (character-
 // building) before it can measure the shape of the portfolio. That
-// classification is the single most consequential judgement this engine makes,
+// classification is the single most consequential judgment this engine makes,
 // because it is the one a student will argue with, and it is the one that
 // decides whether they are told to build something new.
 //
@@ -87,7 +87,7 @@ export const TIER_PENALTIES = [TIERS[1].penaltyWeight, TIERS[2].penaltyWeight, T
 
 /**
  * Named distinctions whose tier is a matter of public record rather than of
- * judgement. Matching one of these skips the heuristics entirely.
+ * judgment. Matching one of these skips the heuristics entirely.
  *
  * `scale` feeds the competition selectivity index (module 11); `ratio` is the
  * published or well-estimated winners-to-participants ratio where one exists,
@@ -186,7 +186,7 @@ export const TIER_HEURISTICS = [
     id: 'founder-thin', tier: 3,
     test: (a) => a.isFounder,
     because: 'founding a group, with no external validation or scale reported yet',
-    promotion: 'A founder line is read as Tier 3 until something outside the school confirms it. One verifiable number — members, dollars, attendees, a partner organisation — moves it.',
+    promotion: 'A founder line is read as Tier 3 until something outside the school confirms it. One verifiable number — members, dollars, attendees, a partner organization — moves it.',
   },
 ];
 

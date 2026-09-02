@@ -33,7 +33,7 @@
  * classifier (src/lib/ivy/hooks.js).
  */
 export const OPENING_CLICHES = [
-  { id: 'dictionary', re: /\b(webster'?s|the dictionary|merriam[- ]webster)\b.{0,40}\bdefines?\b/i, note: 'The dictionary-definition opener is the single most recognised essay opening there is.' },
+  { id: 'dictionary', re: /\b(webster'?s|the dictionary|merriam[- ]webster)\b.{0,40}\bdefines?\b/i, note: 'The dictionary-definition opener is the single most recognized essay opening there is.' },
   { id: 'ever-since', re: /\bever since I (was|can remember)\b/i, note: '"Ever since I was little" tells the reader a fact about chronology, not about you.' },
   { id: 'as-long-as', re: /\bfor as long as I can remember\b/i, note: 'Opens on a claim of duration rather than on a moment.' },
   { id: 'always-known', re: /\bI(?:'ve| have) always (known|wanted|loved|been)\b/i, note: 'An always-statement cannot be witnessed; a scene can.' },

@@ -24,7 +24,7 @@
 // ── Unattempted is not zero ────────────────────────────────────────────────
 // A heuristic with no attempts returns `available: false` and is EXCLUDED from
 // the mean rather than counted as mastery zero. Otherwise a student who has
-// practised one technique well is shown 0.2 and told they are failing at four
+// practiced one technique well is shown 0.2 and told they are failing at four
 // things they have not tried, which is both false and the fastest way to make
 // someone stop using a study tool.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -58,7 +58,7 @@ export function scoreSatHeuristics(practice = {}) {
       return {
         ...h, available: false, value: null, attempted: 0,
         state: 'untried',
-        note: `Not practised yet. ${h.detail}`,
+        note: `Not practiced yet. ${h.detail}`,
       };
     }
 
@@ -115,7 +115,7 @@ export function scoreSatHeuristics(practice = {}) {
     untried: untried.map(u => ({ id: u.id, label: u.label, detail: u.detail })),
     weakest: weakest ? { id: weakest.id, label: weakest.label, value: weakest.value } : null,
     next: untried[0]
-      ? { id: untried[0].id, label: untried[0].label, why: 'Not practised at all — the cheapest available gain is a technique you have never tried.' }
+      ? { id: untried[0].id, label: untried[0].label, why: 'Not practiced at all — the cheapest available gain is a technique you have never tried.' }
       : weakest && weakest.value < 0.85
         ? { id: weakest.id, label: weakest.label, why: weakest.note }
         : null,

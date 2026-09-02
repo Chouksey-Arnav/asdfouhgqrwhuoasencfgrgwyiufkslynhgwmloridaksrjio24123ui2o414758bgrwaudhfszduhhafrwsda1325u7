@@ -45,6 +45,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { SAFEGUARDS, clamp } from './constants.js';
+// The single source of truth for what this product will and will not do with a
+// student's essay. Imported rather than restated: main added this module (and
+// api/_lib/essayProseGuard.js, which enforces it on the server) precisely so the
+// policy the student reads, the policy the model is given, and the policy a
+// feature claims are one document instead of three that agree by coincidence.
+// This engine is essay-facing, so it cites it rather than paraphrasing it.
+import { AI_POLICY, HARD_RULES } from '../aiPolicy.js';
 
 /**
  * 6.1 — the confidence interval on a rubric reading.
@@ -108,6 +115,17 @@ export const AI_POLICY_NOTE = {
     'The Common App handles suspected misrepresentation through a collaborative review involving your school — not through automated scoring, and not by an algorithm rejecting a file.',
     'The useful question is not "will this be detected". It is whether an essay contains something only you could have written. That is also, separately, what makes it work.',
   ],
+
+  // ── The product-wide rules, quoted from the one place that defines them ───
+  // This engine points at sentences, names weaknesses and asks questions; it
+  // never produces prose a student could submit. That is not a promise this
+  // module makes on its own — it is the same rule the essay workspace shows and
+  // the server enforces, carried here so a student reading a narrative reading
+  // sees identical wording.
+  policyHeadline: AI_POLICY.headline,
+  policyShort: AI_POLICY.short,
+  hardRules: HARD_RULES.map(r => ({ id: r.id, title: r.title, body: r.body })),
+
   // Explicitly the free tier's, always.
   alwaysVisible: true,
 };
@@ -138,7 +156,7 @@ export const DEMOGRAPHIC_DEFINITIONS = [
     id: 'rural-limited-access',
     label: 'Limited-resource school context',
     institutional: 'Read from your school\'s profile: how many advanced courses were offered, the counselor-to-student ratio, and what share of your class goes on to four-year colleges. Rigor is judged against what was AVAILABLE to you.',
-    commonError: 'Students routinely apologise for a schedule that was the most demanding their school offered, which reads to a committee as a weaker claim than the truth.',
+    commonError: 'Students routinely apologize for a schedule that was the most demanding their school offered, which reads to a committee as a weaker claim than the truth.',
     action: 'This is the counselor letter\'s job. Give them the specifics on the brag sheet.',
   },
 ];

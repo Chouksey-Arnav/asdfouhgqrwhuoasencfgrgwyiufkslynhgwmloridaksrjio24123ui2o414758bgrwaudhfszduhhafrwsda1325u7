@@ -60,7 +60,7 @@ export const MILESTONES = [
     id: 'm3', key: 'M3', weight: DOMINO_WEIGHTS[2], label: 'Credibility bridges',
     short: 'Someone outside vouches',
     detail: 'A named mentor who has agreed in writing, an institutional partner, or press coverage. This is the milestone that converts a school activity into something a stranger can verify — and it is the one that moves tier.',
-    threshold: 'A signed mentor agreement, a partner organisation, or a media mention',
+    threshold: 'A signed mentor agreement, a partner organization, or a media mention',
   },
   {
     id: 'm4', key: 'M4', weight: DOMINO_WEIGHTS[3], label: 'Academic connection',
@@ -151,7 +151,7 @@ export function scoreDomino(project = {}) {
     },
     note: bridged
       ? 'External validation is in place. This is what moves an activity out of "school club" in a reader\'s eye.'
-      : 'Nobody outside your building has put their name to this yet. One email to one person — a teacher, a librarian, a local organisation, a professor whose paper you read — is the entire task, and it is worth more than another month of building.',
+      : 'Nobody outside your building has put their name to this yet. One email to one person — a teacher, a librarian, a local organization, a professor whose paper you read — is the entire task, and it is worth more than another month of building.',
   });
 
   // ── M₄ ──────────────────────────────────────────────────────────────────

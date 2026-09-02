@@ -104,7 +104,7 @@ export function classifyHook(essay, { count = HOOK_RULES.sentences } = {}) {
   const confidence = Math.max(...Object.values(H));
   // Below this the opening is not doing any of the three, which is far more
   // useful to say than naming the least-bad match.
-  const recognisable = Math.max(...Object.values(raw)) >= 0.45;
+  const recognizable = Math.max(...Object.values(raw)) >= 0.45;
 
   // ── The archetype's own test ─────────────────────────────────────────────
   const tests = {
@@ -140,20 +140,20 @@ export function classifyHook(essay, { count = HOOK_RULES.sentences } = {}) {
     available: true,
     hook, firstSentence: first,
     vector: H,
-    archetype: recognisable ? archetype : null,
-    archetypeLabel: recognisable ? ARCHETYPE_LABELS[archetype] : 'No recognisable hook',
+    archetype: recognizable ? archetype : null,
+    archetypeLabel: recognizable ? ARCHETYPE_LABELS[archetype] : 'No recognizable hook',
     confidence: round3(confidence),
-    recognisable,
+    recognizable,
     test: tests[archetype],
     allTests: tests,
-    passes: recognisable && tests[archetype].passes,
+    passes: recognizable && tests[archetype].passes,
     cliches: clicheHits.map(c => ({ id: c.id, match: c.match, note: c.note })),
     evidence: {
       concreteNouns: na.nouns, adjectives: na.adjectives, ratio: na.ratio === Infinity ? null : round3(na.ratio),
       outlierIndex: round3(outlierIndex), hasQuote, hasSpeechVerb, hasEmotionMarker, hasSensoryVerb,
       specificity: round3(spec.share), words: tokenize(hook).length,
     },
-    verdict: !recognisable
+    verdict: !recognizable
       ? 'This opening is a statement rather than a scene. All three shapes that work put the reader somewhere in the first line: an object that contradicts itself, a physical detail, or a voice. Right now the reader is being told the topic.'
       : clicheHits.length
         ? `${clicheHits[0].note} It is a ${ARCHETYPE_LABELS[archetype].toLowerCase()} in form, and the form is fine — the specific phrasing is what thousands of files share.`

@@ -36,7 +36,7 @@ const RESOURCE_MAP = {
   // was created to end.
   test_scores: 'testScores',
   admission_intake: 'admissionIntake',
-  // The Narrative Method Engine's inputs (supabase/migrations/0023_narrative_engine.sql).
+  // The Narrative Method Engine's inputs (supabase/migrations/0025_narrative_engine.sql).
   // Fetched with the rest of the snapshot because the panel reads it on mount,
   // so it costs no extra round trip.
   //

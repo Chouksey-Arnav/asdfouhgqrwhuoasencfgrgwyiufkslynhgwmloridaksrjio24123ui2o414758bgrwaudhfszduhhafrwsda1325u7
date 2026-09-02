@@ -64,7 +64,7 @@ import { assembleSafeguards } from './safeguards.js';
  */
 export const ENGINE_INPUTS = [
   { id: 'personal_statement', label: 'Personal statement draft', unlocks: ['Voice reading', 'Hook classification', 'Stakes audit', 'Syntax sweeps', 'Personal-qualities rating'], weight: 'high' },
-  { id: 'extracurriculars', label: 'Activities, with roles and years', unlocks: ['Tiering', 'Portfolio balance', 'Differentiation', 'Extracurricular rating'], weight: 'high' },
+  { id: 'extracurriculars', label: 'Activities, with roles and years', unlocks: ['Tiering', 'Portfolio balance', 'Differentiation', 'Activities rating'], weight: 'high' },
   { id: 'academics', label: 'GPA, rigor and any test score', unlocks: ['Academic rating'], weight: 'high' },
   { id: 'intended_major', label: 'The field your application claims', unlocks: ['Domino M₄', '"Why major" audit'], weight: 'medium' },
   { id: 'supplemental_essays', label: 'Supplement drafts', unlocks: ['Storyboard score', '"Why us" audit', 'Supplement echo'], weight: 'medium' },
@@ -125,7 +125,7 @@ export function runEngine(profile = {}, { tier = 'premium', now = new Date(), co
   const intendedMajor = p.intended_major || p.intendedMajor || null;
 
   const completeness = assessCompleteness(p);
-  // The engine honours the tier it is handed; it does not decide who gets
+  // The engine honors the tier it is handed; it does not decide who gets
   // which. That decision is `narrativeEngineTier()` in src/lib/entitlements.js,
   // which consults ENFORCE_PREMIUM and today returns 'premium' for everyone.
   //
@@ -328,7 +328,7 @@ export function runEngine(profile = {}, { tier = 'premium', now = new Date(), co
     locked: {
       feature: PREMIUM.featureId, tier: PREMIUM.tier, label: PREMIUM.label, pitch: PREMIUM.pitch,
       included: [
-        'All thirteen modules, itemised, with the arithmetic shown',
+        'All thirteen modules, itemized, with the arithmetic shown',
         'Line-level essay audit: hook, stakes, syntax sweeps, storyboard',
         'The authenticity sorter — which edits to refuse, and why',
         'Your dated roadmap, and the senior triage when you are behind',

@@ -170,7 +170,7 @@ export const OVERUSED_PROJECTS = [
     // scripts/verifyIvyEngine.mjs. A real 501(c)(3) shipping 2,200 kits across
     // three countries is genuinely differentiated by SCALE and VERIFICATION even
     // when the THEME is crowded, and the engine must separate those two facts.
-    redirect: 'Kits are a common shape; a registered entity with audited distribution across three countries is not. Lead with what makes it verifiable — the registration, the count, the partner institutions — and with the programme that outlives the delivery.',
+    redirect: 'Kits are a common shape; a registered entity with audited distribution across three countries is not. Lead with what makes it verifiable — the registration, the count, the partner institutions — and with the program that outlives the delivery.',
     prevalence: 0.04,
   },
   {

@@ -8,7 +8,7 @@
 //
 // Five complete applicant profiles, one per strategic archetype, carried in the
 // exact ingestion schema the engine accepts. They exist so that the engine's
-// behaviour on five very different students is a thing the build asserts rather
+// behavior on five very different students is a thing the build asserts rather
 // than a thing anyone remembers to check by hand: scripts/verifyIvyEngine.mjs
 // runs every module against every profile on every build.
 //
@@ -141,7 +141,7 @@ export const TC_002_INTERNATIONAL = {
     minWhyUsBlocked: 3,
     whyUsFailsSwapTest: true,
     // A genuinely unusual project. If the differentiation module flags this as
-    // derivative it is not measuring novelty, it is penalising service work.
+    // derivative it is not measuring novelty, it is penalizing service work.
     differentiationFlagged: false,
     themeId: 'translation',
     // Academics at the top of the scale, and a spike flag on that category.
@@ -248,7 +248,7 @@ export const TC_004_FIRST_GEN = {
     // the word "Head" in "Head of Household Operations".
     careWorkProtected: true,
     careWorkNeverConsolidated: true,
-    // The Congressional Award is a catalogued Tier 2 distinction, recognised
+    // The Congressional Award is a catalogued Tier 2 distinction, recognized
     // from its name rather than from the student's participant counts.
     tier2Count: 1,
     congressionalAwardCatalogued: true,

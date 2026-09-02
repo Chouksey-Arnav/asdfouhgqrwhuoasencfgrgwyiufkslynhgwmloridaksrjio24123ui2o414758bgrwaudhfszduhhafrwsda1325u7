@@ -87,7 +87,7 @@ export function clicheDensity(text) {
 /**
  * THE INDEX.
  *
- * Each term is normalised to [0,1] against its own target before weighting, so
+ * Each term is normalized to [0,1] against its own target before weighting, so
  * that the composite is readable as a proportion rather than as an arbitrary
  * scale — the raw perplexity proxy runs to 200+ and the raw burstiness to 0.6,
  * and adding those together directly would make the index a perplexity score
@@ -139,7 +139,7 @@ export function authenticityIndex(text) {
   if (cliche.tropes.length >= 2 || cliche.density >= 2) {
     flags.push({
       id: 'crowded', severity: 'medium',
-      label: `${cliche.tropes.length + cliche.phrases.length + cliche.openers.length} recognisable phrases`,
+      label: `${cliche.tropes.length + cliche.phrases.length + cliche.openers.length} recognizable phrases`,
       detail: 'These are not errors and none of them is disqualifying. They are sentences thousands of other files also contain, which means they take up space without carrying anything only you could say.',
     });
   }
@@ -283,7 +283,7 @@ export function saviorAudit(text) {
  *
  * @returns {{rejected: Array, approved: Array}} — `rejected` is the list of
  * edits a clinical tool WOULD make on this text and that this engine refuses to
- * make, shown so the student can recognise them when another tool offers them.
+ * make, shown so the student can recognize them when another tool offers them.
  */
 export function authenticitySorter(text) {
   const auth = authenticityIndex(text);
@@ -310,7 +310,13 @@ export function authenticitySorter(text) {
   if (auth.perplexity.specificity < 0.08) {
     approved.push({
       id: 'localise-motif', label: 'Replace the general with the particular',
-      note: `Only ${Math.round(auth.perplexity.specificity * 100)}% of the words in this draft name something specific. Go through and replace every category noun with the actual object: not "supplies", the thing; not "my community", the street.`,
+      // Addressed to the student in the second person on purpose. It reads
+      // better, and it also makes the sentence classifiable: the shared prose
+      // guard (api/_lib/essayProseGuard.js) reads an unaddressed instruction
+      // carrying a first-person example fragment as essay voice, which is the
+      // right call on the text as written. Coaching should say who it is
+      // talking to.
+      note: `Only ${Math.round(auth.perplexity.specificity * 100)}% of the words in your draft name something specific. Go through it and replace every category noun with the actual object: not "supplies" but the thing itself, not the community but the street.`,
     });
   }
   if (stakes.cost.count === 0 || stakes.smoothCurve) {
@@ -324,7 +330,7 @@ export function authenticitySorter(text) {
   }
   if (auth.cliche.tropes.length) {
     approved.push({
-      id: 'replace-trope', label: 'Trade the recognisable shape for your version of it',
+      id: 'replace-trope', label: 'Trade the recognizable shape for your version of it',
       targets: auth.cliche.tropes.map(t => ({ label: t.label, match: t.match, redirect: t.redirect })),
     });
   }

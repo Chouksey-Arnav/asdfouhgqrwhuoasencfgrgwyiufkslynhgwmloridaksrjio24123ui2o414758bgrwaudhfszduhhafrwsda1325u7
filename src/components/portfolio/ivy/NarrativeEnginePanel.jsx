@@ -142,7 +142,7 @@ export default function NarrativeEnginePanel({
     <div style={CC({ gap: 18 })}>
       <PanelHero
         icon={Compass} color={C.violet} color2={C.sky} m={isMobile}
-        eyebrow="The Narrative Method"
+        eyebrow="The narrative method"
         title="What your file actually says"
         sub="Thirteen models run against your real profile: the theme a reader would extract, where your story stops matching itself, and the specific rewrites that fix it. This is not a chances calculator — it never produces one."
       />
@@ -248,7 +248,7 @@ function IntakeCard({ profile, onPatch, onPatchProject, completeness, saving, is
           <div style={G(2, 8, {}, isMobile)}>
             {[
               ['hasMentorAgreement', 'A named mentor has agreed, in writing'],
-              ['hasPartner', 'An organisation outside school is involved'],
+              ['hasPartner', 'An organization outside school is involved'],
               ['hasMediaMention', 'It has been written about somewhere'],
               ['hasLiveSite', 'There is a live site or repository'],
               ['hasPublishedArtifact', 'Something is published — a handbook, a paper, a dataset'],
@@ -318,7 +318,7 @@ function HeadlineCard({ result, isMobile, onKeep }) {
 
       {interval ? (
         <div style={{ fontSize: 12, color: C.t3, marginTop: 12, lineHeight: 1.55 }}>
-          At 95% confidence your overall reading is <strong style={{ color: C.t2 }}>{interval.low} – {interval.high}</strong> on the 1–6 scale, centred on {interval.centre}. {interval.reasons?.[0]?.label}
+          At 95% confidence your overall reading is <strong style={{ color: C.t2 }}>{interval.low} – {interval.high}</strong> on the 1–6 scale, centered on {interval.centre}. {interval.reasons?.[0]?.label}
         </div>
       ) : null}
 
@@ -802,7 +802,7 @@ function SeniorCalendar({ calendar, priorities, isMobile }) {
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '');
 
 // ─────────────────────────────────────────────────────────────────────────────
-// The remaining modules, itemised. Deliberately last and collapsed: the numbers
+// The remaining modules, itemized. Deliberately last and collapsed: the numbers
 // are the evidence for the findings above, not the product.
 // ─────────────────────────────────────────────────────────────────────────────
 function ModulesSection({ result, isMobile }) {
@@ -812,7 +812,7 @@ function ModulesSection({ result, isMobile }) {
       sub="The numbers behind the findings above. Useful when you disagree with one.">
       <div style={CC({ gap: 10 })}>
         <ModuleRow label="Holistic score" value={m.holistic.reported} note={m.holistic.readingNote} />
-        <ModuleRow label="Spike Index" value={`${m.holistic.spikeIndex} of ${m.holistic.spikeIndexRange[1]}`} note={m.holistic.headline} />
+        <ModuleRow label="Spike index" value={`${m.holistic.spikeIndex} of ${m.holistic.spikeIndexRange[1]}`} note={m.holistic.headline} />
         <ModuleRow label="Project viability" value={m.domino.viability} note={m.domino.stageNote} />
         <ModuleRow label="Portfolio balance" value={m.portfolio.balance} note={m.portfolio.shapeNote} />
         <ModuleRow label="SAT heuristics" value={m.satHeuristics.index ?? '—'} note={m.satHeuristics.note} />
@@ -881,6 +881,22 @@ function SafeguardSection({ result, isMobile }) {
           {s.aiPolicy.points.map((p, i) => (
             <div key={i} style={{ fontSize: 12, color: C.t2, marginTop: 7, lineHeight: 1.6 }}>{p}</div>
           ))}
+
+          {/* Rendered from src/lib/aiPolicy.js — the same source the essay
+              workspace and the server-side guard read, so a student sees
+              identical wording wherever they meet this promise. */}
+          {s.aiPolicy.hardRules?.length ? (
+            <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${tint(C.sky, 0.25)}` }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: C.t1 }}>{s.aiPolicy.policyHeadline}</div>
+              <div style={{ fontSize: 12, color: C.t2, marginTop: 5, lineHeight: 1.6 }}>{s.aiPolicy.policyShort}</div>
+              {s.aiPolicy.hardRules.map(r => (
+                <div key={r.id} style={{ marginTop: 9 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>{r.title}</div>
+                  <div style={{ fontSize: 12, color: C.t3, marginTop: 3, lineHeight: 1.55 }}>{r.body}</div>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
       </Disclosure>
 

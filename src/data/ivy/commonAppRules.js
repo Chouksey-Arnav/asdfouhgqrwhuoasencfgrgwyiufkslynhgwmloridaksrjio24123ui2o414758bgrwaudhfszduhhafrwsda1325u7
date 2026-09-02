@@ -83,7 +83,7 @@ export const ADDITIONAL_INFO = {
   ],
   forbidden: [
     { id: 'narrative', label: 'A second personal statement', detail: 'Storytelling here reads as a student who could not follow an instruction, which is the one impression this box is uniquely able to create.' },
-    { id: 'reused-essay', label: 'A supplemental essay that had nowhere else to go', detail: 'Readers recognise a repurposed draft instantly, and it displaces the facts this section exists for.' },
+    { id: 'reused-essay', label: 'A supplemental essay that had nowhere else to go', detail: 'Readers recognize a repurposed draft instantly, and it displaces the facts this section exists for.' },
     { id: 'repeat-activities', label: 'Achievements already in the activities list', detail: 'Repetition costs credibility and space. If it is on the list, it is read.' },
     { id: 'excuse', label: 'An explanation with no resolution attached', detail: 'A hardship stated without what changed afterwards leaves a reader with an open question and no way to close it — see RESOLUTION_REQUIRED below.' },
   ],
@@ -158,7 +158,7 @@ export const SUPPLEMENT_STRUCTURES = {
     requires: [
       { id: 'named-course', label: 'At least one named course beyond the intro sequence', check: 'course-number-or-title' },
       { id: 'named-faculty', label: 'A named person and what they actually work on', check: 'faculty-name' },
-      { id: 'named-program', label: 'A specific program, lab, centre, publication or tradition', check: 'program-name' },
+      { id: 'named-program', label: 'A specific program, lab, center, publication or tradition', check: 'program-name' },
       { id: 'the-join', label: 'The sentence that explains why THIS student needs THAT thing', check: 'personal-link' },
     ],
     // Test Case 2's "why us" draft fails every one of these, which is the point

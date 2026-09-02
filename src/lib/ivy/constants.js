@@ -20,7 +20,7 @@
 //    • FREE ALWAYS GETS A REAL ANSWER, NOT A BLUR. See FREE_TIER below. A free
 //      account runs the full engine on their own profile and sees the headline
 //      finding, the four rubric scores and the single highest-value action. The
-//      paid tier is the depth — all thirteen modules itemised, line-level essay
+//      paid tier is the depth — all thirteen modules itemized, line-level essay
 //      rewrites, the dated roadmap, the interview alignment work. A locked
 //      screen sells nothing; a real finding with an obvious next layer does.
 //    • NOTHING BEHIND THE PAYWALL IS SAFETY-CRITICAL. Every safeguard in

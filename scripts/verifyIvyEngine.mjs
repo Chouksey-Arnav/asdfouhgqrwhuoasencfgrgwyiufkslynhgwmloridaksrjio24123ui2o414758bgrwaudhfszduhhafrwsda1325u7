@@ -60,6 +60,9 @@ import { GRADE_PLANS, SENIOR_PIPELINE } from '../src/data/ivy/gradeTimelines.js'
 import { IVY_PRODUCTIVE, HEALTH_FLOOR, BURNERS } from '../src/data/ivy/productivity.js';
 import { ALL_CLICHE_IDS, NARRATIVE_TROPES, CLUTTER_PHRASES } from '../src/data/ivy/clicheBank.js';
 import { canUseNarrativeEngine, narrativeEngineTier, PLANS } from '../src/lib/entitlements.js';
+import { AI_POLICY_NOTE } from '../src/lib/ivy/safeguards.js';
+import { AI_POLICY, HARD_RULES } from '../src/lib/aiPolicy.js';
+import { isNarrativeProse } from '../api/_lib/essayProseGuard.js';
 import { RESOURCES } from '../api/_lib/resources.js';
 
 let failures = 0, checks = 0;
@@ -517,6 +520,79 @@ section('11. The senior calendar is dated and triages honestly');
   // A student who is on time gets no triage.
   const early = runEngine(profileById('TC_003_SCATTERED_HIGH_STATS'), { now: new Date('2026-06-05T12:00:00Z'), gradYear: 2027 });
   assert('an on-time student gets no triage', !early.roadmap.calendar.triage);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+section('12. The engine never ghostwrites, and cites the one policy');
+// ═══════════════════════════════════════════════════════════════════════════
+// This engine is essay-facing, so it is bound by the same academic-integrity
+// promise the essay workspace makes and api/_lib/essayProseGuard.js enforces on
+// the server: it critiques, questions and points at sentences, and it never
+// produces prose a student could submit.
+//
+// That is architecturally true — no module in src/lib/ivy/ contains a text
+// generator — but "architecturally true" is exactly the property that stops
+// being true the day someone adds a helpful `suggestedOpening` field. So it is
+// asserted with the same guard the server uses, rather than trusted.
+{
+  assert('the engine quotes the canonical policy headline', AI_POLICY_NOTE.policyHeadline === AI_POLICY.headline);
+  assert('and carries every hard rule verbatim',
+    AI_POLICY_NOTE.hardRules.length === HARD_RULES.length
+    && AI_POLICY_NOTE.hardRules.every((r, i) => r.body === HARD_RULES[i].body),
+    'the engine has drifted from src/lib/aiPolicy.js');
+  assert('the no-ghostwriting rule is among them', AI_POLICY_NOTE.hardRules.some(r => r.id === 'no_ghostwriting'));
+
+  // Keys carrying the STUDENT's own words are excluded: quoting their sentence
+  // back while diagnosing it is explicitly permitted by the policy and is most
+  // of what a useful audit does. What is checked is everything the engine wrote.
+  const STUDENT_TEXT_KEYS = new Set([
+    'sentence', 'sentences', 'hook', 'firstSentence', 'match', 'phrase', 'text',
+    'before', 'after', 'matches', 'found', 'answer', 'stacked', 'assigned', 'evidence',
+  ]);
+  function engineAuthoredStrings(value, key = null, out = [], depth = 0) {
+    if (depth > 14) return out;
+    if (typeof value === 'string') {
+      if (!STUDENT_TEXT_KEYS.has(key)) out.push({ key, text: value });
+      return out;
+    }
+    if (Array.isArray(value)) {
+      if (STUDENT_TEXT_KEYS.has(key)) return out;
+      for (const v of value) engineAuthoredStrings(v, key, out, depth + 1);
+      return out;
+    }
+    if (value && typeof value === 'object') {
+      if (value instanceof Map || value instanceof Set) return out;
+      for (const [k, v] of Object.entries(value)) {
+        if (STUDENT_TEXT_KEYS.has(k)) continue;
+        engineAuthoredStrings(v, k, out, depth + 1);
+      }
+    }
+    return out;
+  }
+
+  let totalStrings = 0;
+  for (const [id, r] of results) {
+    const strings = engineAuthoredStrings(r);
+    totalStrings += strings.length;
+    const prose = strings.filter(x => isNarrativeProse(x.text));
+    assert(`${id.slice(0, 14)} emits no submittable prose`, prose.length === 0,
+      prose.slice(0, 2).map(x => `${x.key}: ${x.text.slice(0, 120)}`).join(' | '));
+  }
+  assert(`the check actually inspected the output (${totalStrings} engine-authored strings)`, totalStrings > 500);
+
+  // And the guard can genuinely catch a violation, so a green run above means
+  // something. If this fixture stops being caught, the assertions prove nothing.
+  assert('the guard would catch a generated opening if one were ever added',
+    isNarrativeProse("I still remember the smell of the hallway outside room 412 — antiseptic and old coffee. My grandmother had been in that bed for nine days, and I had counted every one of them on the drive over."),
+    'essayProseGuard no longer detects narrative prose');
+
+  // The hook module is the likeliest to acquire a generator, because "suggest an
+  // opening line" is the obvious next feature request and the single worst place
+  // for the engine's voice to appear.
+  const hook = byId('TC_005_MULTIPASSIONATE_FATIMA').modules.hook;
+  assert('the hook module classifies and never proposes an opening',
+    !('suggestion' in hook) && !('rewrite' in hook) && !('suggestedOpening' in hook) && !('example' in hook),
+    Object.keys(hook).join(', '));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

@@ -177,7 +177,7 @@ export function alignmentDrills(result, { theme = null } = {}) {
     {
       id: 'ninety-second-core',
       prompt: 'Tell me about yourself.',
-      target: `Ninety seconds that end on ${label}. Most students use this question to summarise a résumé; it is the one question where you choose the subject of the whole interview.`,
+      target: `Ninety seconds that end on ${label}. Most students use this question to summarize a résumé; it is the one question where you choose the subject of the whole interview.`,
     },
     {
       id: 'why-this',

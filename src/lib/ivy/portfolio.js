@@ -11,7 +11,7 @@
 // with T⃗ = [1, 3, 4] and β⃗ = [0.5, 0.3, 0.2].
 //
 // ── One correction to the literal formula, and why ─────────────────────────
-// The specification defines Nₖ as "normalised to the total number of
+// The specification defines Nₖ as "normalized to the total number of
 // activities" — a share in [0,1] — and Tₖ as counts [1, 3, 4]. Subtracting a
 // count from a share is dimensionally incoherent: with N⃗ summing to 1 and T⃗
 // summing to 8, the residual can never be small, and the score is pinned near
@@ -21,7 +21,7 @@
 // So the comparison is done in COUNT SPACE — Nₖ as actual counts against the
 // target counts — which is the only reading under which the specification's own
 // worked triggers (N₁ < 1, N₃ > 6) are expressible at all. Both the raw
-// residual and the normalised shares are returned so anyone auditing this can
+// residual and the normalized shares are returned so anyone auditing this can
 // see exactly what was compared. The deviation is scaled by the target's own
 // magnitude so that "one short on Tier 1" and "one short on Tier 3" are not
 // treated as equal errors, and the result is clamped into [0,1] so that the
@@ -139,7 +139,7 @@ export function classifyActivity(raw) {
 function promotionFor(tier, a) {
   if (tier === 3) {
     return a.isFounder
-      ? 'One verifiable number moves this to Tier 2: members, dollars raised, attendees, or a partner organisation that will confirm it.'
+      ? 'One verifiable number moves this to Tier 2: members, dollars raised, attendees, or a partner organization that will confirm it.'
       : 'A role with an outcome attached, or one result judged by someone outside your school, moves this to Tier 2.';
   }
   if (tier === 2) {

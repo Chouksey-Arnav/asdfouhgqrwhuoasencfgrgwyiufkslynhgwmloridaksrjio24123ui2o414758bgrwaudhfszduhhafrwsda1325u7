@@ -13,7 +13,7 @@
 // the actual word distribution sits from the target one.
 //
 // ── The hard problem: which words are in which phase ───────────────────────
-// A student's draft does not come labelled. Two approaches were possible:
+// A student's draft does not come labeled. Two approaches were possible:
 //
 //   • Trust the paragraphs. Fast, and wrong for the many drafts written as one
 //     block or as eight short paragraphs.
@@ -51,7 +51,7 @@ export function countMetrics(text) {
     const matches = s.match(g);
     if (matches) found.push(...matches);
   }
-  // Dedupe by normalised text — "2,200 art kits" matched by two patterns is one
+  // Dedupe by normalized text — "2,200 art kits" matched by two patterns is one
   // metric, not two, and inflating the count would defeat the whole check.
   const unique = [...new Set(found.map(f => f.trim().toLowerCase()))];
   return { count: unique.length, matches: unique };
@@ -277,7 +277,7 @@ export function validateWhyUs(text, { school = null } = {}) {
   const requirements = [
     { id: 'named-course', label: structure.requires[0].label, met: namedCourse, fix: 'Open the department\'s course catalog, find one course past the intro sequence you would actually take, and name it with its number.' },
     { id: 'named-faculty', label: structure.requires[1].label, met: namedFaculty, fix: 'Name one professor and one thing they published. Two sentences of their abstract is enough — the point is that you looked.' },
-    { id: 'named-program', label: structure.requires[2].label, met: namedProgram, fix: 'Name a lab, centre, publication, or tradition. Specific enough that it does not exist at the school down the road.' },
+    { id: 'named-program', label: structure.requires[2].label, met: namedProgram, fix: 'Name a lab, center, publication, or tradition. Specific enough that it does not exist at the school down the road.' },
     { id: 'the-join', label: structure.requires[3].label, met: theJoin, fix: 'Add the sentence that connects one of those things to something you have already done. That sentence is the essay; the rest is evidence for it.' },
   ];
 
