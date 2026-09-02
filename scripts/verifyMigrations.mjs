@@ -87,6 +87,19 @@ const EXPECTED_TABLES = [
   // today's portfolio would show a student a history in which they were always as strong as they
   // are now. See supabase/migrations/0021_medex_score.sql.
   'medex_scores',
+  // The Narrative Method Engine (supabase/migrations/0025_narrative_engine.sql).
+  // `narrative_profile` is one row per user holding the engine's inputs — the
+  // passion project's state, the practice results, the brag sheets.
+  // `narrative_runs` is the append-only history of readings a student chose to
+  // keep, and it is a separate table because the two have genuinely different
+  // lifecycles: the profile is edited constantly and read on every run, while a
+  // run is written once and never updated. Keeping the history rather than
+  // overwriting a "latest result" column is what makes a September reading
+  // comparable against a June one.
+  //
+  // Neither holds essay text. The engine reads drafts from `essays` at run time
+  // and stores only its findings — see stripDrafts() in src/lib/ivy/serialize.js.
+  'narrative_profile', 'narrative_runs',
   'otp_codes', 'parent_link_events', 'parent_links',
   'parent_messages',
   'parent_profiles', 'parent_summary_cache', 'portfolio_evidence', 'progress_sync', 'recommenders',

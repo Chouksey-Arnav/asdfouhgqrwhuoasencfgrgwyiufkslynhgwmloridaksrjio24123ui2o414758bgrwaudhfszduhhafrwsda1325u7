@@ -117,6 +117,24 @@ import { exportQuizResult, exportFlashDeck, exportPathwayCertificate } from './l
 import { ACHIEVEMENTS, checkAchievements, PATHWAY_KEYS } from './lib/achievements';
 import CollegeListPanel from './components/CollegeListPanel';
 import AdmissionCalculatorPanel from './components/portfolio/admissions/AdmissionCalculatorPanel';
+// ── The Narrative Method Engine is lazy, and has to be ──────────────────────
+// The panel pulls the whole engine behind it: thirteen modules plus the cliché
+// bank, the overused-project corpus, the tier catalog and the grade timelines.
+// Statically imported that is ~82 KB gzipped added to the FIRST-LOAD bundle —
+// the number scripts/verifyPayload.mjs guards because it decides whether a
+// student on a mid-range Android ever sees the app at all.
+//
+// Nobody pays that on boot. This is one section of one page of the Portfolio,
+// opened deliberately, so Rollup follows the import() and gives it its own
+// chunk fetched the first time somebody actually opens the reading. Same
+// reasoning as the jspdf note in vite.config.js — and the same trap: adding
+// this module to a manualChunk would pin it back into the entry graph and
+// silently cancel the split.
+const NarrativeEnginePanel = React.lazy(() => import('./components/portfolio/ivy/NarrativeEnginePanel'));
+// The cache reset runs on sign-out, when the panel may never have been opened,
+// so it is imported eagerly. store.js is a few hundred bytes and carries none
+// of the corpora — the weight is all behind the lazy boundary above.
+import { resetNarrativeCache } from './lib/ivy/store.js';
 import { resetIntakeCache, derivePortfolioSignals, deriveApplicantFromPortfolio, buildApplicant, assessCompleteness, unpackIntake } from './lib/admissions';
 import { computeMedEx, loadSeals, sealIfNeeded, planSeal, readMirror, resetMedexCache } from './lib/medex';
 import MedExHomeCard from './components/medex/MedExHomeCard';
@@ -462,6 +480,11 @@ const PORTFOLIO_GROUP_FOR_VIEW = {
   // because they answer the same question at two altitudes — position vs. odds —
   // and a student sent here from Home should land on the number, not the page.
   medex:['applying','medex'],
+  // The Narrative Method Engine's own address. Its own entry rather than only a
+  // section id because it is the screen a counselor or a parent is sent a link
+  // to — "run the narrative reading on your file" — and because it is the one
+  // Applying section a student arrives at from outside the page.
+  narrative:['applying','narrative'],
   // The combined-degree and direct-admit catalog. Addressable in its own right
   // (/portfolio/combined) because it is the one screen in this app a student is
   // sent a link to by a parent or a counselor — "look at the BS/MD list" — and
@@ -3803,6 +3826,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     PlanStore.resetPlanStore(); // drop the previous account's plan-push state with everything else
     resetIntakeCache();         // …and the Admissions Calculator's cached intake row, so a second
                                 // account on this browser never sees the first one's answers
+    resetNarrativeCache();       // …and the Narrative Method Engine's cached inputs, for the same
+                                 // reason and with more at stake: that row holds a student's
+                                 // passion-project description and their Additional Information
+                                 // draft, which must never appear under a second account
     await DB.clearAllData();
     clearViewState();
     resetMedexCache(user?.id);   // …and the MedEx seal history plus its localStorage mirror, for
@@ -8695,6 +8722,34 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     );
   }
 
+  // ── THE NARRATIVE METHOD ENGINE ───────────────────────────────────────────────
+  // Sits beside the calculator because they answer the same question at two
+  // different altitudes and must not be confused for each other: the calculator
+  // says what your odds are at these programs, this says what your file
+  // currently reads as. It deliberately emits no probability of its own — see
+  // the header of src/lib/ivy/engine.js.
+  //
+  // PREMIUM ROADMAP: this is the app's first screen designed from the start to
+  // sit behind billing. The gate is inside the panel (`narrativeEngineTier`) and
+  // is currently open for everyone; nothing here changes when it closes.
+  function tNarrative(){
+    return (
+      <React.Suspense fallback={
+        <div style={{...glass({padding:40}), display:'flex', justifyContent:'center'}}>
+          <Loader2 size={20} style={{animation:'spin 1s linear infinite', color:C.t3}}/>
+        </div>
+      }>
+      <NarrativeEnginePanel
+        user={user}
+        snapshot={portSnapshot}
+        gradeLevel={user?.gradeLevel??user?.grade_level??null}
+        isMobile={isMobile}
+        onGoTo={goPortfolio}
+      />
+      </React.Suspense>
+    );
+  }
+
 
   // ── ANALYTICS ─────────────────────────────────────────────────────────────────
   function tAnalytics(){
@@ -10238,6 +10293,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       interview:()=><InterviewPrepPanel accent={C.orange} pathway={curPath} pathwayKey={eSpec} studentName={user?.name?.split(' ')[0]||user?.name||null} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);logEvent('interview_session_completed',mode);const ivWrite=saveUser(applyPlanAutoComplete({...user,interviewCount:nc},t=>t.type==='interview'));bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});ivWrite.then(()=>creditStreak('interview_session')).catch(console.error);}}/>,
       calc:tCalc,
       medex:tMedex,
+      narrative:tNarrative,
       }}/>,
     // Activities & résumé reasons over the student's own academic history: it reads
     // gpa_entries/test_scores/colleges itself and matches U.S. schools against their real GPA,
