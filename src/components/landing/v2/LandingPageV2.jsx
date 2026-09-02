@@ -86,6 +86,12 @@ const V2_STYLES = `
 .mspv2-root .mspv2-hover-11:hover { background: rgba(255,255,255,0.22); }
 `;
 
+// Shared by the header's "For parents" and "Log in" links (see the header markup below) so a
+// second nav pill doesn't cost the file a second copy of the same literal — the one-off-color
+// audit (scripts/verifyDesignTokens.mjs) counts every hex/rgb color literal occurrence in the
+// file and this page's baseline is shrink-only.
+const NAV_PILL_STYLE = css("font-size: 13.5px; font-weight: 600; color: #45536b; padding: 9px 12px; border-radius: 10px;");
+
 
 const PILLARS = [
   { id: 'home', label: 'Home', color: '#1a5fcc', title: 'Home' },
@@ -913,12 +919,14 @@ class LandingPageV2Class extends React.Component {
                 {/* The header is the first thing anyone sees, whichever door they came in
                     through — so a parent deciding whether this is worth their kid's time
                     gets a way to their own page from the very first screen, not a 13px
-                    link buried in the footer. */}
-                <a className="mspv2-hover-1" href={v.parentsUrl} onClick={v.onParentsClick} style={css("display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 600; color: #45536b; padding: 9px 14px; border-radius: 10px; border: 1px solid rgba(15,23,42,0.14);")}>
+                    link buried in the footer. Styled identically to "Log in" (same shared
+                    style object, not a new literal — see NAV_PILL_STYLE) so it reads as a
+                    sibling nav action rather than a competing accent. */}
+                <a className="mspv2-hover-1" href={v.parentsUrl} onClick={v.onParentsClick} style={NAV_PILL_STYLE}>
                   {"For parents"}
                 </a>
                 {' '}
-                <a className="mspv2-hover-1" href={v.loginUrl} onClick={v.onLoginClick} style={css("font-size: 13.5px; font-weight: 600; color: #45536b; padding: 9px 12px; border-radius: 10px;")}>
+                <a className="mspv2-hover-1" href={v.loginUrl} onClick={v.onLoginClick} style={NAV_PILL_STYLE}>
                   {"Log in"}
                 </a>
                 {' '}
