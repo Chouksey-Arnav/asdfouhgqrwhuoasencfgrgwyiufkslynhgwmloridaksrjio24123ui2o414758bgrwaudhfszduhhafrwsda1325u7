@@ -117,7 +117,23 @@ import { exportQuizResult, exportFlashDeck, exportPathwayCertificate } from './l
 import { ACHIEVEMENTS, checkAchievements, PATHWAY_KEYS } from './lib/achievements';
 import CollegeListPanel from './components/CollegeListPanel';
 import AdmissionCalculatorPanel from './components/portfolio/admissions/AdmissionCalculatorPanel';
-import NarrativeEnginePanel from './components/portfolio/ivy/NarrativeEnginePanel';
+// ── The Narrative Method Engine is lazy, and has to be ──────────────────────
+// The panel pulls the whole engine behind it: thirteen modules plus the cliché
+// bank, the overused-project corpus, the tier catalog and the grade timelines.
+// Statically imported that is ~82 KB gzipped added to the FIRST-LOAD bundle —
+// the number scripts/verifyPayload.mjs guards because it decides whether a
+// student on a mid-range Android ever sees the app at all.
+//
+// Nobody pays that on boot. This is one section of one page of the Portfolio,
+// opened deliberately, so Rollup follows the import() and gives it its own
+// chunk fetched the first time somebody actually opens the reading. Same
+// reasoning as the jspdf note in vite.config.js — and the same trap: adding
+// this module to a manualChunk would pin it back into the entry graph and
+// silently cancel the split.
+const NarrativeEnginePanel = React.lazy(() => import('./components/portfolio/ivy/NarrativeEnginePanel'));
+// The cache reset runs on sign-out, when the panel may never have been opened,
+// so it is imported eagerly. store.js is a few hundred bytes and carries none
+// of the corpora — the weight is all behind the lazy boundary above.
 import { resetNarrativeCache } from './lib/ivy/store.js';
 import { resetIntakeCache, derivePortfolioSignals, deriveApplicantFromPortfolio, buildApplicant, assessCompleteness, unpackIntake } from './lib/admissions';
 import { computeMedEx, loadSeals, sealIfNeeded, planSeal, readMirror, resetMedexCache } from './lib/medex';
@@ -8718,6 +8734,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // is currently open for everyone; nothing here changes when it closes.
   function tNarrative(){
     return (
+      <React.Suspense fallback={
+        <div style={{...glass({padding:40}), display:'flex', justifyContent:'center'}}>
+          <Loader2 size={20} style={{animation:'spin 1s linear infinite', color:C.t3}}/>
+        </div>
+      }>
       <NarrativeEnginePanel
         user={user}
         snapshot={portSnapshot}
@@ -8725,6 +8746,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         isMobile={isMobile}
         onGoTo={goPortfolio}
       />
+      </React.Suspense>
     );
   }
 

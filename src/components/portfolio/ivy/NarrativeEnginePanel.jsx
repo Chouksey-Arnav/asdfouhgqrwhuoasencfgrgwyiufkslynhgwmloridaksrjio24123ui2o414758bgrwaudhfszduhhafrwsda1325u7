@@ -36,7 +36,7 @@ import {
   Compass, Loader2, Save, Target, Layers, Sparkles, ShieldCheck, CalendarDays,
   PenLine, Gauge, CheckCircle2, Info, ListChecks, Lock, TrendingUp,
 } from 'lucide-react';
-import { C, glass, glass2, btnSm, inp, lbl, CC, G, pill, tint, accentText } from '../../../lib/theme';
+import { C, glass, glass2, btnSm, inp, lbl, CC, G, pill, tint, accentText, type } from '../../../lib/theme';
 import PanelHero, { SectionTitle, StatTile } from '../../ui/PanelHero';
 import Disclosure, { HelpNote, HowItWorks } from '../../ui/Disclosure';
 import { narrativeEngineTier } from '../../../lib/entitlements';
@@ -139,7 +139,7 @@ export default function NarrativeEnginePanel({
   }
 
   return (
-    <div style={CC({ gap: 18 })}>
+    <div style={CC({ gap: 16 })}>
       <PanelHero
         icon={Compass} color={C.violet} color2={C.sky} m={isMobile}
         eyebrow="The narrative method"
@@ -159,8 +159,8 @@ export default function NarrativeEnginePanel({
       />
 
       {result?.error ? (
-        <div style={{ ...glass({ padding: 18 }), border: `1px solid ${tint(C.orange, 0.4)}` }}>
-          <div style={{ fontWeight: 700, color: C.orange, marginBottom: 6 }}>The reading did not complete</div>
+        <div style={{ ...glass({ padding: 16 }), border: `1px solid ${tint(C.orange, 0.4)}` }}>
+          <div style={{ fontWeight: 700, color: C.orange, marginBottom: 8 }}>The reading did not complete</div>
           <div style={{ color: C.t2, fontSize: 13 }}>
             Something in your profile made a module fail. Your inputs are safe and nothing was changed. Adding or editing a draft usually clears it — and if it does not, tell us what is on this page.
           </div>
@@ -208,7 +208,7 @@ function IntakeCard({ profile, onPatch, onPatchProject, completeness, saving, is
       defaultOpen={!p.intendedMajor || !proj.description}
       sub={completeness ? `${Math.round((completeness.share || 0) * 100)}% of the inputs are in. Everything missing widens the band rather than being assumed.` : undefined}
     >
-      <div style={CC({ gap: 14 })}>
+      <div style={CC({ gap: 16 })}>
         <HelpNote>
           Your activities, essays and logged hours are read straight from the Portfolio — nothing here duplicates them. These are the few things no other part of the app knows.
         </HelpNote>
@@ -220,7 +220,7 @@ function IntakeCard({ profile, onPatch, onPatchProject, completeness, saving, is
               <option value="">Not decided yet</option>
               {DEPARTMENTS.map(d => <option key={d} value={d}>{d.replace(/-/g, ' ')}</option>)}
             </select>
-            <div style={{ fontSize: 11, color: C.t3, marginTop: 5 }}>
+            <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>
               It does not have to be your final answer. It has to be the one your application makes.
             </div>
           </div>
@@ -229,7 +229,7 @@ function IntakeCard({ profile, onPatch, onPatchProject, completeness, saving, is
             <input style={inp} type="number" min="0" placeholder="e.g. 50"
               value={proj.engagement ?? ''}
               onChange={e => onPatchProject('engagement', e.target.value === '' ? null : Number(e.target.value))} />
-            <div style={{ fontSize: 11, color: C.t3, marginTop: 5 }}>
+            <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>
               Attendees, subscribers, members — people who turned up, not people you could reach.
             </div>
           </div>
@@ -254,7 +254,7 @@ function IntakeCard({ profile, onPatch, onPatchProject, completeness, saving, is
               ['hasPublishedArtifact', 'Something is published — a handbook, a paper, a dataset'],
             ].map(([key, label]) => (
               <label key={key} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13, color: C.t2, cursor: 'pointer' }}>
-                <input type="checkbox" checked={!!proj[key]} onChange={e => onPatchProject(key, e.target.checked)} style={{ marginTop: 3 }} />
+                <input type="checkbox" checked={!!proj[key]} onChange={e => onPatchProject(key, e.target.checked)} style={{ marginTop: 4 }} />
                 <span>{label}</span>
               </label>
             ))}
@@ -269,14 +269,14 @@ function IntakeCard({ profile, onPatch, onPatchProject, completeness, saving, is
             onChange={e => onPatch('additionalInfo', e.target.value)} />
         </div>
 
-        <div style={{ fontSize: 11, color: saving ? C.sky : C.t3, display: 'flex', gap: 6, alignItems: 'center' }}>
+        <div style={{ fontSize: 11, color: saving ? C.sky : C.t3, display: 'flex', gap: 8, alignItems: 'center' }}>
           {saving ? <><Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> Saving…</> : <><CheckCircle2 size={12} /> Saved automatically</>}
         </div>
 
         {completeness?.next ? (
           <div style={{ ...glass2({ padding: 12 }), borderLeft: `3px solid ${C.sky}` }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>Next most useful thing to add: {completeness.next.label}</div>
-            <div style={{ fontSize: 12, color: C.t3, marginTop: 3 }}>Unlocks {completeness.next.unlocks.join(', ').toLowerCase()}.</div>
+            <div style={{ fontSize: 12, color: C.t3, marginTop: 4 }}>Unlocks {completeness.next.unlocks.join(', ').toLowerCase()}.</div>
           </div>
         ) : null}
       </div>
@@ -293,8 +293,8 @@ function HeadlineCard({ result, isMobile, onKeep }) {
 
   return (
     <div style={{ ...glass({ padding: isMobile ? 16 : 20 }), border: `1px solid ${tint(C.violet, 0.35)}` }}>
-      <div style={{ ...pill(C.violet), marginBottom: 10 }}>The finding</div>
-      <div style={{ fontSize: isMobile ? 17 : 20, fontWeight: 800, color: C.t1, lineHeight: 1.35 }}>
+      <div style={{ ...pill(C.violet), marginBottom: 8 }}>The finding</div>
+      <div style={{ ...type(isMobile ? 17 : 20, { weight: 800 }), color: C.t1 }}>
         {result.headline.lead}
       </div>
       {result.headline.supporting?.map((s, i) => (
@@ -307,7 +307,7 @@ function HeadlineCard({ result, isMobile, onKeep }) {
           return (
             <div key={key} style={{ ...glass2({ padding: 12 }), opacity: assumed ? 0.6 : 1 }}>
               <div style={{ fontSize: 11, color: C.t3 }}>{RUBRIC_LABELS[key]}</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: assumed ? C.t3 : accentText(C.violet) }}>
+              <div style={{ ...type(22, { weight: 800 }), color: assumed ? C.t3 : accentText(C.violet) }}>
                 {Number(score).toFixed(1)}
               </div>
               <div style={{ fontSize: 10, color: C.t3 }}>{assumed ? 'not evaluable yet' : '1 is strongest'}</div>
@@ -323,7 +323,7 @@ function HeadlineCard({ result, isMobile, onKeep }) {
       ) : null}
 
       {result.tier === 'premium' ? (
-        <button style={{ ...btnSm(C.violet), marginTop: 14 }} onClick={onKeep}>
+        <button style={{ ...btnSm(C.violet), marginTop: 16 }} onClick={onKeep}>
           <Save size={13} /> Keep this reading
         </button>
       ) : null}
@@ -348,9 +348,9 @@ function ThemeSection({ result, isMobile }) {
   return (
     <div style={glass({ padding: isMobile ? 16 : 20 })}>
       <SectionTitle icon={Target} color={C.sky}>Your Value-Based Theme</SectionTitle>
-      <div style={{ fontSize: 16, fontWeight: 700, color: C.t1, marginTop: 6 }}>{theme.headline}</div>
+      <div style={{ ...type(16, { weight: 700 }), color: C.t1, marginTop: 8 }}>{theme.headline}</div>
       <div style={{ fontSize: 13, color: C.t2, marginTop: 8, lineHeight: 1.55 }}>{theme.statement}</div>
-      <div style={{ fontSize: 11, color: C.t3, marginTop: 10, lineHeight: 1.5, fontStyle: 'italic' }}>{theme.caveat}</div>
+      <div style={{ fontSize: 11, color: C.t3, marginTop: 8, lineHeight: 1.5, fontStyle: 'italic' }}>{theme.caveat}</div>
 
       {coherence?.available ? (
         <div style={{ marginTop: 16 }}>
@@ -359,14 +359,14 @@ function ThemeSection({ result, isMobile }) {
           </div>
           <div style={CC({ gap: 8 })}>
             {coherence.echoes.map(e => (
-              <div key={e.id} style={{ ...glass2({ padding: 11 }), display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                <div style={{ width: 8, height: 8, borderRadius: 4, marginTop: 5, flexShrink: 0,
+              <div key={e.id} style={{ ...glass2({ padding: 12 }), display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                <div style={{ width: 8, height: 8, borderRadius: 4, marginTop: 4, flexShrink: 0,
                   background: !e.present ? C.t3 : e.state === 'strong' ? C.green : e.state === 'present' ? C.sky : e.state === 'faint' ? C.orange : C.red }} />
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: C.t1 }}>
                     {e.label}{e.present ? ` — ${Math.round(e.score * 100)}%` : ''}
                   </div>
-                  <div style={{ fontSize: 12, color: C.t3, marginTop: 2, lineHeight: 1.5 }}>{e.note}</div>
+                  <div style={{ fontSize: 12, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>{e.note}</div>
                 </div>
               </div>
             ))}
@@ -384,7 +384,7 @@ function ThemeSection({ result, isMobile }) {
           ) : null}
 
           {coherence.redundancy?.note ? (
-            <div style={{ ...glass2({ padding: 12, marginTop: 10 }), borderLeft: `3px solid ${C.gold}` }}>
+            <div style={{ ...glass2({ padding: 12, marginTop: 8 }), borderLeft: `3px solid ${C.gold}` }}>
               <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }}>{coherence.redundancy.note}</div>
             </div>
           ) : null}
@@ -405,7 +405,7 @@ function StructureSection({ result, isMobile }) {
     <div style={glass({ padding: isMobile ? 16 : 20 })}>
       <SectionTitle icon={Layers} color={C.gold}>The shape of your portfolio</SectionTitle>
 
-      <div style={{ ...G(4, 10, { marginTop: 10 }, isMobile) }}>
+      <div style={{ ...G(4, 10, { marginTop: 8 }, isMobile) }}>
         <StatTile icon={Layers} value={pf.counts.tier1} label="Tier 1" sub="target 1" color={C.gold} />
         <StatTile icon={Layers} value={pf.counts.tier2} label="Tier 2" sub="target 3" color={C.sky} />
         <StatTile icon={Layers} value={pf.counts.tier3} label="Tier 3" sub="target 4" color={C.t3} />
@@ -415,11 +415,11 @@ function StructureSection({ result, isMobile }) {
       <div style={{ fontSize: 13, color: C.t2, marginTop: 12, lineHeight: 1.55 }}>{pf.shapeNote}</div>
 
       {pf.triggers?.map(t => (
-        <div key={t.id} style={{ ...glass2({ padding: 13, marginTop: 10 }), borderLeft: `3px solid ${TONE[t.severity] || C.t3}` }}>
+        <div key={t.id} style={{ ...glass2({ padding: 12, marginTop: 8 }), borderLeft: `3px solid ${TONE[t.severity] || C.t3}` }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{t.label}</div>
           <div style={{ fontSize: 12, color: C.t2, marginTop: 4, lineHeight: 1.55 }}>{t.detail}</div>
           {t.protectedFromConsolidation?.length ? (
-            <div style={{ fontSize: 11, color: C.green, marginTop: 6 }}>
+            <div style={{ fontSize: 11, color: C.green, marginTop: 8 }}>
               Staying exactly where they are: {t.protectedFromConsolidation.join(', ')}.
             </div>
           ) : null}
@@ -430,7 +430,7 @@ function StructureSection({ result, isMobile }) {
         <Disclosure id="ivy-tiers" title="How each activity was read" icon={Info} color={C.gold} m={isMobile}>
           <div style={CC({ gap: 8 })}>
             {pf.activities.map((a, i) => (
-              <div key={i} style={{ ...glass2({ padding: 11 }) }}>
+              <div key={i} style={{ ...glass2({ padding: 12 }) }}>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: C.t1 }}>{a.name}</span>
                   <span style={pill(a.tier === 1 ? C.gold : a.tier === 2 ? C.sky : C.t3)}>Tier {a.tier}</span>
@@ -449,15 +449,15 @@ function StructureSection({ result, isMobile }) {
           <div style={{ fontSize: 12, fontWeight: 700, color: C.t2, marginBottom: 8 }}>
             The Domino framework — project viability {Math.round(domino.viability * 100)}%, {domino.stage.replace(/-/g, ' ')}
           </div>
-          <div style={{ fontSize: 12, color: C.t3, marginBottom: 10, lineHeight: 1.55 }}>{domino.stageNote}</div>
-          <div style={CC({ gap: 7 })}>
+          <div style={{ fontSize: 12, color: C.t3, marginBottom: 8, lineHeight: 1.55 }}>{domino.stageNote}</div>
+          <div style={CC({ gap: 8 })}>
             {domino.milestones.map(m => (
-              <div key={m.key} style={{ ...glass2({ padding: 11 }), display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                <div style={{ width: 8, height: 8, borderRadius: 4, marginTop: 5, flexShrink: 0,
+              <div key={m.key} style={{ ...glass2({ padding: 12 }), display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                <div style={{ width: 8, height: 8, borderRadius: 4, marginTop: 4, flexShrink: 0,
                   background: m.status === 'met' ? C.green : m.status === 'partial' ? C.orange : m.status === 'unknown' ? C.t3 : C.red }} />
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: C.t1 }}>{m.key} · {m.short}</div>
-                  <div style={{ fontSize: 12, color: C.t2, marginTop: 3, lineHeight: 1.5 }}>{m.note}</div>
+                  <div style={{ fontSize: 12, color: C.t2, marginTop: 4, lineHeight: 1.5 }}>{m.note}</div>
                 </div>
               </div>
             ))}
@@ -489,7 +489,7 @@ function EssaySection({ result, isMobile }) {
     <div style={glass({ padding: isMobile ? 16 : 20 })}>
       <SectionTitle icon={PenLine} color={C.fuchsia}>The written audit</SectionTitle>
 
-      <div style={{ ...G(3, 10, { marginTop: 10 }, isMobile) }}>
+      <div style={{ ...G(3, 10, { marginTop: 8 }, isMobile) }}>
         <StatTile icon={Sparkles} value={a?.perplexity?.value ?? '—'} label="Voice index" sub="target above 120" color={C.fuchsia} />
         <StatTile icon={Gauge} value={ps.syntax?.available ? `${Math.round(ps.syntax.score * 100)}%` : '—'} label="Syntax" sub="last pass, not the first" color={C.sky} />
         <StatTile icon={Target} value={ps.hook?.available ? (ps.hook.passes ? 'Passes' : 'Needs work') : '—'} label="Opening" sub={ps.hook?.archetypeLabel} color={C.gold} />
@@ -500,22 +500,22 @@ function EssaySection({ result, isMobile }) {
       ) : null}
 
       {ps.hook?.available ? (
-        <div style={{ ...glass2({ padding: 13, marginTop: 12 }) }}>
+        <div style={{ ...glass2({ padding: 12, marginTop: 12 }) }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>Your opening</div>
-          <div style={{ fontSize: 13, color: C.t2, marginTop: 6, lineHeight: 1.55, fontStyle: 'italic' }}>“{ps.hook.firstSentence}”</div>
+          <div style={{ fontSize: 13, color: C.t2, marginTop: 8, lineHeight: 1.55, fontStyle: 'italic' }}>“{ps.hook.firstSentence}”</div>
           <div style={{ fontSize: 12, color: C.t2, marginTop: 8, lineHeight: 1.55 }}>{ps.hook.verdict}</div>
         </div>
       ) : null}
 
       {a?.flags?.map(f => (
-        <div key={f.id} style={{ ...glass2({ padding: 13, marginTop: 10 }), borderLeft: `3px solid ${TONE[f.severity] || C.t3}` }}>
+        <div key={f.id} style={{ ...glass2({ padding: 12, marginTop: 8 }), borderLeft: `3px solid ${TONE[f.severity] || C.t3}` }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{f.label}</div>
           <div style={{ fontSize: 12, color: C.t2, marginTop: 4, lineHeight: 1.55 }}>{f.detail}</div>
         </div>
       ))}
 
       <Disclosure id="ivy-sweeps" title="The three editing sweeps" icon={PenLine} color={C.sky} m={isMobile}>
-        <div style={CC({ gap: 10 })}>
+        <div style={CC({ gap: 8 })}>
           {[
             ['Read aloud', ps.syntax?.sweeps?.readAloud],
             ['Transitions', ps.syntax?.sweeps?.transition],
@@ -524,9 +524,9 @@ function EssaySection({ result, isMobile }) {
           ].map(([label, sweep]) => (
             <div key={label} style={glass2({ padding: 12 })}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>{label}</div>
-              <div style={{ fontSize: 12, color: C.t2, marginTop: 3, lineHeight: 1.5 }}>{sweep?.note || '—'}</div>
+              <div style={{ fontSize: 12, color: C.t2, marginTop: 4, lineHeight: 1.5 }}>{sweep?.note || '—'}</div>
               {(sweep?.findings || []).slice(0, 3).map((f, i) => (
-                <div key={i} style={{ fontSize: 12, color: C.t3, marginTop: 6, paddingLeft: 10, borderLeft: `2px solid ${tint(C.sky, 0.4)}`, lineHeight: 1.5 }}>
+                <div key={i} style={{ fontSize: 12, color: C.t3, marginTop: 8, paddingLeft: 8, borderLeft: `2px solid ${tint(C.sky, 0.4)}`, lineHeight: 1.5 }}>
                   {f.fix || f.ask}
                 </div>
               ))}
@@ -535,7 +535,7 @@ function EssaySection({ result, isMobile }) {
           {ps.syntax?.sweeps?.adjective ? (
             <div style={glass2({ padding: 12 })}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>Adjectives against objects</div>
-              <div style={{ fontSize: 12, color: C.t2, marginTop: 3, lineHeight: 1.5 }}>{ps.syntax.sweeps.adjective.note}</div>
+              <div style={{ fontSize: 12, color: C.t2, marginTop: 4, lineHeight: 1.5 }}>{ps.syntax.sweeps.adjective.note}</div>
             </div>
           ) : null}
         </div>
@@ -545,31 +545,31 @@ function EssaySection({ result, isMobile }) {
         <Disclosure id="ivy-supplements" title={`Supplements (${result.essays.supplements.length})`} icon={PenLine} color={C.violet} m={isMobile}>
           <div style={CC({ gap: 12 })}>
             {result.essays.supplements.map((s, i) => (
-              <div key={i} style={glass2({ padding: 13 })}>
+              <div key={i} style={glass2({ padding: 12 })}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>
                   {s.promptType.replace(/_/g, ' ')} · {s.words} words
                 </div>
                 {s.storyboard?.available ? (
-                  <div style={{ fontSize: 12, color: C.t2, marginTop: 5, lineHeight: 1.55 }}>
+                  <div style={{ fontSize: 12, color: C.t2, marginTop: 4, lineHeight: 1.55 }}>
                     {s.storyboard.resolutionNote || s.storyboard.note}
                   </div>
                 ) : null}
                 {(s.storyboard?.findings || []).filter(f => f.severity !== 'good').map((f, j) => (
-                  <div key={j} style={{ fontSize: 12, color: C.t2, marginTop: 7, paddingLeft: 10, borderLeft: `2px solid ${TONE[f.severity] || C.t3}`, lineHeight: 1.5 }}>
+                  <div key={j} style={{ fontSize: 12, color: C.t2, marginTop: 8, paddingLeft: 8, borderLeft: `2px solid ${TONE[f.severity] || C.t3}`, lineHeight: 1.5 }}>
                     <strong>{f.label}.</strong> {f.detail}
                   </div>
                 ))}
                 {s.whyUs?.available ? (
-                  <div style={{ marginTop: 9 }}>
+                  <div style={{ marginTop: 8 }}>
                     <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }}>{s.whyUs.swapTest.note}</div>
                     {s.whyUs.blocked?.length ? (
-                      <div style={{ fontSize: 12, color: C.orange, marginTop: 5 }}>
+                      <div style={{ fontSize: 12, color: C.orange, marginTop: 4 }}>
                         Marketing phrases to cut: {s.whyUs.blocked.map(b => `“${b.match}”`).join(', ')}
                       </div>
                     ) : null}
-                    <div style={{ marginTop: 6 }}>
+                    <div style={{ marginTop: 8 }}>
                       {s.whyUs.requirements.map(r => (
-                        <div key={r.id} style={{ fontSize: 12, color: r.met ? C.green : C.t3, marginTop: 3 }}>
+                        <div key={r.id} style={{ fontSize: 12, color: r.met ? C.green : C.t3, marginTop: 4 }}>
                           {r.met ? '✓' : '○'} {r.label}{r.met ? '' : ` — ${r.fix}`}
                         </div>
                       ))}
@@ -586,13 +586,13 @@ function EssaySection({ result, isMobile }) {
       ) : null}
 
       <Disclosure id="ivy-hooks" title="The three openings that work" icon={Sparkles} color={C.gold} m={isMobile}>
-        <div style={CC({ gap: 10 })}>
+        <div style={CC({ gap: 8 })}>
           {HOOK_ARCHETYPE_GUIDE.map(h => (
             <div key={h.id} style={glass2({ padding: 12 })}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>{h.label}</div>
-              <div style={{ fontSize: 12, color: C.t2, marginTop: 3, lineHeight: 1.5 }}>{h.move}</div>
-              <div style={{ fontSize: 12, color: C.t3, marginTop: 5, fontStyle: 'italic' }}>{h.example}</div>
-              <div style={{ fontSize: 11, color: C.orange, marginTop: 5, lineHeight: 1.45 }}>Fails when: {h.fails}</div>
+              <div style={{ fontSize: 12, color: C.t2, marginTop: 4, lineHeight: 1.5 }}>{h.move}</div>
+              <div style={{ fontSize: 12, color: C.t3, marginTop: 4, fontStyle: 'italic' }}>{h.example}</div>
+              <div style={{ fontSize: 11, color: C.orange, marginTop: 4, lineHeight: 1.45 }}>Fails when: {h.fails}</div>
             </div>
           ))}
         </div>
@@ -611,36 +611,36 @@ function ResonanceSection({ result, isMobile }) {
   return (
     <div style={glass({ padding: isMobile ? 16 : 20 })}>
       <SectionTitle icon={Sparkles} color={C.fuchsia}>The authenticity sorter</SectionTitle>
-      <div style={{ fontSize: 13, color: C.t2, marginTop: 6, lineHeight: 1.55 }}>
+      <div style={{ fontSize: 13, color: C.t2, marginTop: 8, lineHeight: 1.55 }}>
         Two columns. On the left, the edits a clinical tool would make on this draft — the ones this engine refuses to make. On the right, the ones a reader actually responds to.
       </div>
 
-      <div style={{ ...G(2, 12, { marginTop: 14 }, isMobile) }}>
+      <div style={{ ...G(2, 12, { marginTop: 16 }, isMobile) }}>
         <div>
           <div style={{ ...pill(C.red), marginBottom: 8 }}>Refused</div>
           {r.rejected.map(e => (
-            <div key={e.id} style={{ ...glass2({ padding: 11, marginBottom: 8 }) }}>
+            <div key={e.id} style={{ ...glass2({ padding: 12, marginBottom: 8 }) }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: C.t2, textDecoration: 'line-through', opacity: 0.8 }}>{e.clinical}</div>
-              <div style={{ fontSize: 12, color: C.t3, marginTop: 5, lineHeight: 1.5 }}>{e.why}</div>
+              <div style={{ fontSize: 12, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>{e.why}</div>
             </div>
           ))}
         </div>
         <div>
           <div style={{ ...pill(C.green), marginBottom: 8 }}>What to do instead</div>
           {r.approved.length ? r.approved.map(e => (
-            <div key={e.id} style={{ ...glass2({ padding: 11, marginBottom: 8 }) }}>
+            <div key={e.id} style={{ ...glass2({ padding: 12, marginBottom: 8 }) }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>{e.label}</div>
               {e.note ? <div style={{ fontSize: 12, color: C.t2, marginTop: 4, lineHeight: 1.5 }}>{e.note}</div> : null}
               {(e.targets || []).slice(0, 3).map((t, i) => (
-                <div key={i} style={{ fontSize: 12, color: C.t3, marginTop: 6, paddingLeft: 9, borderLeft: `2px solid ${tint(C.green, 0.4)}`, lineHeight: 1.5 }}>
-                  {t.sentence ? <div style={{ fontStyle: 'italic', marginBottom: 3 }}>“{t.sentence}”</div> : null}
-                  {t.match ? <div style={{ fontStyle: 'italic', marginBottom: 3 }}>“{t.match}”</div> : null}
+                <div key={i} style={{ fontSize: 12, color: C.t3, marginTop: 8, paddingLeft: 8, borderLeft: `2px solid ${tint(C.green, 0.4)}`, lineHeight: 1.5 }}>
+                  {t.sentence ? <div style={{ fontStyle: 'italic', marginBottom: 4 }}>“{t.sentence}”</div> : null}
+                  {t.match ? <div style={{ fontStyle: 'italic', marginBottom: 4 }}>“{t.match}”</div> : null}
                   {t.ask || t.redirect}
                 </div>
               ))}
             </div>
           )) : (
-            <div style={{ ...glass2({ padding: 11 }), fontSize: 12, color: C.t2 }}>
+            <div style={{ ...glass2({ padding: 12 }), fontSize: 12, color: C.t2 }}>
               Nothing to amplify — this draft already shows rather than tells, and it has a cost in it. That is the hard half.
             </div>
           )}
@@ -648,7 +648,7 @@ function ResonanceSection({ result, isMobile }) {
       </div>
 
       {r.stakes?.findings?.length ? (
-        <div style={{ marginTop: 14 }}>
+        <div style={{ marginTop: 16 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: C.t2, marginBottom: 8 }}>Narrative stakes</div>
           {r.stakes.findings.map(f => (
             <div key={f.id} style={{ ...glass2({ padding: 12, marginTop: 8 }), borderLeft: `3px solid ${TONE[f.severity] || C.t3}` }}>
@@ -659,7 +659,7 @@ function ResonanceSection({ result, isMobile }) {
         </div>
       ) : null}
 
-      <div style={{ ...glass2({ padding: 13, marginTop: 14 }), borderLeft: `3px solid ${C.green}` }}>
+      <div style={{ ...glass2({ padding: 12, marginTop: 16 }), borderLeft: `3px solid ${C.green}` }}>
         <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.6 }}>{r.safeguard}</div>
       </div>
     </div>
@@ -676,7 +676,7 @@ function RoadmapSection({ result, isMobile }) {
   return (
     <div style={glass({ padding: isMobile ? 16 : 20 })}>
       <SectionTitle icon={CalendarDays} color={C.green}>{rm.title}</SectionTitle>
-      <div style={{ fontSize: 13, color: C.t2, marginTop: 6, lineHeight: 1.55 }}>{rm.premise}</div>
+      <div style={{ fontSize: 13, color: C.t2, marginTop: 8, lineHeight: 1.55 }}>{rm.premise}</div>
 
       {rm.kind === 'senior' ? (
         <SeniorCalendar calendar={rm.calendar} priorities={rm.priorities} isMobile={isMobile} />
@@ -691,7 +691,7 @@ function RoadmapSection({ result, isMobile }) {
                 {item.done ? <span style={pill(C.green)}>done</span> : null}
               </div>
               <div style={{ fontSize: 12, color: C.t2, marginTop: 4, lineHeight: 1.55 }}>{item.detail}</div>
-              {item.metric ? <div style={{ fontSize: 11, color: C.t3, marginTop: 5 }}>Done when: {item.metric}</div> : null}
+              {item.metric ? <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>Done when: {item.metric}</div> : null}
               {item.costNote ? <div style={{ fontSize: 11, color: C.green, marginTop: 4 }}>{item.costNote}</div> : null}
               {item.stillWorth ? <div style={{ fontSize: 11, color: C.sky, marginTop: 4, lineHeight: 1.45 }}>Arriving late: {item.stillWorth}</div> : null}
             </div>
@@ -705,21 +705,21 @@ function RoadmapSection({ result, isMobile }) {
             <div>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>{rm.execution.method.title}</div>
               {rm.execution.method.rules.map(r => (
-                <div key={r.id} style={{ fontSize: 12, color: C.t2, marginTop: 5, lineHeight: 1.5 }}>
+                <div key={r.id} style={{ fontSize: 12, color: C.t2, marginTop: 4, lineHeight: 1.5 }}>
                   <strong>{r.label}.</strong> {r.detail}
                 </div>
               ))}
             </div>
             {rm.execution.suggestedSix?.length ? (
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.t1, marginBottom: 5 }}>Your six, from this reading</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.t1, marginBottom: 4 }}>Your six, from this reading</div>
                 {rm.execution.suggestedSix.map((t, i) => (
                   <div key={i} style={{ fontSize: 12, color: C.t2, marginTop: 4 }}>{i + 1}. {t.label}</div>
                 ))}
               </div>
             ) : null}
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: C.t1, marginBottom: 5 }}>This week's burners</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.t1, marginBottom: 4 }}>This week's burners</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {rm.execution.burners.map(b => (
                   <span key={b.id} style={pill(b.level === 'high' ? C.gold : b.level === 'medium' ? C.sky : C.t3)}>
@@ -727,7 +727,7 @@ function RoadmapSection({ result, isMobile }) {
                   </span>
                 ))}
               </div>
-              <div style={{ fontSize: 11, color: C.t3, marginTop: 7, lineHeight: 1.5 }}>{rm.execution.healthFloor.note}</div>
+              <div style={{ fontSize: 11, color: C.t3, marginTop: 8, lineHeight: 1.5 }}>{rm.execution.healthFloor.note}</div>
             </div>
           </div>
         </Disclosure>
@@ -749,18 +749,18 @@ function SeniorCalendar({ calendar, priorities, isMobile }) {
           <div>
             <div style={{ ...pill(C.green), marginBottom: 8 }}>Keeps its deadline</div>
             {calendar.triage.keep.map(k => (
-              <div key={k.id} style={{ ...glass2({ padding: 11, marginBottom: 7 }) }}>
+              <div key={k.id} style={{ ...glass2({ padding: 12, marginBottom: 8 }) }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>{k.label}</div>
-                <div style={{ fontSize: 11, color: C.t3, marginTop: 3 }}>{fmtDate(k.due)} · {k.why}</div>
+                <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>{fmtDate(k.due)} · {k.why}</div>
               </div>
             ))}
           </div>
           <div>
             <div style={{ ...pill(C.t3), marginBottom: 8 }}>Cut, and what it costs</div>
             {calendar.triage.cut.map(c => (
-              <div key={c.id} style={{ ...glass2({ padding: 11, marginBottom: 7 }) }}>
+              <div key={c.id} style={{ ...glass2({ padding: 12, marginBottom: 8 }) }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: C.t2 }}>{c.label}</div>
-                <div style={{ fontSize: 11, color: C.t3, marginTop: 3, lineHeight: 1.45 }}>{c.cost}</div>
+                <div style={{ fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.45 }}>{c.cost}</div>
               </div>
             ))}
           </div>
@@ -768,18 +768,18 @@ function SeniorCalendar({ calendar, priorities, isMobile }) {
       ) : null}
 
       {calendar.triage ? (
-        <div style={{ fontSize: 12, color: C.t2, marginTop: 10, lineHeight: 1.55, fontWeight: 600 }}>{calendar.triage.rule}</div>
+        <div style={{ fontSize: 12, color: C.t2, marginTop: 8, lineHeight: 1.55, fontWeight: 600 }}>{calendar.triage.rule}</div>
       ) : null}
 
       <Disclosure id="ivy-senior-months" title="The month-by-month pipeline" icon={CalendarDays} color={C.green} m={isMobile}>
-        <div style={CC({ gap: 10 })}>
+        <div style={CC({ gap: 8 })}>
           {calendar.months.map(m => (
             <div key={m.key} style={{ ...glass2({ padding: 12 }), opacity: m.state === 'past' ? 0.6 : 1 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: m.state === 'current' ? accentText(C.green) : C.t1 }}>
                 {m.title} · {m.done}/{m.total}
               </div>
               {m.items.map(i => (
-                <div key={i.id} style={{ fontSize: 12, marginTop: 6, color: i.done ? C.t3 : i.overdue ? C.orange : C.t2, lineHeight: 1.5 }}>
+                <div key={i.id} style={{ fontSize: 12, marginTop: 8, color: i.done ? C.t3 : i.overdue ? C.orange : C.t2, lineHeight: 1.5 }}>
                   {i.done ? '✓' : i.overdue ? '!' : '○'} <strong>{i.label}</strong> — {fmtDate(i.due)}. {i.detail}
                   {i.costNote ? <span style={{ color: C.green }}> {i.costNote}</span> : null}
                 </div>
@@ -810,7 +810,7 @@ function ModulesSection({ result, isMobile }) {
   return (
     <Disclosure id="ivy-modules" title="Every module, with its arithmetic" icon={Gauge} color={C.t3} m={isMobile}
       sub="The numbers behind the findings above. Useful when you disagree with one.">
-      <div style={CC({ gap: 10 })}>
+      <div style={CC({ gap: 8 })}>
         <ModuleRow label="Holistic score" value={m.holistic.reported} note={m.holistic.readingNote} />
         <ModuleRow label="Spike index" value={`${m.holistic.spikeIndex} of ${m.holistic.spikeIndexRange[1]}`} note={m.holistic.headline} />
         <ModuleRow label="Project viability" value={m.domino.viability} note={m.domino.stageNote} />
@@ -834,8 +834,8 @@ function ModulesSection({ result, isMobile }) {
 
 function ModuleRow({ label, value, note }) {
   return (
-    <div style={{ ...glass2({ padding: 11 }) }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline' }}>
+    <div style={{ ...glass2({ padding: 12 }) }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
         <span style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>{label}</span>
         <span style={{ fontSize: 13, fontWeight: 800, color: accentText(C.violet) }}>{value}</span>
       </div>
@@ -862,7 +862,7 @@ function SafeguardSection({ result, isMobile }) {
       </div>
 
       {s.homogeneity?.warnings?.length ? (
-        <div style={{ marginTop: 14 }}>
+        <div style={{ marginTop: 16 }}>
           {s.homogeneity.warnings.map(w => (
             <div key={w.id} style={{ ...glass2({ padding: 12, marginTop: 8 }), borderLeft: `3px solid ${C.gold}` }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>{w.label}</div>
@@ -872,27 +872,27 @@ function SafeguardSection({ result, isMobile }) {
         </div>
       ) : null}
 
-      <div style={{ fontSize: 12, color: C.t2, marginTop: 14, lineHeight: 1.6, fontStyle: 'italic' }}>
+      <div style={{ fontSize: 12, color: C.t2, marginTop: 16, lineHeight: 1.6, fontStyle: 'italic' }}>
         {s.homogeneity?.principle}
       </div>
 
       <Disclosure id="ivy-ai-policy" title={s.aiPolicy.title} icon={Info} color={C.sky} m={isMobile} defaultOpen>
         <div>
           {s.aiPolicy.points.map((p, i) => (
-            <div key={i} style={{ fontSize: 12, color: C.t2, marginTop: 7, lineHeight: 1.6 }}>{p}</div>
+            <div key={i} style={{ fontSize: 12, color: C.t2, marginTop: 8, lineHeight: 1.6 }}>{p}</div>
           ))}
 
           {/* Rendered from src/lib/aiPolicy.js — the same source the essay
               workspace and the server-side guard read, so a student sees
               identical wording wherever they meet this promise. */}
           {s.aiPolicy.hardRules?.length ? (
-            <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${tint(C.sky, 0.25)}` }}>
+            <div style={{ marginTop: 16, paddingTop: 12, borderTop: `1px solid ${tint(C.sky, 0.25)}` }}>
               <div style={{ fontSize: 12, fontWeight: 800, color: C.t1 }}>{s.aiPolicy.policyHeadline}</div>
-              <div style={{ fontSize: 12, color: C.t2, marginTop: 5, lineHeight: 1.6 }}>{s.aiPolicy.policyShort}</div>
+              <div style={{ fontSize: 12, color: C.t2, marginTop: 4, lineHeight: 1.6 }}>{s.aiPolicy.policyShort}</div>
               {s.aiPolicy.hardRules.map(r => (
-                <div key={r.id} style={{ marginTop: 9 }}>
+                <div key={r.id} style={{ marginTop: 8 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>{r.title}</div>
-                  <div style={{ fontSize: 12, color: C.t3, marginTop: 3, lineHeight: 1.55 }}>{r.body}</div>
+                  <div style={{ fontSize: 12, color: C.t3, marginTop: 4, lineHeight: 1.55 }}>{r.body}</div>
                 </div>
               ))}
             </div>
@@ -901,12 +901,12 @@ function SafeguardSection({ result, isMobile }) {
       </Disclosure>
 
       <Disclosure id="ivy-definitions" title="What these labels actually mean" icon={Info} color={C.t3} m={isMobile}>
-        <div style={CC({ gap: 10 })}>
+        <div style={CC({ gap: 8 })}>
           {s.definitions.map(d => (
             <div key={d.id} style={glass2({ padding: 12 })}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>{d.label}</div>
               <div style={{ fontSize: 12, color: C.t2, marginTop: 4, lineHeight: 1.55 }}>{d.institutional}</div>
-              <div style={{ fontSize: 11, color: C.orange, marginTop: 5, lineHeight: 1.5 }}>Commonly got wrong: {d.commonError}</div>
+              <div style={{ fontSize: 11, color: C.orange, marginTop: 4, lineHeight: 1.5 }}>Commonly got wrong: {d.commonError}</div>
               <div style={{ fontSize: 11, color: C.green, marginTop: 4, lineHeight: 1.5 }}>{d.action}</div>
             </div>
           ))}
@@ -918,7 +918,7 @@ function SafeguardSection({ result, isMobile }) {
           <div style={CC({ gap: 8 })}>
             <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.6 }}>{s.interval.note}</div>
             {s.interval.reasons.map(r => (
-              <div key={r.id} style={{ fontSize: 12, color: C.t3, lineHeight: 1.55, paddingLeft: 10, borderLeft: `2px solid ${tint(C.violet, 0.35)}` }}>
+              <div key={r.id} style={{ fontSize: 12, color: C.t3, lineHeight: 1.55, paddingLeft: 8, borderLeft: `2px solid ${tint(C.violet, 0.35)}` }}>
                 {r.label} {r.fixable ? <span style={{ color: C.green }}>— you can close this one.</span> : ''}
               </div>
             ))}
@@ -940,13 +940,13 @@ function UpgradeCard({ locked, isMobile }) {
     <div style={{ ...glass({ padding: isMobile ? 16 : 20 }), border: `1px solid ${tint(C.gold, 0.4)}` }}>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <Lock size={15} style={{ color: C.gold }} />
-        <div style={{ fontSize: 15, fontWeight: 800, color: C.t1 }}>{locked.label}</div>
+        <div style={{ ...type(15, { weight: 800 }), color: C.t1 }}>{locked.label}</div>
       </div>
       <div style={{ fontSize: 13, color: C.t2, marginTop: 8, lineHeight: 1.55 }}>{locked.pitch}</div>
       <div style={{ marginTop: 12 }}>
         {locked.included.map((x, i) => (
-          <div key={i} style={{ fontSize: 12, color: C.t2, marginTop: 6, display: 'flex', gap: 7 }}>
-            <TrendingUp size={13} style={{ color: C.gold, flexShrink: 0, marginTop: 2 }} />{x}
+          <div key={i} style={{ fontSize: 12, color: C.t2, marginTop: 8, display: 'flex', gap: 8 }}>
+            <TrendingUp size={13} style={{ color: C.gold, flexShrink: 0, marginTop: 4 }} />{x}
           </div>
         ))}
       </div>
