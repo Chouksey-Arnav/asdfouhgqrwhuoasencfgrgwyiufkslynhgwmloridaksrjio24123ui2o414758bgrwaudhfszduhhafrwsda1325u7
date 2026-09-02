@@ -90,7 +90,12 @@ const rootCss = extractRootRules(fs.readFileSync(CSS_PATH, 'utf8'));
 
 // The image Playwright ships is not always the one this environment has on
 // disk; prefer whatever is actually installed and fall back to the default.
+// The Docker build is the case that matters: Playwright publishes no musl
+// browser build, so there the Chromium is Alpine's own, named by the env var.
 function executablePath() {
+  const fromEnv = process.env.CHROMIUM_EXECUTABLE_PATH;
+  if (fromEnv && fs.existsSync(fromEnv)) return fromEnv;
+
   const base = process.env.PLAYWRIGHT_BROWSERS_PATH || '/opt/pw-browsers';
   try {
     const dir = fs.readdirSync(base).find((d) => /^chromium-\d+$/.test(d));
@@ -98,8 +103,12 @@ function executablePath() {
       const bin = path.join(base, dir, 'chrome-linux', 'chrome');
       if (fs.existsSync(bin)) return bin;
     }
-  } catch { /* fall through to Playwright's own resolution */ }
-  return undefined;
+  } catch { /* fall through */ }
+
+  for (const bin of ['/usr/bin/chromium-browser', '/usr/bin/chromium']) {
+    if (fs.existsSync(bin)) return bin;
+  }
+  return undefined; // let Playwright resolve its own download
 }
 
 const failures = [];
