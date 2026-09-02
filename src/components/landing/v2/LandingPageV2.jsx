@@ -910,6 +910,14 @@ class LandingPageV2Class extends React.Component {
               {' '}
               <div style={css("margin-left: auto; display: flex; align-items: center; gap: 12px;")}>
                 {' '}
+                {/* The header is the first thing anyone sees, whichever door they came in
+                    through — so a parent deciding whether this is worth their kid's time
+                    gets a way to their own page from the very first screen, not a 13px
+                    link buried in the footer. */}
+                <a className="mspv2-hover-1" href={v.parentsUrl} onClick={v.onParentsClick} style={css("display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 600; color: #45536b; padding: 9px 14px; border-radius: 10px; border: 1px solid rgba(15,23,42,0.14);")}>
+                  {"For parents"}
+                </a>
+                {' '}
                 <a className="mspv2-hover-1" href={v.loginUrl} onClick={v.onLoginClick} style={css("font-size: 13.5px; font-weight: 600; color: #45536b; padding: 9px 12px; border-radius: 10px;")}>
                   {"Log in"}
                 </a>
