@@ -19,18 +19,34 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <!--
+      No SVG favicon here on purpose. public/icon.svg is 1.58 MB — it is the mark
+      exported with its full glow artwork rather than as flat vector shapes — and
+      a browser that prefers `image/svg+xml` fetches the whole thing to paint a
+      16-pixel tab icon. That was, by a wide margin, the single largest file the
+      average first visit downloaded: more than the entire CSS bundle and every
+      font put together, for a favicon.
+
+      The PNGs below are already generated from the same master (public/logo.png,
+      via scripts/renderIcons.mjs) and total under 8 kB for the pair. The file
+      itself stays in public/ — it is a legitimate export anyone may deep-link —
+      it just is not something every visitor is made to download.
+    -->
     <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/icon-16.png" />
 
     <!--
-      The first two frames of the loading animation (src/components/BrandJourney.jsx).
-      Everything else it draws is needed a second or more in, by which time the
-      images have streamed in on their own; these two are on screen immediately,
-      and without the hint a cold first visit opens on an empty circle.
+      The one image the loading screen draws (src/components/BrandJourney.jsx's
+      StillMark). Without the hint a cold first visit opens on an empty ring.
+
+      This used to preload /brand/book-left.png and /brand/book-right.png — the
+      first two frames of the six-beat animation. That animation is switched off
+      at JOURNEY_ANIMATION_ENABLED, so those two are no longer on screen at boot
+      and preloading them was fetching 56 kB nothing was going to draw. If the
+      animation is switched back on, swap these back too: it needs those two
+      immediately and mark.png not at all.
     -->
-    <link rel="preload" as="image" href="/brand/book-left.png" />
-    <link rel="preload" as="image" href="/brand/book-right.png" />
+    <link rel="preload" as="image" href="/brand/mark.png" />
     <title>MedSchoolPrep — Your Path Into Medicine</title>
 
     <!--
