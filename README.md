@@ -145,6 +145,28 @@ ships.
 Set `REQUIRE_BROWSER_CHECKS=1` locally to get the same strictness as CI, or point
 `CHROMIUM_EXECUTABLE_PATH` at a Chromium you already have.
 
+### The production bundle is not the bundle CI builds
+
+Coolify passes every configured environment variable into the image build as a Docker
+`ARG`, which Docker exposes to `RUN` — so `vite build` there sees `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_ANON_KEY`, and CI and a plain local build never do. That is not cosmetic:
+`src/lib/supabaseClient.js` resolves to `null` when either is missing, so without them
+Rollup tree-shakes `@supabase/supabase-js` out of the entry graph entirely — **56 KB
+gzipped that only the production bundle carries**.
+
+`verify:payload` therefore keeps one baseline per build shape, in
+`scripts/payloadBaseline.json`, and prints which one it used:
+
+| profile | when | baseline |
+|---|---|---|
+| `oauth-configured` | `VITE_SUPABASE_*` set — every Coolify deploy | 3052 KB gzipped |
+| `oauth-unconfigured` | CI, and `npm run build` locally | 2996 KB gzipped |
+
+`node scripts/verifyPayload.mjs --update` re-baselines **only the profile of the build in
+front of it**, so re-baseline in the same shape of build the number came from. If you ever
+see the two numbers converge or the gap change a lot, something moved in or out of the
+entry graph and is worth a look.
+
 > ⚠️ **Before you set `NODE_ENV=production` as a Coolify *build* variable:**
 > `verify:legal` turns its placeholder-postal-address warning into a hard build failure
 > when `NODE_ENV=production` or `VERCEL_ENV=production` is set. That is deliberate — a
