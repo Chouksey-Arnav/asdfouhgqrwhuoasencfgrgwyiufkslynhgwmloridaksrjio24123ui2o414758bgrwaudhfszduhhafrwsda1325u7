@@ -1,0 +1,67 @@
+{
+  "note": "Measured by scripts/verifyMemory.mjs. Re-record deliberately with `npm run verify:memory -- --update`.",
+  "recordedAt": "2026-09-03",
+  "routes": {
+    "/home": {
+      "nodes": 689,
+      "listeners": 284
+    },
+    "/prep/quizzes": {
+      "nodes": 834,
+      "listeners": 411
+    },
+    "/prep/flashcards": {
+      "nodes": 1100,
+      "listeners": 407
+    },
+    "/prep/library": {
+      "nodes": 1956,
+      "listeners": 628
+    },
+    "/prep/coach": {
+      "nodes": 445,
+      "listeners": 513
+    },
+    "/sat/library": {
+      "nodes": 799,
+      "listeners": 645
+    },
+    "/sat/review": {
+      "nodes": 358,
+      "listeners": 563
+    },
+    "/sat/skills": {
+      "nodes": 982,
+      "listeners": 624
+    },
+    "/portfolio/opportunities": {
+      "nodes": 2029,
+      "listeners": 767
+    },
+    "/portfolio/resume": {
+      "nodes": 603,
+      "listeners": 588
+    },
+    "/portfolio/applying": {
+      "nodes": 762,
+      "listeners": 600
+    },
+    "/roadmap": {
+      "nodes": 313,
+      "listeners": 541
+    },
+    "/plans": {
+      "nodes": 312,
+      "listeners": 374
+    },
+    "/progress": {
+      "nodes": 430,
+      "listeners": 399
+    }
+  },
+  "heap": {
+    "startMB": 47.5,
+    "endMB": 51.24,
+    "perCycleMB": 0.623
+  }
+}

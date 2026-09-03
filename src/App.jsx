@@ -37,6 +37,7 @@ const TIER_ICONS = { Sparkles, Hammer, Compass, Trophy, Sun, ShieldCheck, Crown 
 
 import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
+import useWindowedList from './lib/useWindowedList';
 import { PATHS, FLASH_DECKS, SCHOOL_DATA, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP, DECK_CATEGORY_ORDER, getDeckCategory, UNIT_STAGES, isUnitTimelyFor } from './data/constants';
 import BandPreview, { BandPreviewTag, BandPreviewBanner } from './components/BandPreview';
 import { LESSON_CONTENT } from './data/lessonContent';
@@ -1508,6 +1509,39 @@ function PathwayCard({ pathKey, p, current, enrolled=false, full=false, onSelect
         })()}
       </div>
     </motion.div>
+  );
+}
+
+// ── The end-of-grid affordance for a windowed list ──────────────────────────
+//
+// Declared at module scope rather than inside the render function that uses it.
+// A component declared inside a render is a NEW COMPONENT TYPE on every render,
+// so React cannot reconcile it — it unmounts the old subtree and mounts a fresh
+// one each time, which here would tear down and rebuild the sentinel and its
+// IntersectionObserver on every keystroke in the search box. Out here it is one
+// stable type and the subtree updates in place.
+//
+// The sentinel is what makes scrolling feel like an ordinary long page; the button
+// is what a keyboard user reaches, since tabbing past the last card never scrolls a
+// sentinel into view. The live count is the honest answer to "is this everything?" —
+// without it a windowed list is indistinguishable from a truncated one.
+function MoreRows({ win, label }) {
+  if (!win.hasMore) return null;
+  return (
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,padding:'16px 0 4px'}}>
+      <div ref={win.sentinelRef} aria-hidden="true" style={{width:1,height:1}}/>
+      <button
+        onClick={win.showMore}
+        style={{background:'rgba(255,255,255,0.04)',border:`1px solid ${C.b1}`,borderRadius:12,
+                padding:'8px 16px',color:C.t2,fontSize:12,fontWeight:700,cursor:'pointer',
+                fontFamily:C.FB,transition:CONTROL_TRANSITION}}
+      >
+        Show more {label}
+      </button>
+      <div aria-live="polite" style={{fontSize:10.5,color:C.t3}}>
+        Showing {win.visible.length} of {win.total} &middot; {win.remaining} more
+      </div>
+    </div>
   );
 }
 
@@ -5916,6 +5950,46 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
     return result;
   }, [libFuse, lSrch, lCat, lType, lDiff, lFreeOnly, lSubTab, lSort, user]);
+
+  // ── How much of the library is actually put in the document ───────────────
+  //
+  // `fLib` is the full result set and stays that way: the counts in the section
+  // headers, the empty states and everything downstream still describe every
+  // matching resource. What changed is that the two grids below render a window
+  // onto it rather than all of it.
+  //
+  // The measurement that forced this: /prep/library committed 53,001 DOM nodes
+  // and ~10,500 event listeners in a single render — 1,628 cards, each ~32 nodes
+  // and each carrying a framer-motion hover instance. Opening the tab was enough
+  // to make the whole browser unusable, and a detached copy of that tree stayed
+  // reachable well past unmount, so the cost accumulated as a student moved
+  // around the app instead of being paid once.
+  //
+  // The split into two windows (rather than one over `fLib`) keeps the existing
+  // shape of the page: videos are their own section above the reading list, and
+  // each grows on its own as you reach it.
+  const libYt  = useMemo(()=>fLib.filter(r=>r.type==='YouTube'),[fLib]);
+  const libReg = useMemo(()=>fLib.filter(r=>r.type!=='YouTube'),[fLib]);
+  // Every control that can change WHICH resources match. Changing any of them
+  // means the student is looking at a new list from the top, so the window snaps
+  // back to the first page instead of dumping hundreds of rows for a query that
+  // matched a handful.
+  const libWindowKey = `${lSrch}|${lCat}|${lType}|${lDiff}|${lFreeOnly}|${lSubTab}|${lSort}`;
+  const ytWindow  = useWindowedList(libYt,  { resetKey: libWindowKey });
+  const regWindow = useWindowedList(libReg, { resetKey: libWindowKey });
+
+  // The quiz grid has the same shape of problem as the library, an order of
+  // magnitude smaller: 342 cards measured at 6,864 nodes in one commit. Same
+  // treatment, same reasoning — the ordering below (plan quizzes stable-partitioned
+  // to the front) still runs over every quiz, so "the two quizzes my plan asked
+  // for" are in the first page by construction, not by luck of where the window
+  // happens to fall.
+  const orderedQuiz = useMemo(()=>{
+    const onPlan=(q)=>todayPlanTargets.quizIds.has(q.id);
+    const planned=fQuiz.filter(onPlan);
+    return planned.length?[...planned,...fQuiz.filter(q=>!onPlan(q))]:fQuiz;
+  },[fQuiz,todayPlanTargets]);
+  const quizWindow = useWindowedList(orderedQuiz, { resetKey: `${qSrch}|${qCat}|${qDiff}|${qSort}` });
   // All decks: custom decks first (newest created on top), then built-in decks —
   // so a deck you just generated or created is always the first thing you see.
   const allDecksList = useMemo(()=>{
@@ -6817,8 +6891,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // Stable-partition today's plan quizzes to the very front, ahead of whatever sort/filter
     // is active — "the two quizzes my plan asked for" should never be buried in a 342-quiz grid.
     const onPlan=(q)=>todayPlanTargets.quizIds.has(q.id);
-    const planQuizzesShown=fQuiz.filter(onPlan);
-    const orderedQuiz=planQuizzesShown.length?[...planQuizzesShown,...fQuiz.filter(q=>!onPlan(q))]:fQuiz;
+    // Rendered rows only — see the comment on `quizWindow` above. Every count and
+    // every empty state on this screen still speaks for the full `fQuiz` result set.
+    const shownQuiz=quizWindow.visible;
     return(
       <div style={CC({gap:20})}>
         <PanelHero tourTag="prep-deep-quizzes" icon={Layers} color={C.green} color2={C.cyan} m={isMobile}
@@ -6893,7 +6968,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <SectionTitle icon={Layers} color={C.greenL} extra={{marginBottom:0}}>{fQuiz.length} {fQuiz.length===1?'Quiz':'Quizzes'}</SectionTitle>
         </div>
         <div style={G(2,14,{},isMobile)}>
-          {orderedQuiz.map((q,qi)=>{
+          {shownQuiz.map((q,qi)=>{
             const sc=qScores[q.id];const taken=sc!==undefined;const dc=dColors[q.diff]||C.t2;const scc=taken?scCol(sc):null;const cm=catMeta(q.cat);
             const planned=onPlan(q);
             const glowColor=planned?C.amber:cm.color;
@@ -6938,6 +7013,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             );
           })}
         </div>
+        <MoreRows win={quizWindow} label="quizzes"/>
         {fQuiz.length===0&&<EmptyState kind="filtered" icon={Layers} accent={accent} title="No quizzes match those filters" body="Nothing in the bank matches what you have selected. Clearing the filters brings all of them back." actionLabel="Clear filters" onAction={()=>{setQSrch('');setQC('All');setQD('All');}}/>}
       </div>
     );
@@ -7726,7 +7802,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
   // ── E-LIBRARY ─────────────────────────────────────────────────────────────────
   function tLib(){
-    const yt=fLib.filter(r=>r.type==='YouTube');const reg=fLib.filter(r=>r.type!=='YouTube');
+    // Rendered rows, not results. `ytWindow.total`/`regWindow.total` are the real
+    // counts and are what the section headers report — a student filtering down to
+    // "12 videos" must still be told there are 12, whether 12 or 24 are in the DOM.
+    const yt=ytWindow.visible;const reg=regWindow.visible;
     const tc={Article:C.blue,Book:C.amber,Course:C.violet,App:C.green,Community:'#ec4899',Podcast:C.cyan};
 
     // Tracking actions
@@ -8039,8 +8118,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         </motion.div>
 
         {/* Video Resources Section */}
-        {yt.length>0&&<div>
-          <SectionTitle icon={Play} color={C.redL}>Video Resources ({yt.length})</SectionTitle>
+        {ytWindow.total>0&&<div>
+          <SectionTitle icon={Play} color={C.redL}>Video Resources ({ytWindow.total})</SectionTitle>
           <div style={G(2,14,{},isMobile)}>
             {yt.map((r,i)=>{
               const hasNotes = !!user?.resourceNotes?.[r.title];
@@ -8167,11 +8246,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               </motion.div>
             )})}
           </div>
+          <MoreRows win={ytWindow} label="videos"/>
         </div>}
 
         {/* Text/Interactive Resources Section */}
-        {reg.length>0&&<div>
-          {yt.length>0&&<SectionTitle icon={BookOpen} color={C.pinkL}>Articles, Books & Courses ({reg.length})</SectionTitle>}
+        {regWindow.total>0&&<div>
+          {ytWindow.total>0&&<SectionTitle icon={BookOpen} color={C.pinkL}>Articles, Books &amp; Courses ({regWindow.total})</SectionTitle>}
           <div style={G(2,12,{},isMobile)}>
             {reg.map((r,i)=>{
               const col=tc[r.type]||C.t2;
@@ -8291,6 +8371,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 </motion.div>
               );})}
           </div>
+          <MoreRows win={regWindow} label="resources"/>
         </div>}
         {fLib.length===0&& (
           lSubTab === 'notes' ? (
