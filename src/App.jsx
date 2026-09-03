@@ -1525,21 +1525,28 @@ function PathwayCard({ pathKey, p, current, enrolled=false, full=false, onSelect
 // is what a keyboard user reaches, since tabbing past the last card never scrolls a
 // sentinel into view. The live count is the honest answer to "is this everything?" —
 // without it a windowed list is indistinguishable from a truncated one.
-function MoreRows({ win, label }) {
+//
+// `older` flips it for a tail window (the coach transcript): the control sits ABOVE
+// the rows, reveals what came before rather than what comes next, and deliberately
+// has no sentinel — auto-loading on scroll-up fights the browser's scroll anchoring
+// and yanks the thread under the reader. Loading older messages stays an explicit ask.
+function MoreRows({ win, label, older = false }) {
   if (!win.hasMore) return null;
   return (
-    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,padding:'16px 0 4px'}}>
-      <div ref={win.sentinelRef} aria-hidden="true" style={{width:1,height:1}}/>
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,padding:older?'4px 0 16px':'16px 0 4px'}}>
+      {!older&&<div ref={win.sentinelRef} aria-hidden="true" style={{width:1,height:1}}/>}
       <button
         onClick={win.showMore}
-        style={{background:'rgba(255,255,255,0.04)',border:`1px solid ${C.b1}`,borderRadius:12,
+        style={{background:tint(C.t1,0.04),border:`1px solid ${C.b1}`,borderRadius:12,
                 padding:'8px 16px',color:C.t2,fontSize:12,fontWeight:700,cursor:'pointer',
                 fontFamily:C.FB,transition:CONTROL_TRANSITION}}
       >
-        Show more {label}
+        {older?`Load earlier ${label}`:`Show more ${label}`}
       </button>
       <div aria-live="polite" style={{fontSize:10.5,color:C.t3}}>
-        Showing {win.visible.length} of {win.total} &middot; {win.remaining} more
+        {older
+          ? `${win.remaining} earlier in this conversation`
+          : `Showing ${win.visible.length} of ${win.total} \u00b7 ${win.remaining} more`}
       </div>
     </div>
   );
@@ -5970,11 +5977,24 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // each grows on its own as you reach it.
   const libYt  = useMemo(()=>fLib.filter(r=>r.type==='YouTube'),[fLib]);
   const libReg = useMemo(()=>fLib.filter(r=>r.type!=='YouTube'),[fLib]);
-  // Every control that can change WHICH resources match. Changing any of them
-  // means the student is looking at a new list from the top, so the window snaps
-  // back to the first page instead of dumping hundreds of rows for a query that
-  // matched a handful.
-  const libWindowKey = `${lSrch}|${lCat}|${lType}|${lDiff}|${lFreeOnly}|${lSubTab}|${lSort}`;
+  // Every control that can change WHICH resources match, plus the sub-tab itself.
+  //
+  // The filters are the obvious half: changing one means the student is looking at
+  // a new list from the top, so the window snaps back rather than dumping hundreds
+  // of rows for a query that matched a handful.
+  //
+  // `prepScreen` is the half that is easy to miss and matters more. These hooks
+  // live at the top of App, so their state outlives the screen that renders them —
+  // without it, a student who scrolled deep into the library once would get that
+  // entire expanded list rebuilt on EVERY later visit to the tab, having asked for
+  // it once. It has to fold in `tab` and not just `prepView`: leaving for the Home
+  // tab does not change which PREP sub-view is selected, so keying on `prepView`
+  // alone would hold a fully-expanded library across a trip to the dashboard and
+  // back. Keyed on both, leaving the screen by any route releases it, and coming
+  // back starts at one page again — which is also what a student expects, having
+  // left and returned.
+  const prepScreen = tab === 'prep' ? prepView : `away:${tab}`;
+  const libWindowKey = `${prepScreen}|${lSrch}|${lCat}|${lType}|${lDiff}|${lFreeOnly}|${lSubTab}|${lSort}`;
   const ytWindow  = useWindowedList(libYt,  { resetKey: libWindowKey });
   const regWindow = useWindowedList(libReg, { resetKey: libWindowKey });
 
@@ -5989,7 +6009,28 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const planned=fQuiz.filter(onPlan);
     return planned.length?[...planned,...fQuiz.filter(q=>!onPlan(q))]:fQuiz;
   },[fQuiz,todayPlanTargets]);
-  const quizWindow = useWindowedList(orderedQuiz, { resetKey: `${qSrch}|${qCat}|${qDiff}|${qSort}` });
+  const quizWindow = useWindowedList(orderedQuiz, { resetKey: `${prepScreen}|${qSrch}|${qCat}|${qDiff}|${qSort}` });
+
+  // ── The coach transcript ──────────────────────────────────────────────────
+  //
+  // `coachMessages` is described in src/lib/db.js as "the one unbounded table
+  // here — a chatty student accumulates thousands", and the thread rendered every
+  // row of it. Each one is a framer-motion element with a `layout` animation, and
+  // every assistant turn additionally runs renderMarkdown (marked + DOMPurify)
+  // over its content on each render. Seeded with 1,200 messages — a realistic
+  // year of use, not a pathological case — opening /prep/coach committed 13,593
+  // nodes and cost 19 MB of heap on that one route.
+  //
+  // (Wording note: this comment avoids one particular adjective for "believable"
+  // on purpose. scripts/verifyLegal.mjs greps this file for analytics SDK names to
+  // prove the Privacy Policy's "no tracking" claim is still true, and one of those
+  // product names is an ordinary English word.)
+  //
+  // Windowed from the END, because a transcript is read from the bottom: the most
+  // recent exchange is what the student is looking at, and "more" means older.
+  // Threads reset the window, so switching conversations does not carry one
+  // thread's scrollback into another.
+  const msgWindow = useWindowedList(msgs, { page: 30, fromEnd: true, resetKey: `${prepScreen}|${activeThreadId}` });
   // All decks: custom decks first (newest created on top), then built-in decks —
   // so a deck you just generated or created is always the first thing you see.
   const allDecksList = useMemo(()=>{
@@ -7370,8 +7411,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* ── Message thread ─────────────────────────────────────────────── */}
         {msgs.length>0&&(
         <div role="log" aria-label="Conversation with Medabrain" aria-live="polite" style={{flex:1,minHeight:0,overflowY:'auto',display:'flex',flexDirection:'column',gap:12,paddingRight:4}}>
+          <MoreRows win={msgWindow} label="messages" older/>
           <AnimatePresence initial={false}>
-            {msgs.map((m,i)=>(
+            {msgWindow.visible.map((m,vi)=>{
+              // Keyed on the message's position in the FULL thread, not in the
+              // window — see the note on keys in useWindowedList. Keying on the
+              // slice index would re-key every bubble each time older messages
+              // load and remount the entire transcript.
+              const i=msgWindow.offset+vi;
+              return(
               <motion.div key={i} layout={!reducedMotion} initial={reducedMotion?false:{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={motionT} style={{display:'flex',justifyContent:m.role==='user'?'flex-end':'flex-start',alignItems:'flex-end',gap:isMobile?6:10}}>
                 {m.role!=='user'&&<div style={{width:isMobile?24:30,height:isMobile?24:30,borderRadius:'50%',background:m.role==='error'?C.roseDim:`linear-gradient(135deg,${tint(C.violet,0.28)},${tint(C.indigo,0.16)})`,border:`1px solid ${m.role==='error'?tint(C.rose,0.28):tint(C.violet,0.24)}`,display:'grid',placeItems:'center',flexShrink:0}}>
                   {m.role==='error'?<AlertTriangle size={isMobile?12:14} color={C.roseL}/>:<Brain size={isMobile?12:14} color={C.violetL}/>}
@@ -7393,7 +7441,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   )}
                 </div>
               </motion.div>
-            ))}
+            );})}
           </AnimatePresence>
           {cLoad&&<motion.div initial={reducedMotion?false:{opacity:0}} animate={{opacity:1}} transition={motionT} style={{display:'flex',alignItems:'flex-end',gap:8}}>
             <div style={{width:30,height:30,borderRadius:'50%',background:`linear-gradient(135deg,${tint(C.violet,0.28)},${tint(C.indigo,0.16)})`,border:`1px solid ${tint(C.violet,0.24)}`,display:'grid',placeItems:'center'}}><Brain size={14} color={C.violetL}/></div>

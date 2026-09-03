@@ -36,7 +36,7 @@
 // end of the rendered rows never scrolls a sentinel into view, and it is what
 // makes the behavior testable and announceable. Both are load-bearing.
 // ─────────────────────────────────────────────────────────────────────────────
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 // One screenful of a two-column card grid, plus enough slack that the sentinel
 // starts below the fold on a tall desktop window — otherwise the observer fires
@@ -48,13 +48,32 @@ export const DEFAULT_PAGE = 24;
  * @param {object} opts
  * @param {number} opts.page  how many rows to add per step
  * @param {any}    opts.resetKey  changing this snaps the window back to the first page
- * @returns {{visible:Array, hasMore:boolean, remaining:number, total:number,
- *            showMore:()=>void, sentinelRef:React.RefObject}}
+ * @param {boolean} opts.fromEnd  window the TAIL instead of the head, growing backwards.
+ *   For a transcript: the newest messages are the ones on screen, and "more" means
+ *   older. `offset` is then the number of items hidden ABOVE the window, which the
+ *   caller needs to build stable React keys — see the note on keys below.
+ * @returns {{visible:Array, offset:number, hasMore:boolean, remaining:number,
+ *            total:number, showMore:()=>void, sentinelRef:React.RefObject}}
  */
-export default function useWindowedList(items, { page = DEFAULT_PAGE, resetKey = null } = {}) {
+export default function useWindowedList(items, { page = DEFAULT_PAGE, resetKey = null, fromEnd = false } = {}) {
   const list = Array.isArray(items) ? items : [];
   const [count, setCount] = useState(page);
-  const sentinelRef = useRef(null);
+  // ── A callback ref, not useRef, and this is load-bearing ───────────────────
+  //
+  // The sentinel does not exist when this hook first runs. It is rendered by the
+  // screen that consumes the window, which mounts later (the tab is not open yet,
+  // or `items` is still empty on the first pass), and a plain useRef gives the
+  // effect below no way to learn that it has since appeared: the effect would run
+  // once against a null ref, bail out, and never re-run — because the only things
+  // that re-trigger it are `count` and `list.length`, and the only thing that
+  // moves `count` is the observer it failed to attach. A deadlock that leaves the
+  // button working and silently kills scroll-to-load.
+  //
+  // Storing the node in state means mounting it IS a state change, so the effect
+  // re-runs and observes it the moment it appears, and unmounting sets it back to
+  // null and tears the observer down.
+  const [sentinelEl, setSentinelEl] = useState(null);
+  const sentinelRef = useCallback((node) => { setSentinelEl(node); }, []);
 
   // A new search or filter is a new list, and the student is looking at the top
   // of it — carrying a grown window across would render hundreds of rows for a
@@ -67,25 +86,38 @@ export default function useWindowedList(items, { page = DEFAULT_PAGE, resetKey =
   }, [page, list.length]);
 
   useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el || count >= list.length) return undefined;
+    if (!sentinelEl || count >= list.length) return undefined;
     // rootMargin pulls the trigger a screen early so the next page is committed
     // before the student reaches the bottom and the growth is invisible to them.
     const io = new IntersectionObserver(
       entries => { if (entries.some(e => e.isIntersecting)) setCount(c => Math.min(c + page, list.length)); },
       { rootMargin: '600px 0px' },
     );
-    io.observe(el);
+    io.observe(sentinelEl);
     return () => io.disconnect();
-  }, [count, list.length, page]);
+  }, [sentinelEl, count, list.length, page]);
 
   // Slicing allocates, and this runs on every keystroke in the search box while
   // `list` is stable — memoizing keeps the children's props referentially equal
   // so React can bail out of re-rendering rows that did not change.
-  const visible = useMemo(() => list.slice(0, count), [list, count]);
+  //
+  // ── A note on keys, for `fromEnd` callers ──────────────────────────────────
+  // A tail window's slice indices move every time it grows: today's index 0 is
+  // tomorrow's index 24. Keying rendered rows by their position WITHIN the slice
+  // therefore re-keys every row on each "load earlier", which unmounts and
+  // remounts the whole transcript — the exact churn this hook exists to avoid.
+  // `offset` is the count of items hidden above the window, so `offset + i` is a
+  // row's stable position in the full list and is what a caller should key on
+  // (or key on the item's own id, if it has one).
+  const offset = fromEnd ? Math.max(0, list.length - count) : 0;
+  const visible = useMemo(
+    () => (fromEnd ? list.slice(Math.max(0, list.length - count)) : list.slice(0, count)),
+    [list, count, fromEnd],
+  );
 
   return {
     visible,
+    offset,
     hasMore: count < list.length,
     remaining: Math.max(0, list.length - count),
     total: list.length,

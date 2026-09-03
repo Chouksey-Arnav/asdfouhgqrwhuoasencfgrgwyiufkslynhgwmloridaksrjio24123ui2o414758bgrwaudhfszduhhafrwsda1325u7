@@ -62,25 +62,23 @@ let failures = 0;
 const ok = (m) => console.log(`  ✓ ${m}`);
 const fail = (m) => { failures += 1; console.error(`  ✗ ${m}`); };
 
-// The routes worth holding a number over: every screen that renders a list off a
-// bulk dataset, plus the dashboard as a control. A route missing from the
-// baseline is measured and reported but cannot fail the build until it is
-// recorded, so adding one here is a two-step, deliberate act.
+// Every route in the app, not a chosen sample. The screen that turns out to be
+// heavy is rarely the one anyone suspected — /prep/coach was found this way, and
+// only because the sweep was exhaustive. A route missing from the baseline is
+// measured and reported but cannot fail the build until it is recorded, so
+// adding one is a two-step, deliberate act.
 const ROUTES = [
   '/home',
-  '/prep/quizzes',
-  '/prep/flashcards',
-  '/prep/library',
-  '/prep/coach',
-  '/sat/library',
-  '/sat/review',
-  '/sat/skills',
-  '/portfolio/opportunities',
-  '/portfolio/resume',
-  '/portfolio/applying',
-  '/roadmap',
+  '/sat/overview', '/sat/baseline', '/sat/diagnostic', '/sat/practice', '/sat/tests',
+  '/sat/review', '/sat/skills', '/sat/library', '/sat/toolkit', '/sat/scores',
+  '/prep/diagnostic', '/prep/pathways', '/prep/quizzes', '/prep/flashcards', '/prep/coach', '/prep/library',
+  '/portfolio/overview', '/portfolio/resume', '/portfolio/opportunities', '/portfolio/applying', '/portfolio/milestones',
+  '/roadmap/overview', '/roadmap/year', '/roadmap/climb', '/roadmap/seasons', '/roadmap/list', '/roadmap/intake',
   '/plans',
-  '/progress',
+  '/progress/overview', '/progress/streak', '/progress/quests', '/progress/verified',
+  '/progress/performance', '/progress/achievements',
+  '/settings/profile', '/settings/study', '/settings/family', '/settings/appearance',
+  '/settings/medabrain', '/settings/data', '/settings/account',
 ];
 
 // Headroom over the recorded number before a route fails. Generous in relative
@@ -91,6 +89,15 @@ const NODE_TOLERANCE = 0.25;
 const NODE_FLOOR = 250;      // ignore noise on screens that are tiny anyway
 const LISTENER_TOLERANCE = 0.30;
 const LISTENER_FLOOR = 80;
+
+// ── A budget alone rewards the wrong outcome ────────────────────────────────
+// A crashed app renders the error boundary and nothing else — about 56 nodes —
+// which sails under every ceiling in this file. A memory check that a broken
+// build passes is worse than no check, so each route also has to prove it
+// actually rendered: no lower than a floor under its recorded size, and no
+// uncaught exceptions anywhere in the run.
+const MIN_RENDER_RATIO = 0.5;
+const ABSOLUTE_MIN_NODES = 120;
 
 // Ceiling on JS heap growth per full lap of the app, after a forced GC. The
 // pre-fix build measured ~4.3 MB/lap and rising; a healthy build settles well
@@ -148,7 +155,17 @@ const server = http.createServer((req, res) => {
   res.setHeader('Content-Type', MIME[path.extname(file)] || 'application/octet-stream');
   res.end(readFileSync(file));
 });
-await new Promise((resolve) => server.listen(PORT, '127.0.0.1', resolve));
+// A leftover run holding the port used to surface as an unhandled EADDRINUSE and a
+// raw stack trace, which in a build gate reads like the app is broken rather than
+// like the machine is busy. Fail with a sentence someone can act on instead.
+await new Promise((resolve, reject) => {
+  server.once('error', (err) => reject(
+    err.code === 'EADDRINUSE'
+      ? new Error(`Port ${PORT} is already in use — another verify run is probably still going. Wait for it, or set E2E_PORT to a free port.`)
+      : err,
+  ));
+  server.listen(PORT, '127.0.0.1', resolve);
+}).catch((err) => { console.error(`\n${err.message}`); process.exit(2); });
 
 const exe = findChromium();
 const browser = await chromium.launch(exe ? { executablePath: exe } : {});
@@ -162,10 +179,78 @@ try {
     : r.fulfill({ status: 200, contentType: 'application/json', body: '[]' })));
   await context.addInitScript(() => { localStorage.setItem('msp_session_token', 'memory-token'); });
 
+  // ── The account this measures is deliberately a heavy one ─────────────────
+  //
+  // The first version of this script measured an EMPTY account, and an empty
+  // account cannot see the failure mode that matters most: a screen whose size is
+  // set by how much the student has done. It passed /prep/coach at 445 nodes while
+  // a real user with a year of chat history got 13,593 and a 19 MB heap spike on
+  // that one route, because the thread rendered every message it had ever stored —
+  // src/lib/db.js calls coachMessages "the one unbounded table here".
+  //
+  // So the fixture below is a student who has used the product hard for a year:
+  // 1,200 coach messages, 2,500 card reviews, 1,500 SAT responses, 420 days of
+  // activity. Every number here is plausible rather than pathological, and that is
+  // the point — the budget has to hold for the students who use the app the most,
+  // because they are the ones whose laptops it breaks.
+  await context.addInitScript(() => {
+    window.__seedHeavyAccount = async () => {
+      const db = await new Promise((res, rej) => {
+        const r = indexedDB.open('MedSchoolPrep');
+        r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+      });
+      const stores = [...db.objectStoreNames];
+      const put = (store, rows) => new Promise((res) => {
+        if (!stores.includes(store)) return res();
+        const tx = db.transaction(store, 'readwrite');
+        const os = tx.objectStore(store);
+        rows.forEach(x => { try { os.put(x); } catch { /* schema drift — skip */ } });
+        tx.oncomplete = () => res(); tx.onerror = () => res();
+      });
+      const now = Date.now();
+      const day = 86400000;
+      const iso = (t) => new Date(t).toISOString().slice(0, 10);
+      await put('coachThreads', [{ id: 1, title: 'Coach', updatedAt: now }]);
+      await put('coachMessages', Array.from({ length: 1200 }, (_, i) => ({
+        id: i + 1, threadId: 1, role: i % 2 ? 'assistant' : 'user',
+        content: `Message ${i} — ${'a long coaching reply about pathway planning and MCAT prep. '.repeat(3)}`,
+        ts: now - (1200 - i) * 60000,
+      })));
+      await put('quizScores', Array.from({ length: 180 }, (_, i) => ({ quizId: `q${i}`, score: 40 + (i % 60), completedAt: now - i * day / 4 })));
+      await put('lessons', Array.from({ length: 220 }, (_, i) => ({ lessonId: `l${i}`, completedAt: now - i * day / 3 })));
+      await put('cardReviews', Array.from({ length: 2500 }, (_, i) => ({ id: i + 1, cardId: `c${i % 600}`, reviewedAt: now - i * 3600000 })));
+      await put('satResponses', Array.from({ length: 1500 }, (_, i) => ({ id: i + 1, attemptId: 1 + (i % 14), questionId: `sq${i}`, skill: `S${i % 22}`, answeredAt: now - i * 600000, correct: i % 3 !== 0 })));
+      await put('satAttempts', Array.from({ length: 14 }, (_, i) => ({ id: i + 1, kind: i % 3 ? 'practice' : 'full', section: i % 2 ? 'math' : 'rw', status: 'done', startedAt: now - i * day })));
+      await put('satReviewLog', Array.from({ length: 320 }, (_, i) => ({ id: i + 1, questionId: `sq${i}`, due: now + i * 3600000, resolved: i % 4 === 0 })));
+      await put('dayActivity', Array.from({ length: 420 }, (_, i) => ({ date: iso(now - i * day), met: i % 3 !== 0, minutes: 10 + (i % 50) })));
+      await put('studyEvents', Array.from({ length: 1800 }, (_, i) => ({ id: i + 1, type: i % 2 ? 'lesson' : 'quiz', refId: `r${i}`, ts: now - i * 1800000 })));
+      await put('lessonNotes', Array.from({ length: 120 }, (_, i) => ({ lessonId: `l${i}`, text: 'Note '.repeat(40), updatedAt: now - i * day })));
+      await put('lessonHighlights', Array.from({ length: 400 }, (_, i) => ({ id: i + 1, lessonId: `l${i % 120}`, text: 'Highlighted passage '.repeat(5), createdAt: now - i * 3600000 })));
+      await put('portfolio', Array.from({ length: 90 }, (_, i) => ({ id: i + 1, name: `Activity ${i}`, type: ['clinical', 'research', 'volunteer', 'shadow'][i % 4], hours: 5 + i, date: iso(now - i * day) })));
+      await put('clinicalHours', Array.from({ length: 120 }, (_, i) => ({ id: i + 1, siteName: `Site ${i}`, siteType: 'hospital', hours: 4 + (i % 9), entryDate: iso(now - i * day) })));
+      await put('flashCards', Array.from({ length: 600 }, (_, i) => ({ id: i + 1, deckName: `Custom Deck ${i % 12}`, front: `Front ${i}`, back: `Back ${i}` })));
+      await put('deckMeta', Array.from({ length: 12 }, (_, i) => ({ name: `Custom Deck ${i}`, createdAt: now - i * day })));
+      await put('unitMastery', Array.from({ length: 60 }, (_, i) => ({ id: i + 1, pathwayKey: 'physician', unitId: `u${i}`, verifiedAt: now - i * day })));
+      await put('achievements', Array.from({ length: 40 }, (_, i) => ({ key: `a${i}`, unlockedAt: now - i * day })));
+      await put('interviewSessions', Array.from({ length: 30 }, (_, i) => ({ id: i + 1, mode: 'mmi', pathwayKey: 'physician', completedAt: now - i * day })));
+      await put('recommenders', Array.from({ length: 12 }, (_, i) => ({ id: i + 1, name: `Dr. ${i}`, relationship: 'Science teacher', status: 'asked', type: 'academic' })));
+      await put('gpaEntries', Array.from({ length: 12 }, (_, i) => ({ id: i + 1, term: `T${i}`, gpa: 3 + (i % 10) / 10, addedAt: now - i * day })));
+      db.close();
+    };
+  });
+
   const page = await context.newPage();
+  const pageErrors = [];
+  page.on('pageerror', e => pageErrors.push(String(e.message || e).slice(0, 200)));
   await page.goto(`${BASE}/home`, { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('nav a[href="/home"], a[href="/home"]', { timeout: 30000 }).catch(() => {});
   await page.waitForTimeout(6000);
+  // Dexie has created its object stores by now; fill them, then reload so the app
+  // boots against a heavy account rather than an empty one.
+  await page.evaluate(() => window.__seedHeavyAccount());
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('nav a[href="/home"], a[href="/home"]', { timeout: 30000 }).catch(() => {});
+  await page.waitForTimeout(9000);
 
   const cdp = await context.newCDPSession(page);
   await cdp.send('Performance.enable');
@@ -213,10 +298,57 @@ try {
     }
     const nodeCap = Math.max(Math.round(prev.nodes * (1 + NODE_TOLERANCE)), prev.nodes + NODE_FLOOR);
     const lisCap = Math.max(Math.round(prev.listeners * (1 + LISTENER_TOLERANCE)), prev.listeners + LISTENER_FLOOR);
+    const nodeFloorCheck = Math.max(ABSOLUTE_MIN_NODES, Math.round(prev.nodes * MIN_RENDER_RATIO));
     const label = `${route.padEnd(26)} ${String(nodes).padStart(6)} nodes (max ${nodeCap}), ${String(lis).padStart(5)} listeners (max ${lisCap})`;
-    if (nodes <= nodeCap && lis <= lisCap) ok(label);
+    if (nodes < nodeFloorCheck) {
+      fail(`${label}  ← only ${nodes} nodes, under the ${nodeFloorCheck} floor. This screen is not rendering — a crash or an error boundary, not a saving.`);
+    } else if (nodes <= nodeCap && lis <= lisCap) ok(label);
     else fail(`${label}  ← over budget. A list on this screen is probably rendering every row; see src/lib/useWindowedList.js`);
   }
+
+  // ── An expanded list must not outlive the screen that expanded it ─────────
+  //
+  // The windows are hooks at the top of App, so their state survives the screen
+  // being swapped out. A student who scrolls deep into the library grows it to
+  // tens of thousands of nodes — that is the honest cost of asking to see
+  // everything, and it is fine while they are looking at it. What is not fine is
+  // that expansion being rebuilt on every later visit to the tab because they
+  // scrolled once, which is what happens the moment the window's reset key stops
+  // tracking whether its screen is on screen.
+  console.log('\nA deep-scrolled list is released on leaving');
+  await go('/prep/library');
+  // The daily check-in chest and any toast sit above the page and would swallow
+  // the wheel events below, which reads exactly like "scrolling loads nothing".
+  for (let i = 0; i < 4; i += 1) {
+    for (const sel of ['[aria-label="Close"]', '[aria-label="Dismiss"]', 'button:has-text("Open chest")',
+      'button:has-text("Collect")', 'button:has-text("Maybe later")', 'button:has-text("Skip")']) {
+      const el = page.locator(sel).first();
+      if (await el.count() && await el.isVisible().catch(() => false)) await el.click({ force: true }).catch(() => {});
+    }
+    await page.keyboard.press('Escape').catch(() => {});
+    await page.waitForTimeout(400);
+  }
+  await settle();
+  const libFresh = await liveNodes();
+  await page.mouse.move(720, 500);
+  for (let i = 0; i < 40; i += 1) { await page.mouse.wheel(0, 3000); await page.waitForTimeout(120); }
+  await page.waitForTimeout(800);
+  const libScrolled = await liveNodes();
+  await go('/home');
+  await go('/prep/library');
+  await settle();
+  const libReturned = await liveNodes();
+  const grew = libScrolled > libFresh * 2;
+  const released = libReturned <= Math.max(libFresh * 1.5, libFresh + NODE_FLOOR);
+  const scrollLabel = `library ${libFresh} nodes → ${libScrolled} scrolled → ${libReturned} on return`;
+  if (!grew) {
+    fail(`${scrollLabel}  ← scrolling did not page anything in. Scroll-to-load is broken (the sentinel's observer is probably never attached); only the button still works.`);
+  } else if (released) ok(scrollLabel);
+  else fail(`${scrollLabel}  ← the expanded list survived leaving the screen. Its window's resetKey is not tracking whether the screen is displayed.`);
+
+  console.log('\nThe app actually ran');
+  if (pageErrors.length === 0) ok('no uncaught exceptions while visiting every route');
+  else fail(`${pageErrors.length} uncaught exception(s): ${[...new Set(pageErrors)].slice(0, 3).join(' | ')}`);
 
   // ── Does moving around the app cost memory that is never given back? ───────
   console.log(`\nHeap across ${CYCLES} full laps of the app`);
