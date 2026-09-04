@@ -164,10 +164,47 @@ if (failures === before) ok(`both foundations units are appended to all ${PATH_K
 }
 
 // App.jsx has to honour openAlways, or the tier is gated after all.
+const app = read('src/App.jsx');
 {
-  const app = read('src/App.jsx');
   if (!app.includes('units[ui]?.openAlways')) fail('lessonState() in App.jsx does not exempt openAlways units from the sequential gate');
   else ok('lessonState() exempts the foundations tier from the sequential gate');
+}
+
+// ── The cost of sharing one id space across ten pathways ────────────────────
+// The cross-pathway lesson total flattens every unit of every track. The shared
+// tier is nine lessons that appear on all ten, so a naive flatten counts eighty
+// -one lessons that do not exist and prints them on the Home tile. This is the
+// only place in the app where a lesson id is legitimately reachable twice, so
+// it is the only place that has to de-duplicate — and the failure is silent,
+// which is what puts it in a verify script rather than in a comment.
+{
+  const dedupes = /const allL\s*=\s*\[\.\.\.new Map\(/.test(app);
+  if (!dedupes) {
+    fail('App.jsx builds the cross-pathway lesson list without de-duplicating by id — the shared foundations lessons would be counted once per pathway');
+  } else ok('the cross-pathway lesson total counts each shared lesson once');
+}
+
+// ── The two tools stay out of the first-load bundle ─────────────────────────
+// Both are one tool under one unit behind a closed door. Statically imported
+// they land in the entry graph that scripts/verifyPayload.mjs budgets, paid by
+// every student on every boot including the ones who never open the tier. The
+// regression is invisible — the app looks identical and the number moves — so
+// it is asserted rather than trusted.
+{
+  before = failures;
+  for (const [name, file] of [['CoursePlannerPanel', 'prep/CoursePlannerPanel'], ['CertificationExplorer', 'prep/CertificationExplorer']]) {
+    const lazy = new RegExp(`const ${name}\\s*=\\s*React\\.lazy\\(\\s*\\(\\)\\s*=>\\s*import\\('\\./components/${file}'\\)`);
+    const staticImport = new RegExp(`^import ${name} from`, 'm');
+    if (staticImport.test(app)) fail(`${name} is statically imported into App.jsx — it belongs behind React.lazy, off the boot path`);
+    else if (!lazy.test(app)) fail(`${name} is no longer lazily imported in App.jsx`);
+  }
+  // coursePlanner.js carries the course catalog and the gap rules; importing it
+  // on boot for one helper would pull all of that back in behind the panel's
+  // own split and quietly cancel it.
+  if (/^import \{[^}]*\bemptyPlan\b[^}]*\} from '\.\/lib\/coursePlanner'/m.test(app)) {
+    fail('App.jsx imports coursePlanner.js eagerly, which pulls the course catalog back into the entry graph');
+  }
+  if (failures === before) ok('both foundations tools, and the planner engine, stay out of the first-load bundle');
 }
 
 // ── 4. The content is real ──────────────────────────────────────────────────

@@ -4,7 +4,7 @@ import { CalendarRange, Plus, X, AlertTriangle, Eye, Info, Calculator, Check } f
 import { C, glass, glass2, pill, btn, btnSm, btnG, CC, R, accentFill, shade } from '../../lib/theme';
 import {
   PLAN_YEARS, SUBJECTS, SUBJECT_BY_ID, COURSE_LEVELS, LEVEL_BY_ID,
-  emptyPlan, makeCourse, evaluatePlan, planHeadline,
+  normalizePlan, makeCourse, evaluatePlan, planHeadline,
 } from '../../lib/coursePlanner';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -80,10 +80,14 @@ export default function CoursePlannerPanel({
   plan: planProp, onPlanChange, pathways = [], gradeStage = null,
   accent = C.blue, onApplyRigor = null, rigorApplied = false, m = false,
 }) {
-  const [local, setLocal] = useState(() => planProp || emptyPlan());
   const [combined, setCombined] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
-  const plan = planProp || local;
+  // App.jsx hands this over as opaque JSON — null on a first visit, or whatever
+  // shape an older release wrote — so the panel normalises it once per change
+  // rather than trusting it. This module owns the shape; nothing else should
+  // have to know it.
+  const [local, setLocal] = useState(() => normalizePlan(planProp));
+  const plan = useMemo(() => (planProp ? normalizePlan(planProp) : local), [planProp, local]);
 
   const update = useCallback((next) => {
     setLocal(next);

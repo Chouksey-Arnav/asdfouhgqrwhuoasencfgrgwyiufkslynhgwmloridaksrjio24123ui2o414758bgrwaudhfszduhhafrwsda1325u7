@@ -97,7 +97,17 @@ export function makeCourse(subject = 'other', level = 'regular', title = '') {
   return { id: `c${Math.random().toString(36).slice(2, 9)}`, subject, level, title };
 }
 
-const norm = (plan) => {
+/**
+ * Coerce anything into a valid plan.
+ *
+ * Exported because App.jsx deliberately reads the persisted plan as opaque JSON
+ * — importing this module on boot for one helper would drag the course catalog
+ * and the gap rules back into the entry graph that the panel's React.lazy just
+ * got them out of. So the panel, which owns the shape, normalises whatever it
+ * is handed: null on a first visit, a stale shape from an older release, or a
+ * hand-edited localStorage value.
+ */
+export const normalizePlan = (plan) => {
   const base = emptyPlan();
   if (!plan || typeof plan !== 'object') return base;
   return {
@@ -109,7 +119,7 @@ const norm = (plan) => {
 
 /** Every course in the plan, flattened, each carrying the year it sits in. */
 export function allCourses(plan) {
-  const p = norm(plan);
+  const p = normalizePlan(plan);
   return PLAN_YEAR_IDS.flatMap(yid => p.years[yid].map(c => ({ ...c, year: yid })));
 }
 
@@ -126,7 +136,7 @@ const yearIdx = (yid) => PLAN_YEAR_IDS.indexOf(yid);
  * only removes the guessing from its inputs.
  */
 export function rigorFromPlan(plan) {
-  const p = norm(plan);
+  const p = normalizePlan(plan);
   const courses = allCourses(p);
   const counts = { ap: 0, ib: 0, honors: 0, dualEnrollment: 0 };
   for (const c of courses) {
@@ -298,7 +308,7 @@ function firstOpenYear(currentGrade) {
  *                      applied to everyone are how the planner becomes noise.
  */
 export function evaluatePlan(plan, { pathways = [], gradeStage = null, combined = false } = {}) {
-  const p = norm(plan);
+  const p = normalizePlan(plan);
   const courses = allCourses(p);
   const active = Array.isArray(pathways) ? pathways : [pathways].filter(Boolean);
   const openYear = firstOpenYear(gradeStage);

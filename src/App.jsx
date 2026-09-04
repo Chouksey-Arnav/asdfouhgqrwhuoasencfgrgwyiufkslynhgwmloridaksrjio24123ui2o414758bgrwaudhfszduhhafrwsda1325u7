@@ -21,13 +21,15 @@ import {
   ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, ExternalLink, Plus,
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
-  Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
+  Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock, CalendarRange,
   Highlighter, Accessibility, Gauge, Info, Download, Headphones, Users,
   Shuffle, Flag, Swords, Gift, ListChecks, Loader2,
   // Aliased: `Radar` is already taken in this file by react-chartjs-2's chart component.
   Radar as RadarIcon,
   // Aliased for the same reason: `Map` is a JavaScript global this file uses.
   Map as MapIcon,
+  // Medabrain's named modes (src/lib/medabrainModes.js) and the equity shelf.
+  HelpCircle, PenLine, KeyRound,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck, Layers, Crown, Compass };
@@ -35,13 +37,25 @@ const TIER_ICONS = { Sparkles, Hammer, Compass, Trophy, Sun, ShieldCheck, Crown 
 
 import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
+import useWindowedList from './lib/useWindowedList';
 import { PATHS, FLASH_DECKS, SCHOOL_DATA, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP, DECK_CATEGORY_ORDER, getDeckCategory, UNIT_STAGES, isUnitTimelyFor } from './data/constants';
 import BandPreview, { BandPreviewTag, BandPreviewBanner } from './components/BandPreview';
+// The year rail itself is small and renders on every visit to the Pathways tab,
+// so it stays in the entry graph. Its logic module is pure data and functions.
 import FourYearMap from './components/prep/FourYearMap';
-import CoursePlannerPanel from './components/prep/CoursePlannerPanel';
-import CertificationExplorer from './components/prep/CertificationExplorer';
-import { buildFourYearMap, FOUNDATION_TIER, tierBannerText } from './lib/fourYearMap';
-import { emptyPlan } from './lib/coursePlanner';
+import { buildFourYearMap } from './lib/fourYearMap';
+// ── The two foundations tools are lazy, for the Narrative Engine's reason ────
+// Each is one tool under one unit, opened deliberately, and each drags real
+// weight behind it: the planner pulls the whole course catalog and gap-rule
+// engine, and the explorer pulls the credential database plus the fifty-state
+// list. Statically imported, both land in the FIRST-LOAD bundle that
+// scripts/verifyPayload.mjs guards — paid by every student on every boot,
+// including the ones who never scroll to the foundations tier. Behind
+// React.lazy, Rollup gives them their own chunks, fetched the first time
+// somebody actually opens the unit. Same trap as the note above: adding either
+// to a manualChunk would pin it back into the entry graph and cancel the split.
+const CoursePlannerPanel = React.lazy(() => import('./components/prep/CoursePlannerPanel'));
+const CertificationExplorer = React.lazy(() => import('./components/prep/CertificationExplorer'));
 import { typicalAgeForGrade } from './lib/credentials';
 import { LESSON_CONTENT } from './data/lessonContent';
 import { rankQuizzes, getMedabrainPickPrompt, medabrainPicksProgress, MEDABRAIN_PICKS_UNLOCK_AT } from './lib/recommend';
@@ -121,6 +135,27 @@ import { exportQuizResult, exportFlashDeck, exportPathwayCertificate } from './l
 import { ACHIEVEMENTS, checkAchievements, PATHWAY_KEYS } from './lib/achievements';
 import CollegeListPanel from './components/CollegeListPanel';
 import AdmissionCalculatorPanel from './components/portfolio/admissions/AdmissionCalculatorPanel';
+// ── The Narrative Method Engine is lazy, and has to be ──────────────────────
+// The panel pulls the whole engine behind it: thirteen modules plus the cliché
+// bank, the overused-project corpus, the tier catalog and the grade timelines.
+// Statically imported that is ~82 KB gzipped added to the FIRST-LOAD bundle —
+// the number scripts/verifyPayload.mjs guards because it decides whether a
+// student on a mid-range Android ever sees the app at all.
+//
+// Nobody pays that on boot. This is one section of one page of the Portfolio,
+// opened deliberately, so Rollup follows the import() and gives it its own
+// chunk fetched the first time somebody actually opens the reading. Same
+// reasoning as the jspdf note in vite.config.js — and the same trap: adding
+// this module to a manualChunk would pin it back into the entry graph and
+// silently cancel the split.
+const NarrativeEnginePanel = React.lazy(() => import('./components/portfolio/ivy/NarrativeEnginePanel'));
+// The cache reset runs on sign-out, when the panel may never have been opened,
+// so it is imported eagerly. store.js is a few hundred bytes and carries none
+// of the corpora — the weight is all behind the lazy boundary above.
+import { resetNarrativeCache } from './lib/ivy/store.js';
+// loadIntake/saveIntake/flushIntake are here for the course planner, which
+// writes the rigor counts it derives straight into the calculator's intake
+// rather than asking the same question a second time in different words.
 import { resetIntakeCache, derivePortfolioSignals, deriveApplicantFromPortfolio, buildApplicant, assessCompleteness, unpackIntake, loadIntake, saveIntake, flushIntake } from './lib/admissions';
 import { computeMedEx, loadSeals, sealIfNeeded, planSeal, readMirror, resetMedexCache } from './lib/medex';
 import MedExHomeCard from './components/medex/MedExHomeCard';
@@ -232,7 +267,7 @@ import TrackedPanel from './components/portfolio/TrackedPanel';
 import Disclosure, { HelpNote } from './components/ui/Disclosure';
 import NextStepsCard from './components/portfolio/NextStepsCard';
 import { buildNextSteps } from './lib/portfolioNextSteps';
-import { goalsForWeek } from './lib/weeklyGoals';
+import { goalsForWeek, measureWeek, METRIC_BY_ID, daysLeftInWeek } from './lib/weeklyGoals';
 import QuizPlanToday from './components/QuizPlanToday';
 import {
   summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch, typeMatch, getTodayPlanEntry, getNextPlanDay, getPlanStreak,
@@ -267,6 +302,16 @@ import { buildInsights } from './lib/insights';
 // computePlanReadiness is the Plans generator's own bar, read by the unlock ladder so that
 // tab opens only once it can actually build something — see the `planReady` signal below.
 import { buildCoachSystemPrompt, buildOnboardingRecap, computeOnboardingCompleteness, computePlanReadiness } from './lib/studentProfile';
+// ── Modes, deep context, and the safety layer ───────────────────────────────
+// The three things that turn the chat tab from a text box into a coach: named
+// modes instead of a blank prompt (medabrainModes), the measured record shaped
+// into sentences the model can quote (coachContext), and a dedicated
+// classification pass on every message the student sends (safety/*).
+import { MEDABRAIN_MODES, FREE_MODE, modeById, buildModeBlock, equityStarters } from './lib/medabrainModes';
+import { summarizeQuizTopics, summarizeHoursByCategory, summarizeSavedPrograms, summarizeWeeklyGoal, summarizeDeadlines, buildDeepContextBlock } from './lib/coachContext';
+import { runSafetyPass } from './lib/safety/pass';
+import { loadCrisisResources } from './lib/safety/resources';
+import CrisisResourceCard from './components/safety/CrisisResourceCard';
 import { buildNotesDigest, buildHighlightsDigest } from './lib/lessonMemory';
 import {
   C, catMeta, tint, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill,
@@ -389,6 +434,16 @@ const SAT_SUBNAV = [
   {id:'toolkit',ic:Calculator,label:'Calculator',color:C.sky},
   {id:'scores',ic:LineChart,label:'Scores',color:C.sky},
 ];
+/** The placeholder a lazily-loaded foundations tool shows while its chunk
+ *  arrives. Sized so the card does not collapse and then jump when the real
+ *  panel lands — a layout shift under the student's thumb is worse than the
+ *  half-second of waiting it was trying to hide. */
+const ToolLoading = () => (
+  <div style={{ minHeight: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <Loader2 size={18} style={{ animation: 'spin 1s linear infinite', color: C.t3 }} />
+  </div>
+);
+
 const PREP_SUBNAV = [
   {id:'diagnostic',ic:Compass,label:'Diagnostic',color:C.cyan},
   {id:'pathways',ic:Route,label:'Pathways',color:C.blue},
@@ -456,6 +511,11 @@ const PORTFOLIO_GROUP_FOR_VIEW = {
   // because they answer the same question at two altitudes — position vs. odds —
   // and a student sent here from Home should land on the number, not the page.
   medex:['applying','medex'],
+  // The Narrative Method Engine's own address. Its own entry rather than only a
+  // section id because it is the screen a counselor or a parent is sent a link
+  // to — "run the narrative reading on your file" — and because it is the one
+  // Applying section a student arrives at from outside the page.
+  narrative:['applying','narrative'],
   // The combined-degree and direct-admit catalog. Addressable in its own right
   // (/portfolio/combined) because it is the one screen in this app a student is
   // sent a link to by a parent or a counselor — "look at the BS/MD list" — and
@@ -1482,6 +1542,46 @@ function PathwayCard({ pathKey, p, current, enrolled=false, full=false, onSelect
   );
 }
 
+// ── The end-of-grid affordance for a windowed list ──────────────────────────
+//
+// Declared at module scope rather than inside the render function that uses it.
+// A component declared inside a render is a NEW COMPONENT TYPE on every render,
+// so React cannot reconcile it — it unmounts the old subtree and mounts a fresh
+// one each time, which here would tear down and rebuild the sentinel and its
+// IntersectionObserver on every keystroke in the search box. Out here it is one
+// stable type and the subtree updates in place.
+//
+// The sentinel is what makes scrolling feel like an ordinary long page; the button
+// is what a keyboard user reaches, since tabbing past the last card never scrolls a
+// sentinel into view. The live count is the honest answer to "is this everything?" —
+// without it a windowed list is indistinguishable from a truncated one.
+//
+// `older` flips it for a tail window (the coach transcript): the control sits ABOVE
+// the rows, reveals what came before rather than what comes next, and deliberately
+// has no sentinel — auto-loading on scroll-up fights the browser's scroll anchoring
+// and yanks the thread under the reader. Loading older messages stays an explicit ask.
+function MoreRows({ win, label, older = false }) {
+  if (!win.hasMore) return null;
+  return (
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,padding:older?'4px 0 16px':'16px 0 4px'}}>
+      {!older&&<div ref={win.sentinelRef} aria-hidden="true" style={{width:1,height:1}}/>}
+      <button
+        onClick={win.showMore}
+        style={{background:tint(C.t1,0.04),border:`1px solid ${C.b1}`,borderRadius:12,
+                padding:'8px 16px',color:C.t2,fontSize:12,fontWeight:700,cursor:'pointer',
+                fontFamily:C.FB,transition:CONTROL_TRANSITION}}
+      >
+        {older?`Load earlier ${label}`:`Show more ${label}`}
+      </button>
+      <div aria-live="polite" style={{fontSize:10.5,color:C.t3}}>
+        {older
+          ? `${win.remaining} earlier in this conversation`
+          : `Showing ${win.visible.length} of ${win.total} \u00b7 ${win.remaining} more`}
+      </div>
+    </div>
+  );
+}
+
 // ── Achievement Toast ─────────────────────────────────────────────────────────
 function showAchievementToast(achievement) {
   play('achieve');
@@ -2143,6 +2243,18 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [activeThreadId,setActiveThreadId]=useState(null);
   const [threadsLoading,setThreadsLoading]=useState(true);
   const [coachSidebarOpen,setCoachSidebarOpen]=useState(false); // mobile-only slide-over
+  // Which named mode the chat is in (src/lib/medabrainModes.js). 'free' is the
+  // old blank-box behavior and stays available — the modes are a front door, not
+  // a cage. Deliberately NOT persisted: a mode is about what the student is
+  // doing in the next ten minutes, and reopening the app three days later in
+  // "review my essay's structure" would be the app remembering the wrong thing.
+  const [coachMode,setCoachMode]=useState('free');
+  // The safety tier of the message currently being answered. Held in a ref
+  // rather than in state because requestAIResponse reads it during the same tick
+  // it is written, and a state update would not have landed yet — a one-render
+  // lag here means the crisis guidance misses the exact turn it was for.
+  const safetyTierRef=useRef(null);
+  const [crisisConfig,setCrisisConfig]=useState(null);
   const [renamingThreadId,setRenamingThreadId]=useState(null);
   const [renameDraft,setRenameDraft]=useState('');
   // Which of Medabrain's three model tiers answered the most-recent message — same idea as Claude's
@@ -2502,6 +2614,35 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // ── Sync status (for the "Synced just now" indicator in Settings) ───────────
   const [syncStatus,setSyncStatus]=useState(()=>ProgressSync.getSyncStatus());
   useEffect(()=>ProgressSync.subscribeSyncStatus(setSyncStatus),[]);
+  // ── Progress that arrived from another device mid-session ───────────────────
+  // Everything below this component reads Dexie once, at mount, and holds the
+  // result in React state. So when progressSync merges another device's snapshot
+  // into IndexedDB — on a foreground reconcile, or after a push was refused for
+  // being stale — the merged data is on disk but not on screen, and the two only
+  // agree again after a reload.
+  //
+  // Reloading on the student's behalf is not an option: this can fire in the
+  // middle of a lesson, a timed SAT section or a half-written essay. So it is
+  // offered instead, once, and it waits — which is also the honest version of
+  // what happened, since nothing they can see has changed yet.
+  useEffect(()=>{
+    const onMerged=()=>{
+      toast.success(
+        (t)=>(
+          <span style={{display:'flex',alignItems:'center',gap:8}}>
+            Progress from another device is ready.
+            <button
+              onClick={()=>{toast.dismiss(t.id);window.location.reload();}}
+              style={{fontWeight:700,color:C.blueL,background:'none',border:'none',cursor:'pointer',padding:0,textDecoration:'underline'}}
+            >Refresh</button>
+          </span>
+        ),
+        {id:'remote-progress-merged',duration:8000,icon:'☁️'},
+      );
+    };
+    window.addEventListener(ProgressSync.REMOTE_MERGE_EVENT,onMerged);
+    return()=>window.removeEventListener(ProgressSync.REMOTE_MERGE_EVENT,onMerged);
+  },[]);
   // Forces the "Xm ago" label in Settings to keep advancing even when no new
   // sync event has fired — only ticks while Settings is actually open.
   const [,setSyncTick]=useState(0);
@@ -2970,9 +3111,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // without the rest of the account, and the one piece of it that genuinely has
   // to reach the server — the rigor counts — travels through the admissions
   // intake, which already has a row, a schema and a debounced writer.
+  // Read as opaque JSON, deliberately: normalising it here would mean importing
+  // coursePlanner.js on boot for one helper, dragging its course catalog and
+  // gap-rule tables back into the entry graph that the React.lazy above just got
+  // them out of. `null` means "nothing saved"; the panel — which owns the shape
+  // and is the only thing that reads it — normalises whatever it is handed.
   const [coursePlan,setCoursePlan_]=useState(()=>{
-    try{ const raw=localStorage.getItem('msp_coursePlan'); return raw?JSON.parse(raw):emptyPlan(); }
-    catch{ return emptyPlan(); }
+    try{ const raw=localStorage.getItem('msp_coursePlan'); return raw?JSON.parse(raw):null; }
+    catch{ return null; }
   });
   const [rigorApplied,setRigorApplied]=useState(false);
   // The same key the Portfolio's credential picker already uses, deliberately.
@@ -3082,7 +3228,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // after routing the student to their first pillar and never seen again.
   const onboardingRecap = useMemo(()=>buildOnboardingRecap(user),[user]);
   const onboardingCompleteness = useMemo(()=>computeOnboardingCompleteness(user),[user]);
-  const allL    = Object.values(PATHS).flatMap(p=>(p.units||[]).flatMap(u=>u.lessons||[]));
+  // DISTINCT lessons, across every pathway. The de-duplication is not defensive
+  // tidying — the foundations tier (course strategy, certifications) is the same
+  // two units on all ten tracks by design, sharing one id space so that reading
+  // a lesson once counts everywhere. Flattened naively those nine lessons appear
+  // ninety times, and "Pathways · 12/321 lessons" on the Home tile would be
+  // counting eighty-one lessons that do not exist. Pathway-scoped counts
+  // (`curPathAllL` below) are unaffected: within one track every id is unique.
+  const allL    = [...new Map(
+    Object.values(PATHS).flatMap(p=>(p.units||[]).flatMap(u=>u.lessons||[])).map(l=>[l.id,l])
+  ).values()];
   const doneL   = allL.filter(l=>isLessonComplete(l,pathway[l.id])).length;
   const mastery = allL.length>0?Math.round((doneL/allL.length)*100):0;
   // Current-pathway-only lesson count (distinct from the cross-pathway `allL`/`doneL`/`mastery`
@@ -3812,6 +3967,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     PlanStore.resetPlanStore(); // drop the previous account's plan-push state with everything else
     resetIntakeCache();         // …and the Admissions Calculator's cached intake row, so a second
                                 // account on this browser never sees the first one's answers
+    resetNarrativeCache();       // …and the Narrative Method Engine's cached inputs, for the same
+                                 // reason and with more at stake: that row holds a student's
+                                 // passion-project description and their Additional Information
+                                 // draft, which must never appear under a second account
     await DB.clearAllData();
     clearViewState();
     resetMedexCache(user?.id);   // …and the MedEx seal history plus its localStorage mirror, for
@@ -4877,13 +5036,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // `purpose` selects which Medabrain subsystem key-pool the server routes this call through
   // (coach/interview/portfolio/prep/plan — see api/groq.js). Defaults to the head coach so every
   // existing caller is unchanged; portfolio/prep/plan features pass their own purpose.
-  async function callGroqAI(sys, msg, toks = 700, hist = null, tier = 'guide', purpose = 'coach') {
+  // `extra` carries the per-request fields the server reads directly — today
+  // only `safetyTier`, which lets api/groq.js append its own crisis instruction
+  // rather than trusting a client-assembled system prompt to still contain one
+  // (see the SERVER_CRISIS_GUARDRAIL note in that file).
+  async function callGroqAI(sys, msg, toks = 700, hist = null, tier = 'guide', purpose = 'coach', extra = {}) {
     let r, d;
     try {
       r = await fetch('/api/groq', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ system: sys, message: msg, messages: hist, maxTokens: toks, tier, purpose }),
+        body: JSON.stringify({ system: sys, message: msg, messages: hist, maxTokens: toks, tier, purpose, ...extra }),
       });
     } catch {
       throw new Error("Couldn't reach Medabrain — check your connection and try again.");
@@ -5042,6 +5205,54 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     return()=>{cancelled=true;};
   },[dbReady,user?.masterPlan?.windowBuiltFor,user?.masterPlan?.daysGeneratedThrough,user?.specialty]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // The crisis-resource config (public/safety-resources.json), fetched once so
+  // the numbers the coach says out loud and the numbers on the card come from
+  // the same place. Null until it lands; every consumer falls back to the
+  // compiled-in defaults, so nothing waits on this.
+  useEffect(()=>{
+    let alive=true;
+    loadCrisisResources().then(cfg=>{ if(alive)setCrisisConfig(cfg); }).catch(()=>{});
+    return()=>{alive=false;};
+  },[]);
+
+  // The weekly goal, with its real numbers — targets the student set, against
+  // what they have actually done this week. Medabrain needs both halves: the
+  // academic-stress response is "your goal is 6 clinical hours and you're at 1;
+  // want to make it 2 this week?", and neither number can be invented.
+  const weeklyGoalRows=useMemo(()=>{
+    try{
+      const targets=goalsForWeek(user)||{};
+      const measured=portSnapshot?measureWeek(portSnapshot):{};
+      return Object.entries(targets).map(([id,target])=>{
+        const metric=METRIC_BY_ID[id];
+        if(!metric)return null;
+        return { id, label:metric.short||metric.label, unit:metric.unitShort||metric.unit||'', target:Number(target)||0, current:Number(measured[id])||0 };
+      }).filter(Boolean);
+    }catch{ return []; }
+  },[user,portSnapshot]);
+
+  // ── The deep context block ─────────────────────────────────────────────────
+  // Recomputed only when the underlying rows change, because it walks the whole
+  // quiz history and the whole tracker and is then serialized into the prompt on
+  // every single turn. See src/lib/coachContext.js for why each of these five is
+  // prose rather than an object.
+  const coachDeepContext=useMemo(()=>{
+    try{
+      return buildDeepContextBlock({
+        quizTopics:summarizeQuizTopics(qHistory,ALL_QUIZZES),
+        hoursByCategory:summarizeHoursByCategory({
+          clinicalHours:clinicalHoursEntries||[],
+          activities:portActivities||[],
+          research:portSnapshot?.research||[],
+        }),
+        savedPrograms:summarizeSavedPrograms(trackedSummary?.items||[]),
+        weeklyGoal:summarizeWeeklyGoal(weeklyGoalRows,{daysLeft:daysLeftInWeek()}),
+        deadlines:summarizeDeadlines(upcomingDeadlines||[]),
+      });
+    }catch{ return ''; }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[qHistory,clinicalHoursEntries,portActivities,portSnapshot,trackedSummary,weeklyGoalRows,upcomingDeadlines]);
+
   async function requestAIResponse(history,threadId,chatCountForAchievements=aiChatCount){
     setCLoad(true);
     try{
@@ -5076,14 +5287,26 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         paceText,
         feedbackSummary:feedbackSummary.promptText,
         parallelPathwaysSummary:isParallel?parallelSummary:null,
+        deepContext:coachDeepContext,
+        modeBlock:buildModeBlock(coachMode),
+        // Empty on almost every turn. When the classifier fired on the message
+        // being answered, this is what suspends the demanding-mentor stance and
+        // replaces it with acknowledge-first — see src/lib/safety/prompts.js.
+        safetyBlock:safetyTierRef.current?.block||'',
       });
       const lastUser=[...history].reverse().find(m=>m.role==='user');
-      // Honor a pinned model; otherwise let Medabrain auto-route this message.
-      const tier=coachModelPref==='auto'?classifyCoachTier(lastUser?.content||''):coachModelPref;
+      const mode=modeById(coachMode);
+      // A mode may pin a tier (essay work and career questions want depth, a
+      // quiz turn does not); otherwise honor a pinned model, otherwise let
+      // Medabrain auto-route this message.
+      const tier=mode.tier||(coachModelPref==='auto'?classifyCoachTier(lastUser?.content||''):coachModelPref);
       setCoachTier(tier);
       // 1600 (up from 700): a full breakdown or plan-style reply routinely ran past 700 tokens and
       // got cut off mid-sentence. api/groq.js's per-purpose ceiling for 'coach' was raised to match.
-      const r=await callGroqAI(sysPrompt,lastUser?.content||'',1600,history.filter(m=>m.role!=='error'),tier);
+      // The mode's purpose — not always 'coach' — is what puts essay mode behind
+      // the server-side prose guard rather than behind its prompt alone.
+      const r=await callGroqAI(sysPrompt,lastUser?.content||'',1600,history.filter(m=>m.role!=='error'),tier,mode.purpose||'coach',
+        safetyTierRef.current?.safetyTier?{safetyTier:safetyTierRef.current.safetyTier}:{});
       setCoachTierCounts(c=>({...c,[tier]:(c[tier]||0)+1}));
       setMsgs(m=>[...m,{role:'assistant',content:r}]);
       if(threadId){ DB.addCoachMessage(threadId,'assistant',r).catch(console.error); bumpThreadLocally(threadId); }
@@ -5118,6 +5341,25 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     setMsgs(next);setCi('');
     DB.addCoachMessage(threadId,'user',message).catch(console.error);
     bumpThreadLocally(threadId);
+
+    // ── The safety pass ──────────────────────────────────────────────────────
+    // Runs BEFORE the coach call and is awaited, because its result changes what
+    // the coach is told to do on this exact turn — a detection that lands one
+    // message late is a detection that missed. The cost is bounded: the
+    // deterministic screen is free and synchronous, and the model half only runs
+    // on the genuinely ambiguous band (see needsModelPass in
+    // src/lib/safety/classifier.js), so an ordinary "explain glycolysis" pays
+    // nothing at all.
+    //
+    // Everything here fails open toward safety and never toward an error the
+    // student has to deal with: if the whole assessment throws, the turn
+    // proceeds as an ordinary one rather than failing.
+    // One call: classify, arm the resource card, log the event to the internal
+    // review queue (timestamp, user and severity — never a word of what was
+    // said, and no parent notified by it or by anything downstream of it), and
+    // produce the block that reshapes this turn's system prompt.
+    const safety=await runSafetyPass(message,{surface:'coach',crisisConfig});
+    safetyTierRef.current=safety.block?safety:null;
     const newCount=aiChatCount+1;setAiChatCount(newCount);logEvent('coach_message_sent',threadId);saveUser(applyPlanAutoComplete({...user,aiChatCount:newCount},typeMatch('coach')));bumpWeeklyCoachCount(getIsoWeekKey());
     await requestAIResponse(next,threadId,newCount);
   }
@@ -5815,6 +6057,80 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
     return result;
   }, [libFuse, lSrch, lCat, lType, lDiff, lFreeOnly, lSubTab, lSort, user]);
+
+  // ── How much of the library is actually put in the document ───────────────
+  //
+  // `fLib` is the full result set and stays that way: the counts in the section
+  // headers, the empty states and everything downstream still describe every
+  // matching resource. What changed is that the two grids below render a window
+  // onto it rather than all of it.
+  //
+  // The measurement that forced this: /prep/library committed 53,001 DOM nodes
+  // and ~10,500 event listeners in a single render — 1,628 cards, each ~32 nodes
+  // and each carrying a framer-motion hover instance. Opening the tab was enough
+  // to make the whole browser unusable, and a detached copy of that tree stayed
+  // reachable well past unmount, so the cost accumulated as a student moved
+  // around the app instead of being paid once.
+  //
+  // The split into two windows (rather than one over `fLib`) keeps the existing
+  // shape of the page: videos are their own section above the reading list, and
+  // each grows on its own as you reach it.
+  const libYt  = useMemo(()=>fLib.filter(r=>r.type==='YouTube'),[fLib]);
+  const libReg = useMemo(()=>fLib.filter(r=>r.type!=='YouTube'),[fLib]);
+  // Every control that can change WHICH resources match, plus the sub-tab itself.
+  //
+  // The filters are the obvious half: changing one means the student is looking at
+  // a new list from the top, so the window snaps back rather than dumping hundreds
+  // of rows for a query that matched a handful.
+  //
+  // `prepScreen` is the half that is easy to miss and matters more. These hooks
+  // live at the top of App, so their state outlives the screen that renders them —
+  // without it, a student who scrolled deep into the library once would get that
+  // entire expanded list rebuilt on EVERY later visit to the tab, having asked for
+  // it once. It has to fold in `tab` and not just `prepView`: leaving for the Home
+  // tab does not change which PREP sub-view is selected, so keying on `prepView`
+  // alone would hold a fully-expanded library across a trip to the dashboard and
+  // back. Keyed on both, leaving the screen by any route releases it, and coming
+  // back starts at one page again — which is also what a student expects, having
+  // left and returned.
+  const prepScreen = tab === 'prep' ? prepView : `away:${tab}`;
+  const libWindowKey = `${prepScreen}|${lSrch}|${lCat}|${lType}|${lDiff}|${lFreeOnly}|${lSubTab}|${lSort}`;
+  const ytWindow  = useWindowedList(libYt,  { resetKey: libWindowKey });
+  const regWindow = useWindowedList(libReg, { resetKey: libWindowKey });
+
+  // The quiz grid has the same shape of problem as the library, an order of
+  // magnitude smaller: 342 cards measured at 6,864 nodes in one commit. Same
+  // treatment, same reasoning — the ordering below (plan quizzes stable-partitioned
+  // to the front) still runs over every quiz, so "the two quizzes my plan asked
+  // for" are in the first page by construction, not by luck of where the window
+  // happens to fall.
+  const orderedQuiz = useMemo(()=>{
+    const onPlan=(q)=>todayPlanTargets.quizIds.has(q.id);
+    const planned=fQuiz.filter(onPlan);
+    return planned.length?[...planned,...fQuiz.filter(q=>!onPlan(q))]:fQuiz;
+  },[fQuiz,todayPlanTargets]);
+  const quizWindow = useWindowedList(orderedQuiz, { resetKey: `${prepScreen}|${qSrch}|${qCat}|${qDiff}|${qSort}` });
+
+  // ── The coach transcript ──────────────────────────────────────────────────
+  //
+  // `coachMessages` is described in src/lib/db.js as "the one unbounded table
+  // here — a chatty student accumulates thousands", and the thread rendered every
+  // row of it. Each one is a framer-motion element with a `layout` animation, and
+  // every assistant turn additionally runs renderMarkdown (marked + DOMPurify)
+  // over its content on each render. Seeded with 1,200 messages — a realistic
+  // year of use, not a pathological case — opening /prep/coach committed 13,593
+  // nodes and cost 19 MB of heap on that one route.
+  //
+  // (Wording note: this comment avoids one particular adjective for "believable"
+  // on purpose. scripts/verifyLegal.mjs greps this file for analytics SDK names to
+  // prove the Privacy Policy's "no tracking" claim is still true, and one of those
+  // product names is an ordinary English word.)
+  //
+  // Windowed from the END, because a transcript is read from the bottom: the most
+  // recent exchange is what the student is looking at, and "more" means older.
+  // Threads reset the window, so switching conversations does not carry one
+  // thread's scrollback into another.
+  const msgWindow = useWindowedList(msgs, { page: 30, fromEnd: true, resetKey: `${prepScreen}|${activeThreadId}` });
   // All decks: custom decks first (newest created on top), then built-in decks —
   // so a deck you just generated or created is always the first thing you see.
   const allDecksList = useMemo(()=>{
@@ -6682,24 +6998,47 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   to look at their own four years right now; putting the planner
                   three tabs away converts that impulse into an intention, and
                   intentions do not survive a navigation. */}
+              {/* ── The tool that belongs to this unit ──────────────────────
+                  Behind a named door, for the reason Disclosure exists: the
+                  unit is a reading list first, and a four-year form plus a
+                  nine-card credential catalog rendered under it unasked buries
+                  the three lessons the student came for. The door is also what
+                  makes the React.lazy above worth anything — closed, the chunk
+                  is never fetched and the panel's DOM never exists — and the
+                  choice is remembered per student, so somebody who lives in the
+                  planner finds it open next time. */}
               {unit.tool==='coursePlanner'&&(
-                <div style={{...glass2({padding:isMobile?12:16,marginTop:16,background:`${accent}08`,border:`1px solid ${accent}26`})}}>
-                  <CoursePlannerPanel
-                    plan={coursePlan} onPlanChange={setCoursePlan}
-                    pathways={activePathways} gradeStage={effGrade}
-                    accent={accent} m={isMobile}
-                    onApplyRigor={applyPlanRigor} rigorApplied={rigorApplied}
-                  />
+                <div style={{marginTop:16}}>
+                  <Disclosure
+                    id="prep-course-planner" icon={CalendarRange} color={accent} m={isMobile}
+                    title="Plan your four years"
+                    sub="Enter the courses you have taken and plan to take, and see the gaps against your pathways.">
+                    <React.Suspense fallback={<ToolLoading/>}>
+                      <CoursePlannerPanel
+                        plan={coursePlan} onPlanChange={setCoursePlan}
+                        pathways={activePathways} gradeStage={effGrade}
+                        accent={accent} m={isMobile}
+                        onApplyRigor={applyPlanRigor} rigorApplied={rigorApplied}
+                      />
+                    </React.Suspense>
+                  </Disclosure>
                 </div>
               )}
               {unit.tool==='certifications'&&(
-                <div style={{...glass2({padding:isMobile?12:16,marginTop:16,background:`${accent}08`,border:`1px solid ${accent}26`})}}>
-                  <CertificationExplorer
-                    stateCode={credentialState} onStateChange={setCredentialState}
-                    age={typicalAgeForGrade(effGrade)}
-                    pathwayKey={eSpec} pathwayLabel={curPath?.label||''}
-                    accent={accent} m={isMobile}
-                  />
+                <div style={{marginTop:16}}>
+                  <Disclosure
+                    id="prep-certification-explorer" icon={BadgeCheck} color={accent} m={isMobile}
+                    title="Compare the credentials"
+                    sub="Nine credentials with the real age requirement, cost, and what each one opens — for your state.">
+                    <React.Suspense fallback={<ToolLoading/>}>
+                      <CertificationExplorer
+                        stateCode={credentialState} onStateChange={setCredentialState}
+                        age={typicalAgeForGrade(effGrade)}
+                        pathwayKey={eSpec} pathwayLabel={curPath?.label||''}
+                        accent={accent} m={isMobile}
+                      />
+                    </React.Suspense>
+                  </Disclosure>
                 </div>
               )}
             </motion.div>
@@ -6766,8 +7105,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // Stable-partition today's plan quizzes to the very front, ahead of whatever sort/filter
     // is active — "the two quizzes my plan asked for" should never be buried in a 342-quiz grid.
     const onPlan=(q)=>todayPlanTargets.quizIds.has(q.id);
-    const planQuizzesShown=fQuiz.filter(onPlan);
-    const orderedQuiz=planQuizzesShown.length?[...planQuizzesShown,...fQuiz.filter(q=>!onPlan(q))]:fQuiz;
+    // Rendered rows only — see the comment on `quizWindow` above. Every count and
+    // every empty state on this screen still speaks for the full `fQuiz` result set.
+    const shownQuiz=quizWindow.visible;
     return(
       <div style={CC({gap:20})}>
         <PanelHero tourTag="prep-deep-quizzes" icon={Layers} color={C.green} color2={C.cyan} m={isMobile}
@@ -6842,7 +7182,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <SectionTitle icon={Layers} color={C.greenL} extra={{marginBottom:0}}>{fQuiz.length} {fQuiz.length===1?'Quiz':'Quizzes'}</SectionTitle>
         </div>
         <div style={G(2,14,{},isMobile)}>
-          {orderedQuiz.map((q,qi)=>{
+          {shownQuiz.map((q,qi)=>{
             const sc=qScores[q.id];const taken=sc!==undefined;const dc=dColors[q.diff]||C.t2;const scc=taken?scCol(sc):null;const cm=catMeta(q.cat);
             const planned=onPlan(q);
             const glowColor=planned?C.amber:cm.color;
@@ -6887,13 +7227,46 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             );
           })}
         </div>
+        <MoreRows win={quizWindow} label="quizzes"/>
         {fQuiz.length===0&&<EmptyState kind="filtered" icon={Layers} accent={accent} title="No quizzes match those filters" body="Nothing in the bank matches what you have selected. Clearing the filters brings all of them back." actionLabel="Clear filters" onAction={()=>{setQSrch('');setQC('All');setQD('All');}}/>}
       </div>
     );
   }
 
   // ── AI COACH ─────────────────────────────────────────────────────────────────
-  const COACH_ICONS = { FlaskConical, Compass, Sparkles };
+  const COACH_ICONS = { FlaskConical, Compass, Sparkles, Lightbulb, HelpCircle, CalendarDays, PenLine, Stethoscope, MessageCircle, KeyRound };
+  // ── The mode picker ────────────────────────────────────────────────────────
+  // Rendered large in the empty state (where an unprompted student needs to be
+  // told what this thing is for) and as a compact row above the composer once a
+  // conversation is running (where it is a control, not an invitation).
+  // Switching mid-thread is allowed and deliberately does not clear the thread:
+  // a student who has been explaining a concept and now wants to be quizzed on
+  // it is describing one continuous piece of work.
+  function ModePicker({compact=false}){
+    const active=modeById(coachMode);
+    const options=[FREE_MODE,...MEDABRAIN_MODES];
+    return(
+      <div role="group" aria-label="What do you want help with?" style={{display:'flex',gap:8,flexWrap:compact?'nowrap':'wrap',overflowX:compact?'auto':'visible',paddingBottom:compact?4:0}}>
+        {options.map(m=>{
+          const Ic=COACH_ICONS[m.icon]||Sparkles;
+          const on=m.id===active.id;
+          return(
+            <motion.button key={m.id} whileTap={{scale:.97}} onClick={()=>{setCoachMode(m.id);play('click');}}
+              aria-pressed={on} title={m.blurb}
+              style={{display:'inline-flex',alignItems:'center',gap:6,flexShrink:0,
+                padding:compact?'4px 12px':'8px 12px',borderRadius:compact?8:12,cursor:'pointer',
+                border:`1px solid ${on?tint(C.violet,0.45):C.b1}`,
+                background:on?tint(C.violet,0.16):C.surf2,
+                color:on?C.t1:C.t3,fontSize:compact?11.5:12.5,fontWeight:on?700:600,fontFamily:C.FB,
+                transition:CONTROL_TRANSITION}}>
+              <Ic size={compact?12:13} color={on?C.violetL:C.t4}/>
+              {m.label}
+            </motion.button>
+          );
+        })}
+      </div>
+    );
+  }
   // Builds a "For you right now" group from the same profile signals already
   // fed into buildCoachSystemPrompt (weakest category, due cards, stated
   // goal) so the starter prompts a student actually sees are
@@ -6906,9 +7279,27 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     if(dueCards>0)personal.push(`Quiz me out loud on my ${dueCards} due flashcard${dueCards===1?'':'s'} instead of the review screen`);
     const goalLabel=GOAL_OPTIONS.find(o=>o.value===user?.goal)?.label;
     if(goalLabel)personal.push(`My goal is "${goalLabel}" — what's the single highest-leverage thing I should do this week?`);
-    if(!personal.length)return QUICK_P_GROUPS;
-    return [{label:'For you right now',icon:'Sparkles',prompts:personal.slice(0,3)},...QUICK_P_GROUPS];
-  },[secAvgs,cats3,user,dueCards]);
+    // The mode's own starters come first when one is picked: the student just
+    // told the app what they want, and answering that with the generic shelf
+    // would be the interface ignoring them.
+    const mode=modeById(coachMode);
+    const modeGroup=mode.starters?.length
+      ?[{label:mode.label,icon:mode.icon,prompts:mode.starters}]
+      :[];
+    // ── The equity shelf ─────────────────────────────────────────────────────
+    // Questions a student with a physician in the family already knows to ask.
+    // Shown to everyone, always — see the header of src/lib/medabrainModes.js
+    // for why targeting these at "students who need them" would be both
+    // unreliable and insulting. Seeded on the account so the three a student
+    // sees are stable within a session rather than reshuffling on every render.
+    const equityGroup={
+      label:'Questions nobody told you to ask',
+      icon:'KeyRound',
+      prompts:equityStarters(3,(user?.id?String(user.id).length:0)+(user?.name?user.name.length:0)+aiChatCount),
+    };
+    const personalGroup=personal.length?[{label:'For you right now',icon:'Sparkles',prompts:personal.slice(0,3)}]:[];
+    return [...modeGroup,...personalGroup,equityGroup,...(modeGroup.length?[]:QUICK_P_GROUPS)];
+  },[secAvgs,cats3,user,dueCards,coachMode,aiChatCount]);
   function TypingDots(){
     return(
       <div style={{display:'flex',alignItems:'center',gap:4,padding:'4px 4px'}}>
@@ -7158,15 +7549,29 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 </div>
               </div>
             </div>
-            {personalizedQuickPrompts().map(group=>{const GIc=COACH_ICONS[group.icon];const personal=group.label==='For you right now';return(
+            {/* The front door. An empty box is an exam question with no prompt
+                for a fifteen-year-old — see src/lib/medabrainModes.js. */}
+            <div style={{marginBottom:16}}>
+              <div style={{...R({gap:8}),marginBottom:8}}>
+                <Sparkles size={12} color={C.violetL}/><span style={lbl({marginBottom:0})}>What do you want help with?</span>
+              </div>
+              <ModePicker/>
+              <div style={{fontSize:11.5,color:C.t4,lineHeight:1.5,marginTop:8}}>{modeById(coachMode).blurb}</div>
+            </div>
+            {personalizedQuickPrompts().map(group=>{const GIc=COACH_ICONS[group.icon]||Sparkles;const personal=group.label==='For you right now';const equity=group.icon==='KeyRound';return(
               <div key={group.label} style={{marginBottom:16}}>
                 <div style={{...R({gap:4}),marginBottom:8}}>
-                  <GIc size={12} color={personal?C.amberL:C.t3}/><span style={{...lbl({marginBottom:0}),color:personal?C.amberL:undefined}}>{group.label}</span>
+                  <GIc size={12} color={personal?C.amberL:equity?C.tealL||C.teal:C.t3}/><span style={{...lbl({marginBottom:0}),color:personal?C.amberL:equity?C.tealL||C.teal:undefined}}>{group.label}</span>
                 </div>
+                {equity&&(
+                  <div style={{fontSize:11.5,color:C.t4,lineHeight:1.5,marginBottom:8}}>
+                    The questions students with a doctor in the family already know to ask. You should have them too.
+                  </div>
+                )}
                 <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(auto-fill,minmax(240px,1fr))',gap:8}}>
                   {group.prompts.map((p,i)=>(
                     <motion.button key={i} whileHover={reducedMotion?undefined:{y:-2}} whileTap={{scale:.98}} onClick={()=>sendChat(p)}
-                      style={{textAlign:'left',padding:'12px 12px',borderRadius:12,border:`1px solid ${personal?tint(C.amber,0.3):C.b1}`,background:personal?C.amberDim:C.surf2,color:C.t2,fontSize:12.5,lineHeight:1.5,fontFamily:C.FB,cursor:'pointer',transition:'background .15s,border-color .15s'}}>
+                      style={{textAlign:'left',padding:'12px 12px',borderRadius:12,border:`1px solid ${personal?tint(C.amber,0.3):equity?tint(C.teal,0.3):C.b1}`,background:personal?C.amberDim:equity?tint(C.teal,0.07):C.surf2,color:C.t2,fontSize:12.5,lineHeight:1.5,fontFamily:C.FB,cursor:'pointer',transition:'background .15s,border-color .15s'}}>
                       {p}
                     </motion.button>
                   ))}
@@ -7179,8 +7584,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* ── Message thread ─────────────────────────────────────────────── */}
         {msgs.length>0&&(
         <div role="log" aria-label="Conversation with Medabrain" aria-live="polite" style={{flex:1,minHeight:0,overflowY:'auto',display:'flex',flexDirection:'column',gap:12,paddingRight:4}}>
+          <MoreRows win={msgWindow} label="messages" older/>
           <AnimatePresence initial={false}>
-            {msgs.map((m,i)=>(
+            {msgWindow.visible.map((m,vi)=>{
+              // Keyed on the message's position in the FULL thread, not in the
+              // window — see the note on keys in useWindowedList. Keying on the
+              // slice index would re-key every bubble each time older messages
+              // load and remount the entire transcript.
+              const i=msgWindow.offset+vi;
+              return(
               <motion.div key={i} layout={!reducedMotion} initial={reducedMotion?false:{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={motionT} style={{display:'flex',justifyContent:m.role==='user'?'flex-end':'flex-start',alignItems:'flex-end',gap:isMobile?6:10}}>
                 {m.role!=='user'&&<div style={{width:isMobile?24:30,height:isMobile?24:30,borderRadius:'50%',background:m.role==='error'?C.roseDim:`linear-gradient(135deg,${tint(C.violet,0.28)},${tint(C.indigo,0.16)})`,border:`1px solid ${m.role==='error'?tint(C.rose,0.28):tint(C.violet,0.24)}`,display:'grid',placeItems:'center',flexShrink:0}}>
                   {m.role==='error'?<AlertTriangle size={isMobile?12:14} color={C.roseL}/>:<Brain size={isMobile?12:14} color={C.violetL}/>}
@@ -7202,7 +7614,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   )}
                 </div>
               </motion.div>
-            ))}
+            );})}
           </AnimatePresence>
           {cLoad&&<motion.div initial={reducedMotion?false:{opacity:0}} animate={{opacity:1}} transition={motionT} style={{display:'flex',alignItems:'flex-end',gap:8}}>
             <div style={{width:30,height:30,borderRadius:'50%',background:`linear-gradient(135deg,${tint(C.violet,0.28)},${tint(C.indigo,0.16)})`,border:`1px solid ${tint(C.violet,0.24)}`,display:'grid',placeItems:'center'}}><Brain size={14} color={C.violetL}/></div>
@@ -7214,9 +7626,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
         {/* ── Composer — pinned to the bottom of the panel ─────────────────── */}
         <div style={{flexShrink:0,paddingTop:12}}>
+          {/* Support resources. Sits ABOVE the composer, not in the thread,
+              because a message scrolls away and this must not — see
+              src/components/safety/CrisisResourceCard.jsx. Renders nothing
+              until something has armed it. */}
+          <div style={{marginBottom:12}}><CrisisResourceCard isMobile={isMobile} compact/></div>
+          {msgs.length>0&&<div style={{marginBottom:8}}><ModePicker compact/></div>}
           <div style={R({gap:isMobile?6:10,alignItems:'flex-end'})}>
             <label htmlFor="msp-coach-input" className="msp-sr-only">Ask Medabrain a question</label>
-            <textarea id="msp-coach-input" style={{...inp({resize:'none',minHeight:isMobile?44:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:12,padding:'8px 12px'}),flex:1,opacity:coachRequestsRemaining<=0?.5:1}} placeholder={isMobile?"Ask Medabrain anything…":"Ask Medabrain anything — a concept, a college, a deadline, a plan…"} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={coachRequestsRemaining<=0}/>
+            <textarea id="msp-coach-input" style={{...inp({resize:'none',minHeight:isMobile?44:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:12,padding:'8px 12px'}),flex:1,opacity:coachRequestsRemaining<=0?.5:1}} placeholder={isMobile?(coachMode==='free'?"Ask Medabrain anything…":modeById(coachMode).placeholder):modeById(coachMode).placeholder} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={coachRequestsRemaining<=0}/>
             <motion.button whileHover={reducedMotion?undefined:{scale:1.05}} whileTap={{scale:.95}} aria-label="Send message" style={{...btn(C.violetGrad,{padding:isMobile?'0 16px':'0 22px',height:isMobile?44:52,flexShrink:0,borderRadius:12,boxShadow:`0 4px 16px ${tint(C.violet,0.35)}`,opacity:cLoad||coachRequestsRemaining<=0?.6:1}),display:'inline-flex',alignItems:'center',justifyContent:'center'}} onClick={()=>sendChat(ci)} disabled={cLoad||coachRequestsRemaining<=0}>
               {cLoad?<RefreshCw size={isMobile?16:19} className="spin"/>:<ArrowUp size={isMobile?16:19}/>}
             </motion.button>
@@ -7605,7 +8023,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
   // ── E-LIBRARY ─────────────────────────────────────────────────────────────────
   function tLib(){
-    const yt=fLib.filter(r=>r.type==='YouTube');const reg=fLib.filter(r=>r.type!=='YouTube');
+    // Rendered rows, not results. `ytWindow.total`/`regWindow.total` are the real
+    // counts and are what the section headers report — a student filtering down to
+    // "12 videos" must still be told there are 12, whether 12 or 24 are in the DOM.
+    const yt=ytWindow.visible;const reg=regWindow.visible;
     const tc={Article:C.blue,Book:C.amber,Course:C.violet,App:C.green,Community:'#ec4899',Podcast:C.cyan};
 
     // Tracking actions
@@ -7918,8 +8339,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         </motion.div>
 
         {/* Video Resources Section */}
-        {yt.length>0&&<div>
-          <SectionTitle icon={Play} color={C.redL}>Video Resources ({yt.length})</SectionTitle>
+        {ytWindow.total>0&&<div>
+          <SectionTitle icon={Play} color={C.redL}>Video Resources ({ytWindow.total})</SectionTitle>
           <div style={G(2,14,{},isMobile)}>
             {yt.map((r,i)=>{
               const hasNotes = !!user?.resourceNotes?.[r.title];
@@ -8046,11 +8467,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               </motion.div>
             )})}
           </div>
+          <MoreRows win={ytWindow} label="videos"/>
         </div>}
 
         {/* Text/Interactive Resources Section */}
-        {reg.length>0&&<div>
-          {yt.length>0&&<SectionTitle icon={BookOpen} color={C.pinkL}>Articles, Books & Courses ({reg.length})</SectionTitle>}
+        {regWindow.total>0&&<div>
+          {ytWindow.total>0&&<SectionTitle icon={BookOpen} color={C.pinkL}>Articles, Books &amp; Courses ({regWindow.total})</SectionTitle>}
           <div style={G(2,12,{},isMobile)}>
             {reg.map((r,i)=>{
               const col=tc[r.type]||C.t2;
@@ -8170,6 +8592,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 </motion.div>
               );})}
           </div>
+          <MoreRows win={regWindow} label="resources"/>
         </div>}
         {fLib.length===0&& (
           lSubTab === 'notes' ? (
@@ -8598,6 +9021,34 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         onGoTo={goPortfolio}
         onReload={refreshPortSnapshot}
       />
+    );
+  }
+
+  // ── THE NARRATIVE METHOD ENGINE ───────────────────────────────────────────────
+  // Sits beside the calculator because they answer the same question at two
+  // different altitudes and must not be confused for each other: the calculator
+  // says what your odds are at these programs, this says what your file
+  // currently reads as. It deliberately emits no probability of its own — see
+  // the header of src/lib/ivy/engine.js.
+  //
+  // PREMIUM ROADMAP: this is the app's first screen designed from the start to
+  // sit behind billing. The gate is inside the panel (`narrativeEngineTier`) and
+  // is currently open for everyone; nothing here changes when it closes.
+  function tNarrative(){
+    return (
+      <React.Suspense fallback={
+        <div style={{...glass({padding:40}), display:'flex', justifyContent:'center'}}>
+          <Loader2 size={20} style={{animation:'spin 1s linear infinite', color:C.t3}}/>
+        </div>
+      }>
+      <NarrativeEnginePanel
+        user={user}
+        snapshot={portSnapshot}
+        gradeLevel={user?.gradeLevel??user?.grade_level??null}
+        isMobile={isMobile}
+        onGoTo={goPortfolio}
+      />
+      </React.Suspense>
     );
   }
 
@@ -10144,6 +10595,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       interview:()=><InterviewPrepPanel accent={C.orange} pathway={curPath} pathwayKey={eSpec} studentName={user?.name?.split(' ')[0]||user?.name||null} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);logEvent('interview_session_completed',mode);const ivWrite=saveUser(applyPlanAutoComplete({...user,interviewCount:nc},t=>t.type==='interview'));bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});ivWrite.then(()=>creditStreak('interview_session')).catch(console.error);}}/>,
       calc:tCalc,
       medex:tMedex,
+      narrative:tNarrative,
       }}/>,
     // Activities & résumé reasons over the student's own academic history: it reads
     // gpa_entries/test_scores/colleges itself and matches U.S. schools against their real GPA,
