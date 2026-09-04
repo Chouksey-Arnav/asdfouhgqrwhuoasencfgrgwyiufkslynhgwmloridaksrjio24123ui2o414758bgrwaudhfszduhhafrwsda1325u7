@@ -155,7 +155,14 @@ export default function FourYearMap({
     const rail = railRef.current;
     const chip = rail?.querySelector(`[data-tier="${selected}"]`);
     if (!rail || !chip || rail.scrollWidth <= rail.clientWidth) return;
-    const target = chip.offsetLeft - (rail.clientWidth - chip.offsetWidth) / 2;
+    // Measured rather than read off offsetLeft: that is relative to the nearest
+    // positioned ancestor, and the rail is an unpositioned flex row, so which
+    // element it resolves to depends on cards above it that this component does
+    // not own. Rects plus the current scrollLeft are true whatever wraps it.
+    const railBox = rail.getBoundingClientRect();
+    const chipBox = chip.getBoundingClientRect();
+    const offsetInRail = (chipBox.left - railBox.left) + rail.scrollLeft;
+    const target = offsetInRail - (rail.clientWidth - chipBox.width) / 2;
     rail.scrollTo({ left: Math.max(0, target), behavior: reducedMotion ? 'auto' : 'smooth' });
   }, [selected, reducedMotion]);
 
