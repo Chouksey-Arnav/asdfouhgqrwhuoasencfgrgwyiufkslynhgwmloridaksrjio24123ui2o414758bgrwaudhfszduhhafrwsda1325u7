@@ -121,16 +121,28 @@ if (!existsSync(path.join(ROOT, 'dist', 'index.html'))) {
 
 // Playwright's bundled browser and the image's pre-installed one drift apart by
 // build number, so resolve whatever is actually on disk rather than pinning a path.
+// The Docker build stage is the case that matters most: Playwright publishes no
+// musl browser build, so there is no /opt/pw-browsers at all — the Dockerfile
+// installs Alpine's own Chromium instead and names it via CHROMIUM_EXECUTABLE_PATH,
+// exactly like scripts/verifyViewportFit.mjs already resolves it.
 function findChromium() {
-  const direct = ['/opt/pw-browsers/chromium', '/opt/pw-browsers/chromium/chrome-linux/chrome'];
+  const fromEnv = process.env.CHROMIUM_EXECUTABLE_PATH;
+  if (fromEnv && existsSync(fromEnv) && statSync(fromEnv).isFile()) return fromEnv;
+
+  const root = process.env.PLAYWRIGHT_BROWSERS_PATH || '/opt/pw-browsers';
+  const direct = [path.join(root, 'chromium'), path.join(root, 'chromium', 'chrome-linux', 'chrome')];
   for (const p of direct) if (existsSync(p) && statSync(p).isFile()) return p;
-  const root = '/opt/pw-browsers';
-  if (!existsSync(root)) return null;
-  for (const dir of readdirSync(root).filter(d => d.startsWith('chromium')).sort().reverse()) {
-    for (const rel of ['chrome-linux/chrome', 'chrome-linux/headless_shell']) {
-      const p = path.join(root, dir, rel);
-      if (existsSync(p) && statSync(p).isFile()) return p;
+  if (existsSync(root)) {
+    for (const dir of readdirSync(root).filter(d => d.startsWith('chromium')).sort().reverse()) {
+      for (const rel of ['chrome-linux/chrome', 'chrome-linux/headless_shell']) {
+        const p = path.join(root, dir, rel);
+        if (existsSync(p) && statSync(p).isFile()) return p;
+      }
     }
+  }
+
+  for (const bin of ['/usr/bin/chromium-browser', '/usr/bin/chromium']) {
+    if (existsSync(bin)) return bin;
   }
   return null;
 }
@@ -167,8 +179,28 @@ await new Promise((resolve, reject) => {
   server.listen(PORT, '127.0.0.1', resolve);
 }).catch((err) => { console.error(`\n${err.message}`); process.exit(2); });
 
+// A missing browser (mirror down, image rebuilt without it, disk pressure during
+// `apk add`) must not be able to fail the production build over a check that
+// exists to catch DOM bloat, not to gate deploys on Chromium's availability.
+// REQUIRE_BROWSER_CHECKS=1 turns that back into a hard failure, for CI, where a
+// real browser is always expected to be present.
+const REQUIRED = process.env.REQUIRE_BROWSER_CHECKS === '1';
 const exe = findChromium();
-const browser = await chromium.launch(exe ? { executablePath: exe } : {});
+let browser;
+try {
+  browser = await chromium.launch(exe ? { executablePath: exe } : {});
+} catch (err) {
+  server.close();
+  console.error(`\n⚠  verify:memory — no usable headless Chromium here (tried: ${exe || "Playwright's own download"}).`);
+  console.error(`  ${String(err && err.message ? err.message : err).split('\n')[0]}`);
+  if (REQUIRED) {
+    console.error('  REQUIRE_BROWSER_CHECKS=1 is set, so this fails the build.');
+    process.exit(1);
+  }
+  console.warn('  SKIPPED — install one with `npx playwright install --with-deps chromium`,\n'
+    + '  or point CHROMIUM_EXECUTABLE_PATH at a Chromium already on this machine.');
+  process.exit(0);
+}
 const measured = {};
 try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
