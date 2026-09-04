@@ -3111,7 +3111,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // without the rest of the account, and the one piece of it that genuinely has
   // to reach the server — the rigor counts — travels through the admissions
   // intake, which already has a row, a schema and a debounced writer.
-  // Read as opaque JSON, deliberately: normalising it here would mean importing
+  //
+  // Read as opaque JSON, deliberately: normalizing it here would mean importing
   // coursePlanner.js on boot for one helper, dragging its course catalog and
   // gap-rule tables back into the entry graph that the React.lazy above just got
   // them out of. `null` means "nothing saved"; the panel — which owns the shape

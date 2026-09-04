@@ -207,17 +207,16 @@ export function buildLessonPathwayIndex(paths = {}) {
 /** The lesson ids that appear on more than one pathway — the shared tier. Kept
  *  beside the index so a caller can tell "not indexed" from "not a lesson". */
 export function sharedLessonIds(paths = {}) {
-  const counts = new Map();
-  for (const p of Object.values(paths)) {
+  const owners = new Map();
+  for (const [key, p] of Object.entries(paths)) {
     for (const unit of p?.units || []) {
       for (const lesson of unit?.lessons || []) {
-        const owners = counts.get(lesson.id) || new Set();
-        owners.add(p);
-        counts.set(lesson.id, owners);
+        if (!owners.has(lesson.id)) owners.set(lesson.id, new Set());
+        owners.get(lesson.id).add(key);
       }
     }
   }
-  return new Set([...counts.entries()].filter(([, owners]) => owners.size > 1).map(([id]) => id));
+  return new Set([...owners.entries()].filter(([, keys]) => keys.size > 1).map(([id]) => id));
 }
 
 /** Every lesson in a pathway, flattened, in unit order. */
