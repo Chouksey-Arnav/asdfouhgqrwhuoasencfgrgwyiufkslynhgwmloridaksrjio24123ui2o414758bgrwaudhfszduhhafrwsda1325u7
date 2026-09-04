@@ -12,6 +12,11 @@
 #                      of thing a developer skips when their build is already green.
 #
 # So they run here, on a service container, against every push and pull request.
+#
+# verify:api-boot is different: it IS in `npm run build`, so the build job below already runs it
+# and a broken server can never produce a Docker image. It gets its own job anyway because that
+# job takes ten minutes and installs a browser, and "the server does not start" is the one
+# failure worth knowing about in the first thirty seconds.
 name: verify
 
 on:
@@ -69,6 +74,21 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run verify:parent
+
+  api:
+    name: API boots and every endpoint is routed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      # Starts server.js on an ephemeral port and probes every handler file over HTTP. No
+      # database and no credentials: the probe is an OPTIONS request, which every handler answers
+      # before it reaches Supabase.
+      - run: npm run verify:api-boot
 
   build:
     name: Build (runs every other verify:* script)

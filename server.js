@@ -19,6 +19,7 @@ import googleAuth from './api/auth/google.js';
 import resetPassword from './api/auth/reset-password.js';
 import me from './api/auth/me.js';
 import logout from './api/auth/logout.js';
+import account from './api/auth/account.js';
 import dataResource from './api/data/[resource].js';
 import progressSync from './api/progress-sync.js';
 import masterPlan from './api/master-plan.js';
@@ -72,6 +73,13 @@ app.all('/api/auth/google', googleAuth);
 app.all('/api/auth/reset-password', resetPassword);
 app.all('/api/auth/me', me);
 app.all('/api/auth/logout', logout);
+// Data export (GET) and account deletion (DELETE). This route was missing for the life of this
+// file: Vercel serves api/auth/account.js at this path because of where the file sits, and this
+// server routes by hand, so here the request fell through to the SPA catch-all and the Export
+// button got the app's HTML shell back with a 200. The Privacy Policy promises both of these and
+// GDPR Art. 17/20 require them. scripts/verifyApiBoot.mjs now probes every handler file over HTTP
+// so a handler that exists without a route cannot ship again.
+app.all('/api/auth/account', account);
 app.all('/api/send-email', sendEmail);
 app.all('/api/groq', groq);
 app.all('/api/progress-sync', progressSync);
@@ -97,6 +105,11 @@ app.all('/api/data/:resource', (req, res) => {
   req.query.resource = req.params.resource;
   return dataResource(req, res);
 });
+
+// Anything under /api that got this far has no handler. Without this it reaches the SPA
+// catch-all below, which answers an API call with index.html and a 200 — so the caller fails on
+// `res.json()` and reports a JSON parse error instead of the missing route it actually hit.
+app.all('/api/*', (req, res) => res.status(404).json({ error: 'Unknown endpoint.' }));
 
 const distDir = path.join(__dirname, 'dist');
 
