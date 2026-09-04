@@ -120,7 +120,26 @@ const distDir = path.join(__dirname, 'dist');
 // canonical tag and the URL serving it would disagree, and a crawler would spend
 // its budget on hops. The prerender lookup below serves those directories'
 // index.html directly instead, with no redirect and no trailing slash.
-app.use(express.static(distDir, { redirect: false }));
+app.use(express.static(distDir, {
+  redirect: false,
+  // Every file under /assets/ carries a content hash in its name, so its contents can never
+  // change: cache it for a year and never revalidate. This is a load-time win, and it is also
+  // half of the fix for the dead-page failure described in index.html's boot-recovery comment —
+  // a browser still holding an older build's HTML (its service worker answers navigations from a
+  // precached copy) can boot from that build's chunks out of the HTTP cache long after a deploy
+  // has replaced them on disk, instead of asking for a 404 and stopping.
+  //
+  // Everything else — index.html, the prerendered pages, sw.js, the manifest — must revalidate on
+  // every request. An HTML file cached for even a few minutes is a student on a build whose
+  // chunks may already be gone, which is the exact failure this is here to prevent.
+  setHeaders: (res, filePath) => {
+    if (/[\\/]assets[\\/]/.test(filePath) && !filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  },
+}));
 
 // ── Prerendered pages ───────────────────────────────────────────────────────
 //
@@ -184,6 +203,9 @@ const FILE_REQUEST = /\.[a-zA-Z0-9]+$/;
 app.get('*', (req, res) => {
   if (FILE_REQUEST.test(req.path)) return res.status(404).type('text/plain').send('Not found');
   const prerendered = PRERENDERED.get(routeKey(req.path));
+  // Same rule as the static handler above, which does not see these: an HTML document names one
+  // build's hashed chunks and must never outlive it in a cache.
+  res.setHeader('Cache-Control', 'no-cache');
   return res.sendFile(prerendered || path.join(distDir, 'index.html'));
 });
 
