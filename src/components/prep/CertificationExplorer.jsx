@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  BadgeCheck, MapPin, ChevronDown, ChevronRight, Clock, DollarSign,
+  MapPin, ChevronDown, ChevronRight, Clock, DollarSign,
   Briefcase, School, ExternalLink, ShieldAlert, GraduationCap,
 } from 'lucide-react';
-import { C, glass, glass2, pill, btnSm, btnG, CC, R } from '../../lib/theme';
+import { C, glass2, pill, btnSm, btnG, CC, R } from '../../lib/theme';
 import { US_STATES } from '../../data/constants';
 import { moduleEntries, STRENGTH_LEVELS, RENAMING_STATES } from '../../lib/certificationGuide';
 import { credentialType } from '../../data/credentials/index.js';
@@ -209,16 +209,6 @@ export default function CertificationExplorer({
 
   return (
     <div style={CC({ gap: 16 })}>
-      <div style={R({ gap: 8, flexWrap: 'wrap' })}>
-        <BadgeCheck size={16} color={accent} style={{ flexShrink: 0 }} />
-        <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Certification explorer</div>
-          <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>
-            Nine credentials, with the real age requirement first. Requirements are set by states, so pick yours.
-          </div>
-        </div>
-      </div>
-
       <div style={{ ...glass2({ padding: '8px 16px' }), ...R({ gap: 8, flexWrap: 'wrap' }) }}>
         <MapPin size={14} color={accent} style={{ flexShrink: 0 }} />
         <label htmlFor="cert-state" style={{ fontSize: 11.5, color: C.t2 }}>Your state</label>

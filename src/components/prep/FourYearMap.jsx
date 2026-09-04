@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Telescope, Check, History, Compass, ArrowRight } from 'lucide-react';
 import { C, glass, glass2, pill, btnSm, CC, R } from '../../lib/theme';
@@ -41,9 +41,15 @@ const STATE_META = {
   preview: { icon: Telescope, badge: 'Read ahead',  tone: 'cyan' },
 };
 
-/** One shelf in the rail. A button in every state — there is no state in which
- *  a year cannot be opened, which is the whole point of the preview treatment. */
-function YearChip({ tier, selected, accent, onSelect, m }) {
+/** One shelf in the rail. A tab in every state — there is no state in which a
+ *  year cannot be opened, which is the whole point of the preview treatment.
+ *
+ *  It is `role="tab"` rather than a toggle button because that is what it
+ *  actually is: exactly one is selected, and selecting one swaps the unit list
+ *  below it. Announcing `aria-pressed` on five buttons would tell a screen
+ *  reader user they can press several, which is not true; `aria-selected` plus
+ *  the roving tabindex below is the pattern that matches the behavior. */
+function YearChip({ tier, selected, accent, onSelect, onKeyDown, m, panelId }) {
   const meta = STATE_META[tier.state] || STATE_META.active;
   const Icon = meta.icon;
   const isFoundation = tier.id === FOUNDATION_TIER.id;
@@ -53,11 +59,24 @@ function YearChip({ tier, selected, accent, onSelect, m }) {
   return (
     <motion.button
       type="button"
+      data-tier={tier.id}
       onClick={() => onSelect(tier.id)}
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.98 }}
-      aria-pressed={selected}
-      aria-label={`${tier.label}, ${tier.years}, ${tier.pct}% complete`}
+      role="tab"
+      aria-selected={selected}
+      aria-controls={panelId}
+      // Roving tabindex: one stop for the whole rail, arrows move within it, so
+      // a keyboard user tabs past five years in one press rather than five.
+      tabIndex={selected ? 0 : -1}
+      onKeyDown={onKeyDown}
+      // The state is part of the label, not just a color: "Year 4, 12th grade"
+      // and "Year 4, 12th grade, most students work through this later" are
+      // different facts, and only one of them survives being read aloud.
+      aria-label={`${tier.label}, ${tier.years}, ${tier.pct}% complete, ${
+        tier.complete ? 'complete' : tier.id === FOUNDATION_TIER.id ? 'open every year'
+          : tier.state === 'active' ? 'your year' : tier.state === 'past' ? 'behind you' : 'most students work through this later'
+      }`}
       style={{
         ...glass2({
           padding: m ? '10px 12px' : '12px 14px',
@@ -91,12 +110,59 @@ function YearChip({ tier, selected, accent, onSelect, m }) {
 }
 
 export default function FourYearMap({
-  map, selected, onSelect, accent = C.blue, gradeLabel = null, m = false, reducedMotion = false,
+  map, selected, onSelect, accent = C.blue, m = false, reducedMotion = false,
+  // The unit list this rail selects into. It already exists in App.jsx and
+  // already carries role="tabpanel", so the tabs point at it rather than at a
+  // second container invented here.
+  panelId = 'pathway-rail-panel',
 }) {
   const suggestion = useMemo(() => nextTierSuggestion(map), [map]);
+  const railRef = useRef(null);
+
+  // Arrow keys move between years, Home/End jump to the ends — the keyboard
+  // behavior a tab set is expected to have, and the half of the roving
+  // tabindex that makes it usable rather than merely correct.
+  const onKeyDown = useCallback((e) => {
+    const ids = map?.tiers?.map(t => t.id) || [];
+    const at = ids.indexOf(selected);
+    let next = null;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = ids[(at + 1) % ids.length];
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = ids[(at - 1 + ids.length) % ids.length];
+    else if (e.key === 'Home') next = ids[0];
+    else if (e.key === 'End') next = ids[ids.length - 1];
+    if (!next) return;
+    e.preventDefault();
+    onSelect(next);
+    // Move focus with the selection, or the arrow key moves the content and
+    // leaves the keyboard behind on the tab that is no longer selected.
+    requestAnimationFrame(() => {
+      railRef.current?.querySelector(`[data-tier="${next}"]`)?.focus();
+    });
+  }, [map, selected, onSelect]);
+
+  // ── Keep the selected year on screen ─────────────────────────────────────
+  // On a phone the rail scrolls horizontally and only the first two chips fit.
+  // Without this the student's OWN year — the single thing the rail exists to
+  // point at — starts off the right edge, so a sophomore opens the tab and sees
+  // Foundations and ninth grade and no indication that anything else is theirs.
+  //
+  // The arithmetic is deliberate rather than scrollIntoView(): that scrolls
+  // every scrollable ancestor, which on this page means yanking the whole tab
+  // down to the rail on load. This moves one container's scrollLeft and nothing
+  // else. `behavior` follows the reduced-motion preference, since an unrequested
+  // horizontal slide is exactly the kind of movement that setting is for.
+  useEffect(() => {
+    const rail = railRef.current;
+    const chip = rail?.querySelector(`[data-tier="${selected}"]`);
+    if (!rail || !chip || rail.scrollWidth <= rail.clientWidth) return;
+    const target = chip.offsetLeft - (rail.clientWidth - chip.offsetWidth) / 2;
+    rail.scrollTo({ left: Math.max(0, target), behavior: reducedMotion ? 'auto' : 'smooth' });
+  }, [selected, reducedMotion]);
+
   if (!map?.tiers?.length) return null;
 
   const current = map.byId[selected] || map.byId[map.defaultTier] || map.tiers[0];
+  const ownYear = map.currentTier ? map.byId[map.currentTier] : null;
   const banner = tierBannerText(current, current.state);
 
   return (
@@ -106,8 +172,12 @@ export default function FourYearMap({
           <div>
             <div style={{ fontSize: 13.5, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Your four-year map</div>
             <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>
-              {gradeLabel
-                ? `Every year is open. ${gradeLabel} is the one we build your plan around.`
+              {/* Named the way the chips name it. `gradeLabel` is "Senior", which
+                  reads as a job title in the middle of this sentence and does not
+                  match the "Year 4 · 12th" the student is looking at while they
+                  read it. The tier already knows the words for its own year. */}
+              {ownYear
+                ? `Every year is open. ${ownYear.years} is the one we build your plan around.`
                 : 'Every year is open — pick the one you want to work through.'}
             </div>
           </div>
@@ -119,6 +189,7 @@ export default function FourYearMap({
         </div>
 
         <div
+          ref={railRef}
           role="tablist" aria-label="Four-year map"
           style={{
             display: 'flex', gap: 8, overflowX: m ? 'auto' : 'visible',
@@ -126,7 +197,10 @@ export default function FourYearMap({
           }}
         >
           {map.tiers.map(t => (
-            <YearChip key={t.id} tier={t} selected={t.id === current.id} accent={accent} onSelect={onSelect} m={m} />
+            <YearChip
+              key={t.id} tier={t} selected={t.id === current.id} accent={accent}
+              onSelect={onSelect} onKeyDown={onKeyDown} panelId={panelId} m={m}
+            />
           ))}
         </div>
 

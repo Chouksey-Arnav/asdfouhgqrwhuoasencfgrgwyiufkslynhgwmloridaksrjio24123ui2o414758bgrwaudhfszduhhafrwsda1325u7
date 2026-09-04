@@ -103,7 +103,7 @@ export function makeCourse(subject = 'other', level = 'regular', title = '') {
  * Exported because App.jsx deliberately reads the persisted plan as opaque JSON
  * — importing this module on boot for one helper would drag the course catalog
  * and the gap rules back into the entry graph that the panel's React.lazy just
- * got them out of. So the panel, which owns the shape, normalises whatever it
+ * got them out of. So the panel, which owns the shape, normalizes whatever it
  * is handed: null on a first visit, a stale shape from an older release, or a
  * hand-edited localStorage value.
  */

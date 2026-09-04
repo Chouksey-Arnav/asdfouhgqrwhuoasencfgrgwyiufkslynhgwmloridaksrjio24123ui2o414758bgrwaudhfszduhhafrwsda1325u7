@@ -3115,7 +3115,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // coursePlanner.js on boot for one helper, dragging its course catalog and
   // gap-rule tables back into the entry graph that the React.lazy above just got
   // them out of. `null` means "nothing saved"; the panel — which owns the shape
-  // and is the only thing that reads it — normalises whatever it is handed.
+  // and is the only thing that reads it — normalizes whatever it is handed.
   const [coursePlan,setCoursePlan_]=useState(()=>{
     try{ const raw=localStorage.getItem('msp_coursePlan'); return raw?JSON.parse(raw):null; }
     catch{ return null; }
@@ -6891,7 +6891,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             exactly as they were before it existed. */}
         <FourYearMap
           map={fourYear} selected={activeTier?.id} onSelect={setMapTier}
-          accent={accent} gradeLabel={gradeLabel} m={isMobile} reducedMotion={reducedMotion}
+          accent={accent} m={isMobile} reducedMotion={reducedMotion}
         />
         {shelfUnits.map(({unit,index:ui,basis})=>{
           const p=unitM(unit);const done=p===100;const ucm=catMeta(unit.quizCat);

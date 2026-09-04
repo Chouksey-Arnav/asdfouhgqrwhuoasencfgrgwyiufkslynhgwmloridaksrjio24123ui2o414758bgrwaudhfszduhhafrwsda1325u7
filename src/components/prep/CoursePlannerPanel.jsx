@@ -83,7 +83,7 @@ export default function CoursePlannerPanel({
   const [combined, setCombined] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   // App.jsx hands this over as opaque JSON — null on a first visit, or whatever
-  // shape an older release wrote — so the panel normalises it once per change
+  // shape an older release wrote — so the panel normalizes it once per change
   // rather than trusting it. This module owns the shape; nothing else should
   // have to know it.
   const [local, setLocal] = useState(() => normalizePlan(planProp));
@@ -115,12 +115,12 @@ export default function CoursePlannerPanel({
 
   return (
     <div style={CC({ gap: 16 })}>
+      {/* No title here — the door above this panel already carries it, and the
+          same sentence twice, six pixels apart, reads as a rendering bug. What
+          survives is the half that changes: what the plan currently says. */}
       <div style={R({ gap: 8, flexWrap: 'wrap' })}>
         <CalendarRange size={16} color={accent} style={{ flexShrink: 0 }} />
-        <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Four-year course planner</div>
-          <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>{planHeadline(result)}</div>
-        </div>
+        <div style={{ flex: 1, minWidth: 200, fontSize: 12.5, color: C.t2, lineHeight: 1.5 }}>{planHeadline(result)}</div>
         <label style={{ ...R({ gap: 8 }), fontSize: 11.5, color: C.t2, cursor: 'pointer' }}>
           <input type="checkbox" checked={combined} onChange={e => setCombined(e.target.checked)} />
           Considering a combined-degree program
