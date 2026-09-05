@@ -26,6 +26,87 @@ let transporter = null;
 // missing FROM is now a loud config error instead of a silent delivery failure.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// ── Say out loud which sender is actually configured ────────────────────────
+// A near-miss in BREVO_SMTP_FROM — `noreply@` where Brevo has `no-reply@`, a
+// stray space, the wrong domain — is syntactically perfect and therefore
+// invisible to the check above. It is also the single most likely reason a
+// correctly-keyed deployment cannot send: Brevo authenticates the connection
+// happily and then refuses, or silently reclassifies, mail from an address that
+// is not one of its verified senders.
+//
+// Nothing in this process can know which senders the Brevo account has
+// verified, so it cannot be validated here. What it can do is stop the value
+// being invisible. This prints the resolved sender once, on the first send the
+// process makes, so comparing a deployment against Brevo's Senders page is
+// reading one log line rather than guessing at an environment variable.
+//
+// The password is never printed. The login is, because it is `…@smtp-brevo.com`
+// on current accounts and getting it wrong is another silent failure worth
+// being able to see.
+function announce(acc) {
+  console.log('mailer: configured', {
+    host: acc.host,
+    port: acc.port,
+    user: acc.user,
+    from: acc.from,
+    note: 'from MUST be verified in Brevo → Senders, Domains & Dedicated IPs',
+  });
+}
+
+// ── Turning an SMTP error into something a human can act on ─────────────────
+// Nodemailer surfaces the relay's raw reply, which is accurate and unhelpful:
+// "535 5.7.8 Authentication failed" and "553 5.7.1 Sender not allowed" are
+// entirely different jobs — regenerate a key versus fix an address — and both
+// used to reach the logs as an undifferentiated `error:` string, behind an API
+// response that says only "Could not send verification code."
+//
+// This does not change what fails. It changes whether the person reading the
+// deployment's logs at 1am can tell WHICH thing failed without a bisect.
+const FAILURES = [
+  {
+    id: 'auth_rejected',
+    match: (c, m) => c === 'EAUTH' || /535|authentication (failed|credentials)|invalid login/i.test(m),
+    say: () => 'The SMTP login/key was rejected by the relay.',
+    fix: () => 'Regenerate the SMTP key in Brevo → SMTP & API and update BREVO_SMTP_PASS. '
+      + 'BREVO_SMTP_USER must be the "login" from that same page, not your Brevo account email.',
+  },
+  {
+    id: 'sender_not_allowed',
+    match: (c, m) => /sender|from address|not allowed|unverified|553|501 5\.1\.7/i.test(m),
+    say: (from) => `Brevo refused "${from}" as a sender.`,
+    fix: (from) => `Add ${from} under Brevo → Senders, Domains & Dedicated IPs → Senders and verify `
+      + 'it, or set BREVO_SMTP_FROM to an address that is already verified there. '
+      + 'Watch for near-misses: no-reply@ and noreply@ are different addresses.',
+  },
+  {
+    id: 'quota_exhausted',
+    match: (c, m) => /quota|limit exceeded|too many messages|450 4\.7/i.test(m),
+    say: () => 'The Brevo account is out of send quota.',
+    fix: () => 'Check Brevo → Usage and plan. The free tier is 300 emails/day.',
+  },
+  {
+    id: 'unreachable',
+    match: (c) => ['ECONNECTION', 'ETIMEDOUT', 'ESOCKET', 'ECONNREFUSED', 'EDNS', 'ENOTFOUND'].includes(c),
+    say: () => 'Could not reach the SMTP host at all.',
+    fix: (from, acc) => `Check BREVO_SMTP_HOST/PORT (currently ${acc.host}:${acc.port}) and that the `
+      + 'host allows outbound SMTP. Port 587 is STARTTLS; only 465 turns on implicit TLS here.',
+  },
+];
+
+/**
+ * Best-effort classification. An unrecognised error still returns a shape, so a
+ * caller never has to branch on whether classification worked.
+ */
+export function describeFailure(err, acc) {
+  const code = String(err?.code || '');
+  const message = String(err?.message || err || '');
+  const hit = FAILURES.find((f) => {
+    try { return f.match(code, message); } catch { return false; }
+  });
+  if (!hit) return { cause: 'unknown', say: 'The relay rejected the message.', fix: 'See the raw error below.' };
+  return { cause: hit.id, say: hit.say(acc.from, acc), fix: hit.fix(acc.from, acc) };
+}
+
 function loadAccount() {
   if (account) return account;
 
@@ -43,6 +124,7 @@ function loadAccount() {
       );
     }
     account = { host, port, user: BREVO_SMTP_USER, pass: BREVO_SMTP_PASS, from: BREVO_SMTP_FROM };
+    announce(account);
     return account;
   }
 
@@ -62,6 +144,7 @@ function loadAccount() {
     );
   }
   account = { host: SMTP_HOST, port: Number(SMTP_PORT), user: SMTP_USER, pass: SMTP_PASS, from: SMTP_FROM };
+  announce(account);
   return account;
 }
 
@@ -93,7 +176,16 @@ export async function sendMail({ to, subject, html, text }) {
     // code could not do.
     console.log('mailer: sent', { from, accepted: info?.accepted, response: info?.response, messageId: info?.messageId });
   } catch (err) {
-    console.error('mailer: send failed', { from, error: err?.message });
+    const { cause, say, fix } = describeFailure(err, loadAccount());
+    // Three lines rather than one object, because this is the thing somebody is
+    // scrolling a Coolify log looking for and it should be readable at a glance.
+    console.error(`mailer: send failed (${cause}) — ${say}`);
+    console.error(`mailer:   fix — ${fix}`);
+    console.error('mailer:   raw —', { from, code: err?.code, response: err?.response, error: err?.message });
+    // Carried on the error so a handler can log or branch without re-parsing the
+    // relay's wording. Nothing puts this in an HTTP response: it names internal
+    // configuration, and the client is told only that sending failed.
+    err.mailerCause = cause;
     throw err;
   }
 }

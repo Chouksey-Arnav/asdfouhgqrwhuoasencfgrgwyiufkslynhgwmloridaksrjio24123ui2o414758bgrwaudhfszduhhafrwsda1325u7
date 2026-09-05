@@ -14,6 +14,9 @@
  * This is a manual diagnostic, not part of `npm run build` — it sends real mail and costs one
  * send against the account's monthly quota, so it only runs when asked for.
  *
+ * See docs/EMAIL.md for the whole setup, and `npm run check:mailer-dns` for the SPF/DKIM/DMARC
+ * side, which is free to run and catches the failures this script cannot.
+ *
  * Usage:
  *   BREVO_SMTP_USER=... BREVO_SMTP_PASS=... BREVO_SMTP_FROM=... \
  *     node scripts/checkMailerConfig.mjs you@example.com
