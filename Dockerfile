@@ -19,6 +19,18 @@ RUN apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefo
 COPY package*.json ./
 RUN npm ci
 COPY . .
+
+# Vite inlines import.meta.env at build time, so these have to exist in THIS
+# stage — a runtime env var set on the container comes too late, the bundle is
+# already written. Both are public values (the anon key is meant to ship to the
+# browser); the service-role key is a runtime-only secret and must never be an
+# ARG. Unset is a supported state: GOOGLE_OAUTH_CONFIGURED goes false and the
+# Google button shows a friendly error instead of crashing (src/lib/supabaseClient.js).
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL \
+    VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
 RUN npm run build
 
 FROM node:22-alpine
