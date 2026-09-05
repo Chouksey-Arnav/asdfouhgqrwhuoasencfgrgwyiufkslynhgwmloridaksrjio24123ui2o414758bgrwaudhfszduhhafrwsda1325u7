@@ -336,21 +336,16 @@ is reached only when every Groq key has already failed, it is never mixed into t
 and it never sees a request Groq could have served — so a free tier lasts, and a paid one bills as
 a function of Groq's downtime rather than of your volume.
 
-Set **any one** of these and it switches itself on:
+This deployment runs on Groq keys only, so layer 2 is **off** and no second vendor is named
+anywhere in the code. It used to ship four hard-coded presets (Cerebras, OpenRouter, Together,
+Gemini), each carrying its own four-tier model map. None was ever configured here, and a model map
+nobody exercises is a map nobody notices going stale — vendors deprecate `gemini-2.5-pro` and
+`llama-3.3-70b` on their own schedule, and the day you finally need the backup is the worst
+possible day to find out it stopped working. The presets are gone; the mechanism stays.
 
-```bash
-CEREBRAS_API_KEY=csk_...     # Cerebras — same open-weight models (gpt-oss-120b, Llama 3.3 70B) at
-                             # comparable speed, so a relief answer is not a worse answer
-OPENROUTER_API_KEY=sk-or-... # OpenRouter — the broadest catalogue and the best single choice if
-                             # you do not want to think about it: one key reaches every model below
-TOGETHER_API_KEY=...         # Together AI — the same open-weight family again
-GEMINI_API_KEY=...           # Google Gemini, through its OpenAI-compatible endpoint. The most
-                             # different of the four, which is what you want in a backup: a Gemini
-                             # outage and a Groq outage have no common cause
-```
-
-Or point it at anything else that speaks the OpenAI chat-completions shape, including a private or
-self-hosted endpoint:
+To switch it on, point it at anything that speaks the OpenAI chat-completions shape — a hosted
+vendor or a private endpoint. All three of the first vars are required together; set fewer and the
+layer stays off rather than half-configured:
 
 ```bash
 FALLBACK_AI_KEY=...
@@ -363,7 +358,8 @@ FALLBACK_AI_LABEL=Reserve      # what it is called in the response
 FALLBACK_AI_JSON_MODE=false    # if the endpoint rejects response_format
 ```
 
-**With none of them set, nothing changes.** The relief layer is an upgrade, never a dependency —
+**With none of them set, nothing changes** — which is the state this deployment is in. The relief
+layer is an upgrade, never a dependency —
 the same contract `api/roadmap.js` holds itself to for durable storage.
 
 ### What it does not change

@@ -51,6 +51,7 @@ import { existsSync, statSync, readFileSync, writeFileSync, readdirSync } from '
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { chromium } from 'playwright';
+import { announceSkip, browserChecksRequired } from './browserGate.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BASELINE = path.join(ROOT, 'scripts', 'memoryBaseline.json');
@@ -113,6 +114,10 @@ const PROFILE = {
   name: ACCOUNT.name, email: ACCOUNT.email, specialty: 'physician',
   gradeStage: 'junior', age: 16, xp: 400, createdAt: Date.now(), onboardedAt: Date.now(),
 };
+
+// Before the dist check and before the static server below: on a host that has
+// opted out there is nothing to serve and no port worth claiming.
+if (announceSkip('verify:memory')) process.exit(0);
 
 if (!existsSync(path.join(ROOT, 'dist', 'index.html'))) {
   console.error('dist/ is missing — run `npm run build` first.');
@@ -184,7 +189,7 @@ await new Promise((resolve, reject) => {
 // exists to catch DOM bloat, not to gate deploys on Chromium's availability.
 // REQUIRE_BROWSER_CHECKS=1 turns that back into a hard failure, for CI, where a
 // real browser is always expected to be present.
-const REQUIRED = process.env.REQUIRE_BROWSER_CHECKS === '1';
+const REQUIRED = browserChecksRequired();
 const exe = findChromium();
 let browser;
 try {
