@@ -4,7 +4,10 @@ Welcome to **MedSchoolPrep** (internally configured as `medschoolprep`), a compr
 
 This workspace is specifically engineered for high school and undergraduate students preparing for college admissions, exams, and future career pathways. All legacy graduate-level/medical depth has been removed or reframed, keeping focus strictly on secondary-to-undergraduate pathways (e.g. SAT/ACT prep, college application portfolios, financial aid, admissions planning, and undergraduate pre-professional tracking).
 
-This README acts as the complete, single source of truth for the entire application, containing its core architecture, system mechanisms, API routes, testing/verification engines, environment variables, and an exhaustive file directory mapping the exact purpose of **every single file in the repository**.
+This README acts as the primary source of truth for the entire application, containing its core architecture, system mechanisms, API routes, testing/verification engines, environment variables, and platform guidelines.
+
+> 🤖 **For AI Agents (Claude, Jules, GPT):**
+> Refer to **`AGENTS.md`** for operational rules, guidelines, dual-deployment rules, and testing workflows, and **`FILE_NAVIGATION.md`** for an exhaustive, 100%-verified file-by-file directory map and Task-to-File Quick Lookup Matrix designed for low-token navigation.
 
 ---
 
