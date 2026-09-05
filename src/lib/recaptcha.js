@@ -6,7 +6,11 @@
 // request without a token. The server treats a missing token as accepted whenever
 // RECAPTCHA_SECRET_KEY itself isn't set, so the two envs turn on together — set one without the
 // other and verification simply doesn't run rather than 500ing on every login.
-const SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+// Guarded like src/lib/sat/desmos.js's VITE_DESMOS_API_KEY read: this module is reachable from
+// scripts/verifyParentDashboard.mjs's plain-Node import of src/lib/parentApi.js (via authApi.js),
+// where there is no Vite and `import.meta.env` itself is undefined rather than merely missing the
+// key.
+const SITE_KEY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_RECAPTCHA_SITE_KEY) || '';
 
 let scriptPromise = null;
 
