@@ -1,20 +1,29 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 
-# `npm run build` chains verify:viewport-fit, which lays the real stylesheet out
-# in a headless browser. Playwright publishes no musl browser build, so its own
-# download is useless here (and skipped outright, so `npm ci` doesn't try) —
-# Alpine's Chromium is what this stage uses instead.
+# No browser in this stage, on purpose.
 #
-# Best-effort on purpose: if the mirror is down, the package moves, or the
-# builder is out of disk, the deploy must still ship. The check notices the
-# missing browser and skips with a warning, and CI runs the same assertions with
-# a known-good Chromium on every push and pull request (.github/workflows/verify.yml).
+# Three of the checks `npm run build` chains drive a real headless Chromium
+# (verify:viewport-fit, verify:memory, verify:boot-recovery). This image used to
+# `apk add chromium` so they could run here too. That cost a deploy: verifyMemory
+# opens all forty-two routes and then laps the whole app six more times watching
+# the heap, which on a small VPS is enough to bring the OOM killer down on node
+# mid-run. A process cannot catch its own kill, so the scripts' careful
+# skip-on-missing-browser paths never got a chance to fire — the build just
+# stopped, exit non-zero, with the log ending mid-route and no error anywhere.
+#
+# Those three assert facts about the source, and the source is the same whatever
+# machine packages it. CI already runs the full build with a known-good Chromium
+# and REQUIRE_BROWSER_CHECKS=1 on every push and pull request
+# (.github/workflows/verify.yml), so running them again here bought no signal —
+# only a RAM floor on whatever host happens to be deploying. See
+# scripts/browserGate.mjs for the whole argument.
+#
+# PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD stops `npm ci` reaching for a browser that
+# would not run on musl anyway; SKIP_BROWSER_CHECKS tells those three to bow out
+# before they launch anything.
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
-    CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
-RUN apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefont \
- && { [ -x /usr/bin/chromium-browser ] || ln -sf /usr/bin/chromium /usr/bin/chromium-browser; } \
- || echo "chromium unavailable — verify:viewport-fit will skip; CI still runs it"
+    SKIP_BROWSER_CHECKS=1
 
 COPY package*.json ./
 RUN npm ci

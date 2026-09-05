@@ -46,6 +46,7 @@ import http from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { chromium } from 'playwright';
+import { announceSkip, browserChecksRequired } from './browserGate.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(ROOT, 'dist');
@@ -76,7 +77,10 @@ function executablePath() {
 }
 
 const LAUNCH_ARGS = ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'];
-const REQUIRED = process.env.REQUIRE_BROWSER_CHECKS === '1';
+const REQUIRED = browserChecksRequired();
+
+// Opted out before anything is started — no browser, no server, no port.
+if (announceSkip('verify:boot-recovery')) process.exit(0);
 
 async function launch() {
   const exec = executablePath();

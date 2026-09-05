@@ -28,12 +28,15 @@
 //
 // Run: node scripts/verifyViewportFit.mjs
 //   REQUIRE_BROWSER_CHECKS=1    a browser that will not start fails the run
+//   SKIP_BROWSER_CHECKS=1       do not launch a browser here at all (see
+//                               scripts/browserGate.mjs)
 //   CHROMIUM_EXECUTABLE_PATH=…  use this Chromium rather than looking for one
 // ─────────────────────────────────────────────────────────────────────────────
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { announceSkip, browserChecksRequired } from './browserGate.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CSS_PATH = path.join(ROOT, 'src', 'index.css');
@@ -135,7 +138,7 @@ const LAUNCH_ARGS = ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
 // what stops a release from shipping. Every push and pull request runs the full
 // build in CI with the browser present, so the check still gates main either
 // way — what changes is which failure blocks a deploy.
-const REQUIRED = process.env.REQUIRE_BROWSER_CHECKS === '1';
+const REQUIRED = browserChecksRequired();
 
 async function launch() {
   const exec = executablePath();
@@ -160,6 +163,8 @@ async function launch() {
     return null;
   }
 }
+
+if (announceSkip('verify:viewport-fit')) process.exit(0);
 
 const browser = await launch();
 if (!browser) process.exit(0);
