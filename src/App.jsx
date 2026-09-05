@@ -21,7 +21,7 @@ import {
   ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, ExternalLink, Plus,
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
-  Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
+  Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock, CalendarRange,
   Highlighter, Accessibility, Gauge, Info, Download, Headphones, Users,
   Shuffle, Flag, Swords, Gift, ListChecks, Loader2,
   // Aliased: `Radar` is already taken in this file by react-chartjs-2's chart component.
@@ -40,6 +40,23 @@ import { ELIB } from './data/elib';
 import useWindowedList from './lib/useWindowedList';
 import { PATHS, FLASH_DECKS, SCHOOL_DATA, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP, DECK_CATEGORY_ORDER, getDeckCategory, UNIT_STAGES, isUnitTimelyFor } from './data/constants';
 import BandPreview, { BandPreviewTag, BandPreviewBanner } from './components/BandPreview';
+// The year rail itself is small and renders on every visit to the Pathways tab,
+// so it stays in the entry graph. Its logic module is pure data and functions.
+import FourYearMap from './components/prep/FourYearMap';
+import { buildFourYearMap } from './lib/fourYearMap';
+// ── The two foundations tools are lazy, for the Narrative Engine's reason ────
+// Each is one tool under one unit, opened deliberately, and each drags real
+// weight behind it: the planner pulls the whole course catalog and gap-rule
+// engine, and the explorer pulls the credential database plus the fifty-state
+// list. Statically imported, both land in the FIRST-LOAD bundle that
+// scripts/verifyPayload.mjs guards — paid by every student on every boot,
+// including the ones who never scroll to the foundations tier. Behind
+// React.lazy, Rollup gives them their own chunks, fetched the first time
+// somebody actually opens the unit. Same trap as the note above: adding either
+// to a manualChunk would pin it back into the entry graph and cancel the split.
+const CoursePlannerPanel = React.lazy(() => import('./components/prep/CoursePlannerPanel'));
+const CertificationExplorer = React.lazy(() => import('./components/prep/CertificationExplorer'));
+import { typicalAgeForGrade } from './lib/credentials';
 import { LESSON_CONTENT } from './data/lessonContent';
 import { rankQuizzes, getMedabrainPickPrompt, medabrainPicksProgress, MEDABRAIN_PICKS_UNLOCK_AT } from './lib/recommend';
 import { scorePathways, explainMatch } from './lib/diagnosticEngine';
@@ -136,7 +153,10 @@ const NarrativeEnginePanel = React.lazy(() => import('./components/portfolio/ivy
 // so it is imported eagerly. store.js is a few hundred bytes and carries none
 // of the corpora — the weight is all behind the lazy boundary above.
 import { resetNarrativeCache } from './lib/ivy/store.js';
-import { resetIntakeCache, derivePortfolioSignals, deriveApplicantFromPortfolio, buildApplicant, assessCompleteness, unpackIntake } from './lib/admissions';
+// loadIntake/saveIntake/flushIntake are here for the course planner, which
+// writes the rigor counts it derives straight into the calculator's intake
+// rather than asking the same question a second time in different words.
+import { resetIntakeCache, derivePortfolioSignals, deriveApplicantFromPortfolio, buildApplicant, assessCompleteness, unpackIntake, loadIntake, saveIntake, flushIntake } from './lib/admissions';
 import { computeMedEx, loadSeals, sealIfNeeded, planSeal, readMirror, resetMedexCache } from './lib/medex';
 import MedExHomeCard from './components/medex/MedExHomeCard';
 import MedExPanel from './components/medex/MedExPanel';
@@ -414,6 +434,16 @@ const SAT_SUBNAV = [
   {id:'toolkit',ic:Calculator,label:'Calculator',color:C.sky},
   {id:'scores',ic:LineChart,label:'Scores',color:C.sky},
 ];
+/** The placeholder a lazily-loaded foundations tool shows while its chunk
+ *  arrives. Sized so the card does not collapse and then jump when the real
+ *  panel lands — a layout shift under the student's thumb is worse than the
+ *  half-second of waiting it was trying to hide. */
+const ToolLoading = () => (
+  <div style={{ minHeight: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <Loader2 size={18} style={{ animation: 'spin 1s linear infinite', color: C.t3 }} />
+  </div>
+);
+
 const PREP_SUBNAV = [
   {id:'diagnostic',ic:Compass,label:'Diagnostic',color:C.cyan},
   {id:'pathways',ic:Route,label:'Pathways',color:C.blue},
@@ -3068,6 +3098,61 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // the page opens on the student's own work rather than on ten choices — the wall of options
   // this app deliberately keeps tearing down.
   const [pathwayManagerOpen,setPathwayManagerOpen]=useState(false);
+  // ── The four-year map's selected shelf ──────────────────────────────────────
+  // null means "follow the student's own year", which is what almost everyone
+  // wants and what a returning student should get without touching anything. A
+  // non-null value means they deliberately went to look at another year, and it
+  // is deliberately NOT persisted: reading ahead into senior year in March
+  // should not be where the app leaves them in April.
+  const [mapTier,setMapTier]=useState(null);
+  // ── The course plan ─────────────────────────────────────────────────────────
+  // Local-only, on purpose and for now. It is a planning scratchpad rather than
+  // a record of anything that happened, it is worthless on another device
+  // without the rest of the account, and the one piece of it that genuinely has
+  // to reach the server — the rigor counts — travels through the admissions
+  // intake, which already has a row, a schema and a debounced writer.
+  //
+  // Read as opaque JSON, deliberately: normalizing it here would mean importing
+  // coursePlanner.js on boot for one helper, dragging its course catalog and
+  // gap-rule tables back into the entry graph that the React.lazy above just got
+  // them out of. `null` means "nothing saved"; the panel — which owns the shape
+  // and is the only thing that reads it — normalizes whatever it is handed.
+  const [coursePlan,setCoursePlan_]=useState(()=>{
+    try{ const raw=localStorage.getItem('msp_coursePlan'); return raw?JSON.parse(raw):null; }
+    catch{ return null; }
+  });
+  const [rigorApplied,setRigorApplied]=useState(false);
+  // The same key the Portfolio's credential picker already uses, deliberately.
+  // A student's state is one fact about them, and asking for it twice in two
+  // places — then showing them their state's name for a credential on one screen
+  // and the national name on the other — is the exact inconsistency the state
+  // naming work existed to remove.
+  const [credentialState,setCredentialState_]=useState(()=>{
+    try{ return localStorage.getItem('credentialStateCode')||''; }catch{ return ''; }
+  });
+  const setCredentialState=useCallback((code)=>{
+    setCredentialState_(code);
+    try{ if(code) localStorage.setItem('credentialStateCode',code); }catch{ /* private mode; it holds for the session */ }
+  },[]);
+  const setCoursePlan=useCallback((next)=>{
+    setCoursePlan_(next);
+    setRigorApplied(false); // the plan moved, so what the calculator holds is now behind
+    try{ localStorage.setItem('msp_coursePlan',JSON.stringify(next)); }catch{ /* private mode; the plan still works this session */ }
+  },[]);
+  // One input, two outputs: the courses the student typed become the calculator's
+  // `rigorCounts`/`rigorOffered` answers rather than being asked for a second
+  // time in different words. The calculator owns that store, so this merges into
+  // whatever is already there rather than replacing the intake.
+  const applyPlanRigor=useCallback(async(rigor)=>{
+    try{
+      const intake=await loadIntake();
+      const answers={...(intake.answers||{}), rigorCounts:{ap:rigor.ap,ib:rigor.ib,honors:rigor.honors,dualEnrollment:rigor.dualEnrollment}};
+      if(rigor.offeredAdvanced!=null) answers.rigorOffered=rigor.offeredAdvanced;
+      saveIntake({answers,programRounds:intake.programRounds||{}});
+      await flushIntake();
+      setRigorApplied(true);
+    }catch(err){ console.error('Could not send course rigor to the calculator:',err); }
+  },[]);
   // Expanding the catalog is useless if it opens below the fold — the "Add pathway" affordances
   // scattered around the app all route through here so the student actually lands on it.
   const openPathwayManager = useCallback(()=>{
@@ -3144,7 +3229,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // after routing the student to their first pillar and never seen again.
   const onboardingRecap = useMemo(()=>buildOnboardingRecap(user),[user]);
   const onboardingCompleteness = useMemo(()=>computeOnboardingCompleteness(user),[user]);
-  const allL    = Object.values(PATHS).flatMap(p=>(p.units||[]).flatMap(u=>u.lessons||[]));
+  // DISTINCT lessons, across every pathway. The de-duplication is not defensive
+  // tidying — the foundations tier (course strategy, certifications) is the same
+  // two units on all ten tracks by design, sharing one id space so that reading
+  // a lesson once counts everywhere. Flattened naively those nine lessons appear
+  // ninety times, and "Pathways · 12/321 lessons" on the Home tile would be
+  // counting eighty-one lessons that do not exist. Pathway-scoped counts
+  // (`curPathAllL` below) are unaffected: within one track every id is unique.
+  const allL    = [...new Map(
+    Object.values(PATHS).flatMap(p=>(p.units||[]).flatMap(u=>u.lessons||[])).map(l=>[l.id,l])
+  ).values()];
   const doneL   = allL.filter(l=>isLessonComplete(l,pathway[l.id])).length;
   const mastery = allL.length>0?Math.round((doneL/allL.length)*100):0;
   // Current-pathway-only lesson count (distinct from the cross-pathway `allL`/`doneL`/`mastery`
@@ -3852,6 +3946,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       return'done';
     }
     if(ui===0)return'available';
+    // The foundations tier sits behind nothing. Course strategy and credentials
+    // are decisions with an external deadline — a course selection sheet is due
+    // whether or not the student has finished three biology units — so these
+    // units carry `openAlways` and are exempt from the sequential gate. Every
+    // other unit's gating is untouched (see the note beside FOUNDATION_UNITS in
+    // data/constants.js for why they are appended rather than prepended).
+    if(units[ui]?.openAlways)return'available';
     const prev=units[ui-1];
     if(!prev)return'available';
     return prev.lessons.every(l=>isLessonComplete(l,pathway[l.id]))?'available':'locked';
@@ -6624,6 +6725,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // ── PATHWAY ───────────────────────────────────────────────────────────────────
   function tPath(){
     const units=curPath?.units||[];
+    // ── The four-year map ────────────────────────────────────────────────────
+    // Same units, grouped into five shelves. `isDone` is INJECTED rather than
+    // reimplemented in the map module, because "complete" here means "verified
+    // if it has a quiz" and a second copy of that rule is a second chance to be
+    // wrong about a student's progress.
+    const fourYear=buildFourYearMap(units,{
+      pathwayKey:eSpec,
+      gradeStage:effGrade,
+      isDone:(l)=>isLessonComplete(l,pathway[l.id]),
+    });
+    const activeTier=fourYear.byId[mapTier]||fourYear.byId[fourYear.defaultTier]||fourYear.tiers[0];
+    // The units on the selected shelf, carrying their ORIGINAL index — the one
+    // lessonState() gates on. Filtering for display must never renumber them,
+    // or a unit would read available on one shelf and not on another.
+    const shelfUnits=activeTier?activeTier.units:units.map((u,i)=>({unit:u,index:i,basis:'tagged'}));
     // Dropping every pathway is a legitimate state (it's how a student clears the decks and
     // starts over), so it gets a real screen rather than silently falling back to Exploring.
     if(activePathways.length===0){
@@ -6771,7 +6887,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             />
           );
         })()}
-        {units.map((unit,ui)=>{
+        {/* The year rail. It changes which units are on screen and nothing else —
+            sequencing, unlocking and every lesson's own state are computed below
+            exactly as they were before it existed. */}
+        <FourYearMap
+          map={fourYear} selected={activeTier?.id} onSelect={setMapTier}
+          accent={accent} m={isMobile} reducedMotion={reducedMotion}
+        />
+        {shelfUnits.map(({unit,index:ui,basis})=>{
           const p=unitM(unit);const done=p===100;const ucm=catMeta(unit.quizCat);
           // Grade personalization — the deep tracks (physician/nursing/PA/exploring) tag each
           // unit with the class years it's genuinely best timed for. This only ever *labels*:
@@ -6784,7 +6907,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           // with no explanation. When the unit isn't reachable yet the badge says so and names
           // what stands between them and it, instead of pointing at a wall.
           const stageMeta=unit.stage?UNIT_STAGES[unit.stage]:null;
-          const reachable=ui===0||(units[ui-1]?.lessons||[]).every(l=>isLessonComplete(l,pathway[l.id]));
+          const reachable=unit.openAlways||ui===0||(units[ui-1]?.lessons||[]).every(l=>isLessonComplete(l,pathway[l.id]));
           const timely=isUnitTimelyFor(unit,effGrade)&&!done;
           // The unit's recommended BAND, derived from the gradeFocus it already declares — one
           // tag, no second list to keep in sync. Out-of-band units are marked and left out of the
@@ -6813,7 +6936,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               {/* Motivation boost: turn "the next unit is locked" into a concrete, encouraging
                   countdown instead of just a dimmed lock icon — a visible, achievable next step
                   keeps momentum going into the next section of the pathway. */}
-              {!done&&units[ui+1]&&(()=>{
+              {/* …except where there is nothing to unlock. The foundations tier is
+                  open from the start and does not gate the unit after it, so this
+                  nudge would be making a promise the sequencing does not keep. */}
+              {!done&&units[ui+1]&&!unit.openAlways&&!units[ui+1].openAlways&&(()=>{
                 const remaining=unit.lessons.filter(l=>!isLessonComplete(l,pathway[l.id])).length;
                 return(
                   <div style={{...glass2({padding:'8px 12px',marginBottom:16,background:`${accent}0a`,border:`1px solid ${accent}22`}),display:'flex',alignItems:'center',gap:8}}>
@@ -6868,6 +6994,54 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   );
                 })}
               </div>
+              {/* The tool that belongs to this unit, inline. A student who has just
+                  read "most nursing programs want statistics, not calculus" wants
+                  to look at their own four years right now; putting the planner
+                  three tabs away converts that impulse into an intention, and
+                  intentions do not survive a navigation. */}
+              {/* ── The tool that belongs to this unit ──────────────────────
+                  Behind a named door, for the reason Disclosure exists: the
+                  unit is a reading list first, and a four-year form plus a
+                  nine-card credential catalog rendered under it unasked buries
+                  the three lessons the student came for. The door is also what
+                  makes the React.lazy above worth anything — closed, the chunk
+                  is never fetched and the panel's DOM never exists — and the
+                  choice is remembered per student, so somebody who lives in the
+                  planner finds it open next time. */}
+              {unit.tool==='coursePlanner'&&(
+                <div style={{marginTop:16}}>
+                  <Disclosure
+                    id="prep-course-planner" icon={CalendarRange} color={accent} m={isMobile}
+                    title="Plan your four years"
+                    sub="Enter the courses you have taken and plan to take, and see the gaps against your pathways.">
+                    <React.Suspense fallback={<ToolLoading/>}>
+                      <CoursePlannerPanel
+                        plan={coursePlan} onPlanChange={setCoursePlan}
+                        pathways={activePathways} gradeStage={effGrade}
+                        accent={accent} m={isMobile}
+                        onApplyRigor={applyPlanRigor} rigorApplied={rigorApplied}
+                      />
+                    </React.Suspense>
+                  </Disclosure>
+                </div>
+              )}
+              {unit.tool==='certifications'&&(
+                <div style={{marginTop:16}}>
+                  <Disclosure
+                    id="prep-certification-explorer" icon={BadgeCheck} color={accent} m={isMobile}
+                    title="Compare the credentials"
+                    sub="Nine credentials with the real age requirement, cost, and what each one opens — for your state.">
+                    <React.Suspense fallback={<ToolLoading/>}>
+                      <CertificationExplorer
+                        stateCode={credentialState} onStateChange={setCredentialState}
+                        age={typicalAgeForGrade(effGrade)}
+                        pathwayKey={eSpec} pathwayLabel={curPath?.label||''}
+                        accent={accent} m={isMobile}
+                      />
+                    </React.Suspense>
+                  </Disclosure>
+                </div>
+              )}
             </motion.div>
           );
         })}
