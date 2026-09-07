@@ -35,6 +35,7 @@ import {
 } from './model.js';
 import { TERMINAL_CODES, parseLooseJSON, degradedReasonFor } from '../roadmap/generator.js';
 import { PLAN_HORIZONS, defaultHorizon } from './yearly.js';
+import { postMedabrain } from '../medabrainRequest.js';
 
 const TIMEOUT_MS = 42000;
 const ATTEMPTS = 2;
@@ -49,17 +50,18 @@ async function callOnce({ system, user, lane }) {
   const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
   const timer = controller ? setTimeout(() => controller.abort(), TIMEOUT_MS) : null;
   try {
-    const r = await fetch('/api/groq', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system, message: user, maxTokens: 1800,
-        // The same purpose and key pool the year roadmap uses. A month plan is
-        // the same kind of artifact for the same student — giving it its own
-        // purpose would split one budget into two that cannot see each other.
-        purpose: 'roadmap', tier: 'oracle', jsonMode: true, reasoningEffort: 'medium',
-        lane,
-      }),
+    const r = await postMedabrain({
+      system, message: user, maxTokens: 1800,
+      // The same purpose and key pool the year roadmap uses. A month plan is
+      // the same kind of artifact for the same student — giving it its own
+      // purpose would split one budget into two that cannot see each other.
+      purpose: 'roadmap', tier: 'oracle',
+      // `lane` is passed through for the callers that hand this generator an
+      // explicit one. postMedabrain applies the signed-in student's lane after
+      // `extra` on purpose — a caller must not be able to charge somebody
+      // else's allowance — so this only takes effect when nobody is signed in,
+      // which is the case a passed lane exists for.
+      extra: { jsonMode: true, reasoningEffort: 'medium', lane },
       signal: controller ? controller.signal : undefined,
     });
     if (!r.ok) {

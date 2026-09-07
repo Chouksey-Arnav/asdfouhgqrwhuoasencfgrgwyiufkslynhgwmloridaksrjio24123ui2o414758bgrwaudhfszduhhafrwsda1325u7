@@ -97,7 +97,7 @@ const reasonMeta = (type) => ({
 
 export default function OpportunitiesPanel({
   accent = C.gold, user, onSaveUser, snapshot = null, loading = false,
-  pathwayKey = null, pathwayLabel = 'pre-health', askMedabrain, isMobile = false,
+  pathwayKey = null, pathwayLabel = 'pre-health', askMedabrain, askAmbient, isMobile = false,
   onTrack, trackedKeys, pendingKeys, pendingEntries = [], trackStatus = {}, onOpen,
   focus = null,
   // The three inputs the opportunity-intelligence layer needs beyond the portfolio snapshot:
@@ -164,8 +164,14 @@ export default function OpportunitiesPanel({
     if (cached) { setBrief({ loading: false, content: cached, error: null }); return; }
     let cancelled = false;
     setBrief({ loading: true, content: null, error: null });
-    askMedabrain(buildMatchPrompt(profile, matches), 520)
-      .then((content) => { if (!cancelled) { setCached(briefKey, content); setBrief({ loading: false, content, error: null }); } })
+    (askAmbient || askMedabrain)(buildMatchPrompt(profile, matches), 520)
+      .then((content) => {
+        if (cancelled) return;
+        // A null answer means today's ambient budget is spent (see
+        // askAmbientMedabrain in App.jsx). Not an error, and never shown as one.
+        if (!content) { setBrief(null); return; }
+        setCached(briefKey, content); setBrief({ loading: false, content, error: null });
+      })
       .catch((err) => { if (!cancelled) setBrief({ loading: false, content: null, error: err.message }); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- askMedabrain/profile/matches are recreated every render; briefKey is their identity

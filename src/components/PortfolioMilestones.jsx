@@ -225,7 +225,7 @@ export function useDeadlines() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function PortfolioMilestones({ accent = C.indigo, user = null, apIb = false, askMedabrain, onNavigate, onAdded, isMobile = false }) {
+export default function PortfolioMilestones({ accent = C.indigo, user = null, apIb = false, askMedabrain, askAmbient, onNavigate, onAdded, isMobile = false }) {
   const [refreshKey, setRefreshKey] = useState(0);
   const refresh = useCallback(() => setRefreshKey(k => k + 1), []);
   const { timeline, snapshot, loading } = useMilestoneFeed(user, refreshKey);
@@ -471,7 +471,7 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
     () => (timeline ? timeline.upcoming.slice(0, 12) : []),
     [timeline]
   );
-  const brainSummary = useBrainTake(askMedabrain, brainList);
+  const brainSummary = useBrainTake(askMedabrain, brainList, askAmbient);
 
   const filtersOn = !!(kindFilter || monthFilter || lens !== 'all');
   const clearFilters = () => { setKindFilter(null); setMonthFilter(null); setLens('all'); };
@@ -891,7 +891,7 @@ function Hero({ accent, timeline, isMobile, onExport }) {
  * cacheKey alone captures everything that should trigger a refetch — the day
  * rolling over, or the actual list of dates changing.
  */
-function useBrainTake(askMedabrain, events) {
+function useBrainTake(askMedabrain, events, askAmbient) {
   const [summary, setSummary] = useState(null);
   const cacheKey = useMemo(
     () => dailyKey('milestonesPriority', events.map(e => `${e.title}:${e.date}`).join('|')),
@@ -915,8 +915,14 @@ function useBrainTake(askMedabrain, events) {
       .join('; ');
     // The lead-time figures are in the prompt because "prioritize the soonest" is exactly the
     // wrong advice on this feed and it is the advice a model gives when it only sees dates.
-    askMedabrain(`Here is this student's real upcoming Milestones feed: ${list}. In 2-3 concise sentences, tell them what to prioritize this week and why. Prioritize by how much SLACK is left — days until due minus the run-up the work needs — not by which date is soonest: a deadline ninety days out needing two months of preparation is more urgent than one thirty days out that takes an afternoon, and saying otherwise costs them the first one. Only reference milestones from this exact list — never invent one. If you cite a date marked "typical", say it still needs confirming on the official site.`)
-      .then(content => { if (!cancelled) { setCached(cacheKey, content); setSummary({ loading: false, content, error: null }); } })
+    (askAmbient || askMedabrain)(`Here is this student's real upcoming Milestones feed: ${list}. In 2-3 concise sentences, tell them what to prioritize this week and why. Prioritize by how much SLACK is left — days until due minus the run-up the work needs — not by which date is soonest: a deadline ninety days out needing two months of preparation is more urgent than one thirty days out that takes an afternoon, and saying otherwise costs them the first one. Only reference milestones from this exact list — never invent one. If you cite a date marked "typical", say it still needs confirming on the official site.`)
+      .then(content => {
+        if (cancelled) return;
+        // A null answer means today's ambient budget is spent (see
+        // askAmbientMedabrain in App.jsx). Not an error, and never shown as one.
+        if (!content) { setSummary(null); return; }
+        setCached(cacheKey, content); setSummary({ loading: false, content, error: null });
+      })
       .catch(err => { if (!cancelled) { fetchedKeyRef.current = null; setSummary({ loading: false, content: null, error: err.message }); } });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- askMedabrain intentionally excluded, see comment above

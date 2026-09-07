@@ -15,7 +15,7 @@
 // see — it just means the note stays as an unstructured entry until they
 // (or a future pass) tag it.
 // ─────────────────────────────────────────────────────────────────────────────
-import { aiLane } from '../aiLane';
+import { postMedabrain } from '../medabrainRequest';
 
 function parseLooseJSON(text) {
   if (!text) return null;
@@ -49,17 +49,17 @@ export async function extractFromNote(rawText) {
   const text = String(rawText || '').trim();
   if (!text) return null;
   try {
-    const res = await fetch('/api/groq', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system: EXTRACT_SYSTEM,
-        messages: [{ role: 'user', content: text.slice(0, 1200) }],
-        purpose: 'coach',
-        maxTokens: 220,
-        noCache: true,
-        lane: aiLane(),
-      }),
+    const res = await postMedabrain({
+      system: EXTRACT_SYSTEM,
+      messages: [{ role: 'user', content: text.slice(0, 1200) }],
+      purpose: 'coach',
+      maxTokens: 220,
+      extra: { noCache: true },
+      // This runs over a message the student already sent, to pull facts out of
+      // it. It is not a turn in the conversation, so the block describing what
+      // they can open would be noise in the prompt and would cost tokens on
+      // every message.
+      personalize: false,
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data?.content) return null;

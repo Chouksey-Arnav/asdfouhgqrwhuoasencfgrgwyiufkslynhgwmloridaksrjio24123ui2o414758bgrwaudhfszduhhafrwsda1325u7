@@ -21,7 +21,7 @@ import { subscribeMedabrainFocus } from '../lib/medabrainFocus';
 import { renderMarkdown } from '../lib/renderMarkdown';
 import { parseAssistantDirective, describeAction, executeAction, labelForDestination } from '../lib/medabrainActions';
 import MedabrainLauncher from './MedabrainLauncher';
-import { aiLane } from '../lib/aiLane';
+import { postMedabrain } from '../lib/medabrainRequest';
 
 // The first two are the questions this panel can now answer with real evidence rather than
 // generalities: it is handed the term-by-term GPA history and every activity with the
@@ -236,20 +236,16 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
         // as a lead.
         opportunityBlock: buildOpportunityIntel(user, portfolioData),
       });
-      const res = await fetch('/api/groq', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // 1600 (up from 800): a fully cited "most urgent thing" or a ranked deadline breakdown
-        // routinely runs past 800 tokens once formatting is included, and a reply cut mid-sentence
-        // reads as broken rather than as a length limit. See api/groq.js's per-purpose ceiling,
-        // which was also raised so this isn't silently reclamped server-side.
-        body: JSON.stringify({
-          system: sys, messages: nextMsgs.slice(-10), purpose: 'portfolio', maxTokens: 1600,
-          ...(safety.safetyTier ? { safetyTier: safety.safetyTier } : {}),
-          // Whose rate-limit budget this request spends. Without it every request from one
-          // school's NAT shares a single allowance — see src/lib/aiLane.js.
-          lane: aiLane(),
-        }),
+      // 1600 (up from 800): a fully cited "most urgent thing" or a ranked deadline breakdown
+      // routinely runs past 800 tokens once formatting is included, and a reply cut mid-sentence
+      // reads as broken rather than as a length limit. See api/groq.js's per-purpose ceiling,
+      // which was also raised so this isn't silently reclamped server-side.
+      //
+      // Assembled by src/lib/medabrainRequest.js — see the note at the same call
+      // in PrepMedabrain.jsx for what that one door carries.
+      const res = await postMedabrain({
+        system: sys, messages: nextMsgs.slice(-10), purpose: 'portfolio', maxTokens: 1600,
+        extra: safety.safetyTier ? { safetyTier: safety.safetyTier } : {},
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || `Medabrain error (${res.status})`);

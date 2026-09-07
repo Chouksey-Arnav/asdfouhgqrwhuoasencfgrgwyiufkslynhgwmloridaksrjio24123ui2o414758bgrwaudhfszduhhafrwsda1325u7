@@ -68,7 +68,7 @@ async function ensureChecklists(colleges, grouped, setChecklists) {
   }
 }
 
-export default function CollegeListPanel({ accent = C.blue, user = null, studentSAT = null, askMedabrain = null, onAdded = null, isMobile = false }) {
+export default function CollegeListPanel({ accent = C.blue, user = null, studentSAT = null, askMedabrain = null, askAmbient = null, onAdded = null, isMobile = false }) {
   const { entries: pendingEntries, status: trackStatus } = usePendingTrackKeys();
   const [colleges, setColleges] = useState([]);
   const [checklists, setChecklists] = useState({}); // collegeId -> items[]
@@ -253,8 +253,14 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
     const scoreLine = scores.hasScore
       ? `The student's own scores: ${scores.sat != null ? `SAT ${scores.sat}` : 'no SAT logged'}${scores.act != null ? `, ACT ${scores.act}` : ''} (use SAT ${scores.effectiveSat} as their effective level).`
       : 'The student has not logged an SAT or ACT yet.';
-    askMedabrain(`Here is this student's real college list: ${list}. ${scoreLine} These are all U.S. schools; the platform only covers U.S. institutions. In 2-3 concise sentences: comment on whether the reach/target/safety balance looks healthy given their score, flag any school whose category is wrong compared to the SAT/ACT midpoints given above, and name which 1-2 schools on THIS list they should prioritize finishing an application for next. Only reference schools from this exact list — never invent or suggest a school that isn't on it. Never cite a score other than the ones given above.`)
-      .then(content => { if (!cancelled) { setCached(brainCacheKey, content); setBrainTake({ loading: false, content, error: null }); } })
+    (askAmbient || askMedabrain)(`Here is this student's real college list: ${list}. ${scoreLine} These are all U.S. schools; the platform only covers U.S. institutions. In 2-3 concise sentences: comment on whether the reach/target/safety balance looks healthy given their score, flag any school whose category is wrong compared to the SAT/ACT midpoints given above, and name which 1-2 schools on THIS list they should prioritize finishing an application for next. Only reference schools from this exact list — never invent or suggest a school that isn't on it. Never cite a score other than the ones given above.`)
+      .then(content => {
+        if (cancelled) return;
+        // A null answer means today's ambient budget is spent (see
+        // askAmbientMedabrain in App.jsx). Not an error, and never shown as one.
+        if (!content) { setBrainTake(null); return; }
+        setCached(brainCacheKey, content); setBrainTake({ loading: false, content, error: null });
+      })
       .catch(err => { if (!cancelled) { brainFetchedKeyRef.current = null; setBrainTake({ loading: false, content: null, error: err.message }); } });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- askMedabrain intentionally excluded, it's a fresh closure every render (see DeadlinesPanel.jsx for the same pattern)
@@ -281,8 +287,14 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
     setRecBrain({ loading: true, content: null, error: null });
     const recList = recommendations.map(r => `${r.name} (${r.category}, SAT mid ${r.school.sat} / ACT mid ${r.school.act}, ${r.school.accept}% admit, ${r.school.state}${r.school.bsmd ? ', has BS/MD' : ''}, pre-health rank ${r.school.preHealthRank}/5)`).join('; ');
     const scoreLine = `${scores.sat != null ? `SAT ${scores.sat}` : 'no SAT logged'}${scores.act != null ? `, ACT ${scores.act}` : ''} (effective SAT level ${scores.effectiveSat})`;
-    askMedabrain(`This student's own test scores are: ${scoreLine}. MedSchoolPrep matched them to these U.S. colleges: ${recList}. In 3-4 concise sentences aimed at a high school student heading toward a health career: explain what their score realistically opens up, pick the 1-2 schools from THIS slate you'd add first and why (reference the actual SAT/ACT midpoints), and give one concrete thing they could do to move up a tier — a score gain target, or a strength that offsets a score gap. Only name schools from the slate above. Never invent a school or a score.`)
-      .then(content => { if (!cancelled) { setCached(recBrainCacheKey, content); setRecBrain({ loading: false, content, error: null }); } })
+    (askAmbient || askMedabrain)(`This student's own test scores are: ${scoreLine}. MedSchoolPrep matched them to these U.S. colleges: ${recList}. In 3-4 concise sentences aimed at a high school student heading toward a health career: explain what their score realistically opens up, pick the 1-2 schools from THIS slate you'd add first and why (reference the actual SAT/ACT midpoints), and give one concrete thing they could do to move up a tier — a score gain target, or a strength that offsets a score gap. Only name schools from the slate above. Never invent a school or a score.`)
+      .then(content => {
+        if (cancelled) return;
+        // A null answer means today's ambient budget is spent (see
+        // askAmbientMedabrain in App.jsx). Not an error, and never shown as one.
+        if (!content) { setRecBrain(null); return; }
+        setCached(recBrainCacheKey, content); setRecBrain({ loading: false, content, error: null });
+      })
       .catch(err => { if (!cancelled) { recBrainFetchedKeyRef.current = null; setRecBrain({ loading: false, content: null, error: err.message }); } });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- askMedabrain intentionally excluded, it's a fresh closure every render (same pattern as the list take above)

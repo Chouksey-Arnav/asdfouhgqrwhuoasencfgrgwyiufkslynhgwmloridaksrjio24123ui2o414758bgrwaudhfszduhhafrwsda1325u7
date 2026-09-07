@@ -11,7 +11,7 @@
 // back as prose ranges/seasons, never an invented exact figure or date presented as this year's
 // real value. `recognized:false` is the model's own admission it doesn't actually know the
 // program, which the UI surfaces plainly instead of quietly showing confident-looking blanks.
-import { aiLane } from './aiLane.js';
+import { postMedabrain } from './medabrainRequest';
 
 export async function researchScholarship(name) {
   const trimmed = String(name || '').trim();
@@ -38,17 +38,12 @@ Rules:
 
 This mirrors exactly how MedSchoolPrep's own curated scholarship database describes programs — always hedge amount/deadline as typical/historical and tell the student to confirm on the official site, never state this year's real numbers as verified fact.`;
 
-  const res = await fetch('/api/groq', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      system,
-      message: `Research the scholarship "${trimmed}" and return the JSON object.`,
-      purpose: 'portfolio',
-      lane: aiLane(),
-      jsonMode: true,
-      maxTokens: 500,
-    }),
+  const res = await postMedabrain({
+    system,
+    message: `Research the scholarship "${trimmed}" and return the JSON object.`,
+    purpose: 'portfolio',
+    maxTokens: 500,
+    extra: { jsonMode: true },
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.error || `Medabrain error (${res.status})`);

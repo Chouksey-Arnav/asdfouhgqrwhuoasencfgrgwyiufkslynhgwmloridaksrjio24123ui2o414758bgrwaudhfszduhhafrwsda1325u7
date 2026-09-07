@@ -66,7 +66,45 @@ result into four-week stances. Three rules follow, all asserted by
 - Default goal is 4 credits (cleared by 1 verified pathway lesson or 2 quizzes).
 - Guarded by `npm run verify:streak`.
 
-### 9. COPPA & Legal Compliance Invariants
+### 9. The New-Student Path
+- **The first week is a guide, not a dashboard.** A brand-new account's Home renders
+  `FirstRunGuide` (`src/lib/firstRun.js`): exactly TWO questions, then a grade-ordered ladder
+  with exactly ONE bright step. It retires permanently on three conditions and never returns.
+  Adding a third question is a change to onboarding, not to this.
+- **Grade opens doors early and never closes one.** `openFor` in `src/lib/featureUnlock.js` is
+  strictly additive — a freshman gets the plain ladder, a junior gets the whole Portfolio on day
+  one. There is no `closeFor` and there can never be one; access is asserted monotonic across
+  grades by `npm run verify:nav`.
+- Guarded by `npm run verify:first-run`, `npm run verify:nav`, and `npm run verify:new-user-e2e`.
+
+### 10. The App Decides Locally Before It Asks a Model
+- `src/lib/decisionEngine.js` answers "what should I do next", "why is this locked" and "you are
+  about to lose something" from state the client already holds. Zero API cost, instant, offline.
+- Every decision names its rule (`source: 'rule:<id>'`) AND its evidence, may never promise an
+  outcome, and may never point at a surface the student cannot open.
+- Guarded by `npm run verify:decisions`.
+
+### 11. One Door to /api/groq
+- Every Medabrain request goes through `postMedabrain()` in `src/lib/medabrainRequest.js`, which
+  attaches the lane, checks and records the client budget, and appends the per-student
+  availability block — **before** it sends. A component that builds its own `fetch('/api/groq')`
+  is spending money nobody counted.
+- The budget targets **20 calls per student per day** (`src/lib/aiBudget.js`), which is what puts
+  150 students inside the Groq free tier with the margin spent on burst headroom. Ambient
+  traffic — the paragraphs Portfolio panels generate on mount — is capped at 3/day and cached
+  for 24 hours.
+- **The safety classifier is never budgeted.** A limit that switches it off switches off
+  detection for exactly the student sending a lot of messages at one in the morning.
+- Guarded by `npm run verify:ai-budget`.
+
+### 12. The Exit Prompt Is Never a Dark Pattern
+- The one interception in the product (`src/lib/streakRetention.js`) may never ask a student to
+  STAY — the streak counts finished work, so staying does not protect it. It asks them to finish
+  one specific thing, at most once a day, never when today is cleared, always dismissible in one
+  tap, with no `beforeunload` and no shame button.
+- Guarded by `npm run verify:retention`.
+
+### 13. COPPA & Legal Compliance Invariants
 - Minimum user age is **13** (`src/lib/ageGate.js`). Failed age checks immediately purge the account (`AgeBlockedStep.jsx`).
 - AdSense tag ordering: `tagForChildDirectedTreatment` is set *before* loading AdSense script in `index.html`.
 - YouTube embeds use `youtube-nocookie.com` across all lesson modules.
@@ -80,6 +118,7 @@ For instant file navigation, consult this quick index or `FILE_NAVIGATION.md`:
 
 | Subsystem / Task | Primary Component | Core Logic | Data Catalog / Migration | Test / Audit Script |
 | :--- | :--- | :--- | :--- | :--- |
+| **SAT — pillar retired from the nav (see `RETIRED_TABS` in `src/lib/routes.js`); code intact** | | | | |
 | **SAT Desmos Calculator** | `src/components/sat/DesmosCalculator.jsx` | `src/lib/sat/desmos.js` | `src/data/sat/reference.js` | `scripts/verifySatDesmos.mjs` |
 | **SAT Adaptive Tests** | `src/components/sat/SatFullTestPanel.jsx` | `src/lib/sat/adaptive.js` | `src/data/sat/forms.js` | `scripts/verifySatForms.mjs` |
 | **SAT Question Bank** | `src/components/sat/SatLibraryPanel.jsx` | `src/lib/sat/aiPractice.js` | `src/data/sat/questions/index.js` | `scripts/auditSatBank.mjs` |
@@ -91,6 +130,11 @@ For instant file navigation, consult this quick index or `FILE_NAVIGATION.md`:
 | **Milestones & Roadmaps** | `src/components/PortfolioMilestones.jsx` | `src/lib/roadmap/generator.js` | `supabase/migrations/0015_roadmaps.sql` | `scripts/verifyRoadmap.mjs` |
 | **Parent Dashboard** | `src/components/parent/ParentApp.jsx` | `src/lib/parentApi.js` | `supabase/migrations/0006_parent_dashboard.sql` | `scripts/verifyParentDashboard.mjs` |
 | **AI Routing & Groq** | `src/components/MedabrainLauncher.jsx` | `api/groq.js` | `GROQ_SETUP.md` | `scripts/verifyMedabrainModes.mjs` |
+| **New-student first week** | `src/components/home/FirstRunGuide.jsx` | `src/lib/firstRun.js` | — (rides the user record) | `scripts/verifyFirstRun.mjs` |
+| **Local decision engine** | `src/components/home/DecisionCard.jsx` | `src/lib/decisionEngine.js` | — | `scripts/verifyDecisions.mjs` |
+| **Exit prompt / retention** | `src/components/streak/StayForStreakModal.jsx` | `src/lib/streakRetention.js` | — | `scripts/verifyRetention.mjs` |
+| **AI budget & one door** | — | `src/lib/aiBudget.js`, `src/lib/medabrainRequest.js` | `GROQ_SETUP.md` | `scripts/verifyAiBudget.mjs` |
+| **Medabrain personalization** | — | `src/lib/medabrainProfile.js` | — | `scripts/verifyAiBudget.mjs` |
 | **URL Routing Table** | `src/App.jsx` | `src/lib/routes.js` | `src/lib/seoRoutes.js` | `scripts/verifyRouting.mjs` |
 
 ---
@@ -118,6 +162,13 @@ npm run verify:parent
 
 # Earned Streak Audit
 npm run verify:streak
+
+# The new-student path, the local decision engine, the exit prompt, the API budget
+npm run verify:first-run
+npm run verify:decisions
+npm run verify:retention
+npm run verify:ai-budget
+npm run verify:new-user-e2e   # real browser; needs `npm run build` first
 
 # Month Plan (the adaptive four-week roadmap — the free-plan experience)
 npm run verify:month-plan

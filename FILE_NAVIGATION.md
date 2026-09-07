@@ -28,6 +28,10 @@ When assigned a specific task, jump directly to the relevant files listed below:
 | **College & Scholarship Database** | `src/components/CollegeListPanel.jsx`, `ScholarshipDatabase.jsx` | `src/lib/collegeRecommend.js`, `scholarshipResearch.js` | `src/data/scholarships.js`, `opportunities.js` | `scripts/verifyOpportunities.mjs`, `verifyMedicalScholarships.mjs` |
 | **Mock Voice Interview Simulator** | `src/components/LiveVoiceInterview.jsx`, `InterviewPrepPanel.jsx` | `src/lib/speech.js`, `interviewScore.js` | `src/data/interviewQuestions.js`, `mmiCasperQuestions.js` | `scripts/verifyInterviewRealism.mjs` |
 | **Parent Dashboard & Guarding** | `src/components/parent/ParentApp.jsx` | `src/lib/parentApi.js`, `parentDigest.js` | `supabase/migrations/0006_parent_dashboard.sql` | `scripts/verifyParentDashboard.mjs`, `verifyParentClaimFlow.mjs` |
+| **New-student first week** | `src/components/home/FirstRunGuide.jsx` | `src/lib/firstRun.js` | — (rides the user record) | `scripts/verifyFirstRun.mjs` |
+| **Local decision engine** | `src/components/home/DecisionCard.jsx` | `src/lib/decisionEngine.js` | — | `scripts/verifyDecisions.mjs` |
+| **Exit prompt / retention** | `src/components/streak/StayForStreakModal.jsx` | `src/lib/streakRetention.js` | — | `scripts/verifyRetention.mjs` |
+| **API budget & the one door** | — | `src/lib/aiBudget.js`, `src/lib/medabrainRequest.js`, `medabrainProfile.js` | `GROQ_SETUP.md` | `scripts/verifyAiBudget.mjs` |
 | **Earned Streaks & Gamification** | `src/components/StreakHeatmap.jsx`, `RewardChest.jsx` | `src/lib/streak.js`, `gamification.js` | `supabase/migrations/0004_reward_and_counter_sync.sql` | `scripts/verifyStreak.mjs` |
 | **Medabrain AI Coaching & Groq** | `src/components/MedabrainLauncher.jsx` | `api/groq.js`, `src/lib/studentProfile.js` | `GROQ_SETUP.md` | `scripts/verifyMedabrainModes.mjs` |
 | **Offline DB & Flashcard Engine** | `src/lib/db.js` | `src/lib/fsrs.js`, `src/lib/flashcards/engine.js` | `src/lib/flashcards/extractors/facts.js` | `scripts/verifyTracking.mjs` |
@@ -169,7 +173,13 @@ Below is the complete, itemized inventory of **every single file in the reposito
 - `src/lib/eventLog.js` — Shared application utility / service for eventLog.
 - `src/lib/exportPDF.impl.js` — Shared application utility / service for exportPDF.impl.
 - `src/lib/exportPDF.js` — Shared application utility / service for exportPDF.
-- `src/lib/featureUnlock.js` — Shared application utility / service for featureUnlock.
+- `src/lib/featureUnlock.js` — The progressive unlock ladder. Also carries `openFor`, which opens a gate on the student's grade alone — strictly additive, never subtractive.
+- `src/lib/firstRun.js` — The first week: two orientation questions and a grade-ordered ladder of first steps, plus the three ways the guide retires permanently.
+- `src/lib/decisionEngine.js` — The local ranked-decision engine. Answers "what next", "why is this locked" and "you are about to lose something" with no model call.
+- `src/lib/streakRetention.js` — What the app says to a student who is about to leave with today unfinished, and the rules that keep that from being a dark pattern.
+- `src/lib/aiBudget.js` — Per-student, per-day API budget with lanes, so 150 students fit inside the Groq free tier.
+- `src/lib/medabrainRequest.js` — The one door to /api/groq: lane, budget and personalization, attached before the request is sent.
+- `src/lib/medabrainProfile.js` — The per-student block appended to every Medabrain prompt: what is open, what is not and what opens it.
 - `src/lib/flashcards/aiPolish.js` — Offline flashcard processing/extraction logic for aiPolish.
 - `src/lib/flashcards/engine.js` — Offline flashcard processing/extraction logic for engine.
 - `src/lib/flashcards/extractors/acronyms.js` — Offline flashcard processing/extraction logic for acronyms.
@@ -716,6 +726,9 @@ Below is the complete, itemized inventory of **every single file in the reposito
 - `src/components/roadmap/roadmapUi.jsx` — React UI component / panel for roadmapUi.
 - `src/components/roadmap/useDragScroll.js` — React UI component / panel for useDragScroll.
 - `src/components/safety/CrisisResourceCard.jsx` — React UI component / panel for CrisisResourceCard.
+- `src/components/home/FirstRunGuide.jsx` — The first-week Home: the two questions and the one-bright-step ladder that replaces the dashboard for a new account.
+- `src/components/home/DecisionCard.jsx` — One local decision, with the evidence it was made from and the rule id behind a "why am I seeing this" affordance.
+- `src/components/streak/StayForStreakModal.jsx` — The exit prompt. Owns detecting the exit; the copy is decided by src/lib/streakRetention.js.
 - `src/components/streak/BoostChip.jsx` — Earned streak UI overlay component for BoostChip.
 - `src/components/streak/CheckInCalendar.jsx` — Earned streak UI overlay component for CheckInCalendar.
 - `src/components/streak/FreezeCard.jsx` — Earned streak UI overlay component for FreezeCard.
@@ -869,6 +882,11 @@ Below is the complete, itemized inventory of **every single file in the reposito
 - `scripts/verifySmartSearchE2E.mjs` — Automated audit / verification script for verifySmartSearchE2E.
 - `scripts/verifySpacing.mjs` — Automated audit / verification script for verifySpacing.
 - `scripts/verifyStreak.mjs` — Automated audit / verification script for verifyStreak.
+- `scripts/verifyFirstRun.mjs` — Guards the first-week guide: it ends, it is two questions, the order is the student's grade, every step is a working button.
+- `scripts/verifyDecisions.mjs` — Guards the local decision engine: no promises, every row shows its rule and evidence, nothing points at a locked screen.
+- `scripts/verifyRetention.mjs` — Guards the exit prompt against becoming a dark pattern.
+- `scripts/verifyAiBudget.mjs` — Guards the API arithmetic, the never-budgeted safety lane, and the one-door property.
+- `scripts/verifyNewUserE2E.mjs` — Real-browser proof that a new account gets the guide, an established one gets the dashboard, and the SAT tab is gone.
 - `scripts/verifyTabSwitch.mjs` — Automated audit / verification script for verifyTabSwitch.
 - `scripts/verifyTabSwitchE2E.mjs` — Automated audit / verification script for verifyTabSwitchE2E.
 - `scripts/verifyTimeline.mjs` — Automated audit / verification script for verifyTimeline.

@@ -116,7 +116,7 @@ import {
 } from './lib/dailyCheckin';
 import { localDateStr } from './lib/dateUtils';
 import {
-  PERFECT_WEEK_REWARD, PERFECT_MONTH_REWARD, DEFAULT_GOAL_ID, creditsFor, goalCreditsFor, getGoal,
+  PERFECT_WEEK_REWARD, PERFECT_MONTH_REWARD, DEFAULT_GOAL_ID, STREAK_GOALS, creditsFor, goalCreditsFor, getGoal,
   streakTargetFor, targetProgress, dayStatus, weekProgress, monthProgress, longestStreak,
   nextMilestone, unclaimedMilestones, rewardKey, perfectWeekKey, perfectMonthKey,
   // ── The expansion layer ──
@@ -303,6 +303,21 @@ import PlanTaskStrip from './components/ui/PlanTaskStrip';
 // opens the app with. See src/components/dashboard/ for the reasoning behind
 // each one and src/lib/nextThree.js for the ranking that drives the first.
 import NextThreeCard from './components/dashboard/NextThreeCard';
+// ── The first week, the local decision engine, and the door ─────────────────
+// Three systems that between them replace the dashboard for a brand-new
+// account, decide what to lead with for everyone else without asking a model,
+// and say one honest thing to a student who is about to leave a day unfinished.
+// The reasoning in all three is pure and lives in lib/ (firstRun.js,
+// decisionEngine.js, streakRetention.js); these are the renderings.
+import FirstRunGuide from './components/home/FirstRunGuide';
+import DecisionCard from './components/home/DecisionCard';
+import StayForStreakModal from './components/streak/StayForStreakModal';
+import { firstRunPlan, recordOrientation, dismissFirstRun, pendingQuestions } from './lib/firstRun';
+import { usage as aiUsageToday } from './lib/aiBudget';
+import { postMedabrain, BudgetError } from './lib/medabrainRequest';
+import { buildAvailabilityBlock, setAboutBlock as setMedabrainAbout } from './lib/medabrainProfile';
+import { decide } from './lib/decisionEngine';
+import { smallestSufficientAction } from './lib/streakRetention';
 import FourYearArc from './components/dashboard/FourYearArc';
 import HoursRings from './components/dashboard/HoursRings';
 import DeadlineHorizon from './components/dashboard/DeadlineHorizon';
@@ -329,16 +344,11 @@ import SubNav from './components/ui/SubNav';
 import TabContentGuard from './components/TabContentGuard';
 import EmptyState from './components/ui/EmptyState';
 import { useMediaQuery, useViewport, Arc, Bar, Stat } from './components/ui/primitives';
-// The SAT pillar ships sealed for v1 — the tab renders behind SatBetaCover and
-// nothing outside it integrates with SAT any more. See src/lib/betaFlags.js.
-import SatTab from './components/sat/SatTab';
-import SatBetaCover from './components/sat/SatBetaCover';
-import { SAT_ENABLED } from './lib/betaFlags';
 import AppTour from './components/AppTour';
 // Progressive feature unlocking — the nav shows what this student can use today,
 // not everything the product contains. See src/lib/featureUnlock.js for the ladder
 // and why day one is four doors instead of thirty-eight.
-import { unlockState, visibleItems, recordUnlocks, seedExistingAccount, sectionKey, ruleCopy, studyActions, MARQUEE_IDS, NAV_MODES } from './lib/featureUnlock';
+import { unlockState, visibleItems, recordUnlocks, seedExistingAccount, sectionKey, ruleCopy, studyActions, MARQUEE_IDS, NAV_MODES, GATED_IDS } from './lib/featureUnlock';
 import NextUnlockCard from './components/NextUnlockCard';
 import UnlockCelebration from './components/UnlockCelebration';
 import Onboarding, { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS, STUDY_HOURS_OPTIONS, GPA_OPTIONS, SCIENCE_OPTIONS, EXPERIENCE_OPTIONS } from './components/onboarding/Onboarding';
@@ -454,7 +464,6 @@ const AI_MSG = 'AI features require an OpenAI API key. Set OPENAI_KEY in your Ve
 // Settings lives in the account menu (avatar click), not the main nav.
 const NAV = [
   {id:'home',ic:Home,label:'Home'},
-  {id:'sat',ic:Target,label:'SAT'},
   {id:'prep',ic:Compass,label:'Prep'},
   {id:'portfolio',ic:Building2,label:'Portfolio'},
   // Sits between Portfolio and Plans, and the ordering is the argument: Portfolio is the record
@@ -466,36 +475,13 @@ const NAV = [
   {id:'progress',ic:LineChart,label:'Progress'},
   {id:'settings',ic:Settings,label:'Settings'},
 ];
-// The SAT pillar. Sits second because onboarding sells score improvement harder
-// than anything else in the product, and until now nothing behind that promise
-// existed — see src/data/sat/taxonomy.js for the content model it runs on.
-// One identity color across the whole pillar (see SatTab.jsx) — the SAT tab
-// holds itself to a stricter, assessment-grade visual standard than the rest
-// of the app, so its sub-views share C.sky rather than a per-view rainbow.
-// Review Log keeps rose because there the color MEANS something: work owed.
-const SAT_SUBNAV = [
-  {id:'overview',ic:Target,label:'Overview',color:C.sky},
-  // Sits directly after Overview, ahead of the Diagnostic, because it is the
-  // first thing a new student should do: the Diagnostic tells them WHAT to work
-  // on, but only the Baseline tells them roughly where they currently score,
-  // and every other panel's advice reads differently at 1050 than at 1400.
-  {id:'baseline',ic:Gauge,label:'Baseline',color:C.sky},
-  {id:'diagnostic',ic:Compass,label:'Diagnostic',color:C.sky},
-  {id:'practice',ic:Layers,label:'Practice',color:C.sky},
-  {id:'tests',ic:ClipboardList,label:'Full tests',color:C.sky},
-  {id:'review',ic:AlertTriangle,label:'Review Log',color:C.rose},
-  {id:'skills',ic:TrendingUp,label:'Skill Mastery',color:C.sky},
-  // The Digital SAT hands every student the Desmos graphing calculator on every
-  // Math question. This is its home: the real calculator at full size, the
-  // formula sheet the exam does (and does not) give you, and the technique list
-  // that turns "there is a calculator" into points.
-  // The bank, browsable, plus College Board's own free material. Sits beside
-  // the Calculator rather than under Train because it is a reference surface —
-  // somewhere you go looking for a specific thing, not somewhere you are sent.
-  {id:'library',ic:Library,label:'Library',color:C.sky},
-  {id:'toolkit',ic:Calculator,label:'Calculator',color:C.sky},
-  {id:'scores',ic:LineChart,label:'Scores',color:C.sky},
-];
+// ── The SAT pillar is not in this nav ────────────────────────────────────────
+// It shipped sealed behind SatBetaCover: a visible, blurred, inert second row
+// that a new student tapped twice before deciding the app was broken. A nav row
+// that cannot be used is worse than no row, and this one was in the most
+// valuable position in the whole nav. So it is out until the pillar is real —
+// see RETIRED_TABS in src/lib/routes.js for what putting it back involves.
+// src/components/sat/, src/lib/sat/ and src/data/sat/ are untouched.
 /** The placeholder a lazily-loaded foundations tool shows while its chunk
  *  arrives. Sized so the card does not collapse and then jump when the real
  *  panel lands — a layout shift under the student's thumb is worse than the
@@ -658,7 +644,6 @@ const SETTINGS_SUBNAV = [
 // use — the one place two copies of a label would definitely drift.
 const UNLOCK_LABELS = Object.fromEntries([
   ...NAV.map(n=>[n.id,n.label]),
-  ...SAT_SUBNAV.map(n=>[`sat/${n.id}`,n.label]),
   ...PREP_SUBNAV.map(n=>[`prep/${n.id}`,n.label]),
   ...PORTFOLIO_SUBNAV.map(n=>[`portfolio/${n.id}`,n.label]),
   ...ROADMAP_SUBNAV.map(n=>[`roadmap/${n.id}`,n.label]),
@@ -1928,10 +1913,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // A question the app drops into Medabrain's box on the student's behalf — set by the
   // "not yet" recovery screen with the concepts they actually missed. Never auto-sent.
   const [prepBrainPrefill, setPrepBrainPrefill] = useState('');
-  // The SAT tab used to lift its own Medabrain conversation up here for the same
-  // reason Prep's is lifted. It is gone with the seal (src/lib/betaFlags.js):
-  // SatTab is passed a permanently-closed panel and an empty thread, because a
-  // coach a student can neither open nor type into has no state worth keeping.
   // ── Lesson notes + highlights — loaded fresh for whichever lesson is active, so switching
   // lessons never bleeds one lesson's notes/highlights into another's UI, even for an instant.
   const [notesOpen, setNotesOpen] = useState(false);
@@ -1992,12 +1973,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [portfolioView, setPortfolioView] = useState(boot.portfolioView); // overview|tracked|milestones|colleges|essays|aid|resume|interview|calc
   const [roadmapView, setRoadmapView] = useState(boot.roadmapView); // overview|year|seasons|list|intake
   const [progressView, setProgressView] = useState(boot.progressView); // overview|verified|performance|achievements
-  const [satView, setSatView] = useState(boot.satView); // overview|diagnostic|practice|tests|review|skills|scores
   const [settingsView, setSettingsView] = useState(boot.settingsView); // profile|study|family|appearance|medabrain|data|account
   // Deep-link params for the SAT tab (e.g. "drill this specific skill", "resume
   // this attempt"), set by the Overview's next-best-action card and by the
   // Review Log. Cleared by the receiving panel once consumed.
-  const [satParams, setSatParams] = useState(null);
 
   // ── The brand journey ───────────────────────────────────────────────────────
   // Two hooks, both about the loading animation in src/components/BrandJourney.jsx.
@@ -2015,8 +1994,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [bootPlayed, markBootPlayed] = useFirstPassGate();
   const showcase = useBrandShowcase(
     tab,
-    !activeLesson && !vidM && !cmdOpen && !questCelebration && !previewOnboarding
-      && !(tab === 'sat' && ['tests', 'practice', 'diagnostic'].includes(satView)),
+    // The SAT tab's timed surfaces used to be excluded here too — a brand
+    // showcase must never animate over a running test. The pillar is out of the
+    // nav (see RETIRED_TABS in src/lib/routes.js), so the exclusion went with it
+    // and comes back if it does.
+    !activeLesson && !vidM && !cmdOpen && !questCelebration && !previewOnboarding,
   );
 
   // Resolves retired sub-view ids on the way in (resolveView), which is what makes
@@ -2024,7 +2006,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // generated before the rename, and a plan task whose destination silently no-ops is worse
   // than one that never had a destination at all.
   const goPrep = useCallback((view)=>{ setTab('prep'); const v=resolveView('prep',view); if(v) setPrepView(v); }, []);
-  const goSat = useCallback((view, params=null)=>{ setTab('sat'); if(view) setSatView(view); setSatParams(params); }, []);
   // Which section of Activities & résumé is open. It lives here rather than inside the panel
   // because the three tabs that were merged into it are still addressed by name from all over
   // the app — the Home tiles, the weekly goals, the timeline's milestone actions, the class-year
@@ -2111,7 +2092,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // in the catalog and have the button actually land there.
   const goAnywhere = useCallback((tabId, view)=>{
     if(tabId==='prep')return goPrep(view);
-    if(tabId==='sat')return goSat(view);
     if(tabId==='portfolio')return goPortfolio(view);
     if(tabId==='progress')return goProgress(view);
     if(tabId==='plans')return goPlans();
@@ -2120,7 +2100,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // a milestone action, a Home tile — silently landed on Home instead.
     if(tabId==='roadmap')return goRoadmap(view);
     setTab('home');
-  }, [goPrep,goSat,goPortfolio,goProgress,goPlans,goSettings,goRoadmap]);
+  }, [goPrep,goPortfolio,goProgress,goPlans,goSettings,goRoadmap]);
 
   /**
    * The same jump, taking one destination id instead of two arguments.
@@ -2166,7 +2146,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
   // Persist the current tab/sub-view on every change so a reload (a stuck PWA, the phone
   // locking, a flaky connection) resumes on the same screen instead of resetting to Home.
-  useEffect(()=>{ saveViewState({ tab, prepView, portfolioView, roadmapView, progressView, satView, settingsView }); },[tab, prepView, portfolioView, roadmapView, progressView, satView, settingsView]);
+  useEffect(()=>{ saveViewState({ tab, prepView, portfolioView, roadmapView, progressView, settingsView }); },[tab, prepView, portfolioView, roadmapView, progressView, settingsView]);
 
   // Keep the browser tab title in sync with where the student actually is — previously the
   // <title> in index.html ("MedSchoolPrep — Your Path Into Medicine") never changed after load,
@@ -2182,11 +2162,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       tab==='portfolio'?PORTFOLIO_SUBNAV.find(n=>n.id===portfolioView)?.label:
       tab==='roadmap'?ROADMAP_SUBNAV.find(n=>n.id===roadmapView)?.label:
       tab==='progress'?PROGRESS_SUBNAV.find(n=>n.id===progressView)?.label:
-      tab==='sat'?SAT_SUBNAV.find(n=>n.id===satView)?.label:
       tab==='settings'?SETTINGS_SUBNAV.find(n=>n.id===settingsView)?.label:
       null;
     document.title=`${subLabel?`${subLabel} · `:''}${navLabel} · MedSchoolPrep`;
-  },[tab,prepView,portfolioView,roadmapView,progressView,satView,settingsView]);
+  },[tab,prepView,portfolioView,roadmapView,progressView,settingsView]);
 
   // ── Post-onboarding product tour — a short spotlight walkthrough hitting each ──
   // top-level pillar once, offered right after a new account is created (see
@@ -2296,8 +2275,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     : aQuiz      ? { kind:'quiz', quizId:aQuiz.id }
     : null
   ),[activeLesson,aQuiz]);
-  const route = useMemo(()=>routeFromState({ tab, satView, prepView, portfolioView, roadmapView, progressView, settingsView, overlay:overlayRoute }),
-    [tab,satView,prepView,portfolioView,roadmapView,progressView,settingsView,overlayRoute]);
+  const route = useMemo(()=>routeFromState({ tab, prepView, portfolioView, roadmapView, progressView, settingsView, overlay:overlayRoute }),
+    [tab,prepView,portfolioView,roadmapView,progressView,settingsView,overlayRoute]);
 
   // ── Where they have been ────────────────────────────────────────────────────
   // Recorded off the SAME route object the address bar is driven from, rather
@@ -2326,8 +2305,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     setTab(next.tab);
     const sub = SUBVIEWS[next.tab];
     if (sub && next.view) {
-      if (next.tab === 'sat') setSatView(next.view);
-      else if (next.tab === 'prep') setPrepView(next.view);
+      if (next.tab === 'prep') setPrepView(next.view);
       else if (next.tab === 'portfolio') {
         setPortfolioView(next.view);
         // A back/forward press onto an old /portfolio/clinical-style URL: the route already
@@ -2367,10 +2345,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // shows the destination on hover, and a copied link actually lands where it says.
   // Each points at the sub-view the student last had open in that tab, matching exactly
   // where clicking will take them.
-  const subViewOf = useMemo(()=>({sat:satView,prep:prepView,portfolio:portfolioView,roadmap:roadmapView,progress:progressView,settings:settingsView}),
-    [satView,prepView,portfolioView,roadmapView,progressView,settingsView]);
+  const subViewOf = useMemo(()=>({prep:prepView,portfolio:portfolioView,roadmap:roadmapView,progress:progressView,settings:settingsView}),
+    [prepView,portfolioView,roadmapView,progressView,settingsView]);
   const tabHref = useCallback((id)=>formatPath({tab:id,view:subViewOf[id]}),[subViewOf]);
-  const satHref = useCallback((v)=>formatPath({tab:'sat',view:v}),[]);
   const prepHref = useCallback((v)=>formatPath({tab:'prep',view:v}),[]);
   const portfolioHref = useCallback((v)=>formatPath({tab:'portfolio',view:v}),[]);
   const roadmapHref = useCallback((v)=>formatPath({tab:'roadmap',view:v}),[]);
@@ -3516,7 +3493,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const progressAccent = C.cyan;
   const settingsAccent = C.amber;
   const plansAccent = C.pink;
-  const satAccent = C.sky;
   // Violet, which the Prep nav item also uses — deliberate, and the only shared nav color in
   // the app. Prep is "learn the material" and Roadmap is "learn what to do with your year";
   // they are the two forward-looking pillars, and reading as a pair is closer to the truth than
@@ -3526,7 +3502,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // fixed color instead of every nav item lighting up in whatever the current pathway's accent
   // happens to be. Home/Prep's own content can still layer pathway-adaptive tinting on top
   // (Home's hero, Prep's pathway/diagnostic views) — this only fixes the nav identity.
-  const navColor = { home: C.blue, sat: satAccent, prep: C.violet, portfolio: portfolioAccent, roadmap: roadmapAccent, plans: plansAccent, progress: progressAccent, settings: settingsAccent };
+  const navColor = { home: C.blue, prep: C.violet, portfolio: portfolioAccent, roadmap: roadmapAccent, plans: plansAccent, progress: progressAccent, settings: settingsAccent };
   // What onboarding collected, turned back into human-readable copy — shown on both the
   // Progress overview (read-only recap) and Settings ("Your Goals," editable). See
   // src/lib/studentProfile.js for why this exists: onboarding answers used to be discarded
@@ -3715,7 +3691,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // the deadline is the thing, so Portfolio, Recommenders and Interview Prep are
     // open from the first second. The ladder is for students who have time to climb it.
     applicationUrgent: user?.gradeStage==='senior' || user?.gradeStage==='gap',
-  }),[qTaken,doneL,appCounts,portActivities.length,trackedSummary.items.length,achiev,lvl,user,portLoaded,portfolioItems]);
+    // ── The grade the ladder branches on ──────────────────────────────────
+    // `applicationUrgent` above was the first, crudest version of this: one
+    // boolean, seniors only, hard-coded into a handful of rules. It could not
+    // say anything at all about the two years in between, so a junior — the
+    // student for whom the entire Portfolio is live work — met the same
+    // day-one ladder as a fourteen-year-old. `gradeStage` is what the rules
+    // actually branch on now (see `openFor` in src/lib/featureUnlock.js), and
+    // it is DERIVED from the graduation year rather than stored, so it
+    // advances by itself on August 1 with nothing written anywhere.
+    gradeStage: effGrade,
+  }),[qTaken,doneL,appCounts,portActivities.length,trackedSummary.items.length,achiev,lvl,user,portLoaded,portfolioItems,effGrade]);
   const unlocks = useMemo(()=>unlockState(user,unlockSignals),[user,unlockSignals]);
 
   // Two writes, both one-way, both here so nothing else in the app has to think about them.
@@ -3780,7 +3766,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // mobile bar, every SubNav, ⌘K, the product tour, the browser title — reads these rather
   // than the full arrays, so there is exactly one definition of "visible" in the app.
   const navItems       = useMemo(()=>visibleItems(NAV,unlocks),[unlocks]);
-  const satSubnav      = useMemo(()=>visibleItems(SAT_SUBNAV,unlocks,'sat'),[unlocks]);
   const prepSubnav     = useMemo(()=>visibleItems(PREP_SUBNAV,unlocks,'prep'),[unlocks]);
   const portfolioSubnav= useMemo(()=>visibleItems(PORTFOLIO_SUBNAV,unlocks,'portfolio'),[unlocks]);
   const roadmapSubnav  = useMemo(()=>visibleItems(ROADMAP_SUBNAV,unlocks,'roadmap'),[unlocks]);
@@ -3796,11 +3781,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // front of you yet", never "you may not have this".
   useEffect(()=>{
     if(!user||!dbReady) return;
-    const view={sat:satView,prep:prepView,portfolio:portfolioView,roadmap:roadmapView,progress:progressView}[tab]||null;
+    const view={prep:prepView,portfolio:portfolioView,roadmap:roadmapView,progress:progressView}[tab]||null;
     if(unlocks.isOpen(tab,view)) return;
     const recorded=recordUnlocks(user,[tab,view?`${tab}/${view}`:null].filter(Boolean));
     if(recorded) saveUser(recorded);
-  },[tab,satView,prepView,portfolioView,roadmapView,progressView,unlocks,user,dbReady,saveUser]);
+  },[tab,prepView,portfolioView,roadmapView,progressView,unlocks,user,dbReady,saveUser]);
 
   // The same guarantee, one level deeper: the sections of the merged tabs are gated too
   // (a publications form is not a day-one ask, and neither is the aid comparison), and
@@ -4007,7 +3992,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // Access earns its place here more than most: it is the one settings screen another person
     // is waiting on, and "⌘K, fam" is a great deal faster than remembering which tab it is under.
     ...settingsSubnav.map(n=>({ id:`set-${n.id}`, dest:`settings/${n.id}`, keywords:keywordsFor(`settings/${n.id}`), label:n.label, group:'Settings', ic:n.ic, action:()=>goSettings(null,n.id) })),
-  ],[navItems,prepSubnav,portfolioSubnav,roadmapSubnav,progressSubnav,satSubnav,settingsSubnav,unlocks,goPrep,goPortfolio,goRoadmap,goProgress,goSat,goSettings,activePathways,pathwayRows,focusedPathway,switchPath,goManagePathways]);
+  ],[navItems,prepSubnav,portfolioSubnav,roadmapSubnav,progressSubnav,settingsSubnav,unlocks,goPrep,goPortfolio,goRoadmap,goProgress,goSettings,activePathways,pathwayRows,focusedPathway,switchPath,goManagePathways]);
   // ── What the palette shows ──────────────────────────────────────────────────
   // Three different jobs, and they used to be one:
   //
@@ -4490,16 +4475,32 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     }
   },[checkinState,refreshCheckin,cosmetics,streak,openChest,syncUserFromDb,refreshStreakState]);
 
+  // ── The first thing a brand-new account sees must not be a modal ───────────
+  // The day-one check-in fires a full-screen reward chest the instant the app
+  // opens. For a returning student that is the point — the ceremony is why the
+  // first tap of the day feels like something. For a student who has been in
+  // the app for four seconds it lands on top of the two questions the first-run
+  // guide is asking, so their first interaction with the product is dismissing
+  // a modal about a reward for opening it.
+  //
+  // So the CEREMONY waits — not the reward. Nothing is lost or delayed: the
+  // effect re-runs the moment the last question is answered (the ref is only
+  // set once the ceremony actually happens), and the chest opens then, on a
+  // screen the student has already made sense of.
+  const orientationPending = useMemo(()=>pendingQuestions(user).length>0 && !user?.firstRunDismissed,
+    [user?.orientation,user?.firstRunDismissed]);
+
   // Load the cycle once the database is open, and offer today's chest automatically — the
   // ceremony is the reason the first tap of the day feels like something.
   useEffect(()=>{
     if(!dbReady||!user||checkinTriggeredRef.current)return;
+    if(orientationPending) return;
     checkinTriggeredRef.current=true;
     (async()=>{
       const state = await refreshCheckin();
       if(state?.claimable) await claimTodayCheckin();
     })();
-  },[dbReady,user]); // eslint-disable-line react-hooks/exhaustive-deps
+  },[dbReady,user,orientationPending]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ══ EARNED STREAK ══════════════════════════════════════════════════════════
   // One source of truth (dayRows + bridgedDates + the user's two goal settings)
@@ -5371,17 +5372,27 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   async function callGroqAI(sys, msg, toks = 700, hist = null, tier = 'guide', purpose = 'coach', extra = {}) {
     let r, d;
     try {
-      r = await fetch('/api/groq', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // `...extra` carries the server-read per-request fields (today safetyTier). `lane` comes
-        // AFTER it deliberately: it identifies the student to the rate-limit budgets, and a caller
-        // passing a lane of its own through `extra` must not be able to charge someone else's
-        // allowance. With no lane at all, every request from one school's NAT shares one budget —
-        // see src/lib/aiLane.js for the failure that produced.
-        body: JSON.stringify({ system: sys, message: msg, messages: hist, maxTokens: toks, tier, purpose, ...extra, lane: aiLane() }),
+      // One door for every Medabrain request in the app — src/lib/medabrainRequest.js.
+      // It carries the three things no call site should have to remember: the
+      // lane (whose rate-limit budget this spends), the client budget (whether
+      // the call is made at all, checked BEFORE the request is built so a
+      // refused call costs nothing and cannot consume a per-minute slot the next
+      // student's real question needs), and the personalization block.
+      //
+      // `personalize` is off for 'ambient', whose prompts are already a complete
+      // statement of one list and whose answers are cached for a day: a block
+      // that moves whenever the student's unlock state moves would invalidate
+      // that cache for no gain, which is personalization costing money rather
+      // than saving it.
+      r = await postMedabrain({
+        system: sys, message: msg, messages: hist, maxTokens: toks, tier, purpose, extra,
+        personalize: purpose !== 'ambient',
+        ambientEnabled: user?.ambientAiOn !== false,
       });
-    } catch {
+    } catch (err) {
+      // A refused call is a policy decision with a sentence already attached —
+      // pass it through rather than reporting it as a network failure.
+      if (err instanceof BudgetError) throw err;
       throw new Error("Couldn't reach Medabrain — check your connection and try again.");
     }
     try {
@@ -5418,6 +5429,31 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       "You are Meta Brain, MedSchoolPrep's Portfolio Intelligence specialist. You do not have web access — answer only from general knowledge, and say so plainly if you don't actually recognize something instead of inventing details.",
       question, maxTokens, null, 'guide', 'portfolio',
     );
+  }
+
+  // ── The paragraph nobody asked for ─────────────────────────────────────────
+  // Five Portfolio panels generate a one-paragraph read the first time a student
+  // opens them each day: the tracked-programs report, the weekly goals board,
+  // the opportunity brief, the milestone priority note and the college-list
+  // take. Every one of them is genuinely nice and not one of them was requested
+  // by a human being, so on a shared free API tier they were the single largest
+  // line of spending in the product — a student who opened five tabs and read
+  // none of the paragraphs still paid for five model calls, every day.
+  //
+  // They now route through the 'ambient' purpose, which is capped at three calls
+  // a day per student (see src/lib/aiBudget.js) and cached for twenty-four
+  // hours. Past the cap this resolves to null rather than rejecting, and each
+  // panel renders nothing — because a paragraph that did not appear is not an
+  // error and must never be shown as one.
+  async function askAmbientMedabrain(question, maxTokens = 400) {
+    try {
+      return await callGroqAI(
+        "You are Meta Brain, MedSchoolPrep's Portfolio Intelligence specialist. You do not have web access — answer only from general knowledge, and say so plainly if you don't actually recognize something instead of inventing details.",
+        question, maxTokens, null, 'guide', 'ambient',
+      );
+    } catch {
+      return null;
+    }
   }
 
   // Moves a touched thread to the top of the local sidebar list and stamps its
@@ -6732,6 +6768,98 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   }),[gradeBand,effGrade,homeDeadlineRows,nextLesson,curPathDoneL,curPathAllL.length,
       dashboardHours,benchmarks,dueCards,dueDeckCount,portLoaded,recommendersCount,
       appCounts,portSnapshot,portActivities]);
+
+  // ── The first week ─────────────────────────────────────────────────────────
+  // For a brand-new account Home is not a dashboard at all — it is a guide. See
+  // src/lib/firstRun.js for the two questions, the grade-ordered ladder, and the
+  // three ways this screen retires itself permanently.
+  const firstRun = useMemo(()=>firstRunPlan(user,{
+    lessons: doneL, quizzes: qTaken,
+    colleges: appCounts.colleges,
+    activities: portActivities.length,
+    deadlines: (upcomingDeadlines||[]).length,
+    pathwayChosen: !!user?.specialty && user.specialty!=='exploring',
+    streak,
+  },{ gradeStage: effGrade }),[user,doneL,qTaken,appCounts.colleges,portActivities.length,upcomingDeadlines,curPath,streak,effGrade]);
+
+  // ── What the app has decided, locally ──────────────────────────────────────
+  // Zero model calls, zero network, instant, and — because every row carries the
+  // rule that produced it and the numbers it read — arguable. See the header of
+  // src/lib/decisionEngine.js for why this is both the cheapest and the smartest
+  // thing in the product.
+  const nearestDeadline = useMemo(()=>{
+    const now=Date.now();
+    let best=null;
+    for(const row of (homeDeadlineRows||[])){
+      if(row?.completed_at) continue;
+      const t=Date.parse(row?.due_date||'');
+      if(!Number.isFinite(t)) continue;
+      const days=Math.ceil((t-now)/86400000);
+      // A date more than a week gone is history, not a warning: the milestone
+      // list already shows it and shouting about it on Home every day is how a
+      // dashboard trains somebody to stop reading it.
+      if(days< -7) continue;
+      if(!best||days<best.dueInDays) best={ title:row.title||'Your next deadline', dueInDays:days, destination:'portfolio/milestones' };
+    }
+    return best;
+  },[homeDeadlineRows]);
+
+  const decisionState = useMemo(()=>({
+    gradeStage: effGrade, band: gradeBand,
+    lessons: doneL, quizzes: qTaken,
+    activities: portActivities.length, colleges: appCounts.colleges, essays: appCounts.essays,
+    clinicalHours: clinicalHoursTotal, deadlines: (upcomingDeadlines||[]).length,
+    dueCards: dueDeckCount,
+    pathwayChosen: !!user?.specialty && user.specialty!=='exploring',
+    onboarded: !!(user?.onboardingCompletedAt||user?.name),
+    streak, creditsToday: todayStatus?.credits||0, goalCredits: todayStatus?.goalCredits||goalCredits,
+    // The nearest OPEN dated thing, in days. Derived here rather than taken as
+    // row zero because homeDeadlineRows is a union of two unsorted sources and
+    // its first element is whichever query happened to resolve first — which is
+    // how "closes in 3 days" ends up describing something due in April.
+    urgentDeadline: nearestDeadline,
+    // The engine may only point at surfaces this student can actually open —
+    // rule 4 in its header, and the reason a freshman is never told to open the
+    // recommender tracker.
+    canOpen: (t,v,sec)=>unlocks.isOpen(t,v||null,sec||null),
+    nextUnlock: unlocks.locked()[0] || null,
+    firstRun: firstRun.isNew,
+  }),[effGrade,gradeBand,doneL,qTaken,portActivities.length,appCounts,clinicalHoursTotal,
+      upcomingDeadlines,dueDeckCount,user,curPath,streak,todayStatus,goalCredits,
+      nearestDeadline,unlocks,firstRun.isNew]);
+  const decisions = useMemo(()=>decide(decisionState,{limit:2}),[decisionState]);
+  const leadDecisionRow = decisions[0]||null;
+  // Today's Medabrain spend, for the Settings card that shows it. Keyed on the
+  // tab because the ledger only moves when a call is made and a student is not
+  // making calls while looking at this screen.
+  const aiUsage = useMemo(()=>aiUsageToday(),[tab,settingsView]);
+
+  // ── One Medabrain per student ──────────────────────────────────────────────
+  // What is open to them, what is not and the exact condition that opens it,
+  // what the local rules have already decided, where they are in their first
+  // week, and what they said they wanted. Recomputed only when one of those
+  // actually moves, so an unchanged block never invalidates a cached response —
+  // which is what keeps personalization from costing money instead of saving it.
+  const medabrainAbout = useMemo(()=>buildAvailabilityBlock({
+    user, gradeStage: effGrade, unlocks, gatedIds: GATED_IDS, labels: UNLOCK_LABELS,
+    lead: leadDecisionRow, firstRun,
+    streakState: { streak, creditsToday: todayStatus?.credits||0, goalCredits: todayStatus?.goalCredits||goalCredits },
+  }),[user,effGrade,unlocks,leadDecisionRow,firstRun,streak,todayStatus,goalCredits]);
+  // Published rather than passed. Every Medabrain request in the app goes
+  // through src/lib/medabrainRequest.js, which reads the block from a
+  // module-level register — the same pattern, and the same justification, as
+  // setAiLane: one browser tab is one signed-in student, and the alternative is
+  // threading an unlock snapshot through every component that happens to
+  // contain a Medabrain box.
+  useEffect(()=>{ setMedabrainAbout(medabrainAbout); },[medabrainAbout]);
+
+  // The cheapest thing that would clear today, for the exit prompt. Computed here
+  // rather than inside the modal so the modal stays a rendering of a decision
+  // somebody else made — see src/lib/streakRetention.js.
+  const exitAction = useMemo(()=>smallestSufficientAction({
+    nextLesson, dueCards: dueDeckCount,
+    canOpen:(t,v)=>unlocks.isOpen(t,v||null),
+  }),[nextLesson,dueDeckCount,unlocks]);
   // ── Medabrain plan spotlight ─────────────────────────────────────────────────
   // Drives both the Home spotlight (TodayPlanNudge picks exactly ONE task to glow) and the small
   // nav-badge dot below (ANY pillar with outstanding plan tasks today, reusing PlanTaskStrip's
@@ -6905,12 +7033,32 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 <span style={pill(`${accent}22`,accent)}>{curPath?.label}</span>
                 {/* Renders nothing until there is a real score — see MedExChip. */}
                 <MedExChip state={medexState} onClick={()=>goPortfolio('medex')}/>
-                {/* No streak chip here. The streak lives on exactly one surface in this product —
-                    the achievements module at the bottom of this dashboard — and nowhere else,
-                    least of all in the first thing a student reads on opening the app. Putting it
-                    in the hero makes a consecutive-day count the headline fact about a person,
-                    which is both the wrong measure and the wrong greeting. Level moved out for the
-                    same reason: it is a number that only means something inside this app. */}
+                {/* ── The streak, in the hero, and why that changed ─────────────────
+                    This used to be deliberately absent, on the argument that a
+                    consecutive-day count is the wrong headline fact about a person.
+                    That argument is right about a streak that counts ATTENDANCE, and
+                    this one does not: a day clears here only when work is finished
+                    (src/lib/streak.js, guarded by npm run verify:streak). What the
+                    chip states is therefore "you finished work on eleven days running",
+                    which is a true and worth-stating fact about somebody.
+
+                    It reads today's state, not just the number, which is the part that
+                    makes it useful rather than decorative: amber and "today is open"
+                    while the day is still winnable, green once it is cleared. A student
+                    who sees it every time they open the app knows where they stand
+                    without going to look, and the exit prompt at the root of this file
+                    is then a reminder rather than a surprise. Level is still absent,
+                    for the original reason: it is a number that only means something
+                    inside this app. */}
+                {streak>0&&(()=>{
+                  const cleared=(todayStatus?.credits||0)>=(todayStatus?.goalCredits||goalCredits);
+                  return <span
+                    title={cleared?`Today is cleared — ${streak} days in a row`:`${streak} days in a row. Today is not cleared yet.`}
+                    onClick={()=>{goProgress('streak');play('click');}}
+                    style={{...pill(cleared?C.greenDim:C.amberDim,cleared?C.greenL:C.amberL),display:'inline-flex',alignItems:'center',gap:4,cursor:'pointer'}}>
+                    <Flame size={11}/>{streak}-day streak{cleared?'':' · today is open'}
+                  </span>;
+                })()}
                 {/* Same rule as the nav badge: don't advertise decks from a tab this student
                     hasn't unlocked yet. Flashcards open after their first quiz. */}
                 {dueDeckCount>0&&unlocks.isOpen('prep','flashcards')&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:4}}><Layers3 size={11}/>{dueDecksBadge(dueDeckCount)}</span>}
@@ -6927,6 +7075,50 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             </div>
           </div>
         </div>
+
+        {/* ═══ 0 · THE FIRST WEEK ══════════════════════════════════════════════
+            For a brand-new account this is the whole page: two questions and a
+            grade-ordered ladder with exactly one bright step on it. Everything
+            below is still rendered — a student who scrolls finds their real
+            dashboard, and nothing is hidden — but the decision the page is
+            making is "here is your one next step", not "here is how you are
+            doing", because on day one there is no how-you-are-doing.
+
+            It retires by itself the moment the required steps are done, and
+            never comes back. See src/lib/firstRun.js. */}
+        {firstRun.isNew && <FirstRunGuide
+          plan={firstRun}
+          accent={accent}
+          m={isMobile}
+          reducedMotion={reducedMotion}
+          onAnswer={(qid,oid)=>{
+            const next=recordOrientation(user,qid,oid);
+            if(!next) return;
+            // The time answer is not a survey response — it sets the streak goal
+            // the student is then held to. Writing it anywhere else would mean
+            // asking somebody how much time they have and then holding them to a
+            // number they never chose.
+            if(qid==='minutes'){
+              const goal={light:'light',steady:'steady',deep:'serious'}[oid];
+              if(goal&&STREAK_GOALS.some(g=>g.id===goal)) next.streakGoalId=goal;
+            }
+            saveUser(next); play('click');
+          }}
+          onGo={(step)=>{ goDest(step.destination); play('click'); }}
+          onDismiss={()=>{ const next=dismissFirstRun(user); if(next) saveUser(next); play('click'); }}
+        />}
+
+        {/* ═══ 0b · WHAT THE APP DECIDED ════════════════════════════════════════
+            One judgment, with the numbers it was made from printed underneath and
+            the rule id behind an affordance. Produced entirely on this device by
+            src/lib/decisionEngine.js — no model, no network, no latency, and no
+            cost. Suppressed during the first week, where the guide above is
+            already telling the student exactly one thing to do. */}
+        {!firstRun.isNew && leadDecisionRow && <DecisionCard
+          decision={leadDecisionRow}
+          m={isMobile}
+          onGo={(d)=>{ if(d.action?.destination){ goDest(d.action.destination); play('click'); } }}
+        />}
 
         {/* ═══ 1 · NEXT THREE THINGS ═══════════════════════════════════════════
             First and most prominent, because it is the only block on this screen
@@ -9551,7 +9743,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <div id="portfolio-weekly-goals" style={{scrollMarginTop:80}}>
           <WeeklyGoalsBoard
             user={user} snapshot={portSnapshot} loading={portSnapLoading} onSaveUser={saveUser} onOpen={goPortfolio}
-            askMedabrain={askPortfolioMedabrain} isMobile={isMobile}
+            askMedabrain={askPortfolioMedabrain} askAmbient={askAmbientMedabrain} isMobile={isMobile}
             benchmarks={benchmarks} clinicalHoursTotal={clinicalHoursTotal} accent={accent}/>
         </div>
 
@@ -10551,12 +10743,94 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <SL>Your personal brief</SL>
             <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight: 1.55}}>
               {briefEntryCount>0
-                ? <>You've told Medabrain <strong style={{color:C.t1}}>{briefEntryCount} thing{briefEntryCount===1?'':'s'}</strong> about yourself in your own words. Every answer you get — in the coach, in Portfolio, in Prep and in the SAT tab — is shaped by this first, ahead of your sign-up answers and your tracked data.</>
+                ? <>You've told Medabrain <strong style={{color:C.t1}}>{briefEntryCount} thing{briefEntryCount===1?'':'s'}</strong> about yourself in your own words. Every answer you get — in the coach, in Portfolio and in Prep — is shaped by this first, ahead of your sign-up answers and your tracked data.</>
                 : <>Medabrain currently only knows the boxes you ticked when you signed up. Talk to it about your family, your school, what worries you and where you want to end up, and it will use that everywhere in the app — and treat it as more authoritative than anything else it has.</>}
             </p>
             <button style={{...btn(C.violetGrad,{fontSize:12,padding:'8px 16px'})}} onClick={()=>{setTab('prep');setPrepView('coach');setCoachView('about');}}>
               <Volume2 size={14}/>{briefEntryCount>0?'Add or edit what it knows':'Tell Medabrain about yourself'}
             </button>
+          </div>
+
+          {/* ── Today's Medabrain allowance ────────────────────────────────────
+              Shown rather than hidden, because the alternative to a visible
+              budget is a student who asks a fifteenth question and is told
+              "unavailable" with no explanation and no idea whether it is them,
+              the network, or the app. A number they can see is a number they can
+              plan around. See the arithmetic at the top of src/lib/aiBudget.js
+              for why twenty is what lets everyone have one. */}
+          <div style={glass({padding:16,marginTop:12})}>
+            <SL>Today's Medabrain allowance</SL>
+            <p style={{fontSize:13,color:C.t2,margin:'0 0 12px',lineHeight:1.55}}>
+              You have used <strong style={{color:C.t1}}>{aiUsage.used} of {aiUsage.budget}</strong> Medabrain
+              answers today. It resets at midnight. Everything else in the app — your lessons, your
+              quizzes, your Portfolio, your streak and the app's own recommendations — keeps working
+              either way: none of that asks a model anything.
+            </p>
+            <div style={{height:4,borderRadius:4,background:C.s2,overflow:'hidden'}}>
+              <div style={{width:`${Math.round(aiUsage.pct*100)}%`,height:'100%',background:aiUsage.pct>0.85?C.amber:C.violet,borderRadius:4}}/>
+            </div>
+          </div>
+
+          {/* ── Automatic paragraphs ───────────────────────────────────────────
+              The five Portfolio panels that write a paragraph when they open.
+              Off makes every one of those screens paint instantly and spends the
+              whole allowance on questions the student actually asks. */}
+          <div style={glass({padding:16,marginTop:12})}>
+            <div style={R({justifyContent:'space-between',gap:16,flexWrap:'wrap'})}>
+              <div style={{flex:1,minWidth:240}}>
+                <SL extra={{marginBottom:4}}>Automatic write-ups</SL>
+                <p style={{fontSize:12.5,color:C.t3,lineHeight:1.55,margin:0}}>
+                  {user.ambientAiOn===false
+                    ? <>Portfolio screens open instantly and never wait on Medabrain. Your whole allowance goes to questions you ask.</>
+                    : <>Some Portfolio screens write you a short read when you open them — your college list, your tracked programs, your weekly goals. Turn this off if you would rather they just open.</>}
+                </p>
+              </div>
+              <button
+                role="switch"
+                aria-checked={user.ambientAiOn!==false}
+                onClick={()=>{
+                  const on=user.ambientAiOn===false;
+                  saveUser({...user,ambientAiOn:on});
+                  play('select');
+                  toast.success(on?'Automatic write-ups are back on.':'Portfolio screens will open without waiting on Medabrain.');
+                }}
+                style={{...(user.ambientAiOn!==false?btn(accentGrad(accent),{fontSize:12,padding:'8px 16px'}):btnG({fontSize:12,padding:'8px 16px'})),flexShrink:0}}
+              >
+                {user.ambientAiOn!==false?<><Check size={14}/>On</>:<><Brain size={14}/>Off</>}
+              </button>
+            </div>
+          </div>
+
+          {/* ── The reminder before you go ─────────────────────────────────────
+              An interruption a student cannot switch off is not a reminder. It
+              lives here, next to everything else that decides how much the app
+              talks, and turning it off is absolute — see mayInterrupt() in
+              src/lib/streakRetention.js, which honors this before it considers
+              anything else. */}
+          <div style={glass({padding:16,marginTop:12})}>
+            <div style={R({justifyContent:'space-between',gap:16,flexWrap:'wrap'})}>
+              <div style={{flex:1,minWidth:240}}>
+                <SL extra={{marginBottom:4}}>Reminder before you leave</SL>
+                <p style={{fontSize:12.5,color:C.t3,lineHeight:1.55,margin:0}}>
+                  {user.exitPromptOff===true
+                    ? <>You will never be interrupted on your way out. Your streak still works exactly the same.</>
+                    : <>Once a day, if you are about to leave with today unfinished, we will say so and offer the shortest thing that would finish it. Never more than once, and never when today is already done.</>}
+                </p>
+              </div>
+              <button
+                role="switch"
+                aria-checked={user.exitPromptOff!==true}
+                onClick={()=>{
+                  const off=user.exitPromptOff!==true;
+                  saveUser({...user,exitPromptOff:off});
+                  play('select');
+                  toast.success(off?'We will not interrupt you on your way out.':'We will remind you once a day if today is unfinished.');
+                }}
+                style={{...(user.exitPromptOff!==true?btn(accentGrad(accent),{fontSize:12,padding:'8px 16px'}):btnG({fontSize:12,padding:'8px 16px'})),flexShrink:0}}
+              >
+                {user.exitPromptOff!==true?<><Check size={14}/>On</>:<><Flame size={14}/>Off</>}
+              </button>
+            </div>
           </div>
         </Group>}
 
@@ -11440,7 +11714,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const portC=Object.fromEntries(PORTFOLIO_SUBNAV.map(n=>[n.id,n.color]));
   const portfolioRenders={
     overview:tPort,
-    milestones:()=><PortfolioMilestones accent={portC.milestones} user={user} apIb={!!user?.apIb} askMedabrain={askPortfolioMedabrain}
+    milestones:()=><PortfolioMilestones accent={portC.milestones} user={user} apIb={!!user?.apIb} askMedabrain={askPortfolioMedabrain} askAmbient={askAmbientMedabrain}
       onNavigate={goAnywhere} isMobile={isMobile}
       onAdded={()=>{logEvent('portfolio_item_added','deadline');saveUser(applyPlanAutoComplete(user,typeMatch('deadline')));}}/>,
     // Opportunities and Tracked are one page: "what should I go do" and "what did I say I
@@ -11462,7 +11736,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             blurb:'Matched to your interests, your grade and what you can afford',
             render:()=><OpportunitiesPanel accent={portC.opportunities} user={user} onSaveUser={saveUser}
               snapshot={portSnapshot} loading={portSnapLoading} pathwayKey={eSpec} pathwayLabel={curPath?.label}
-              askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onOpen={goPortfolio}
+              askMedabrain={askPortfolioMedabrain} askAmbient={askAmbientMedabrain} isMobile={isMobile} onOpen={goPortfolio}
               onTrack={trackOpportunity}
               trackedKeys={{activities:trackedActivityKeys,scholarships:trackedScholarshipKeys}}
               pendingKeys={{activities:pendingTracks.byResource.activities,scholarships:pendingTracks.byResource.scholarships}}
@@ -11473,7 +11747,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           { id:'tracked', ic:RadarIcon, label:'What you\u2019re tracking', color:C.violet,
             blurb:'Every program you saved, with its deadline, its status and a daily read',
             render:()=><TrackedPanel snapshot={portSnapshot} loading={portSnapLoading} accent={portC.opportunities}
-              askMedabrain={askPortfolioMedabrain} onOpen={goPortfolio} onRefresh={refreshPortSnapshot}
+              askMedabrain={askPortfolioMedabrain} askAmbient={askAmbientMedabrain} onOpen={goPortfolio} onRefresh={refreshPortSnapshot}
               pendingEntries={pendingTracks.entries} trackStatus={pendingTracks.status} isMobile={isMobile} user={user}/> },
         ]}/>
     ),
@@ -11489,7 +11763,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       sectionLocks={applyingSectionLocks}
       counts={{colleges:appCounts.colleges,essays:appCounts.essays,recommenders:recommendersCount,interviews:interviewCount}}
       renders={{
-      colleges:()=><CollegeListPanel accent={C.sky} user={user} askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}/>,
+      colleges:()=><CollegeListPanel accent={C.sky} user={user} askMedabrain={askPortfolioMedabrain} askAmbient={askAmbientMedabrain} isMobile={isMobile} onAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}/>,
       // Reads the same shared Portfolio snapshot every other Applying panel does, so the
       // requirements-gap view reasons over exactly the GPA terms, test sittings and logged hours
       // the rest of Portfolio is showing — one fetch, one truth (src/lib/portfolioData.js).
@@ -11498,8 +11772,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       // circuit with the mode already selected.
       combined:()=><CombinedDegreePanel accent={C.blue} user={user} snapshot={portSnapshot} loading={portSnapLoading}
         pathwayKey={eSpec} onGoTo={goPortfolio} isMobile={isMobile} focus={focusFor('combined')}/>,
-      essays:()=><EssayWorkspacePanel accent={C.violet} user={user} gradeLabel={gradeLabel} askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onCreated={()=>{logEvent('portfolio_item_added','essay');saveUser(applyPlanAutoComplete(user,typeMatch('essay')));}}/>,
-      aid:()=><FinancialAidPanel accent={C.green} askMedabrain={askPortfolioMedabrain} pathwayKey={eSpec}
+      essays:()=><EssayWorkspacePanel accent={C.violet} user={user} gradeLabel={gradeLabel} askMedabrain={askPortfolioMedabrain} askAmbient={askAmbientMedabrain} isMobile={isMobile} onCreated={()=>{logEvent('portfolio_item_added','essay');saveUser(applyPlanAutoComplete(user,typeMatch('essay')));}}/>,
+      aid:()=><FinancialAidPanel accent={C.green} askMedabrain={askPortfolioMedabrain} askAmbient={askAmbientMedabrain} pathwayKey={eSpec}
         focusScholarship={focusFor('scholarship')} focusHealthScholarship={focusFor('health-scholarship')}
         focusMedScholarship={focusFor('med-scholarship')}/>,
       recommenders:()=><RecommendersPanel accent={C.fuchsia} user={user} gradeLabel={gradeLabel} snapshot={portSnapshot} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);logEvent('portfolio_item_added','recommender');checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});saveUser(applyPlanAutoComplete(user,typeMatch('recommender')));}}/>,
@@ -11614,9 +11888,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   function openPlanResource(task){
     const {resourceTab:tab,resourceView:view,resourceKind:kind,resourceId:id}=task||{};
     if(!tab||!view)return;
-    // Without the explicit `sat` branch, a SAT task would fall through to the
-    // final else and land the student on Progress.
-    if(tab==='prep')goPrep(view);else if(tab==='portfolio')goPortfolio(view);else if(tab==='sat')goSat(view);else goProgress(view);
+    // A plan row generated before the SAT pillar was pulled can still name it;
+    // it falls through to Progress rather than to a tab that no longer exists.
+    if(tab==='prep')goPrep(view);else if(tab==='portfolio')goPortfolio(view);else goProgress(view);
     play('click');
     if(!kind||kind==='view'||!id)return;
     if(kind==='quiz'){
@@ -11691,39 +11965,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       </div>
     );
   }
-  // ── SAT: the test-prep pillar (src/components/sat/), sealed for v1 ──
-  //
-  // The pillar renders in full, then SatBetaCover blurs it and makes it inert
-  // (see src/lib/betaFlags.js for why it ships this way rather than deleted).
-  // Everything that used to cross the boundary in either direction is gone
-  // while the seal is on:
-  //
-  //   • no onSessionComplete — no SAT work can happen, so nothing to credit,
-  //     and the streak/plan writes it used to make no longer exist.
-  //   • no planStrip — the plan, daily-quest and quest rails are for surfaces a
-  //     student can act on. Behind a seal they would just be XP shown through
-  //     frosted glass.
-  //   • the sub-nav is passed but unreachable, and its unlock gating is moot.
-  function tSatWrap(){
-    const pillar=(
-      <SatTab
-        view={satView}
-        onViewChange={(v,p)=>{ setSatView(v); setSatParams(p||null); }}
-        params={satParams}
-        onConsumeParams={()=>setSatParams(null)}
-        subnavItems={satSubnav}
-        subnavHrefFor={satHref}
-        accent={satAccent}
-        user={user}
-        gradeLabel={gradeLabel}
-        isMobile={isMobile}
-        medabrainOpen={false}
-        medabrainMessages={[]}
-        recentActivitySummary={recentActivitySummary}
-      />
-    );
-    return SAT_ENABLED ? pillar : <SatBetaCover isMobile={isMobile}>{pillar}</SatBetaCover>;
-  }
   // ── Roadmap: the twelve-month admissions plan ───────────────────────────────
   // Thin on purpose. The tab fetches its own Portfolio and builds its own digest (the same
   // fetchPortfolio + buildProfileFactsText the master plan uses), so all App.jsx owes it is the
@@ -11766,7 +12007,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       </div>
     );
   }
-  const tRenders={ home:tHome, sat:tSatWrap, prep:tPrep, portfolio:tPortWrap, roadmap:tRoadmap, plans:tPlans, progress:tAnalytics, settings:tSettings };
+  const tRenders={ home:tHome, prep:tPrep, portfolio:tPortWrap, roadmap:tRoadmap, plans:tPlans, progress:tAnalytics, settings:tSettings };
 
   return(
     // Every component under here can call useGradeBand() to branch on explore/build/apply
@@ -11791,6 +12032,27 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       {/* The milestone moment. Fires once, the instant a marquee gate opens (today: Plans),
           and its one button walks the student straight into what they just earned — an
           unlock nobody visits is the same as no unlock. */}
+      {/* ── The door ──────────────────────────────────────────────────────────
+          The one interception in this product: fired when a student is about to
+          leave with today unfinished, at most once a day, never when there is
+          nothing genuinely at stake, and always dismissible in one tap.
+
+          It is mounted at the root rather than on Home because leaving does not
+          happen on Home — it happens on whichever screen somebody got stuck on.
+          What it says is decided by src/lib/streakRetention.js, which is also
+          where the rule that keeps this honest is written down: the streak here
+          counts finished work, never app opens, so the prompt can never ask
+          somebody to stay. It asks them to finish one thing. */}
+      <StayForStreakModal
+        streak={streak}
+        creditsToday={todayStatus?.credits||0}
+        goalCredits={todayStatus?.goalCredits||goalCredits}
+        freezes={streakFreezes}
+        smallestAction={exitAction}
+        optedOut={user?.exitPromptOff===true}
+        reducedMotion={reducedMotion}
+        onAct={(action)=>{ if(action?.destination){ goDest(action.destination); play('click'); } }}
+      />
       <UnlockCelebration
         open={!!milestoneUnlock}
         label={milestoneUnlock?.label}
@@ -11991,21 +12253,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                           row — same link, same click, same URL — and simply says so. See
                           previewPillars in src/lib/onboardingFlow.js and BandPreview.jsx. */}
                       {previewPillars.includes(n.id) && <BandPreviewTag bands={bandsAwayFromPillar}/>}
-                      {n.id==='sat' && (
-                        <span className="pbeta" style={{
-                          fontSize:9,
-                          padding:'4px 4px',
-                          borderRadius:4,
-                          background: C.skyDim || tint(C.sky, 0.15),
-                          color: isLight() ? C.sky : C.skyL,
-                          border:`1px solid ${tint(C.sky, 0.35)}`,
-                          fontWeight:800,
-                          fontFamily:C.FM,
-                          lineHeight: 1
-                        }}>
-                          BETA
-                        </span>
-                      )}
                     </span>
                     {badge&&<span style={pill(C.amberDim,C.amberL,{fontSize:9,padding:'4px 8px'})}>{badge}</span>}
                     {/* Medabrain: this pillar has an outstanding plan task due today — see
@@ -12144,21 +12391,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                       top-level destinations, not for smaller type. */}
                   <span style={{fontSize:11,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'100%',display:'inline-flex',alignItems:'center',gap:4}}>
                     <span>{n.label}</span>
-                    {n.id==='sat' && (
-                      <span className="pbeta" style={{
-                        fontSize:8,
-                        padding:'0px 4px',
-                        borderRadius:4,
-                        background: C.skyDim || tint(C.sky, 0.15),
-                        color: isLight() ? C.sky : C.skyL,
-                        border:`1px solid ${tint(C.sky, 0.35)}`,
-                        fontWeight:800,
-                        fontFamily:C.FM,
-                        lineHeight: 1
-                      }}>
-                        BETA
-                      </span>
-                    )}
                   </span>
                 </a>
               );

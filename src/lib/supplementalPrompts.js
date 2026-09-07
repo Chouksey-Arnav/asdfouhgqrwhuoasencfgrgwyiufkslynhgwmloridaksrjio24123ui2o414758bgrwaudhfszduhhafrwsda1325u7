@@ -15,7 +15,7 @@
 // making a deadline decision needs to know which one they're looking at.
 // ─────────────────────────────────────────────────────────────────────────────
 import { getSupplementsFor, CYCLE_NOTE } from '../data/supplementalEssays';
-import { aiLane } from './aiLane.js';
+import { postMedabrain } from './medabrainRequest';
 
 // confidence: 'curated' — from our hand-checked dataset, recent cycle
 //             'recalled' — Medabrain recognizes the school and is reproducing
@@ -77,20 +77,19 @@ export async function fetchSupplementPrompts(collegeName, { signal = null } = {}
   const name = String(collegeName || '').trim();
   if (!name) throw new Error('No school name given.');
 
-  const res = await fetch('/api/groq', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      system: SYSTEM,
-      message: `School: ${name}. Return its supplemental essay prompts as JSON, following the rules and shape you were given.`,
-      purpose: 'essay',
-      lane: aiLane(),
-      tier: 'sage',
-      maxTokens: 1200,
-      jsonMode: true,
-      temperature: 0.2, // this is a recall task; sampling variety here just invents prompts
-    }),
-    signal,
+  const res = await postMedabrain({
+    system: SYSTEM,
+    message: `School: ${name}. Return its supplemental essay prompts as JSON, following the rules and shape you were given.`,
+    purpose: 'essay',
+    tier: 'sage',
+    maxTokens: 1200,
+    // temperature low: this is a recall task, and sampling variety here just
+    // invents prompts.
+    extra: { jsonMode: true, temperature: 0.2 },
+    // The school's own prompt list does not depend on who is asking, which is
+    // what lets the server cache one answer across every student who asks about
+    // that school.
+    personalize: false,
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.error || `Medabrain couldn't look up those prompts (${res.status}).`);
