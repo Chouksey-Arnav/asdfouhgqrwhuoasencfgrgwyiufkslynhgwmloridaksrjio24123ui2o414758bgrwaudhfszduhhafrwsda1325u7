@@ -97,10 +97,33 @@ const prev = baselines[PROFILE] || null;
 
 console.log(`  profile     ${PROFILE}${oauthConfigured ? ' (Google OAuth built in)' : ' (Supabase env unset — SDK tree-shaken out)'}`);
 
+const OTHER = oauthConfigured ? 'oauth-unconfigured' : 'oauth-configured';
+
 if (UPDATE || !prev) {
   baselines[PROFILE] = { gzipBytes: total, assets: rows.length };
+  console.log(`\n✓ baseline for ${PROFILE} set at ${kb(total)} gzipped.`);
+
+  // Carry the same growth to the profile this build cannot measure.
+  //
+  // Only one shape of build runs at a time, so --update can only ever record
+  // the profile in front of it — and the profile it leaves behind goes stale by
+  // exactly the amount the other one moved. That is not a hypothetical: a
+  // re-baseline recorded from an unconfigured build once left the configured
+  // baseline 106 KB behind, CI went green, and the production deploy failed on
+  // the same commit. The gap between the two profiles is structural (the
+  // Supabase SDK, ~55 KB, in one graph and tree-shaken out of the other), not
+  // something a feature changes, so app code that lands in the entry graph
+  // lands in both by the same amount. Shifting the unmeasured profile by the
+  // measured delta keeps them describing the same commit; the next build in
+  // that shape measures it for real, and SLACK absorbs the rounding.
+  if (prev && baselines[OTHER]) {
+    const shifted = baselines[OTHER].gzipBytes + (total - prev.gzipBytes);
+    baselines[OTHER] = { ...baselines[OTHER], gzipBytes: shifted };
+    console.log(`✓ ${OTHER} carried to ${kb(shifted)} (unmeasured by this build).`);
+  }
+
   fs.writeFileSync(BASELINE, `${JSON.stringify({ profiles: baselines }, null, 2)}\n`);
-  console.log(`\n✓ baseline for ${PROFILE} set at ${kb(total)} gzipped.\n`);
+  console.log('');
   process.exit(0);
 }
 
@@ -116,8 +139,9 @@ if (delta > SLACK) {
   console.error('  ever sees the app. If the growth is deliberate, load the new code with a');
   console.error('  dynamic import() so it leaves the entry graph, or re-baseline with');
   console.error('  `node scripts/verifyPayload.mjs --update` and say why in the commit.\n');
-  console.error(`  This is the ${PROFILE} baseline. --update rewrites only that one, so`);
-  console.error('  re-baseline in the same shape of build the number came from.\n');
+  console.error(`  This is the ${PROFILE} baseline. --update measures only that one and`);
+  console.error(`  carries the same delta to ${OTHER}, so re-baseline in the shape of`);
+  console.error('  build the number came from.\n');
   process.exit(1);
 }
 
