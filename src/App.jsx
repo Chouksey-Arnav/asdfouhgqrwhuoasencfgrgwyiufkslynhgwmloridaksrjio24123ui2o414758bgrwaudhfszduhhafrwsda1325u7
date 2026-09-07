@@ -57,6 +57,16 @@ import { buildFourYearMap } from './lib/fourYearMap';
 // to a manualChunk would pin it back into the entry graph and cancel the split.
 const CoursePlannerPanel = React.lazy(() => import('./components/prep/CoursePlannerPanel'));
 const CertificationExplorer = React.lazy(() => import('./components/prep/CertificationExplorer'));
+// Same trade as the two tools above, and for the same reason: all four of these
+// render only after the student does something specific — miss a verification
+// quiz, open the card composer, finish the diagnostic — so none of them belongs
+// in the bundle every student pays for on every boot. RealityCheckCard drags a
+// page of per-pathway prose behind it and DiagnosticDrift drags a chart build,
+// which is most of the weight.
+const NotYetPanel = React.lazy(() => import('./components/quiz/NotYetPanel'));
+const CardComposer = React.lazy(() => import('./components/flashcards/CardComposer'));
+const DiagnosticDrift = React.lazy(() => import('./components/diagnostic/DiagnosticDrift'));
+const RealityCheckCard = React.lazy(() => import('./components/diagnostic/RealityCheckCard'));
 import { typicalAgeForGrade } from './lib/credentials';
 import { LESSON_CONTENT } from './data/lessonContent';
 import { rankQuizzes, getMedabrainPickPrompt, medabrainPicksProgress, MEDABRAIN_PICKS_UNLOCK_AT } from './lib/recommend';
@@ -243,7 +253,6 @@ import {
   dueRechecks, pickRecheckItems, itemCountForStage, applyRecheck, recheckHeld, needsReviewCopy,
 } from './lib/verificationSchedule';
 import { isApplied } from './lib/quizItemMix';
-import NotYetPanel from './components/quiz/NotYetPanel';
 import LessonNotesPanel from './components/LessonNotesPanel';
 import PaceGoalCard from './components/PaceGoalCard';
 import LessonDifficultyCheck from './components/LessonDifficultyCheck';
@@ -253,11 +262,8 @@ import { buildSession, describeSession, normalizeCap, DEFAULT_DAILY_CAP, CAP_RAN
 import { useOnlineStatus, OFFLINE_COPY } from './lib/flashcards/offline';
 import { cardsFromImage, makeCard, isDuplicateCard, OCR_DOWNLOAD_NOTE, hasNativeTextDetection } from './lib/flashcards/capture';
 import { VOCAB_TRACK, VOCAB_TRACK_BLURB } from './data/flashcards/vocabularyDecks';
-import CardComposer from './components/flashcards/CardComposer';
 import { withTradeoffs } from './data/diagnosticTradeoffs';
 import { canTake, driftSeries, retakeBlockedCopy } from './lib/diagnosticHistory';
-import DiagnosticDrift from './components/diagnostic/DiagnosticDrift';
-import RealityCheckCard from './components/diagnostic/RealityCheckCard';
 import { summarizeLessonFeedback, FEEDBACK_LABELS } from './lib/lessonFeedback';
 import { logLessonFeedback } from './lib/lessonFeedbackApi';
 import OpportunitiesPanel from './components/portfolio/OpportunitiesPanel';
@@ -6358,7 +6364,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         // quietly corrupt both pathways' unit mastery and milestone state.
         const lessonPathKey=LESSON_PATHWAY.get(lesson.id)||eSpec;
         const lessonPath=PATHS[lessonPathKey]||curPath;
-        const allVerified=unit.lessons.every(l=>l.id===lesson.id?true:pathway[l.id]?.verified);
+        // `isLessonComplete`, not a bare `.verified` check. A unit can now contain
+        // ungated lessons — the exploratory career-browsing ones, and the whole
+        // openAlways foundations tier — which never set `verified` because there is
+        // nothing to pass. Requiring `verified` on every lesson would mean any unit
+        // holding one of them could never be credited at all: no unit-mastery, no
+        // celebration, no streak credit, forever, for work the student actually did.
+        const allVerified=unit.lessons.every(l=>l.id===lesson.id?true:isLessonComplete(l,pathway[l.id]));
         if(allVerified){
           await DB.verifyUnit(lessonPathKey,unit.id,aQuiz.id,pct);
           logEvent('unit_verified',unit.id);
@@ -7247,10 +7259,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             competitiveness, the actual day, and why people leave. Placed directly
             under the match, before the "accept this pathway" decision has settled —
             a reality check shown after the choice is a footnote. */}
-        <RealityCheckCard pathwayKey={dRes} accent={accentText(path?.accent||C.blue)} m={isMobile}/>
+        <React.Suspense fallback={<ToolLoading/>}>
+          <RealityCheckCard pathwayKey={dRes} accent={accentText(path?.accent||C.blue)} m={isMobile}/>
+        </React.Suspense>
 
         {/* How this has moved across every result they've ever taken. */}
-        {diagRuns.length>0&&<DiagnosticDrift series={driftSeries(diagRuns)} paths={PATHS} m={isMobile}/>}
+        {diagRuns.length>0&&(
+          <React.Suspense fallback={<ToolLoading/>}>
+            <DiagnosticDrift series={driftSeries(diagRuns)} paths={PATHS} m={isMobile}/>
+          </React.Suspense>
+        )}
 
         <div style={{...glass({padding:12}),display:'flex',alignItems:'center',gap:8,background:'rgba(255,255,255,0.02)'}}>
           <Milestone size={14} color={C.t3}/>
@@ -8774,6 +8792,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         </AnimatePresence>
         {/* The student's own cards — typed, or read off a photo of the page they're
             studying from. See components/flashcards/CardComposer.jsx. */}
+        {cardCreateOpen&&<React.Suspense fallback={null}>
         <CardComposer
           open={cardCreateOpen} onClose={()=>setCardCreateOpen(false)} m={isMobile}
           deckNames={Object.keys(cDecks).filter(n=>!builtinDeckNames.has(n))}
@@ -8786,6 +8805,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             toast.success(`${cards.length} card${cards.length===1?'':'s'} added to "${deckName}".`,{icon:<Layers3 size={16}/>});
           }}
         />
+        </React.Suspense>}
       </div>
     );
   }
@@ -9953,15 +9973,24 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       const lessonStates=unit.lessons.map(l=>{
         const entry=pathway[l.id];
         const hasQuiz=l.quizIds?.length>0;
+        // An ungated lesson (exploratory career-browsing content, or anything in the
+        // openAlways foundations tier) has a quiz bank but no bar to clear, so it can
+        // never report `verified`. Without its own status it would sit on 'studying'
+        // permanently and hold its whole unit at "In progress" — see thresholdOf and
+        // data/quizzes/verificationPolicy.js.
+        const gated=thresholdOf(l.id)!==null;
         let status='not_started';
         if(entry){
-          if(hasQuiz) status=entry.verified?'verified':'studying';
+          if(!gated) status='explored';
+          else if(hasQuiz) status=entry.verified?'verified':(entry.needsReview?'review':'studying');
           else status='legacy_done';
         }
-        return{lesson:l,status,hasQuiz};
+        return{lesson:l,status,hasQuiz:hasQuiz&&gated};
       });
+      // 'review' is deliberately NOT settled: a lesson whose spaced re-check didn't
+      // hold is exactly the case this view exists to be honest about.
       const anyQuizGated=lessonStates.some(l=>l.hasQuiz);
-      const allVerified=lessonStates.every(l=>l.status==='verified'||l.status==='legacy_done');
+      const allVerified=lessonStates.every(l=>l.status==='verified'||l.status==='legacy_done'||l.status==='explored');
       return{unit,lessonStates,anyQuizGated,allVerified};
     });
     const verifiedUnitCount=unitMasteryList.filter(u=>u.anyQuizGated&&u.allVerified).length;
@@ -10199,10 +10228,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 <div key={lesson.id} style={{...glass2({padding:'8px 12px'}),display:'flex',alignItems:'center',gap:8}}>
                   {status==='verified'&&<ShieldCheck size={14} color={C.green}/>}
                   {status==='legacy_done'&&<Check size={14} color={C.green}/>}
+                  {status==='explored'&&<Compass size={14} color={C.blueL}/>}
+                  {status==='review'&&<RefreshCw size={14} color={C.violetL}/>}
                   {status==='studying'&&<BookOpen size={14} color={C.amberL}/>}
                   {status==='not_started'&&<Circle size={10} color={C.t4}/>}
                   <span style={{flex:1,fontSize:12.5,color:C.t2}}>{lesson.title}</span>
-                  {hasQuiz
+                  {/* One pill per real state. "Explored" is its own thing rather than
+                      "Self-reported": an ungated lesson was finished exactly as
+                      designed, and filing that under the legacy label reads as a
+                      lesser kind of done. "Worth a refresher" is deliberately not a
+                      failure word — see lib/verificationSchedule.js. */}
+                  {status==='explored'?<span style={pill(C.blueDim,C.blueL,{fontSize:9})}>Explored</span>
+                    :status==='review'?<span style={pill(C.violetDim,C.violetL,{fontSize:9})}>Worth a refresher</span>
+                    :hasQuiz
                     ?<span style={pill(status==='verified'?C.greenDim:'rgba(255,255,255,0.06)',status==='verified'?C.greenL:C.t3,{fontSize:9})}>{status==='verified'?'Quiz passed':'Not yet verified'}</span>
                     :<span style={pill('rgba(255,255,255,0.06)',C.t3,{fontSize:9})}>Self-reported</span>}
                 </div>
@@ -11186,6 +11224,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       <ErrorBoundary>
         <div style={{minHeight:'var(--msp-vh)',width:'100%',flex:1,background:`radial-gradient(ellipse 90% 55% at 50% -10%,${nyAccent}14 0%,transparent 60%),${C.bg}`,color:C.t1,fontFamily:C.FB}}>
           <Toaster position="top-right"/>
+          <React.Suspense fallback={<ToolLoading/>}>
           <NotYetPanel
             lesson={lesson} analysis={analysis} pct={pct} threshold={threshold} m={isMobile}
             onClose={()=>setNotYet(null)}
@@ -11201,6 +11240,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               if(!activeLesson)setActiveLesson({lesson,unit});
             }}
           />
+          </React.Suspense>
         </div>
       </ErrorBoundary>
     );
@@ -11703,6 +11743,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           // ROADMAP_GATES in src/lib/roadmap/readiness.js), so the tab needs the
           // generic jump rather than a fixed pair of callbacks.
           onNavigate={goAnywhere}
+          // Local learning state for the month plan's maintenance rules: which
+          // verified lessons are due a re-check, which slipped back to
+          // needs-review, and how big today's capped card session is. It reaches
+          // the plan from here rather than from the portfolio snapshot on
+          // purpose — see src/lib/learningSignal.js.
+          lessonIndex={LESSON_INDEX} allCards={allCards}
         />
         {/* The coach is mounted here too, not only in Portfolio.
             Every roadmap action, opportunity and dashboard on the month plan

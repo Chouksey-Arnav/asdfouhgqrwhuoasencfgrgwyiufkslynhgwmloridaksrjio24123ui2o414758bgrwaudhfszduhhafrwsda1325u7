@@ -14,6 +14,7 @@
 //      student's own answers.
 // ─────────────────────────────────────────────────────────────────────────────
 import { register } from 'node:module';
+import { readFileSync } from 'node:fs';
 // App modules use Vite-style extensionless imports (data/quizzes/index.js reaches
 // for './bioBiochem'), which Node will not resolve on its own. Same hook every
 // other verify script registers. Static imports are hoisted above this call, so
@@ -32,6 +33,10 @@ const { PATHWAY_REALITY } = await import('../src/data/pathwayRealityChecks.js');
 const { canTake, driftSeries, semesterOf } = await import('../src/lib/diagnosticHistory.js');
 const { PATHWAY_VOCAB_DECKS } = await import('../src/data/flashcards/vocabularyDecks.js');
 const { recheckHeld, nextRecheck, pickRecheckItems } = await import('../src/lib/verificationSchedule.js');
+const { FOUNDATION_UNITS } = await import('../src/data/foundationUnits.js');
+const { buildMonthSignals } = await import('../src/lib/monthPlan/signals.js');
+const { buildCandidates } = await import('../src/lib/monthPlan/rules.js');
+const { ACTION_DOMAINS } = await import('../src/lib/monthPlan/model.js');
 
 let failures = 0;
 const check = (name, ok, detail = '') => {
@@ -195,5 +200,74 @@ const drift = driftSeries(runs);
 check('drift keeps every result', drift.points.length === 2);
 check('drift detects a change of top match', drift.changed === true);
 
+console.log('\n── 8. Content that landed after this work was written ──');
+// The pathway data has roughly doubled since these modules were authored, and a
+// unit shape the policy has not seen must never silently fall into a tier nobody
+// chose. These assert coverage rather than trusting the derivation.
+const allLessonSlots = Object.values(PATHS).flatMap(p => (p.units || []).flatMap(u => u.lessons || []));
+const uncovered = allLessonSlots.filter(l => !policy.has(l.id));
+check('every lesson in every pathway resolves to a tier', uncovered.length === 0,
+  uncovered.slice(0, 5).map(l => l.id).join(', '));
+// The openAlways foundations tier is a deliberate 70%, not a fallback — see the
+// reasoning in verificationPolicy.js.
+const fndLessons = FOUNDATION_UNITS.flatMap(u => u.lessons || []);
+check('the foundations tier is covered', fndLessons.every(l => policy.has(l.id)), `${fndLessons.length} lessons`);
+check('the foundations tier sits at the 70% bar, deliberately',
+  fndLessons.every(l => policy.get(l.id).threshold === 70));
+// An openAlways unit governs ACCESS; it must not accidentally become ungated.
+check('openAlways never silently ungates a lesson',
+  fndLessons.every(l => policy.get(l.id).threshold !== null));
+
+console.log('\n── 9. Ungated lessons still count as done ──');
+// The regression this catches: a unit holding an ungated lesson could never be
+// credited, because the completion checks required `verified` on every lesson and
+// an ungated lesson never sets it. That silently cost unit mastery and streak
+// credit for work the student actually did.
+const appSrc = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
+check('unit completion uses isLessonComplete, not a bare .verified check',
+  /const allVerified=unit\.lessons\.every\(l=>l\.id===lesson\.id\?true:isLessonComplete\(/.test(appSrc));
+check('the Verified Progress view gives ungated lessons their own status',
+  /status='explored'/.test(appSrc) && /status==='explored'/.test(appSrc));
+check('an explored lesson settles its unit',
+  /allVerified=lessonStates\.every\([^)]*status==='explored'\)/.test(appSrc));
+check('isLessonComplete treats an ungated lesson as complete',
+  /if\(thresholdOf\(lesson\.id\)===null\)return true;/.test(appSrc));
+
+console.log('\n── 10. The month plan reads learning maintenance ──');
+const learnSignal = {
+  dueRechecks: [{ lessonId: 'ex1l1', title: 'Biology Fundamentals', items: 3, daysSince: 34 }],
+  needsReview: [{ lessonId: 'ex1l2', title: 'AP Biology Review', concepts: ['Punnett squares'] }],
+  cards: { due: 412, sessionSize: 24, deferred: 388, backlog: true, daysAway: 15 },
+};
+const learnActions = (learning) => buildCandidates(
+  buildMonthSignals({ user: { gradeStage: 'junior' }, snapshot: {}, learning }),
+).filter(a => String(a.source).startsWith('rule:learning-'));
+
+const fired = learnActions(learnSignal);
+check('all three learning rules fire when there is maintenance due', fired.length === 3,
+  fired.map(a => a.source).join(', '));
+check('every learning action uses a registered domain',
+  fired.every(a => ACTION_DOMAINS.includes(a.domain)));
+check('every learning action traces to a named rule',
+  fired.every(a => /^rule:learning-/.test(a.source)));
+// The whole point of the backlog rule: quote the SESSION, never the debt.
+const backlogAction = fired.find(a => a.source === 'rule:learning-card-backlog');
+check('the backlog action headlines the session size, not the raw due count',
+  backlogAction.title.includes('24') && !backlogAction.title.includes('412'), backlogAction.title);
+check('the backlog action tells the student the rest is scheduled, not owed',
+  /scheduled/i.test(backlogAction.definitionOfDone));
+// Nothing about a missed attempt may leak into plan copy, which is shareable.
+const planText = fired.map(a => `${a.title} ${a.reason} ${a.whyThisMatters} ${a.definitionOfDone}`).join(' ');
+check('no learning action uses failure language', !/\bfail(ed|ure)?\b|\bscore of\b|\bgot .* wrong\b/i.test(planText));
+
+// A caught-up student must not be handed manufactured work, and a missing or
+// malformed signal must never take the plan down.
+check('a caught-up student gets no learning actions',
+  learnActions({ dueRechecks: [], needsReview: [], cards: { due: 6, sessionSize: 6, deferred: 0, backlog: false, daysAway: 1 } }).length === 0);
+check('no learning signal at all yields no learning actions', learnActions(undefined).length === 0);
+check('a malformed learning signal degrades rather than throwing',
+  learnActions({ dueRechecks: 'nope', needsReview: 42, cards: 'x' }).length === 0);
+
 console.log(failures ? `\n${failures} check(s) failed.\n` : '\nAll checks passed.\n');
 process.exit(failures ? 1 : 0);
+

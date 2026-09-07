@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
@@ -22,6 +22,9 @@ import {
   addStudentAction, OPEN_ACTION_STATES,
 } from '../../../lib/monthPlan/model';
 import { LEADERSHIP_LADDER, buildMonthSignals } from '../../../lib/monthPlan/signals';
+// Learning maintenance is local-only and never reaches the portfolio snapshot the
+// rest of the signals are read from — see lib/learningSignal.js for why.
+import { buildLearningSignal } from '../../../lib/learningSignal';
 import { applyActionState, reprioritize } from '../../../lib/monthPlan/adapt';
 import { recordActionFeedback, logEvidence } from '../../../lib/monthPlan/store';
 import {
@@ -69,6 +72,9 @@ export default function MonthPlanPanel({
   accent = C.violet, isMobile = false,
   building = false, buildStage = '', onBuild, onRefresh, onCommit,
   goPortfolio, goOpportunities, goActivities, goAcademics, goYear,
+  // Local learning state the plan reads through lib/learningSignal.js. Both are
+  // optional: without them the plan simply carries no learning items.
+  lessonIndex = null, allCards = null,
 }) {
   const today = dayKey();
 
@@ -78,10 +84,21 @@ export default function MonthPlanPanel({
   // import in RoadmapTab.jsx). Recomputed whenever the portfolio changes, which
   // is what keeps the adaptation layer arguing from live data rather than from
   // whatever was true when the plan was built.
+  // Loaded from Dexie rather than the snapshot, and asynchronously, so a slow or
+  // failed local read delays learning items instead of blocking the whole plan.
+  const [learning, setLearning] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    buildLearningSignal({ user, lessonIndex, allCards })
+      .then((l) => { if (alive) setLearning(l); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [user, lessonIndex, allCards]);
+
   const signals = useMemo(() => {
     if (!user) return null;
-    try { return buildMonthSignals({ user, snapshot: portfolio, roadmap }); } catch { return null; }
-  }, [user, portfolio, roadmap]);
+    try { return buildMonthSignals({ user, snapshot: portfolio, roadmap, learning }); } catch { return null; }
+  }, [user, portfolio, roadmap, learning]);
 
   const stale = useMemo(
     () => (plan && signals ? planIsStale(plan, { user, signals }) : false),

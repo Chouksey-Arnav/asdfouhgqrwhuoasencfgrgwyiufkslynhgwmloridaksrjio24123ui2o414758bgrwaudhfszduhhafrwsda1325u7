@@ -15,6 +15,9 @@ When assigned a specific task, jump directly to the relevant files listed below:
 | **SAT Question Bank & AI Practice** | `src/components/sat/SatLibraryPanel.jsx`, `SatPracticePanel.jsx` | `src/lib/sat/aiPractice.js`, `selector.js` | `src/data/sat/questions/index.js` | `scripts/auditSatBank.mjs`, `verifySatLibrary.mjs` |
 | **Pathway Lessons & Audio** | `src/components/PrepMedabrain.jsx`, `HighlightableArticle.jsx` | `src/lib/lessonAudio.js`, `lessonFeedback.js` | `src/data/lessonContent/index.js` | `scripts/auditLessonsCompleteness.mjs` |
 | **Verification Quizzes** | `src/components/QuizRecommendationsPanel.jsx` | `src/lib/quizPersonalization.js` | `src/data/quizzes/index.js` | `scripts/auditQuizBankBalance.mjs` |
+| **Quiz Recovery & Re-verification** | `src/components/quiz/NotYetPanel.jsx` | `src/lib/quizRecovery.js`, `src/lib/verificationSchedule.js`, `src/lib/quizItemMix.js` | `src/data/quizzes/verificationPolicy.js`, `src/data/quizzes/appliedItems.js` | `scripts/verifyQuizRecovery.mjs` |
+| **Flashcard Session & Capture** | `src/components/flashcards/CardComposer.jsx` | `src/lib/flashcards/session.js`, `capture.js`, `offline.js` | `src/data/flashcards/vocabularyDecks.js` | `scripts/verifyQuizRecovery.mjs` |
+| **Pathway Diagnostic** | `src/components/diagnostic/DiagnosticDrift.jsx`, `RealityCheckCard.jsx` | `src/lib/diagnosticEngine.js`, `src/lib/diagnosticHistory.js` | `src/data/diagnosticTradeoffs.js`, `src/data/pathwayRealityChecks.js` | `scripts/verifyQuizRecovery.mjs` |
 | **Ivy Engine & Portfolio Strategy** | `src/components/portfolio/ivy/NarrativeEnginePanel.jsx` | `src/lib/ivy/engine.js`, `holistic.js` | `src/data/ivy/tierCatalog.js` | `scripts/verifyIvyEngine.mjs` |
 | **Four-Year Course Strategy** | `src/components/prep/FourYearMap.jsx`, `CoursePlannerPanel.jsx` | `src/lib/fourYearMap.js`, `coursePlanner.js` | `src/data/lessonContent/courseStrategy.js` | `scripts/verifyFourYearMap.mjs` |
 | **Common App Resume & Activities** | `src/components/ActivitiesResumePanel.jsx` | `src/lib/commonApp/activities.js`, `activityIntel.js` | `src/data/constants.js` | `scripts/verifyResumeBuilder.mjs` |
@@ -180,6 +183,9 @@ Below is the complete, itemized inventory of **every single file in the reposito
 - `src/lib/flashcards/rank.js` — Offline flashcard processing/extraction logic for rank.
 - `src/lib/flashcards/segment.js` — Offline flashcard processing/extraction logic for segment.
 - `src/lib/flashcards/text.js` — Offline flashcard processing/extraction logic for text.
+- `src/lib/flashcards/session.js` — Builds the study queue: a capped daily session with a visible finish line, prioritized by importance rather than due date, interleaved with cards the student already knows so a session never opens or closes on their weakest material.
+- `src/lib/flashcards/capture.js` — Photo-to-card. Native text detection first, then a lazily-imported OCR engine, then a type-it-in fallback; the image never leaves the device.
+- `src/lib/flashcards/offline.js` — Makes it visible that flashcard review already works with no connection.
 - `src/lib/fourYearMap.js` — Shared application utility / service for fourYearMap.
 - `src/lib/fsrs.js` — Shared application utility / service for fsrs.
 - `src/lib/gamification.js` — Shared application utility / service for gamification.
@@ -246,6 +252,11 @@ Below is the complete, itemized inventory of **every single file in the reposito
 - `src/lib/questApi.js` — Shared application utility / service for questApi.
 - `src/lib/quests.js` — Shared application utility / service for quests.
 - `src/lib/quizPersonalization.js` — Shared application utility / service for quizPersonalization.
+- `src/lib/quizRecovery.js` — What happens when a verification quiz is missed: concept-level miss analysis, the served-item exclusion that makes a retry a genuinely different quiz, the "not yet" framing, and the rule that no missed attempt reaches a parent-facing surface.
+- `src/lib/quizItemMix.js` — Classifies a quiz item as data interpretation, scenario, best-next-step or recall, so the draw can prefer the three that are not recall.
+- `src/lib/verificationSchedule.js` — Spaced re-verification: the ~30 and ~90 day 2-3 item checks that stop "verified" decaying into "passed a quiz once", and the quiet move back to needs-review when one does not hold.
+- `src/lib/diagnosticHistory.js` — Every diagnostic result the student has produced, the once-per-semester retake rule, and the drift series behind the chart.
+- `src/lib/learningSignal.js` — Assembles local-only learning maintenance (due re-checks, needs-review lessons, today's capped card session) for the month plan. Local by design: it never reaches the portfolio snapshot.
 - `src/lib/recentActivity.js` — Shared application utility / service for recentActivity.
 - `src/lib/recommend.js` — Shared application utility / service for recommend.
 - `src/lib/recommenders.js` — Shared application utility / service for recommenders.
@@ -253,7 +264,7 @@ Below is the complete, itemized inventory of **every single file in the reposito
 - `src/lib/rewardClaimQueue.js` — Shared application utility / service for rewardClaimQueue.
 - `src/lib/rewards.js` — Shared application utility / service for rewards.
 - `src/lib/monthPlan/model.js` — The month-plan document: its shape, its action states, the forbidden-claim scrubber, and every pure mutation.
-- `src/lib/monthPlan/signals.js` — Everything known about one student, read once, as numbers: colleges, academics, testing, activities, leadership, service, deadlines, constraints, wellbeing, feedback and the detected risks. Opportunities are read through `src/lib/opportunity/`, never from the catalogs directly.
+- `src/lib/monthPlan/signals.js` — Everything known about one student, read once, as numbers: colleges, academics, testing, activities, leadership, service, deadlines, constraints, wellbeing, feedback, learning maintenance (passed in locally — see `src/lib/learningSignal.js`) and the detected risks. Opportunities are read through `src/lib/opportunity/`, never from the catalogs directly.
 - `src/lib/monthPlan/rules.js` — The deterministic rules that turn those signals into ranked candidate actions, plus the capacity budget and the stepping-stone/funded/local alternatives.
 - `src/lib/monthPlan/generator.js` — Assembles the four-week plan; one optional Medabrain call for framing only, with a complete deterministic plan underneath it.
 - `src/lib/monthPlan/adapt.js` — What the plan does when a student marks an action done, paused, declined, too hard, too expensive, too far, ineligible, or needs-help.
@@ -457,6 +468,9 @@ Below is the complete, itemized inventory of **every single file in the reposito
 - `src/data/elibExpansionK.js` — Data catalog / static repository dataset for elibExpansionK.
 - `src/data/elibExtra.js` — Data catalog / static repository dataset for elibExtra.
 - `src/data/foundationUnits.js` — Data catalog / static repository dataset for foundationUnits.
+- `src/data/flashcards/vocabularyDecks.js` — The pathway vocabulary decks: medical roots, prefixes, suffixes, clinical abbreviations and body systems.
+- `src/data/diagnosticTradeoffs.js` — Forced trade-off diagnostic items where every choice costs something, because preference questions have a ceiling.
+- `src/data/pathwayRealityChecks.js` — Per pathway: years of training, total cost, licensing exams, competitiveness, day length and call, and the most common reason people leave.
 - `src/data/healthCareerScholarships.js` — Data catalog / static repository dataset for healthCareerScholarships.
 - `src/data/interviewQuestions.js` — Data catalog / static repository dataset for interviewQuestions.
 - `src/data/ivy/benchmarks.js` — Ivy Engine static data catalog for benchmarks.
@@ -495,6 +509,8 @@ Below is the complete, itemized inventory of **every single file in the reposito
 - `src/data/quizzes/chemPhys.js` — Verification quiz question bank for chemPhys.
 - `src/data/quizzes/index.js` — Verification quiz question bank for index.
 - `src/data/quizzes/lessonQuizzes.js` — Verification quiz question bank for lessonQuizzes.
+- `src/data/quizzes/verificationPolicy.js` — The per-lesson pass bar: 70% on foundations, 80% where later content builds on the lesson, and no gate at all on exploratory career-browsing content.
+- `src/data/quizzes/appliedItems.js` — Data-interpretation, scenario and best-next-step items merged into the lesson banks, so a verification quiz is not made only of recall.
 - `src/data/quizzes/psychSoc.js` — Verification quiz question bank for psychSoc.
 - `src/data/roadmap/anchors.js` — Roadmap schema and catalog dataset for anchors.
 - `src/data/roadmap/awards.js` — Roadmap schema and catalog dataset for awards.
@@ -680,6 +696,10 @@ Below is the complete, itemized inventory of **every single file in the reposito
 - `src/components/quests/QuestStrip.jsx` — React UI component / panel for QuestStrip.
 - `src/components/quests/questIcons.js` — React UI component / panel for questIcons.
 - `src/components/roadmap/month/MonthPlanPanel.jsx` — "This month": the free-plan roadmap surface and the Roadmap tab's default view.
+- `src/components/quiz/NotYetPanel.jsx` — The recovery screen after a missed verification quiz: the concepts to go back to, a targeted Medabrain re-explanation, and a genuinely different retry.
+- `src/components/flashcards/CardComposer.jsx` — Write your own flashcards, or photograph the page you are studying from.
+- `src/components/diagnostic/DiagnosticDrift.jsx` — How a student's diagnostic results moved across years.
+- `src/components/diagnostic/RealityCheckCard.jsx` — The reality of a pathway: years, cost, exams, competitiveness, the day, and why people leave.
 - `src/components/roadmap/month/MonthActionCard.jsx` — One ranked action, with its reason, timing, effort, definition of done, evidence capture, ten-state control and Ask-Medabrain button.
 - `src/components/roadmap/month/MonthSections.jsx` — The opportunity action plan, activity keep/deepen/reduce, leadership path, service dashboard, academics, risks, reminders and adaptation log.
 - `src/components/roadmap/month/MonthCheckin.jsx` — The weekly check-in and the optional grading-quarter academic update.

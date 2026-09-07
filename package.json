@@ -60,7 +60,6 @@
     "verify:home-density": "node scripts/verifyHomeDensity.mjs",
     "verify:lesson-delivery": "node scripts/verifyLessonDelivery.mjs",
     "verify:quiz-recovery": "node scripts/verifyQuizRecovery.mjs",
-    "verify:quiz-recovery": "node scripts/verifyQuizRecovery.mjs",
     "verify:master-plan": "node scripts/verifyMasterPlan.mjs",
     "verify:migrations": "node scripts/verifyMigrations.mjs",
     "verify:api-boot": "node scripts/verifyApiBoot.mjs",

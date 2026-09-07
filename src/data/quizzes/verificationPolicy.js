@@ -87,6 +87,22 @@ export function tierForLesson(lesson, { unit = null, unitIndex = -1, unitCount =
   if (quizIds.some(id => EXPLORATORY_QUIZ_IDS.has(id))) return 'exploratory';
   if (quizIds.some(id => GATEWAY_QUIZ_IDS.has(id))) return 'gateway';
 
+  // ── The foundations tier (data/foundationUnits.js) ─────────────────────────
+  // These units carry `openAlways` and are appended to every pathway: course
+  // sequencing, the AP-credit trap, which certifications are worth a summer.
+  //
+  // They stay at the 70% foundation bar, and that is a decision rather than a
+  // fallback. They look exploratory — a student grabs them mid-decision in
+  // course-selection week, and they sit behind nothing — but unlike the
+  // career-browsing lessons they have right answers that cost real money to get
+  // wrong. Claiming AP credit you should have declined is not reversible.
+  //
+  // What `openAlways` governs is ACCESS, and nothing here touches that: the unit
+  // stays open to everyone, the course planner still renders under it, and a
+  // missed attempt routes into the recovery flow (which is the useful outcome on
+  // exactly this content) rather than closing anything off.
+  if (unit?.openAlways || unit?.tier === 'foundations') return 'foundation';
+
   const stage = unit?.stage;
   // "Next Steps" units are the pathway's application/orientation tail — nothing
   // in the pathway is built on top of them, and their content is exactly the

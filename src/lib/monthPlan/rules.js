@@ -195,6 +195,73 @@ const RULES = [
       })]
       : null),
   },
+  // ── Learning maintenance ──────────────────────────────────────────────────
+  // The three rules below are the only ones in this file that read local-only
+  // state (signals.learning — see readLearning). They exist because the month
+  // plan is where a student asks "what do I do next", and for a student who has
+  // been away the true answer is often none of the application items below it.
+  {
+    id: 'learning-card-backlog', domain: 'academics', weight: 74,
+    build: (s) => {
+      const c = s.learning?.cards;
+      if (!c?.backlog || !c.sessionSize) return null;
+      return [action({
+        ruleId: 'learning-card-backlog', domain: 'academics',
+        title: `Clear today's ${c.sessionSize} flashcards — that is the whole thing`,
+        // The number in the headline is the SESSION, never the backlog. A student
+        // returning from a break who is shown "412 due" quits, and that is not a
+        // motivation problem to be coached out of — it is a number we chose to
+        // show them. The cap, the importance ranking and the interleave already
+        // exist (lib/flashcards/session.js); this rule's job is to make sure the
+        // plan quotes the finished number rather than the raw debt.
+        reason: `You have been away about ${c.daysAway} day${c.daysAway === 1 ? '' : 's'}, so there is a queue. Today's session is ${c.sessionSize} cards, picked as the ones worth rescuing first.`,
+        whyThisMatters: 'Coming back to a huge pile and quitting is the single most common way spaced repetition fails people, and it is a presentation problem rather than a discipline one. The rest of the queue is scheduled, not owed.',
+        dueLabel: 'Today', origin: 'cycle', effort: 'quick', priority: 'high', weight: 74, weekHint: 0,
+        definitionOfDone: `You have been through today's ${c.sessionSize}. The remaining ${c.deferred} are scheduled across the coming days and are not this session's problem.`,
+        evidenceToLog: 'Nothing to log — the app counts the reviews itself.',
+        metabrain: 'I have been away from my flashcards for a while and there is a backlog. Help me get back into a routine I will actually keep.',
+      })];
+    },
+  },
+  {
+    id: 'learning-recheck', domain: 'academics', weight: 58,
+    build: (s) => {
+      const r = s.learning?.nextRecheck;
+      if (!r) return null;
+      return [action({
+        ruleId: 'learning-recheck', key: r.lessonId, domain: 'academics',
+        title: `Quick check: ${r.title || 'a lesson you verified'}`,
+        reason: `You verified this about ${r.daysSince || 30} days ago. It is ${r.items || 2} questions, under a minute.`,
+        whyThisMatters: 'It is what keeps a verified lesson meaning "I know this" rather than "I passed a quiz on this once, in October". The check is small on purpose.',
+        dueLabel: 'This week', origin: 'cycle', effort: 'quick', priority: 'standard', weight: 58, weekHint: 0,
+        definitionOfDone: 'The check is taken. Whether it holds or sends the lesson back for a refresher, both outcomes are useful and neither is reported anywhere.',
+        evidenceToLog: 'Nothing to log — this is between you and the app.',
+        metabrain: `Re-explain the key ideas from "${r.title || 'this lesson'}" quickly, before I take a short check on it.`,
+      })];
+    },
+  },
+  {
+    id: 'learning-needs-review', domain: 'academics', weight: 60,
+    build: (s) => {
+      const n = s.learning?.needsReviewCount || 0;
+      if (!n) return null;
+      const titles = (s.learning.needsReview || []).slice(0, 3).map((r) => r.title).filter(Boolean);
+      return [action({
+        ruleId: 'learning-needs-review', domain: 'academics',
+        title: n === 1 ? `Refresh one lesson that has gone quiet` : `Refresh ${n} lessons that have gone quiet`,
+        // Framed as ordinary forgetting, because that is what it is. Nothing here
+        // says failed, and nothing here reaches a parent — see quizRecovery.js.
+        reason: titles.length
+          ? `${titles.join(', ')}${n > titles.length ? ` and ${n - titles.length} more` : ''} slipped on their last check. The cards for them are already in your deck.`
+          : 'A few verified lessons slipped on their last check. The cards for them are already in your deck.',
+        whyThisMatters: 'This is how memory works rather than a sign anything went wrong, and catching it now is much cheaper than rebuilding the material next year when an application needs it.',
+        dueLabel: 'This month', origin: 'cycle', effort: 'short', priority: 'standard', weight: 60,
+        definitionOfDone: 'Each one is re-verified, or you have decided it is not worth the time this month and said so.',
+        evidenceToLog: 'Nothing to log — re-verifying updates the lesson itself.',
+        metabrain: 'Some lessons I had verified have gone quiet. Help me work out the fastest way to get them back rather than rereading everything.',
+      })];
+    },
+  },
   {
     id: 'academics-log', domain: 'academics', weight: 62,
     build: (s) => (!s.academics.hasData
