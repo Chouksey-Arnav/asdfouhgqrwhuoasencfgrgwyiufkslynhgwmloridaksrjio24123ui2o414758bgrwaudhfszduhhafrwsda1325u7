@@ -25,8 +25,10 @@
 //   2. MONTHLY REFRESHES. refreshMonthPlan() already carries paused actions
 //      forward and records what the previous cycle produced. A yearly plan
 //      calls it on a schedule instead of on a button.
-//   3. DEEPER OPPORTUNITY RESEARCH. readOpportunities() in signals.js returns
-//      the full evaluated catalog, of which the month plan surfaces a slice.
+//   3. DEEPER OPPORTUNITY RESEARCH. readOpportunities() in signals.js already
+//      runs the full opportunity-intelligence ranking (src/lib/opportunity/) and
+//      surfaces the slice a four-week horizon can act on; the ranked pool, the
+//      stretch bucket and the discovery inbox are all sitting behind it.
 //      OPPORTUNITY_DEPTH below names the levels; nothing consumes it yet.
 //   4. LONGER MILESTONE VISIBILITY. The twelve-month roadmap (src/lib/roadmap/)
 //      already models seasons and dated milestones. YEARLY_BRIDGE names the
@@ -76,6 +78,9 @@ export const OPPORTUNITY_DEPTH = ['shortlist', 'researched', 'deep'];
  * a comment describing an architecture nobody kept.
  */
 export const YEARLY_BRIDGE = {
+  // The ranked opportunity pool a longer horizon would research more deeply.
+  opportunityRanking: 'src/lib/opportunity/ranking.js#rankOpportunities',
+  opportunityContext: 'src/lib/opportunity/context.js#buildOpportunityContext',
   // Reading the student — identical inputs at any horizon.
   signals: 'src/lib/monthPlan/signals.js#buildMonthSignals',
   // Candidate generation — a yearly plan runs the same rules per cycle.

@@ -79,7 +79,20 @@ begin
 end;
 $$;
 
-revoke all on function public.bump_user_data_version() from public, anon, authenticated;
+-- REVOKE FROM PUBLIC is the load-bearing line; anon/authenticated are Supabase roles that do not
+-- exist in the bare PostgreSQL scripts/verifyMigrations.mjs builds, so they are revoked only where
+-- they exist. Same convention as 0008_lock_down_rpc_functions.sql and 0024.
+revoke all on function public.bump_user_data_version() from public;
+do $$
+declare
+  role_name text;
+begin
+  foreach role_name in array array['anon', 'authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = role_name) then
+      execute format('revoke all on function public.bump_user_data_version() from %I', role_name);
+    end if;
+  end loop;
+end $$;
 
 -- Attach to every per-user table that a client actually reads back, discovered rather than listed
 -- so a table added later is covered by re-running this block instead of being silently missed.

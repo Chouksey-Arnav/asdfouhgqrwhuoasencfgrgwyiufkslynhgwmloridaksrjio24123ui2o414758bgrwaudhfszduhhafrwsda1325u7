@@ -28,7 +28,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { dayKey, shiftDays } from '../timeline.js';
 import { buildMonthSignals } from './signals.js';
-import { buildCandidates, scheduleCandidates, cycleCapacityHours } from './rules.js';
+import { buildCandidates, scheduleCandidates } from './rules.js';
 import {
   MONTH_PLAN_VERSION, CYCLE_WEEKS, buildWeeks, cycleEndFor, monthPlanFingerprint,
   scrubClaims, assertTraceable, allActions, ACTION_DOMAINS,
@@ -283,44 +283,27 @@ function defaultDirection(signals) {
 }
 
 /**
- * The opportunity action plan: four buckets with an instruction attached to
- * each, read entirely from the existing opportunity system. A closed program is
- * shown as closed with the month its next cycle opens — never as open.
+ * The opportunity action plan.
+ *
+ * A straight pass-through of what readOpportunities() already produced, because
+ * that function reads the opportunity-intelligence layer directly and re-shaping
+ * its output a second time here is how the two would drift. Every row already
+ * carries its stance, its instruction, its data state and the one-line
+ * reliability sentence the card is required to render.
  */
 function buildOpportunityPlan(signals) {
-  const shape = (o, stance, instruction) => ({
-    ref: o.ref,
-    id: o.id,
-    name: o.name,
-    org: o.org,
-    url: o.url,
-    verified: o.verified,
-    verifiedLabel: o.verifiedLabel,
-    tier: o.tier,
-    free: o.free,
-    costLabel: o.costLabel,
-    remote: o.remote,
-    selectivity: o.selectivity,
-    why: o.why,
-    stance,
-    instruction,
-    deadline: o.deadline
-      ? {
-        iso: o.deadline.iso, label: o.deadline.label, precision: o.deadline.precision,
-        daysOut: o.deadline.daysOut, note: o.deadline.note, passedThisCycle: !!o.deadline.passedThisCycle,
-      }
-      : null,
-  });
+  const o = signals.opportunities;
   return {
-    actNow: signals.opportunities.actNow.map((o) => shape(o, 'act', 'Open and close enough that this cycle is the one. Read the requirements this week.')),
-    prepareNow: signals.opportunities.prepareNow.map((o) => shape(o, 'prepare', 'Open, but not yet due. The preparation is what happens this month, not the submission.')),
-    monitor: signals.opportunities.monitor.map((o) => shape(o, 'monitor', 'No fixed date, or one set locally. Nothing to do but keep it in view and check the official page.')),
-    nextCycle: signals.opportunities.nextCycle.map((o) => shape(o, 'closed', 'CLOSED for this cycle. Note when it comes round again and be early next time.')),
-    blocked: signals.opportunities.blocked.map((o) => ({
-      ...shape(o, 'blocked', o.verdict?.detail || 'Not open to you yet.'),
-      altUnder: o.altUnder || null,
-    })),
-    note: 'Every program here comes from the app\'s own verified opportunity database, with the date it was last checked. Deadlines shift — confirm on the official page before you rely on one.',
+    actNow: o.actNow,
+    // Split by stance at render time (see OpportunityPlan in MonthSections.jsx):
+    // a verification task and a preparation task are different conversations.
+    prepareNow: o.prepareNow,
+    monitor: o.monitor,
+    nextCycle: o.nextCycle,
+    blocked: o.blocked,
+    needsVerification: o.needsVerification,
+    capacity: o.capacity ? { count: o.capacity.count, posture: o.capacity.posture, drivers: o.capacity.drivers } : null,
+    note: 'Every program here comes from the app\'s own opportunity database, ranked for you by the same engine the Opportunities tab uses, and each one carries how much we actually know about it. Deadlines shift — confirm on the official page before you rely on one.',
   };
 }
 

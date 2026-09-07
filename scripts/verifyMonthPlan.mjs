@@ -40,6 +40,13 @@ const CONTEXT = await import('../src/lib/monthPlan/context.js');
 const YEARLY = await import('../src/lib/monthPlan/yearly.js');
 const BENCH = await import('../src/lib/studentIntel/benchmarks.js');
 
+// The opportunity-intelligence layer the month plan reads through. Asserted
+// against directly, because "these two features agree" is a property, not a
+// convention — and it is the one that breaks silently.
+const OPP_FEEDBACK = await import('../src/lib/opportunity/feedback.js');
+const OPP_SCHEMA = await import('../src/lib/opportunity/schema.js');
+const OPP_CONTEXT = await import('../src/lib/opportunity/context.js');
+
 let passed = 0;
 const failures = [];
 const assert = (label, cond, detail = '') => {
@@ -192,9 +199,30 @@ for (const o of opp.nextCycle) {
 }
 assert('the opportunity plan carries the confirm-it-yourself line', /confirm/i.test(opp.note));
 const everyOpp = [...opp.actNow, ...opp.prepareNow, ...opp.monitor, ...opp.nextCycle];
-assert('every opportunity came from the catalog', everyOpp.every((o) => /^program:/.test(o.ref)));
-assert('every opportunity carries the date we last checked it',
-  everyOpp.every((o) => o.verified || o.verifiedLabel || o.deadline === null));
+assert('every opportunity uses the opportunity layer\'s own reference format',
+  everyOpp.every((o) => /^opportunity:/.test(o.ref)),
+  everyOpp.map((o) => o.ref).filter((r) => !/^opportunity:/.test(r)).join(', '));
+assert('every opportunity carries a data state', everyOpp.every((o) => !!o.dataState?.id));
+assert('and the one-line reliability sentence a card must render',
+  everyOpp.every((o) => typeof o.reliability === 'string' && o.reliability.length > 10));
+assert('every data state is one the schema defines',
+  everyOpp.every((o) => OPP_SCHEMA.DATA_STATE_BY_ID[o.dataState.id]));
+
+// ── An unverified lead is never a dated commitment ──────────────────────────
+// The single most important interaction between these two features: the
+// discovery pass can propose a program with a plausible-looking February
+// deadline, and nothing in this plan may turn that into a date on a card.
+const unverified = everyOpp.filter((o) => o.dataState.id === 'ai_discovered');
+assert('an AI-discovered record is never datable', unverified.every((o) => o.datable === false));
+assert('and never carries a deadline date', unverified.every((o) => o.deadline.iso === null));
+assert('and reaches the plan as a verification stance', unverified.every((o) => o.stance === 'verify'));
+for (const a of MODEL.allActions(jPlan).filter((x) => x.domain === 'opportunity')) {
+  const entry = everyOpp.find((o) => o.ref === a.link?.ref);
+  if (entry?.dataState.id === 'ai_discovered') {
+    eq(`"${a.title}" has no due date`, a.timing.dueDate, null);
+    assert(`"${a.title}" is a verification task`, /^rule:opportunity-verify$/.test(a.source));
+  }
+}
 
 // Opportunity actions never render an approximate catalog date as exact.
 for (const a of MODEL.allActions(jPlan).filter((x) => x.domain === 'opportunity' && x.timing.dueDate)) {
@@ -202,6 +230,7 @@ for (const a of MODEL.allActions(jPlan).filter((x) => x.domain === 'opportunity'
   if (entry?.deadline?.precision && entry.deadline.precision !== 'exact') {
     eq(`"${a.title}" is marked typical, not exact`, a.timing.precision, 'typical');
   }
+  assert(`"${a.title}" only carries a date the opportunity layer stands behind`, entry ? entry.datable : true);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -506,6 +535,96 @@ assert('the action card renders dates through ActionDate', /ActionDate/.test(rea
 assert('the home card does too', /ActionDate/.test(read(`${monthDir}/MonthHomeCard.jsx`)));
 assert('and the one date helper refuses to state an unconfirmed day',
   /typical, confirm it/.test(read(`${monthDir}/monthUi.jsx`)));
+
+// ─────────────────────────────────────────────────────────────────────────────
+section('9b. The month plan and the opportunity layer are one system');
+
+// ── One vocabulary ──────────────────────────────────────────────────────────
+// The month plan's states and the opportunity layer's actions describe the same
+// student decision from two sides. If these drift, a refusal recorded on a
+// roadmap card stops suppressing the program on the Opportunities tab and the
+// student is offered the thing they just declined, one tab over.
+for (const [monthState, oppAction] of Object.entries(MODEL.MONTH_ACTION_TO_OPPORTUNITY_ACTION)) {
+  assert(`"${monthState}" maps to a real opportunity action`, !!OPP_FEEDBACK.ACTION_BY_ID[oppAction], oppAction);
+  assert(`"${monthState}" is a state this plan actually has`, MODEL.ACTION_STATES.includes(monthState));
+}
+for (const state of MODEL.SUPPRESSING_STATES) {
+  const mapped = MODEL.MONTH_ACTION_TO_OPPORTUNITY_ACTION[state];
+  assert(`"${state}" still suppresses once written`,
+    OPP_FEEDBACK.SUPPRESS_STATUSES.has(OPP_FEEDBACK.ACTION_TO_STATUS[mapped]),
+    `${state} → ${mapped} → ${OPP_FEEDBACK.ACTION_TO_STATUS[mapped]}`);
+}
+assert('every month-plan state that writes anything is mapped',
+  MODEL.ACTION_STATES.filter((st) => st !== 'not_started')
+    .every((st) => !!MODEL.MONTH_ACTION_TO_OPPORTUNITY_ACTION[st]));
+
+// ── One row format, readable by the layer that owns it ──────────────────────
+const oppAction = MODEL.allActions(jPlan).find((a) => a.domain === 'opportunity');
+if (oppAction) {
+  const row = ADAPT.feedbackRowForAction(oppAction, 'too_expensive', 'costs more than I have');
+  assert('an opportunity refusal writes the layer\'s own ref', /^opportunity:/.test(row.item_ref), row.item_ref);
+  const decoded = OPP_FEEDBACK.decodeFeedbackRow(row);
+  eq('and the layer can read the exact button back', decoded.action, 'too_expensive');
+  assert('and the student\'s own words survive the encoding', /costs more than I have/.test(decoded.comment || ''));
+  eq('and the status is one the migration allows', row.status, 'too_expensive');
+  // The whole point of append-only: the index must see it as a live suppression.
+  const idx = OPP_FEEDBACK.indexFeedback([{ ...row, created_at: new Date(NOW).toISOString() }], NOW);
+  assert('a month-plan refusal suppresses the program for the ranker too',
+    !!idx.byRef[row.item_ref] && OPP_FEEDBACK.SUPPRESS_STATUSES.has(idx.byRef[row.item_ref].status));
+  assert('and teaches the generalized cost lesson', (idx.lessons.cost || 0) > 0);
+}
+const plainRow = ADAPT.feedbackRowForAction(
+  { title: 'Decide what comes off the list', domain: 'activity', source: 'rule:activity-reduce' }, 'declined', '',
+);
+assert('a non-opportunity decision still writes a decodable row',
+  !!plainRow && OPP_FEEDBACK.decodeFeedbackRow(plainRow).action === 'declined');
+assert('and never claims to be an opportunity', !/^opportunity:/.test(plainRow.item_ref));
+eq('a not-started action writes nothing at all', ADAPT.feedbackRowForAction(plainRow, 'not_started'), null);
+
+// ── One ranking ─────────────────────────────────────────────────────────────
+assert('the month plan ranks through the opportunity layer, not around it',
+  !!jSignals.opportunities.ranked && Array.isArray(jSignals.opportunities.ranked.matches));
+assert('and inherits its adaptive list size rather than a fixed one',
+  Number.isFinite(jSignals.opportunities.capacity?.count));
+assert('and carries the decayed feedback index the ranker uses',
+  !!jSignals.opportunities.feedback && typeof jSignals.opportunities.feedback.lessons === 'object');
+const monthSrc = read('src/lib/monthPlan/signals.js');
+assert('the month plan does not evaluate eligibility itself any more',
+  !/from '\.\.\/opportunityEligibility/.test(monthSrc));
+assert('and reads the catalogs only through buildRecordPool',
+  /buildRecordPool/.test(monthSrc));
+
+// ── A dream college is a dream college on both sides ────────────────────────
+const dreamCtx = OPP_CONTEXT.buildOpportunityContext({
+  user: junior,
+  colleges: [{ name: 'Johns Hopkins University', category: 'dream' }, { name: 'Duke University', category: 'reach' }],
+});
+assert('the opportunity layer recognizes the dream category the college list writes',
+  dreamCtx.dreamSchools.includes('Johns Hopkins University'), JSON.stringify(dreamCtx.dreamSchools));
+assert('and counts it toward ambition rather than dropping it as uncategorized',
+  dreamCtx.colleges.uncategorized === 0 && dreamCtx.colleges.reach >= 2, JSON.stringify(dreamCtx.colleges));
+assert('the college list offers all four tiers',
+  ['dream', 'reach', 'target', 'safety'].every((t) => read('src/components/CollegeListPanel.jsx').includes(`id: '${t}'`)));
+
+// ── The coach sees both, and can read the intel it is handed ────────────────
+const medabrainSrc = read('src/components/PortfolioMedabrain.jsx');
+for (const key of ['school_context', 'constraints_profile', 'service_logs', 'recommendation_feedback']) {
+  assert(`the coach actually fetches ${key} before reasoning over it`, medabrainSrc.includes(`'${key}'`));
+}
+assert('the coach gets the opportunity shortlist', /opportunityBlock/.test(medabrainSrc));
+assert('and the month plan digest', /monthPlanSummary/.test(medabrainSrc));
+assert('and the one-item focus block', /focusBlock/.test(medabrainSrc));
+const profileSrc = read('src/lib/studentProfile.js');
+const portfolioFn = profileSrc.slice(profileSrc.indexOf('export function buildPortfolioSystemPrompt'), profileSrc.indexOf('export function buildPrepSystemPrompt'));
+for (const param of ['monthPlanSummary', 'focusBlock', 'opportunityBlock']) {
+  assert(`the Portfolio specialist declares ${param} in the function that reads it`,
+    new RegExp(`^\\s*${param}\\s*=`, 'm').test(portfolioFn.slice(0, portfolioFn.indexOf('} = {}) {'))));
+  assert(`and actually renders ${param}`, portfolioFn.slice(portfolioFn.indexOf('} = {}) {')).includes(param));
+}
+assert('the prose block still strips the location it was not consented for',
+  /stripUnconsentedLocation/.test(medabrainSrc));
+assert('while the ranking keeps it, so the coach and the tab rank alike',
+  /constraintsProfileFull/.test(medabrainSrc));
 
 // ─────────────────────────────────────────────────────────────────────────────
 section('10. The yearly-plan hooks are real, not a comment');

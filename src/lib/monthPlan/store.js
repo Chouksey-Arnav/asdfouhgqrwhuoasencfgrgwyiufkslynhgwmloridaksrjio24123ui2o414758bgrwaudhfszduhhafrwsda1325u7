@@ -24,28 +24,38 @@
 import { listItems, createItem, updateItem } from '../dataApi';
 import { invalidateStudentIntel } from '../studentIntel/store';
 import { currentWeekKey } from '../studentIntel/checkins';
-import { RECOMMENDATION_STATUS } from './model.js';
-import { feedbackRowFor } from './adapt.js';
+
+// The row itself is built by a pure function in adapt.js so a verify script can
+// assert its shape without a database. See feedbackRowForAction() there for why
+// the month plan writes through the opportunity layer's format rather than
+// beside it.
+import { feedbackRowForAction } from './adapt.js';
 
 /**
- * Mirror one action state into recommendation_feedback.
+ * Mirror one month-plan action state into `recommendation_feedback`.
  *
- * Upserts on `item_ref`: a student who marks something "too expensive" and then
- * "completed" a month later should have ONE row saying completed, not two rows
- * that disagree. The lookup is a list-and-match rather than a server-side
- * upsert because api/data/[resource].js is a generic CRUD layer with no
- * conflict target — the same pattern every other singleton-ish write in this
- * app uses.
+ * ── Append, never update ────────────────────────────────────────────────────
+ * This used to upsert on `item_ref`, on the reasoning that one item should have
+ * one current verdict. That is wrong, and the opportunity layer is why: its
+ * ranker decays a refusal over a school year and re-introduces the item as a
+ * CHANGED recommendation (see SUPPRESSION_HALF_LIFE_DAYS in
+ * src/lib/opportunity/feedback.js), which needs the timestamp of the refusal
+ * itself. Overwriting the row moves that timestamp forward every time the
+ * student touches the item and quietly resets the decay. "I said no in October
+ * and yes in March" is a fact about a student, and both halves are kept.
+ *
+ * ── One writer, one format ──────────────────────────────────────────────────
+ * For anything linked to an opportunity the row is built by the opportunity
+ * layer's own feedbackRowFor(), so the ref and the note encoding match what the
+ * Opportunities tab writes exactly. Everything else (an activity to reduce, a
+ * college to research) has no record in that layer, so it writes the same shape
+ * by hand against its own ref.
  */
 export async function recordActionFeedback(action, status, note = '') {
-  const row = feedbackRowFor(action, status, note, RECOMMENDATION_STATUS);
+  const row = feedbackRowForAction(action, status, note);
   if (!row) return null;
   try {
-    const existing = await listItems('recommendation_feedback').catch(() => []);
-    const match = (existing || []).find((r) => r.item_ref && r.item_ref === row.item_ref);
-    const saved = match
-      ? await updateItem('recommendation_feedback', match.id, { status: row.status, note: row.note, item_label: row.item_label })
-      : await createItem('recommendation_feedback', row);
+    const saved = await createItem('recommendation_feedback', row);
     // The tutoring surfaces cache their intel slice; a refusal recorded here
     // has to reach the next chat send rather than the next page load.
     invalidateStudentIntel();

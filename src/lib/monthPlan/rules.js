@@ -28,9 +28,15 @@
 //   • Test prep is directed outward: we set the target and the next action,
 //     we do not pretend to tutor.
 // ─────────────────────────────────────────────────────────────────────────────
-import { shiftDays, daysBetween } from '../timeline.js';
+import { daysBetween } from '../timeline.js';
 import { LEADERSHIP_LADDER } from './signals.js';
 import { CYCLE_WEEKS } from './model.js';
+// The opportunity layer already knows how to answer an objection with a
+// different program — free instead of expensive, online instead of far, open
+// entry instead of elite — over the SAME ranked pool the plan was built from.
+// Re-deriving that here would give a student two different "instead of this,
+// try that" answers depending on which tab they said no in.
+import { replacementFor } from '../opportunity/ranking.js';
 
 /** Effort, in hours, as a small vocabulary the UI can render as a chip. */
 /**
@@ -53,6 +59,32 @@ export const EFFORT = {
 
 let seq = 0;
 const mkId = (ruleId, key = '') => `${ruleId}${key ? `-${String(key).slice(0, 24)}` : ''}-${(seq += 1).toString(36)}`;
+
+/**
+ * The linkage an opportunity action carries.
+ *
+ * `ref` is deliberately the opportunity layer's OWN reference format
+ * (`opportunity:<id>` — see refFor() in src/lib/opportunity/feedback.js) rather
+ * than a month-plan-local one. That single decision is what makes a decision
+ * recorded on a roadmap card and a decision recorded on an Opportunities card
+ * the same fact about the same program: they index the same row, they suppress
+ * each other, and the ranker's decay applies to both.
+ */
+export const opportunityLink = (o) => ({
+  kind: 'opportunity',
+  ref: o.ref || `opportunity:${o.id}`,
+  label: o.name,
+  // Carried so a refusal recorded here teaches the ranker the same lesson the
+  // identical refusal on an Opportunities card would. See feedbackRowForAction.
+  category: o.category || null,
+  url: o.url || null,
+  // The card is required to render this — see src/lib/opportunity/schema.js.
+  dataState: o.dataState?.id || 'verified',
+  reliability: o.reliability || null,
+  verified: o.verifiedAt || null,
+  free: !!o.free,
+  remote: o.remote === true,
+});
 
 /** Reset the id counter so a fixture-driven test gets stable-shaped ids. */
 export function resetActionIds() { seq = 0; }
@@ -481,39 +513,64 @@ const RULES = [
     build: (s) => s.opportunities.actNow.slice(0, 3).map((o) => action({
       ruleId: 'opportunity-act', key: o.id, domain: 'opportunity',
       title: `Apply: ${o.name}`,
-      reason: `${o.deadline?.label || 'The deadline is close'} — ${o.deadline?.daysOut} day${o.deadline?.daysOut === 1 ? '' : 's'} out, and you are eligible.`,
-      whyThisMatters: o.why || 'A real, dated opportunity you can act on inside this cycle.',
-      dueDate: o.deadline?.iso || null,
+      reason: `${o.deadline?.daysOut} day${o.deadline?.daysOut === 1 ? '' : 's'} out, you are eligible, and it matched you at ${o.match}%.`,
+      whyThisMatters: [o.topReason, o.why].filter(Boolean).join(' ') || 'A real, dated opportunity you can act on inside this cycle.',
+      // Only ever a date the opportunity layer says we may stand behind — see
+      // `datable` in readOpportunities(). An unverified lead reaches the plan
+      // through opportunity-verify below, with no date at all.
+      dueDate: o.datable ? o.deadline.iso : null,
       dueLabel: o.deadline?.label || 'Check the official page',
       origin: 'catalog',
-      // 'exact' only where the catalog itself says the published date is exact.
-      // Everything else renders as a window with the confirm-it-yourself line.
+      // 'exact' only where the catalog itself publishes an exact day. Everything
+      // else renders as a window with the confirm-it-yourself line attached.
       precision: o.deadline?.precision === 'exact' ? 'exact' : 'typical',
       effort: o.selectivity === 'elite' ? 'deep' : 'medium',
       priority: (o.deadline?.daysOut ?? 99) <= 14 ? 'critical' : 'high',
       weight: 90 - (o.deadline?.daysOut ?? 30) / 2,
       definitionOfDone: 'Submitted — or you have read the real requirements and decided against it, which is also a finished decision.',
       evidenceToLog: 'What you submitted and when. If it places or is accepted, that is an award and a competition entry.',
-      link: { kind: 'opportunity', ref: `program:${o.id}`, label: o.name, url: o.url, verified: o.verifiedLabel },
+      link: opportunityLink(o),
       metabrain: `Talk me through ${o.name}. What does a strong application actually look like, and is it realistic for me with ${o.deadline?.daysOut} days left?`,
     })),
   },
   {
     id: 'opportunity-prepare', domain: 'opportunity', weight: 74,
-    build: (s) => s.opportunities.prepareNow.slice(0, 2).map((o) => action({
+    build: (s) => s.opportunities.prepareNow.filter((o) => o.stance === 'prepare').slice(0, 2).map((o) => action({
       ruleId: 'opportunity-prepare', key: o.id, domain: 'opportunity',
       title: `Start preparing for ${o.name}`,
-      reason: `The deadline is ${o.deadline?.daysOut} days out, which sounds far away and is not — the work that makes this competitive starts now.`,
-      whyThisMatters: `${o.why || ''} Students lose these on preparation time, not on ability. Starting in the cycle before the deadline is the whole difference.`,
-      dueDate: o.deadline?.iso || null,
+      reason: o.deadline?.daysOut != null
+        ? `The deadline is about ${o.deadline.daysOut} days out, which sounds far away and is not — the work that makes this competitive starts now.`
+        : 'No fixed date yet, but the work that makes this competitive starts long before one appears.',
+      whyThisMatters: `${[o.topReason, o.why].filter(Boolean).join(' ')} Students lose these on preparation time, not on ability. Starting in the cycle before the deadline is the whole difference.`,
+      dueDate: o.datable ? o.deadline.iso : null,
       dueLabel: o.deadline?.label || 'Check the official page',
       origin: 'catalog',
       precision: o.deadline?.precision === 'exact' ? 'exact' : 'typical',
       effort: 'medium', priority: 'standard', weight: 74,
       definitionOfDone: 'You have read the actual requirements, know what you would submit, and have done the first piece of it.',
       evidenceToLog: 'Drafts, project notes, or whoever agreed to write for you.',
-      link: { kind: 'opportunity', ref: `program:${o.id}`, label: o.name, url: o.url, verified: o.verifiedLabel },
-      metabrain: `${o.name} closes in about ${o.deadline?.daysOut} days. What should I have done by the end of this month to be genuinely competitive?`,
+      link: opportunityLink(o),
+      metabrain: `${o.name} closes ${o.deadline?.label ? `around ${o.deadline.label.toLowerCase()}` : 'at some point'}. What should I have done by the end of this month to be genuinely competitive?`,
+    })),
+  },
+  {
+    // ── An unverified lead is a verification task, never a commitment ────────
+    // Records the discovery pass found (supabase/migrations/0028) are real-
+    // looking and unchecked. The month plan's whole promise is that a dated
+    // action traces to a date somebody stood behind, so the only honest thing to
+    // put on a plan for one of these is the check itself — which is exactly what
+    // planTasksFor() in src/lib/opportunity/insights.js does for the master plan.
+    id: 'opportunity-verify', domain: 'opportunity', weight: 66,
+    build: (s) => s.opportunities.prepareNow.filter((o) => o.stance === 'verify').slice(0, 2).map((o) => action({
+      ruleId: 'opportunity-verify', key: o.id, domain: 'opportunity',
+      title: `Check whether ${o.name} is real and open to you`,
+      reason: 'Medabrain found this for you and nobody has verified it. It is a lead, not a fact.',
+      whyThisMatters: 'A lead that turns out to be real is worth more than a catalog entry, because almost nobody else is looking at it. A lead that turns out to be stale costs you an afternoon — which is why the check comes before the work, and why this has no deadline on it.',
+      dueLabel: 'This month', origin: 'cycle', effort: 'quick', priority: 'standard', weight: 66,
+      definitionOfDone: 'You found the organization\'s own page and can say whether it is currently running, when it closes, what it costs, and whether you are eligible.',
+      evidenceToLog: 'The official link and the real deadline, so it stops being a lead.',
+      link: opportunityLink(o),
+      metabrain: `Medabrain suggested ${o.name}${o.org ? ` at ${o.org}` : ''} but it is unverified. Help me work out how to check it is real and current before I spend time on it.`,
     })),
   },
 
@@ -708,15 +765,33 @@ export function buildCandidates(signals) {
   return out.sort((a, b) => b.weight - a.weight);
 }
 
-/** True when the student has already told us not to offer this. */
+/**
+ * True when the student has already told us not to offer this.
+ *
+ * Two sources, and the order matters. For anything linked to an opportunity the
+ * authority is the opportunity layer's own index (indexFeedback in
+ * src/lib/opportunity/feedback.js), which decays a refusal over a school year
+ * rather than banning a program forever — so a "too difficult" from ninth grade
+ * does not still be hiding it in eleventh. Everything else falls back to the
+ * flat read of recommendation_feedback, because a refusal of a non-opportunity
+ * action ("reduce this activity") has no ranked pool to decay against.
+ */
 export function isSuppressed(a, signals) {
+  const ref = a.link?.ref || null;
+  const entry = ref ? signals?.opportunities?.feedback?.byRef?.[ref] : null;
+  if (entry?.hide || (entry && SUPPRESSING_FEEDBACK.has(entry.status) && entry.weight >= 0.35)) return true;
   const refs = signals?.feedback?.suppressedRefs;
-  if (refs && a.link?.ref && refs.has(a.link.ref)) return true;
+  if (refs && ref && refs.has(ref)) return true;
   // A declined title is matched loosely too: the same program can arrive from
   // the catalog under a slightly different label than the one they declined.
   const labels = signals?.feedback?.suppressedLabels || [];
   return labels.some((l) => l.label && a.title && normalize(l.label) === normalize(a.title));
 }
+
+/** Mirrors SUPPRESS_STATUSES in src/lib/opportunity/feedback.js and studentIntel/context.js. */
+const SUPPRESSING_FEEDBACK = new Set([
+  'declined', 'not_interested', 'too_difficult', 'too_expensive', 'too_far_away', 'no_longer_eligible',
+]);
 
 const normalize = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
@@ -728,10 +803,20 @@ const normalize = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' 
 export function applyPreferences(a, signals) {
   let weight = a.weight;
   const f = signals?.feedback || {};
-  if (f.tooExpensive && a.link?.kind === 'opportunity' && a.link.free === false) weight -= 25;
-  if (f.tooFar && a.link?.kind === 'opportunity' && a.link.remote === false) weight -= 15;
-  if (f.tooDifficult && a.priority === 'critical') weight -= 5;
-  if (signals?.constraints?.cost && a.link?.kind === 'opportunity' && a.link.free === false) weight -= 10;
+  // The generalized lessons the opportunity layer keeps: a student who refused
+  // three expensive programs has told us something about MONEY, not about those
+  // three programs, and this is where that reaches the month plan. Each lesson
+  // is 0..1 and already decayed. See indexFeedback() in opportunity/feedback.js.
+  const lessons = signals?.opportunities?.feedback?.lessons || {};
+  const opp = a.link?.kind === 'opportunity';
+  if (opp && !a.link.free) weight -= 25 * (lessons.cost || 0);
+  if (opp && !a.link.remote) weight -= 15 * (lessons.distance || 0);
+  if (a.effortHours >= 6) weight -= 12 * (lessons.time || 0);
+  if (a.priority === 'critical') weight -= 5 * (lessons.difficulty || 0);
+  // The flat read, for the cases the ranked pool cannot speak to.
+  if (f.tooExpensive && opp && a.link.free === false) weight -= 10;
+  if (f.tooFar && opp && a.link.remote === false) weight -= 8;
+  if (signals?.constraints?.cost && opp && a.link.free === false) weight -= 10;
   return { ...a, weight };
 }
 
@@ -802,8 +887,46 @@ export function scheduleCandidates(candidates, signals, { maxActions = 9 } = {})
 // moment to show them a spinner.
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * The opportunity layer's answer to an objection, as a month-plan action.
+ *
+ * Returns null when the layer has nothing to offer, and the caller then falls
+ * back to its own generic advice — which is the honest order: a real, ranked,
+ * eligible alternative beats "go and look for a cheaper one" every time.
+ */
+function replacementAction(a, signals, actionId, { ruleId, titlePrefix }) {
+  const ranked = signals?.opportunities?.ranked;
+  if (!ranked || a.link?.kind !== 'opportunity') return null;
+  const declined = [...(ranked.matches || []), ...(ranked.stretch || []), ...(ranked.nextCycle || [])]
+    .find((m) => `opportunity:${m.id}` === a.link.ref) || null;
+  const pick = replacementFor(declined, actionId, ranked, signals.opportunities.ctx);
+  if (!pick?.record?.name) return null;
+
+  const shaped = (signals.opportunities.actNow || [])
+    .concat(signals.opportunities.prepareNow || [], signals.opportunities.monitor || [])
+    .find((o) => o.id === pick.id) || null;
+  const datable = !!shaped?.datable;
+  return action({
+    ruleId, key: pick.id, domain: 'opportunity',
+    title: `${titlePrefix}: ${pick.record.name}`,
+    reason: pick.replacementReason || 'Ranked against the same profile, without the thing that ruled the last one out.',
+    whyThisMatters: `${pick.reasons?.[0]?.text || ''} You told us what did not work about the last one, and this is the answer to that rather than the next name on a list.`,
+    dueDate: datable ? shaped.deadline.iso : null,
+    dueLabel: shaped?.deadline?.label || 'Check the official page',
+    origin: datable ? 'catalog' : 'cycle',
+    precision: shaped?.deadline?.precision === 'exact' ? 'exact' : (datable ? 'typical' : 'flexible'),
+    effort: 'medium', priority: 'standard', weight: 70,
+    definitionOfDone: 'Applied, or read properly and decided against.',
+    evidenceToLog: 'What you submitted and when.',
+    link: shaped ? opportunityLink(shaped) : { kind: 'opportunity', ref: `opportunity:${pick.id}`, label: pick.record.name, url: pick.record.url || null },
+    metabrain: `Tell me about ${pick.record.name} — I passed on ${a.link.label || 'the last one'} and this came up instead.`,
+  });
+}
+
 /** A smaller, closer version of the same idea — the answer to "too difficult". */
 export function steppingStoneFor(a, signals) {
+  const swap = replacementAction(a, signals, 'too_difficult', { ruleId: 'stepping-stone', titlePrefix: 'Open entry instead' });
+  if (swap) return swap;
   const base = {
     ruleId: 'stepping-stone', domain: a.domain,
     title: `A smaller first step toward: ${a.title.replace(/^(Apply|Finish|Start):?\s*/i, '')}`,
@@ -828,22 +951,25 @@ export function steppingStoneFor(a, signals) {
 
 /** Free and funded only — the answer to "too expensive". */
 export function fundedAlternativeFor(a, signals) {
+  const swap = replacementAction(a, signals, 'too_expensive', { ruleId: 'funded-alternative', titlePrefix: 'Free instead' });
+  if (swap) return swap;
   const free = (signals?.opportunities?.actNow || [])
     .concat(signals?.opportunities?.prepareNow || [])
-    .find((o) => o.free && `program:${o.id}` !== a.link?.ref);
+    .find((o) => o.free && o.ref !== a.link?.ref);
   if (free) {
     return action({
       ruleId: 'funded-alternative', key: free.id, domain: 'opportunity',
       title: `Free alternative: ${free.name}`,
       reason: `You said cost was the blocker on ${a.link?.label || 'the last one'}. ${free.costLabel || 'This one costs you nothing'}.`,
       whyThisMatters: 'Cost is a real constraint and it is not a reflection on ambition. Some of the strongest programs on this list are free, funded, or pay a stipend.',
-      dueDate: free.deadline?.iso || null,
+      dueDate: free.datable ? free.deadline.iso : null,
       dueLabel: free.deadline?.label || 'Check the official page',
-      origin: 'catalog', precision: free.deadline?.precision === 'exact' ? 'exact' : 'typical',
+      origin: free.datable ? 'catalog' : 'cycle',
+      precision: free.deadline?.precision === 'exact' ? 'exact' : (free.datable ? 'typical' : 'flexible'),
       effort: 'medium', priority: 'standard', weight: 70,
       definitionOfDone: 'Applied, or read properly and decided against.',
       evidenceToLog: 'What you submitted and when.',
-      link: { kind: 'opportunity', ref: `program:${free.id}`, label: free.name, url: free.url, verified: free.verifiedLabel },
+      link: opportunityLink(free),
       metabrain: `Cost rules out ${a.link?.label || 'that program'}. Talk me through ${free.name} and any fee waivers or funded options I should know about.`,
     });
   }
@@ -862,22 +988,25 @@ export function fundedAlternativeFor(a, signals) {
 
 /** Local or online only — the answer to "too far away". */
 export function localAlternativeFor(a, signals) {
+  const swap = replacementAction(a, signals, 'too_far_away', { ruleId: 'local-alternative', titlePrefix: 'No travel needed' });
+  if (swap) return swap;
   const remote = (signals?.opportunities?.actNow || [])
     .concat(signals?.opportunities?.prepareNow || [])
-    .find((o) => o.remote && `program:${o.id}` !== a.link?.ref);
+    .find((o) => o.remote && o.ref !== a.link?.ref);
   if (remote) {
     return action({
       ruleId: 'local-alternative', key: remote.id, domain: 'opportunity',
       title: `Does not need travel: ${remote.name}`,
       reason: `You said distance ruled out ${a.link?.label || 'the last one'}. This one runs remotely.`,
       whyThisMatters: 'Travel and transport are real constraints, and plenty of genuinely strong programs are remote, local-chapter based, or run entirely online.',
-      dueDate: remote.deadline?.iso || null,
+      dueDate: remote.datable ? remote.deadline.iso : null,
       dueLabel: remote.deadline?.label || 'Check the official page',
-      origin: 'catalog', precision: remote.deadline?.precision === 'exact' ? 'exact' : 'typical',
+      origin: remote.datable ? 'catalog' : 'cycle',
+      precision: remote.deadline?.precision === 'exact' ? 'exact' : (remote.datable ? 'typical' : 'flexible'),
       effort: 'medium', priority: 'standard', weight: 68,
       definitionOfDone: 'Applied, or read properly and decided against.',
       evidenceToLog: 'What you submitted and when.',
-      link: { kind: 'opportunity', ref: `program:${remote.id}`, label: remote.name, url: remote.url, verified: remote.verifiedLabel },
+      link: opportunityLink(remote),
       metabrain: `I cannot travel for ${a.link?.label || 'that program'}. Tell me about ${remote.name} and other things I can do from where I am.`,
     });
   }

@@ -34,9 +34,17 @@ import { activityCountGuidance, SERVICE_HOUR_BENCHMARKS, FRAME_NOTE } from '../s
 import { SUPPRESS_STATUSES, currentInterests } from '../studentIntel/context.js';
 import { isCheckinDue, isAcademicUpdateDue } from '../studentIntel/checkins.js';
 import { PROGRAMS } from '../../data/opportunityPrograms.js';
-import {
-  studentEligibilityFacts, evaluateEligibility, nextDeadline, verifiedLabel, isFreeOrFunded, costLabel,
-} from '../opportunityEligibility.js';
+import { OPPORTUNITIES } from '../../data/opportunities.js';
+// The opportunity-intelligence layer (src/lib/opportunity/). The month plan reads
+// opportunities through it rather than through the raw catalogs, so the plan, the
+// Opportunities tab, the dashboard card and Medabrain all rank the same records the
+// same way against the same student — and so the month plan inherits its honesty
+// model for free: data states, decaying suppression, and a closed cycle that can
+// never be presented as open.
+import { buildRecordPool } from '../opportunity/adapt.js';
+import { buildOpportunityContext } from '../opportunity/context.js';
+import { rankOpportunities } from '../opportunity/ranking.js';
+import { reliabilityLine } from '../opportunity/schema.js';
 import { SCHOOL_DATA } from '../../data/constants.js';
 
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : null);
@@ -428,79 +436,178 @@ export function readTesting(testScores = [], { gradeNumber = null, colleges = nu
 // ── Opportunities ────────────────────────────────────────────────────────────
 
 /**
- * The opportunity picture, read ONLY from the existing opportunity system
- * (src/data/opportunityPrograms.js through src/lib/opportunityEligibility.js).
+ * The opportunity picture, read ENTIRELY through the opportunity-intelligence
+ * layer (src/lib/opportunity/).
  *
- * Four buckets, because "there is a deadline" is not advice:
- *   act now      — open, eligible, and the deadline is inside this cycle or the
- *                  preparation window has already started.
- *   prepare now  — eligible, deadline further out, but the work that makes the
+ * The month plan does not rank, date, or judge an opportunity itself. It asks
+ * the same `rankOpportunities()` the Opportunities tab, the dashboard card and
+ * Medabrain ask, over the same pool, with the same student context — so a
+ * program the tab calls a stretch is a stretch here too, a refusal recorded on a
+ * card there suppresses it here, and nothing this plan says about a program can
+ * contradict what the student is looking at one tab over.
+ *
+ * What this function does is re-bucket that ranking into the four STANCES a
+ * month plan needs, which are about what to do in the next four weeks rather
+ * than about fit:
+ *
+ *   act now      — matched, and the deadline lands inside this cycle (or the
+ *                  ranker flagged it urgent).
+ *   prepare now  — matched or a stretch, due later, but the work that makes the
  *                  application good starts in this cycle.
- *   monitor      — rolling or locally-set dates: nothing to do but watch.
+ *   monitor      — no reliable date: rolling, locally set, or timing unclear.
+ *                  Nothing to do but keep it in view.
  *   next cycle   — this year's window has passed. Shown as CLOSED, with the
- *                  month the next one opens. Never presented as open.
+ *                  month the next one is expected. Never presented as open.
  *
- * The last bucket is the one that earns this function: an expired deadline
- * rendered as an opportunity is the single most damaging thing this product
- * could show a student, so `passedThisCycle` from nextDeadline() is honored
- * exactly and a program whose window has gone is never in the first two lists.
+ * ── The two honesty rules this function is responsible for ──────────────────
+ * 1. A CLOSED CYCLE IS NEVER IN THE FIRST TWO BUCKETS. `rankOpportunities`
+ *    already separates them; this only has to not undo it.
+ * 2. AN UNVERIFIED RECORD IS NEVER TREATED AS A DATED COMMITMENT. Every record
+ *    carries its `dataState`, and `datable` is false for anything AI-discovered
+ *    — which is what stops rules.js building an action with a real due date out
+ *    of a deadline nobody has checked. See the opportunity-verify rule.
  */
-export function readOpportunities({ user = null, gradeNumber = null, suppressedRefs = new Set(), today = new Date(), limit = 14 } = {}) {
-  const facts = studentEligibilityFacts({ user, grade: gradeNumber });
-  const rows = [];
-  for (const program of PROGRAMS) {
-    const verdict = evaluateEligibility(program, facts);
-    const deadline = nextDeadline(program, today);
-    const ref = `program:${program.id}`;
-    const shaped = {
-      ref,
-      id: program.id,
-      name: program.name,
-      org: program.org || null,
-      tier: program.tier,
-      type: program.type,
-      url: program.url || null,
-      verified: program.verified || null,
-      verifiedLabel: verifiedLabel(program, today),
-      selectivity: program.selectivity || null,
-      remote: !!program.remote,
-      location: program.location || null,
-      free: isFreeOrFunded(program),
-      costLabel: costLabel(program),
-      why: program.why || null,
-      eligibility: program.eligibility || null,
-      altUnder: program.altUnder || null,
-      verdict,
-      eligible: verdict?.status === 'eligible' || verdict?.status === 'likely',
-      deadline,
-      suppressed: suppressedRefs.has(ref),
+export function readOpportunities({
+  user = null, snapshot = null, pathwayKey = null, intel = null,
+  colleges = [], roadmap = null, deadlines = [], today = new Date(), limit = 14,
+} = {}) {
+  const ctx = buildOpportunityContext({
+    user, snapshot, pathwayKey, intel, colleges, roadmap, deadlines, today,
+  });
+  const records = buildRecordPool({
+    opportunities: OPPORTUNITIES,
+    programs: PROGRAMS,
+    // The student's own discovery inbox, when the snapshot carried it. Every row
+    // here is unverified by construction (supabase/migrations/0028), which is
+    // exactly what `datable` below refuses to date.
+    discovered: Array.isArray(snapshot?.discoveredOpportunities) ? snapshot.discoveredOpportunities : [],
+  });
+  const ranked = rankOpportunities({ records, ctx });
+
+  const todayKey = dayKey(today);
+
+  /**
+   * The date a card may show for one record, and how much to believe it.
+   *
+   * Two sources, in order: the record's own dated deadline when it is still
+   * ahead of us, then the next expected cycle computed from the month the
+   * catalog recorded (expectedNextCycle in src/lib/opportunity/schema.js — the
+   * same arithmetic opportunityEligibility.nextDeadline does, so the two can
+   * never disagree about which fortnight a program falls in).
+   *
+   * `datable` is the gate rules.js reads before it is allowed to build a dated
+   * action: an AI-discovered lead and a record missing its essentials never get
+   * a due date, whatever month they happen to name.
+   */
+  const timingOf = (r, ds) => {
+    const cycle = ds?.nextCycle || null;
+    const own = r.deadlineIso && daysBetween(todayKey, r.deadlineIso) >= 0 ? r.deadlineIso : null;
+    const iso = own || cycle?.iso || null;
+    const precision = own ? (r.deadlinePrecision || 'exact') : (cycle?.precision || null);
+    const trustworthy = ds?.id !== 'ai_discovered' && ds?.id !== 'incomplete';
+    return {
+      iso: trustworthy ? iso : null,
+      precision,
+      daysOut: trustworthy && iso ? daysBetween(todayKey, iso) : null,
+      rolledToNextYear: !own && !!cycle?.rolledToNextYear,
+      datable: !!(trustworthy && iso),
+      monthLabel: cycle?.monthLabel || null,
     };
-    rows.push(shaped);
-  }
-
-  const open = rows.filter((r) => !r.suppressed && r.eligible);
-  const actNow = open.filter((r) => r.deadline?.daysOut != null && r.deadline.daysOut >= 0 && r.deadline.daysOut <= 35 && !r.deadline.passedThisCycle);
-  const prepareNow = open.filter((r) => r.deadline?.daysOut != null && r.deadline.daysOut > 35 && r.deadline.daysOut <= 120 && !r.deadline.passedThisCycle);
-  const monitor = open.filter((r) => r.deadline && (r.deadline.precision === 'rolling' || r.deadline.precision === 'varies' || r.deadline.daysOut == null));
-  const nextCycle = rows.filter((r) => !r.suppressed && r.deadline?.passedThisCycle);
-
-  const rank = (a, b) => {
-    const t = (x) => (x.tier === 'admissions_moving' ? 0 : x.tier === 'hidden_gem' ? 1 : 2);
-    const d = t(a) - t(b);
-    if (d !== 0) return d;
-    return (a.deadline?.daysOut ?? 9999) - (b.deadline?.daysOut ?? 9999);
   };
 
+  const shape = (scored, stance, instruction) => {
+    const r = scored.record;
+    const ds = scored.dataState;
+    const cycle = ds?.nextCycle || null;
+    const t = timingOf(r, ds);
+    const datable = t.datable;
+    const daysOut = t.daysOut;
+    return {
+      ref: `opportunity:${r.id}`,
+      id: r.id,
+      name: r.name,
+      org: r.org,
+      url: r.url,
+      category: r.category,
+      tier: r.tier,
+      why: r.description || null,
+      eligibility: r.eligibility || null,
+      selectivity: r.selectivity,
+      remote: /virtual|hybrid/i.test(String(r.format || '')) || null,
+      free: scored.flags.includes('free'),
+      costLabel: r.costText || (r.costUsd === 0 ? 'Free' : null),
+      match: scored.match,
+      topReason: scored.reasons?.[0]?.text || null,
+      flags: scored.flags,
+      // The data state travels with every row and every card is required to
+      // render it — the rule src/lib/opportunity/schema.js exists to enforce.
+      dataState: { id: ds?.id || 'verified', label: ds?.label || 'Verified', detail: ds?.detail || '' },
+      reliability: reliabilityLine(r, today),
+      verifiedAt: r.verifiedAt || null,
+      datable,
+      stance,
+      instruction,
+      blockers: scored.eligibility?.blockers || [],
+      altUnder: scored.eligibility?.alternative || null,
+      deadline: {
+        iso: t.iso,
+        // Short enough for a card. The catalog's own prose — which is often a
+        // paragraph — travels as `note` instead, where the card can show it
+        // under the date rather than as the date.
+        label: t.monthLabel
+          ? (stance === 'closed'
+            ? `Next cycle expected around ${t.monthLabel}`
+            : `${t.precision === 'exact' ? '' : 'Around '}${t.monthLabel}${t.rolledToNextYear ? ' next year' : ''}`)
+          : (r.deadlinePrecision === 'rolling' ? 'No deadline — apply any time' : 'No deadline listed'),
+        precision: t.precision,
+        daysOut,
+        note: r.deadlineText || r.recurrence?.note || null,
+        passedThisCycle: stance === 'closed',
+      },
+    };
+  };
+
+  const ACT = 'Open, and close enough that this cycle is the one. Read the requirements this week.';
+  const PREPARE = 'Open, but not yet due. The preparation is what happens this month, not the submission.';
+  const MONITOR = 'No fixed date, or one set locally. Nothing to do but keep it in view and check the official page.';
+  const CLOSED = 'CLOSED for this cycle. Note when it comes round again and be early next time.';
+  const VERIFY = 'A lead Medabrain found, not a checked fact. Confirm it is real and open to you before you build around it.';
+
+  const matches = ranked.matches || [];
+  const actNow = [];
+  const prepareNow = [];
+  const monitor = [];
+
+  for (const m of matches) {
+    if (m.dataState?.id === 'ai_discovered') { prepareNow.push(shape(m, 'verify', VERIFY)); continue; }
+    const days = timingOf(m.record, m.dataState).daysOut;
+    if (days != null && days >= 0 && (days <= 35 || m.flags.includes('very_urgent') || m.flags.includes('urgent'))) {
+      actNow.push(shape(m, 'act', ACT));
+    } else if (days != null && days > 35) {
+      prepareNow.push(shape(m, 'prepare', PREPARE));
+    } else {
+      monitor.push(shape(m, 'monitor', MONITOR));
+    }
+  }
+  for (const m of (ranked.stretch || [])) prepareNow.push(shape(m, 'prepare', PREPARE));
+
   return {
-    all: rows,
-    actNow: actNow.sort(rank).slice(0, limit),
-    prepareNow: prepareNow.sort(rank).slice(0, limit),
-    monitor: monitor.sort(rank).slice(0, Math.min(6, limit)),
-    nextCycle: nextCycle.sort(rank).slice(0, 6),
-    // Everything blocked by age/citizenship, kept so the UI can say what to do
-    // INSTEAD rather than silently hiding the program.
-    blocked: rows.filter((r) => !r.eligible && r.verdict?.status && r.verdict.status !== 'unknown').slice(0, 6),
-    facts,
+    ranked,
+    ctx,
+    all: matches,
+    actNow: actNow.slice(0, limit),
+    prepareNow: prepareNow.slice(0, limit),
+    monitor: monitor.slice(0, 6),
+    nextCycle: (ranked.nextCycle || []).map((m) => shape(m, 'closed', CLOSED)).slice(0, 6),
+    // Everything gated by age, citizenship or grade, kept so the UI can say what
+    // to do INSTEAD rather than silently hiding the program.
+    blocked: (ranked.blocked || []).map((m) => shape(m, 'blocked', m.eligibility?.summary || 'Not open to you yet.')).slice(0, 6),
+    needsVerification: matches.filter((m) => m.dataState?.id === 'ai_discovered').length,
+    capacity: ranked.capacity,
+    // The decayed, generalized feedback index. rules.js consults it so a refusal
+    // recorded on an Opportunities card also stops the month plan re-offering
+    // the same KIND of thing, not just the same row.
+    feedback: ctx.feedback,
   };
 }
 
@@ -580,12 +687,36 @@ export function buildMonthSignals({ user = null, snapshot = null, roadmap = null
     .filter((f) => SUPPRESS_STATUSES.has(f.status))
     .map((f) => ({ label: f.item_label, status: f.status, note: f.note || null, ref: f.item_ref || null }));
 
-  const opportunities = readOpportunities({ user, gradeNumber, suppressedRefs, today: now });
   const deadlines = readDeadlines({
     deadlines: list('deadlines'),
     colleges: colleges.all,
     scholarships: list('scholarships'),
     today,
+  });
+
+  // Ranked through the opportunity-intelligence layer, with exactly the inputs
+  // App.jsx and the Portfolio coach give it — so all three surfaces rank the
+  // same records the same way for the same student. `constraintsProfile` is
+  // handed over whole here (not stripped) because ranking BY DISTANCE is the
+  // consented purpose of the location on that row, and nothing the month plan
+  // renders or sends prints it.
+  const opportunities = readOpportunities({
+    user,
+    snapshot: raw,
+    pathwayKey: user?.specialty || user?.pathway || null,
+    colleges: list('colleges'),
+    roadmap,
+    deadlines: list('deadlines'),
+    intel: {
+      schoolContext,
+      constraints: constraintsRow,
+      interestHistory: list('interestHistory'),
+      serviceLogs: list('serviceLogs'),
+      competitions: list('competitions'),
+      recommendationFeedback: feedbackRows,
+      checkins: list('checkins'),
+    },
+    today: now,
   });
 
   const checkins = list('checkins');

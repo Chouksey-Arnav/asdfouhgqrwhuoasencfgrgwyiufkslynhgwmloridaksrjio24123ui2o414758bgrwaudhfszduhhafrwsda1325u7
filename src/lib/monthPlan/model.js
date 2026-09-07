@@ -98,6 +98,34 @@ export const RECOMMENDATION_STATUS = {
   needs_help: 'needs_help',
 };
 
+/**
+ * month-plan state → the opportunity layer's action id.
+ *
+ * The join between two vocabularies that describe the same student decision.
+ * The month plan's states are about a PLANNED ACTION ("I paused this task");
+ * OPPORTUNITY_ACTIONS in src/lib/opportunity/feedback.js are about an
+ * OPPORTUNITY ("I paused this program"). Where a month-plan action is linked to
+ * an opportunity these are the same event, and this table is the single place
+ * that says so — so a decision made on a roadmap card lands in
+ * recommendation_feedback in exactly the format the opportunity ranker reads
+ * back, including its note encoding and its decay.
+ *
+ * scripts/verifyMonthPlan.mjs asserts every value here is a real action id and
+ * that every suppressing month-plan state maps to a suppressing one.
+ */
+export const MONTH_ACTION_TO_OPPORTUNITY_ACTION = {
+  in_progress: 'applying',
+  complete: 'completed',
+  paused: 'paused',
+  declined: 'declined',
+  not_interested: 'not_interested',
+  too_difficult: 'too_difficult',
+  too_expensive: 'too_expensive',
+  too_far_away: 'too_far_away',
+  no_longer_eligible: 'no_longer_eligible',
+  needs_help: 'needs_help',
+};
+
 /** The domains an action can belong to. Order is the order they rank in a tie. */
 export const ACTION_DOMAINS = [
   'academics', 'testing', 'application', 'opportunity', 'activity',

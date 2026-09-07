@@ -23,9 +23,25 @@ import { linkableUrl } from '../../../lib/roadmap/model';
 const STANCE_META = {
   act: { label: 'Act now', color: C.rose, blurb: 'Open, and close enough that this cycle is the one.' },
   prepare: { label: 'Prepare now', color: C.amber, blurb: 'Open, not yet due — the preparation is what happens this month.' },
+  verify: { label: 'Check it first', color: C.violet, blurb: 'A lead Medabrain found. Nobody has checked it, so the check comes before the work.' },
   monitor: { label: 'Monitor', color: C.sky, blurb: 'No fixed date, or one set locally. Keep it in view.' },
   closed: { label: 'Closed this cycle', color: C.t3, blurb: 'This year\'s window has passed. Be early next time.' },
   blocked: { label: 'Not open to you yet', color: C.violet, blurb: 'Eligibility rules this one out for now — here is what to do instead.' },
+};
+
+// ── How much to believe what this card says ──────────────────────────────────
+// Every record that reaches a card carries a `dataState`, and the card is
+// REQUIRED to render it — the rule src/lib/opportunity/schema.js exists to make
+// structurally impossible to skip. A student must never have to guess whether a
+// sentence on their screen is something a human checked or something an AI
+// proposed.
+const DATA_STATE_META = {
+  verified: { label: 'Verified', color: C.green },
+  ai_discovered: { label: 'Unverified lead', color: C.violet },
+  stale: { label: 'Last checked a while ago', color: C.amber },
+  incomplete: { label: 'Details missing', color: C.amber },
+  upcoming_cycle: { label: 'Next cycle', color: C.sky },
+  archived: { label: 'Closed', color: C.t3 },
 };
 
 /**
@@ -39,9 +55,12 @@ const STANCE_META = {
 export function OpportunityPlan({ plan, accent = C.amber, isMobile, onAsk, onOpenDatabase }) {
   const [showClosed, setShowClosed] = useState(false);
   if (!plan) return null;
+  const prepare = (plan.prepareNow || []).filter((o) => o.stance !== 'verify');
+  const verify = (plan.prepareNow || []).filter((o) => o.stance === 'verify');
   const groups = [
     ['actNow', plan.actNow, 'act'],
-    ['prepareNow', plan.prepareNow, 'prepare'],
+    ['prepareNow', prepare, 'prepare'],
+    ['verify', verify, 'verify'],
     ['monitor', plan.monitor, 'monitor'],
   ].filter(([, rows]) => rows?.length);
 
@@ -49,6 +68,7 @@ export function OpportunityPlan({ plan, accent = C.amber, isMobile, onAsk, onOpe
 
   const Row = ({ o }) => {
     const meta = STANCE_META[o.stance] || STANCE_META.monitor;
+    const ds = DATA_STATE_META[o.dataState?.id] || null;
     const url = linkableUrl(o.url);
     const closed = o.stance === 'closed';
     return (
@@ -59,9 +79,11 @@ export function OpportunityPlan({ plan, accent = C.amber, isMobile, onAsk, onOpe
       }}>
         <div style={R({ gap: 8, flexWrap: 'wrap', marginBottom: 8 })}>
           <Chip label={meta.label} color={meta.color} strong={o.stance === 'act'} />
+          {ds && <Chip label={ds.label} color={ds.color} title={o.reliability || undefined} strong={o.dataState?.id === 'ai_discovered'} />}
           {o.free && <Chip label="Free or funded" color={C.green} />}
           {o.remote && <Chip label="Remote" color={C.cyan} />}
           {o.selectivity && <Chip label={o.selectivity} color={C.t3} />}
+          {Number.isFinite(o.match) && <Chip label={`${o.match}% fit`} color={C.t3} />}
         </div>
         <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1, lineHeight: 1.35 }}>{o.name}</div>
         {o.org && <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4 }}>{o.org}</div>}
@@ -75,6 +97,14 @@ export function OpportunityPlan({ plan, accent = C.amber, isMobile, onAsk, onOpe
         </div>
         {o.deadline?.note && (
           <div style={{ fontSize: 11, color: C.t4, marginTop: 4, lineHeight: 1.5 }}>{o.deadline.note}</div>
+        )}
+        {o.reliability && (
+          <div style={{ fontSize: 11, color: o.dataState?.id === 'ai_discovered' ? accentText(C.violet) : C.t4, marginTop: 8, lineHeight: 1.5 }}>
+            {o.reliability}
+          </div>
+        )}
+        {o.blockers?.length > 0 && (
+          <div style={{ fontSize: 11.5, color: C.amber, marginTop: 8, lineHeight: 1.5 }}>{o.blockers[0]}</div>
         )}
         {o.why && <div style={{ fontSize: 12, color: C.t2, marginTop: 8, lineHeight: 1.55 }}>{o.why}</div>}
         <div style={{ fontSize: 11.5, color: accentText(meta.color), marginTop: 8, lineHeight: 1.5 }}>{o.instruction}</div>
@@ -93,9 +123,7 @@ export function OpportunityPlan({ plan, accent = C.amber, isMobile, onAsk, onOpe
             </a>
           )}
         </div>
-        {o.verifiedLabel && (
-          <div style={{ fontSize: 10.5, color: C.t4, marginTop: 8, fontFamily: C.FM }}>Last checked {o.verifiedLabel}.</div>
-        )}
+
       </div>
     );
   };

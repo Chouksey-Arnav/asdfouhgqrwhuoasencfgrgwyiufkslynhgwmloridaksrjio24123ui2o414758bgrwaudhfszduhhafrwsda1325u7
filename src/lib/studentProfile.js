@@ -380,18 +380,6 @@ export function buildCoachSystemPrompt({
   // job is to reason over the list, not to invent it.
   timelineSummary = null,
   roadmapSummary = null,
-  // Their current four-week plan (src/lib/monthPlan/). This specialist is where
-  // "what should I do next" lands, and that is the exact question the month plan
-  // has already answered with a ranked, dated, definition-of-done list. Without
-  // it the coach and the plan would give the same student two different weeks.
-  monthPlanSummary = null,
-  // ── ONE item, when the student arrived from a specific card ────────────────
-  // Built by src/lib/monthPlan/context.js and carried here by the focus bus
-  // (src/lib/medabrainFocus.js). Deliberately a SMALL pre-rendered block about
-  // one thing rather than more of their history: the panel already carries the
-  // whole portfolio digest above, and a student pressing "Ask Medabrain" on one
-  // card is asking about one card.
-  focusBlock = '',
   // The pathway pace goal the student set for themselves (describePace() in lib/paceGoal.js)
   // and how they've been rating lesson difficulty (summarizeLessonFeedback() in
   // lib/lessonFeedback.js). The head coach needs both for the same reason the Prep specialist
@@ -590,6 +578,24 @@ export function buildPortfolioSystemPrompt({
   // See buildCoachSystemPrompt's `studentIntel` — same digest, rendered here with taskType
   // 'roadmap' (this specialist is exactly where opportunity/service/roadmap questions land).
   studentIntel = null,
+  // The ranked opportunity shortlist, pre-rendered by opportunityIntelBlock()
+  // (src/lib/opportunity/insights.js). Pre-rendered rather than passed as rows for the same
+  // reason timelineSummary and roadmapSummary are: this prompt hands the model prose it can
+  // quote, never a table it has to interpret — and the prose is the same sentences the student
+  // is looking at in the Opportunities tab, so the two can never disagree.
+  opportunityBlock = '',
+  // Their current four-week plan (src/lib/monthPlan/). This specialist is where
+  // "what should I do next" lands, and that is the exact question the month plan
+  // has already answered with a ranked, dated, definition-of-done list. Without
+  // it the coach and the plan would give the same student two different weeks.
+  monthPlanSummary = null,
+  // ── ONE item, when the student arrived from a specific card ────────────────
+  // Built by src/lib/monthPlan/context.js and carried here by the focus bus
+  // (src/lib/medabrainFocus.js). Deliberately a SMALL pre-rendered block about
+  // one thing rather than more of their history: this prompt already carries the
+  // whole portfolio digest and the ranked opportunity shortlist above, and a
+  // student pressing "Ask Medabrain" on one card is asking about one card.
+  focusBlock = '',
 } = {}) {
   const base = `You are Medabrain, the Portfolio Intelligence specialist inside MedSchoolPrep — the same coaching mind as the app's head Medabrain coach, specialized on ${user?.name || 'this student'}'s undergraduate application: their college list, essays, deadlines, financial aid/scholarships, activities & resume, research, skills/certifications, clinical hours, recommenders, test scores, awards, and GPA. You go deeper here than the head coach can because you're handed the student's full tracked data below, not just summary counts.
 
@@ -758,10 +764,11 @@ You are the one reader who will tell them the truth about this application befor
 
   return base + buildPersonalBriefBlock(user) + dataBlock + timelineBlock + roadmapBlock + monthBlock
     + (studentIntel ? buildStudentIntelBlock(studentIntel, 'roadmap') : '')
+    + (opportunityBlock || '')
     // The focus block goes LAST of the grounding sections, immediately before the
     // rules, because it is what the student is actually looking at — recency in a
     // prompt is emphasis, and the one thing they asked about should not be buried
-    // above six paragraphs of tracker.
+    // above six paragraphs of tracker and a ranked shortlist.
     + (focusBlock ? String(focusBlock).slice(0, 3000) : '')
     + KNOWLEDGE_POLICY + HONEST_MENTOR_STANCE + MEDICAL_SCOPE_BOUNDARY + rules + (safetyBlock || '');
 }

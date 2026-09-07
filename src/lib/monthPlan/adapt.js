@@ -28,6 +28,14 @@ import {
   setActionState, noteAdaptation, allActions, backlogActions, weekIndexFor,
 } from './model.js';
 import { steppingStoneFor, fundedAlternativeFor, localAlternativeFor, followOnFor } from './rules.js';
+// The opportunity layer owns the write format for recommendation_feedback: the
+// ref (`opportunity:<id>`), the note encoding that carries the exact button
+// pressed, and the append-only rule its decay model depends on. The month plan
+// writes THROUGH it rather than beside it — two writers with two formats would
+// mean a refusal recorded on a roadmap card and one recorded on an opportunity
+// card were two different facts about the same program.
+import { feedbackRowFor as opportunityFeedbackRow, ACTION_BY_ID, ACTION_TO_STATUS } from '../opportunity/feedback.js';
+import { MONTH_ACTION_TO_OPPORTUNITY_ACTION } from './model.js';
 import { dayKey } from '../timeline.js';
 
 /** Human wording for what the plan did, shown in the toast and in the history strip. */
@@ -146,28 +154,6 @@ export function pickReplacement(plan, refused, preferSameDomain = false) {
 }
 
 /**
- * The `recommendation_feedback` row a state change should write, or null when
- * it should write none.
- *
- * Returned as data rather than written here so this module stays pure — the
- * store (src/lib/monthPlan/store.js) does the network write. The row shape is
- * exactly the one migration 0026 defines, and `item_ref` prefers the linked
- * catalog reference over the action id so that a decision about a PROGRAM
- * suppresses that program everywhere, not just on this month's card.
- */
-export function feedbackRowFor(action, status, note = '', statusMap = null) {
-  const map = statusMap || {};
-  const mapped = map[status];
-  if (!mapped) return null;
-  return {
-    item_label: String(action.title || '').slice(0, 200),
-    item_ref: action.link?.ref || `month-action:${action.source}`,
-    status: mapped,
-    note: note ? String(note).slice(0, 400) : null,
-  };
-}
-
-/**
  * Re-rank an existing plan against fresh signals without rebuilding it.
  *
  * This is what a weekly check-in triggers: the student's own words have just
@@ -210,3 +196,40 @@ const dayDiff = (from, to) => {
   const b = new Date(`${to}T00:00:00`);
   return Math.round((b - a) / 86400000);
 };
+
+/**
+ * The row for one action state, in the opportunity layer's format.
+ *
+ * Exported and pure so scripts/verifyMonthPlan.mjs can assert that both
+ * features write rows the other can read back.
+ */
+export function feedbackRowForAction(action, status, note = '') {
+  const opportunityAction = MONTH_ACTION_TO_OPPORTUNITY_ACTION[status];
+  if (!opportunityAction || !ACTION_BY_ID[opportunityAction]) return null;
+
+  // Opportunity-linked: hand it to the layer that owns the format.
+  if (action?.link?.kind === 'opportunity' && action.link.ref) {
+    const id = String(action.link.ref).replace(/^opportunity:/, '');
+    const built = opportunityFeedbackRow(
+      { id, name: action.link.label || action.title },
+      opportunityAction,
+      // The category is what the layer's "lessons" generalize over (a student who
+      // declines three research programs has told us about research, not about
+      // three programs), so it is passed explicitly exactly as recordAction()
+      // does — omitting it would make a month-plan refusal teach less than the
+      // identical refusal made one tab over.
+      { note, category: action.link.category || null },
+    );
+    if (built) return built;
+  }
+
+  // Everything else, in the same shape so one reader can decode both.
+  return {
+    item_label: String(action?.title || '').slice(0, 200),
+    item_ref: action?.link?.ref || `month-action:${action?.source || 'unknown'}`,
+      status: ACTION_TO_STATUS[opportunityAction] || 'in_progress',
+    note: [`action:${opportunityAction}`, `domain:${action?.domain || 'portfolio'}`, String(note || '').trim().slice(0, 400)]
+      .filter(Boolean).join(' | '),
+    source: 'student_entered',
+  };
+}

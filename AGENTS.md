@@ -51,12 +51,22 @@ The application operates in a monorepo supporting two deployment models:
 - This is enforced, not advised: `FORBIDDEN_CLAIM_PATTERNS`/`scrubClaims()` in `src/lib/monthPlan/model.js` strip any offending sentence before render, and `npm run verify:month-plan` greps every generated string.
 - Two further invariants hold there: every action traces to a named rule (`source: 'rule:<id>'`), and no closed opportunity is ever presented as open.
 
-### 7. Earned Streak Engine
+### 7. One Opportunity System, Two Readers
+The month plan does **not** rank, date or judge an opportunity itself. It reads
+`src/lib/opportunity/` — the same `buildOpportunityContext` → `rankOpportunities`
+call the Opportunities tab, the Home card and Medabrain make — and re-buckets the
+result into four-week stances. Three rules follow, all asserted by
+`npm run verify:month-plan`:
+- **One reference format.** Opportunity-linked rows use `opportunity:<id>` (`refFor()` in `src/lib/opportunity/feedback.js`). A month-plan ref of any other shape breaks suppression across the app.
+- **Append, never update.** `recommendation_feedback` rows are append-only: the ranker decays a refusal over a school year and needs the original timestamp. Overwriting a row silently resets that decay.
+- **An unverified lead is never a dated commitment.** A record whose `dataState` is `ai_discovered` reaches the plan as a *verification* action with no due date, never as an application with one.
+
+### 8. Earned Streak Engine
 - A streak represents **completed work** (credits), NOT app opens (`src/lib/streak.js`).
 - Default goal is 4 credits (cleared by 1 verified pathway lesson or 2 quizzes).
 - Guarded by `npm run verify:streak`.
 
-### 8. COPPA & Legal Compliance Invariants
+### 9. COPPA & Legal Compliance Invariants
 - Minimum user age is **13** (`src/lib/ageGate.js`). Failed age checks immediately purge the account (`AgeBlockedStep.jsx`).
 - AdSense tag ordering: `tagForChildDirectedTreatment` is set *before* loading AdSense script in `index.html`.
 - YouTube embeds use `youtube-nocookie.com` across all lesson modules.

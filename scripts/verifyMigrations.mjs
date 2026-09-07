@@ -109,6 +109,22 @@ const EXPECTED_TABLES = [
   // supabase/migrations/0019_health_pathway_portfolio.sql.
   'reflection_entries',
   'research_experience', 'reward_claims',
+  // ── The durable student-intelligence layer (0026_student_intelligence.sql) ──────────────────
+  // Everything Medabrain needs to know about a student that the tables above have no home for:
+  // what school looks like for them, what they can and cannot say yes to, what they have told us
+  // in their own words, how their direction has moved, what service they have logged, what they
+  // have entered, and — the one no other table records — every recommendation they have refused.
+  'activity_role_history', 'checkins', 'competitions', 'constraints_profile',
+  'interest_history', 'quick_notes', 'recommendation_feedback', 'school_context', 'service_logs',
+  // One counter per account, bumped by an AFTER trigger on every per-user table a client reads
+  // back (0027_live_sync_version.sql). It is the signal a second device polls to learn that the
+  // first one wrote something — see src/lib/liveSync.js.
+  'user_data_version',
+  // The opportunity discovery inbox (0028_opportunity_intelligence.sql): one row per program
+  // Medabrain proposed for this student that nobody has verified yet. Per-user rather than a
+  // shared catalog precisely because it is unverified — an unverified record in a shared catalog
+  // is a rumor with a distribution channel. See src/lib/opportunity/store.js.
+  'discovered_opportunities',
   'roadmap_revisions', 'roadmaps',
   // The internal safety review queue — one row per Medabrain safety detection,
   // carrying who/when/how severe and no conversation content whatsoever. Its own

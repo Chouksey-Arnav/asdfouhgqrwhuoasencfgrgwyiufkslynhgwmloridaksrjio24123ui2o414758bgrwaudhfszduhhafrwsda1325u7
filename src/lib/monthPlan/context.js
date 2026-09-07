@@ -97,7 +97,15 @@ export function contextForOpportunity(entry, { today = dayKey() } = {}) {
     `THE OPPORTUNITY THEY ARE ASKING ABOUT: ${entry.name}${entry.org ? ` (${entry.org})` : ''}.`,
     entry.why ? `Why our catalog rates it: ${trunc(entry.why, 300)}` : null,
     dateLine,
-    entry.verifiedLabel ? `Our catalog last checked the official page: ${entry.verifiedLabel}.` : null,
+    // How much anyone has actually checked this. The opportunity layer computes
+    // it (dataStateFor in src/lib/opportunity/schema.js) and every surface that
+    // renders the record is required to say it — including this one, because a
+    // coach that describes an unverified lead as a fact is the exact failure the
+    // data-state model exists to prevent.
+    entry.reliability ? `How much we know about it: ${entry.reliability}` : null,
+    entry.dataState?.id === 'ai_discovered'
+      ? 'This record is an UNVERIFIED LEAD Medabrain proposed. Describe it as a lead, never as a fact, and tell them to confirm it on the organization\'s own page before spending time on it.'
+      : null,
     entry.costLabel ? `Cost: ${entry.costLabel}.` : null,
     entry.remote === true ? 'It can be done remotely.' : entry.remote === false ? 'It requires being there in person.' : null,
     entry.selectivity ? `Selectivity: ${entry.selectivity}.` : null,
@@ -107,7 +115,7 @@ export function contextForOpportunity(entry, { today = dayKey() } = {}) {
 
   return {
     kind: 'opportunity',
-    ref: entry.ref || `program:${entry.id}`,
+    ref: entry.ref || `opportunity:${entry.id}`,
     label: entry.name,
     question: `Tell me whether ${entry.name} is worth going for, given my record — and what a strong application to it actually looks like.`,
     block: `\n\n── The opportunity they are looking at ──\n${bits.join('\n')}\nAnswer about THIS program. Never state a deadline more confidently than the line above does, and never say a closed program is open.`,
