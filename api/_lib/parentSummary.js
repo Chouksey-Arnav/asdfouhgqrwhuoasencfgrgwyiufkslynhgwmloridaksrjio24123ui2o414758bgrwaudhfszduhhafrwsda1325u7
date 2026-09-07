@@ -125,7 +125,17 @@ export function buildParentSummary({ student, snapshot, sourceUpdatedAt = null, 
   const user = snap.user && typeof snap.user === 'object' ? snap.user : {};
 
   const lessons = Array.isArray(snap.lessons) ? snap.lessons : [];
-  const verified = lessons.filter(l => l?.verified).length;
+  // `everVerified`, deliberately, NOT the live `verified` flag.
+  //
+  // A lesson can move back to needs-review when a spaced re-check doesn't hold
+  // (see src/lib/verificationSchedule.js). That is a private signal between the
+  // student and the app: it routes the material back into their card queue and
+  // nothing else. Counting the live flag here would make that number go DOWN in
+  // a parent's dashboard, which surfaces a missed check as a visible regression —
+  // exactly the thing a student must never have to explain at dinner, and
+  // exactly the kind of thing that gets a study app closed for good. Work the
+  // student demonstrably did stays counted as done.
+  const verified = lessons.filter(l => l?.verified || l?.everVerified).length;
   const studyDays = Array.isArray(snap.studyDays) ? snap.studyDays : [];
   const calendar = activityCalendar(studyDays, 56, now);
   const activeLast7 = calendar.slice(-7).filter(d => d.active).length;

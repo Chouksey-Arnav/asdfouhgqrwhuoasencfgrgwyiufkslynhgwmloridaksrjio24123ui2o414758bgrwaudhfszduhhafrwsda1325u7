@@ -217,6 +217,10 @@ export default function RoadmapTab({
   // Defaults keep this component usable on its own — in a test, or if a caller
   // forgets — rather than rendering a tab with no way to move around it.
   subnavItems = ROADMAP_SUBNAV, hrefFor = null, lockedItem = null,
+  // Local learning state for the month plan's maintenance rules — the lesson
+  // index (for titles) and the pooled flashcard library. Both optional; without
+  // them the plan carries no learning items. See src/lib/learningSignal.js.
+  lessonIndex = null, allCards = null,
 }) {
   const roadmap = user?.roadmap || null;
   const [building, setBuilding] = useState(false);
@@ -551,6 +555,8 @@ export default function RoadmapTab({
             goActivities={() => onNavigate?.('portfolio', 'resume')}
             goAcademics={() => onNavigate?.('portfolio', 'resume')}
             goYear={() => onViewChange?.('overview')}
+            lessonIndex={lessonIndex}
+            allCards={allCards}
           />
           </React.Suspense>
         </div>

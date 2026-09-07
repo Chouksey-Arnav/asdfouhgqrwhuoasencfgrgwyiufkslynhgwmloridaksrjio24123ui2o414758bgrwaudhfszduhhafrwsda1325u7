@@ -639,6 +639,60 @@ export function readDeadlines({ deadlines = [], colleges = [], scholarships = []
   };
 }
 
+// ── Learning maintenance ─────────────────────────────────────────────────────
+
+/**
+ * What the student's own coursework knowledge needs this month.
+ *
+ * ── Why this is a signal and not just a Prep-tab detail ─────────────────────
+ * Every other reader in this file is about the application. This one is about
+ * whether the student still knows the material they were credited for, and it
+ * belongs on the month plan for a blunt reason: the plan is the free-plan "what
+ * do I do next", and a student who opens it after two weeks away has exactly one
+ * question. If the honest answer that day is "twenty-four flashcards, and that
+ * is the whole thing", the plan is the place that has to say it — otherwise they
+ * find out by opening the Flashcards tab and meeting a four-hundred-card wall,
+ * which is the single best-documented way this kind of feature loses a teenager.
+ *
+ * ── Why it arrives as an argument ───────────────────────────────────────────
+ * Unlike everything else here, this data is local-only by design (Dexie
+ * `verifications`, the missed-concept log, the FSRS card state). A missed quiz
+ * attempt is the most privacy-sensitive thing this app records — see the
+ * "Adults never see this" note in lib/quizRecovery.js — so it is never uploaded
+ * to the snapshot the rest of these readers draw on. The caller assembles it and
+ * hands it in; with nothing passed this reads as "nothing due", which is the
+ * correct behavior on the server-side and heuristic paths.
+ */
+export function readLearning(learning = null, { now = new Date() } = {}) {
+  const l = learning && typeof learning === 'object' ? learning : {};
+  const arr = (v) => (Array.isArray(v) ? v : []);
+  const cards = l.cards && typeof l.cards === 'object' ? l.cards : {};
+
+  const dueRechecks = arr(l.dueRechecks).filter((r) => r && r.lessonId);
+  const needsReview = arr(l.needsReview).filter((r) => r && r.lessonId);
+
+  return {
+    hasData: !!learning,
+    dueRechecks,
+    // One at a time, deliberately: a returning student handed a list of six
+    // maintenance checks reads it as a backlog and does none of them. Same
+    // reasoning as the daily card cap.
+    nextRecheck: dueRechecks[0] || null,
+    needsReview,
+    needsReviewCount: needsReview.length,
+    cards: {
+      due: Number(cards.due) || 0,
+      // What today's session actually is once the cap and the interleave have
+      // been applied — the number the student will be shown, not the raw debt.
+      sessionSize: Number(cards.sessionSize) || 0,
+      deferred: Number(cards.deferred) || 0,
+      backlog: !!cards.backlog,
+      daysAway: Number(cards.daysAway) || 0,
+    },
+    now: dayKey(now),
+  };
+}
+
 // ── The whole picture ────────────────────────────────────────────────────────
 
 /**
@@ -648,9 +702,10 @@ export function readDeadlines({ deadlines = [], colleges = [], scholarships = []
  *   user      — the local user record
  *   snapshot  — buildPortfolioSnapshot()'s output, or any subset of it
  *   roadmap   — the twelve-month roadmap, if built
+ *   learning  — local-only learning-maintenance state; see readLearning
  *   now       — injectable clock, so the verify script can pin one
  */
-export function buildMonthSignals({ user = null, snapshot = null, roadmap = null, now = new Date() } = {}) {
+export function buildMonthSignals({ user = null, snapshot = null, roadmap = null, learning = null, now = new Date() } = {}) {
   // A snapshot key can arrive as null (a fetch still in flight), as a string, or
   // as anything else a partial load left behind, so every reader below guards its
   // own inputs and every list read goes through `list()`. One `.map` on a
@@ -841,6 +896,7 @@ export function buildMonthSignals({ user = null, snapshot = null, roadmap = null
     wellbeing,
     portfolio,
     feedback,
+    learning: readLearning(learning, { now }),
     checkin: checkinState,
     roadmap: roadmap
       ? { hasRoadmap: true, seasonLabel: roadmap.seasons?.[0]?.label || null, itemCount: (roadmap.items || []).length }

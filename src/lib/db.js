@@ -293,6 +293,27 @@ db.version(18).stores({
   boosts: '++id, kind, expiresAt',
 });
 
+// v19: spaced re-verification (`verifications`) and diagnostic history
+// (`diagnosticRuns`).
+//
+// `verifications` is what turns a green shield from "passed a quiz once, ever"
+// into a claim with a maintenance schedule behind it — one row per verified
+// lesson carrying when it was verified, which re-check stage it has reached,
+// and whether it has slipped back to needs-review. It is deliberately separate
+// from the `lessons` row: `lessons.verified` is read by unlock gating in a
+// dozen places and must keep meaning exactly what it did, while the schedule is
+// new state with its own lifecycle. See lib/verificationSchedule.js.
+//
+// `diagnosticRuns` keeps EVERY diagnostic result rather than only the latest.
+// A student's interests at fourteen and at seventeen genuinely differ, and the
+// old single `user.diagnosticResult` field overwrote the fourteen-year-old's
+// answer as though it had been a mistake. Four years of dated results is both
+// the reason to come back and, later, real material for an application essay.
+db.version(19).stores({
+  verifications:  'lessonId, verifiedAt, needsReview',
+  diagnosticRuns: '++id, takenAt',
+});
+
 // ── User ─────────────────────────────────────────────────────────────────────
 export async function getUser() {
   return db.user.toCollection().first();
@@ -314,6 +335,12 @@ export async function getPathway() {
   return Object.fromEntries(rows.map(r => [r.lessonId, {
     completedAt: r.completedAt || null, verified: !!r.verified, quizScore: r.quizScore ?? null,
     studying: !!r.studying, studyStartedAt: r.studyStartedAt || null,
+    // `everVerified` is what unlock gating reads, so a lesson that slipped back
+    // to needs-review after a spaced re-check doesn't relock the units the
+    // student has already worked past. `verified` stays strictly honest.
+    everVerified: !!r.everVerified || !!r.verified,
+    needsReview: !!r.needsReview,
+    lastVerifiedAt: r.lastVerifiedAt || r.completedAt || null,
   }]));
 }
 export async function setLessonDone(lessonId) {
@@ -331,13 +358,73 @@ export async function startLessonStudy(lessonId) {
 // Called when a student passes a lesson's curated verification quiz — this is the only path
 // that sets `verified: true`, which is what unit-unlock gating and the Progress tab's Verified
 // Progress view actually check.
-export async function verifyLesson(lessonId, quizScore) {
-  await db.lessons.put({ lessonId, completedAt: Date.now(), verified: true, quizScore, studying: false });
+export async function verifyLesson(lessonId, quizScore, { threshold = null, tier = 'foundation' } = {}) {
+  const now = Date.now();
+  await db.lessons.put({
+    lessonId, completedAt: now, verified: true, quizScore, studying: false,
+    everVerified: true, needsReview: false, lastVerifiedAt: now,
+  });
+  // Passing (re)starts the maintenance schedule from zero — including for a
+  // lesson coming back from needs-review, which has just been re-earned.
+  await db.verifications.put({
+    lessonId, verifiedAt: now, stage: 0, threshold, tier,
+    lastCheckAt: null, lastCheckHeld: null, needsReview: false, reviewConcepts: [],
+  });
   pushDirty();
 }
 export async function resetPathway() {
   await db.lessons.clear();
+  await db.verifications.clear();
   pushDirty();
+}
+
+// ── Spaced re-verification ───────────────────────────────────────────────────
+// See lib/verificationSchedule.js for the schedule itself and why it exists.
+export async function getVerifications() {
+  return db.verifications.toArray();
+}
+export async function getVerification(lessonId) {
+  return db.verifications.get(lessonId);
+}
+export async function putVerification(row) {
+  if (!row?.lessonId) return;
+  await db.verifications.put(row);
+  pushDirty();
+}
+/**
+ * Move a lesson back to needs-review after a re-check didn't hold.
+ *
+ * `verified` on the lessons row goes false — that is the whole point, since a
+ * shield that survives a failed check is a shield that means nothing. But
+ * `everVerified` is stamped alongside it so unlock gating can keep the student
+ * where they already are: the credential gets honest without relocking three
+ * units of work they already did. Quiet by design: no event is logged, nothing
+ * is announced, and nothing here reaches a parent-facing surface.
+ */
+export async function markLessonNeedsReview(lessonId) {
+  const existing = await db.lessons.get(lessonId);
+  if (!existing) return;
+  await db.lessons.put({
+    ...existing,
+    verified: false,
+    everVerified: true,
+    needsReview: true,
+    lastVerifiedAt: existing.lastVerifiedAt || existing.completedAt || null,
+  });
+  pushDirty();
+}
+
+// ── Diagnostic history ───────────────────────────────────────────────────────
+export async function addDiagnosticRun(run) {
+  const id = await db.diagnosticRuns.add({ ...run, takenAt: run?.takenAt || Date.now() });
+  logStudyEvent('pathway_diagnostic_completed', run?.top || null).catch(() => {});
+  pushDirty();
+  return id;
+}
+/** Every result the student has ever produced, oldest first. */
+export async function getDiagnosticRuns() {
+  const rows = await db.diagnosticRuns.toArray();
+  return rows.sort((a, b) => (a.takenAt || 0) - (b.takenAt || 0));
 }
 
 // ── Quiz Scores ───────────────────────────────────────────────────────────────
@@ -412,6 +499,16 @@ export async function getTotalCardReviews() {
 }
 export async function getCardReviewsSince(timestamp) {
   return db.cardReviews.where('reviewedAt').aboveOrEqual(timestamp).count();
+}
+/**
+ * When the last card review happened, or null. Used to detect a return from a
+ * break: after a gap, the queue is prioritized by importance and capped rather
+ * than dumping the whole backlog, which is the classic way a returning student
+ * meets 400 due cards and never opens the app again.
+ */
+export async function getLastCardReviewAt() {
+  const row = await db.cardReviews.orderBy('reviewedAt').last();
+  return row?.reviewedAt || null;
 }
 
 // ── Category Performance ───────────────────────────────────────────────────────
@@ -1103,8 +1200,12 @@ export async function buildSyncSnapshot() {
   return {
     v: SYNC_VERSION,
     user: user ? (({ id, ...rest }) => rest)(user) : null,
-    lessons: lessons.map(({ lessonId, completedAt, verified, quizScore, studying, studyStartedAt }) =>
-      ({ lessonId, completedAt: completedAt || null, verified: !!verified, quizScore: quizScore ?? null, studying: !!studying, studyStartedAt: studyStartedAt || null })),
+    // `everVerified` and `needsReview` ride along so the spaced re-verification
+    // state follows a student across devices — without them, signing in on a phone
+    // would resurrect a green shield the desktop had already retired, and unlock
+    // gating (which reads everVerified) would relock units on the new device.
+    lessons: lessons.map(({ lessonId, completedAt, verified, quizScore, studying, studyStartedAt, everVerified, needsReview, lastVerifiedAt }) =>
+      ({ lessonId, completedAt: completedAt || null, verified: !!verified, quizScore: quizScore ?? null, studying: !!studying, studyStartedAt: studyStartedAt || null, everVerified: !!everVerified || !!verified, needsReview: !!needsReview, lastVerifiedAt: lastVerifiedAt || null })),
     quizScores: quizScores.map(({ quizId, score, completedAt }) => ({ quizId, score, completedAt })),
     flashDecks,
     deckMeta: deckMetaRows.map(({ name, createdAt }) => ({ name, createdAt })),
@@ -1244,9 +1345,16 @@ export async function applyRemoteSnapshot(remote) {
     const bothCompleted = [l.completedAt, r.completedAt].filter(Boolean).sort((a, b) => a - b);
     const bothStarted = [l.studyStartedAt, r.studyStartedAt].filter(Boolean).sort((a, b) => a - b);
     const verified = !!(l.verified || r.verified);
+    // everVerified is a one-way latch: if either device ever saw this lesson
+    // verified, it was. needsReview only survives when NEITHER side is currently
+    // verified — a device that has since re-earned the lesson is the newer truth.
+    const everVerified = !!(l.everVerified || r.everVerified || verified);
     lessonMap.set(r.lessonId, {
       lessonId: r.lessonId,
       verified,
+      everVerified,
+      needsReview: verified ? false : !!(l.needsReview || r.needsReview),
+      lastVerifiedAt: Math.max(l.lastVerifiedAt || 0, r.lastVerifiedAt || 0) || null,
       quizScore: bothScores.length ? Math.max(...bothScores) : null,
       completedAt: bothCompleted[0] || null,
       studying: verified ? false : !!(l.studying || r.studying),

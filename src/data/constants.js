@@ -1,5 +1,6 @@
 // All non-quiz, non-elib constants
 import { FOUNDATION_UNITS } from './foundationUnits.js';
+import { PATHWAY_VOCAB_DECKS, PATHWAY_VOCAB_CATEGORIES } from './flashcards/vocabularyDecks.js';
 
 // ── LEARNING PATHS ────────────────────────────────────────────────────────────
 // Medicine & health-career study tracks for college-bound high schoolers.
@@ -897,7 +898,7 @@ export const CLASS_YEAR_ROADMAP = {
 };
 
 // ── FLASHCARD DECKS ───────────────────────────────────────────────────────────
-export const FLASH_DECKS = {
+const BUILTIN_FLASH_DECKS = {
   'Algebra II Essentials': [
     { front:'Quadratic formula?', back:'x = (-b ± √(b² - 4ac)) / 2a — solves ax² + bx + c = 0.' },
     { front:'What is the discriminant and what does it tell you?', back:'b² - 4ac. Positive → 2 real roots; zero → 1 real root; negative → 2 complex roots.' },
@@ -1788,6 +1789,13 @@ export const FLASH_DECKS = {
   ],
 };
 
+// The pathway vocabulary decks (medical roots/prefixes/suffixes, clinical
+// abbreviations, body systems) are listed FIRST on purpose. They are the only
+// content in this app a ninth grader can learn in a few weeks and then actually
+// demonstrate to somebody — see data/flashcards/vocabularyDecks.js — so they
+// should be the decks a student meets before scrolling.
+export const FLASH_DECKS = { ...PATHWAY_VOCAB_DECKS, ...BUILTIN_FLASH_DECKS };
+
 // ── FLASHCARD DECK CATEGORIES ────────────────────────────────────────────────────
 // Groups every built-in deck into a category + subcategory (Core Skills > Math,
 // Science > Biology, etc.) so the Flashcards tab can section decks off instead of
@@ -1844,6 +1852,7 @@ export const DECK_CATEGORIES = {
   'Personal Statements & "Why Medicine" Essays':  { category: 'Pathway & Admissions', subcategory: 'Application Portfolio' },
   'Letters of Recommendation & Interview Basics': { category: 'Pathway & Admissions', subcategory: 'Application Portfolio' },
   'Financial Aid & Scholarships for Pre-Health Students': { category: 'Pathway & Admissions', subcategory: 'Application Portfolio' },
+  ...PATHWAY_VOCAB_CATEGORIES,
 };
 // Display order for the category pill row — the sciences first, since that is what this product
 // actually teaches, then the broader subject areas, then Pathway & Admissions (choosing a health
