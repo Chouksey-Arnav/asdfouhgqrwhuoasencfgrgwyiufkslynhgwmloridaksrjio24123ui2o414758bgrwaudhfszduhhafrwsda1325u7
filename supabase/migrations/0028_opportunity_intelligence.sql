@@ -98,3 +98,43 @@ alter table recommendation_feedback add column if not exists action text;
 alter table recommendation_feedback add column if not exists item_category text;
 
 create index if not exists recommendation_feedback_user_created_idx on recommendation_feedback(user_id, created_at desc);
+
+-- ── 3. Wire the new table into the cross-device sync signal ────────────────────────────────────
+-- 0027_live_sync_version.sql attaches bump_user_data_version() to every public table carrying a
+-- `user_id`, DISCOVERED rather than listed, precisely so that "a table added later is covered by
+-- re-running this block instead of being silently missed". discovered_opportunities is such a
+-- table, and it is created after 0027 ran — so without this, a student who saved a discovered
+-- opportunity on their phone would have their laptop keep serving the list it loaded hours ago,
+-- for as long as that tab stayed open. src/lib/liveSync.js polls user_data_version and knows
+-- nothing about which tables feed it; the trigger IS the whole mechanism.
+--
+-- Re-running 0027's own block verbatim rather than attaching one trigger by hand: it drops and
+-- recreates per table, so it is idempotent, and it also picks up anything else that has appeared
+-- since. A hand-written single attach here would drift from the block that owns this concern.
+do $$
+declare
+  t record;
+begin
+  for t in
+    select c.relname
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    join pg_attribute a on a.attrelid = c.oid and a.attname = 'user_id' and a.attnum > 0 and not a.attisdropped
+    where n.nspname = 'public'
+      and c.relkind = 'r'
+      and c.relname not in (
+        'user_data_version', 'progress_sync', 'sessions', 'otp_codes',
+        'login_attempts', 'email_verifications', 'safety_events', 'parent_link_events'
+      )
+  loop
+    execute format(
+      'drop trigger if exists %I on public.%I',
+      't_bump_data_version_' || t.relname, t.relname
+    );
+    execute format(
+      'create trigger %I after insert or update or delete on public.%I
+         for each row execute function public.bump_user_data_version()',
+      't_bump_data_version_' || t.relname, t.relname
+    );
+  end loop;
+end $$;
