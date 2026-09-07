@@ -260,6 +260,9 @@ import TodayPlanNudge from './components/TodayPlanNudge';
 import PlansTab, { fetchPortfolio as fetchPlanPortfolio } from './components/PlansTab';
 import RoadmapTab from './components/roadmap/RoadmapTab';
 import RoadmapHomeCard from './components/roadmap/RoadmapHomeCard';
+// Lazy for the same payload reason the panel is (see RoadmapTab.jsx): the month
+// plan's model and UI vocabulary are not boot-path code.
+const MonthHomeCard = React.lazy(() => import('./components/roadmap/month/MonthHomeCard'));
 import PlanTaskStrip from './components/ui/PlanTaskStrip';
 // ── The student dashboard ────────────────────────────────────────────────────
 // Six modules, in a fixed order, rebuilt around the question a student actually
@@ -556,6 +559,9 @@ function portfolioSectionFromPath(pathname=''){
 // src/components/roadmap/RoadmapTab.jsx) and verifyRoadmap.mjs asserts the two agree, so the
 // component and the router can never drift apart.
 const ROADMAP_SUBNAV = [
+  // The four-week plan, first and default — see the header above ROADMAP_SUBNAV
+  // in src/components/roadmap/RoadmapTab.jsx for why it leads the pillar.
+  {id:'month',ic:CalendarRange,label:'This month',color:C.violet},
   {id:'overview',ic:Compass,label:'Overview',color:C.violet},
   {id:'year',ic:CalendarDays,label:'Your year',color:C.sky},
   // The payoff screen — see the header above ROADMAP_SUBNAV in
@@ -5255,7 +5261,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     scholarships: (portScholarships||[]).length,
     hasMedexScore: !!medexState?.score,
     hasRoadmap: !!user?.roadmap,
-  }),[portActivities.length,clinicalHoursTotal,upcomingDeadlines,appCounts.colleges,curPathDoneL,qTaken,achiev.size,streak,portScholarships,medexState,user?.roadmap]);
+    hasMonthPlan: !!user?.monthPlan,
+  }),[portActivities.length,clinicalHoursTotal,upcomingDeadlines,appCounts.colleges,curPathDoneL,qTaken,achiev.size,streak,portScholarships,medexState,user?.roadmap,user?.monthPlan]);
   const home=useMemo(()=>homeModules(homeSignals,user?.homeDensity||'auto',user?.homeEarnedModules||[]),
     [homeSignals,user?.homeDensity,user?.homeEarnedModules]);
   // Persist newly-earned modules so the ratchet survives a reload — a module that appeared
@@ -6687,6 +6694,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* The Roadmap's single most urgent twelve-month item — nearly always
             something whose preparation starts now for a date months away, which
             is the half of the question module 4's sixty-day window cannot see. */}
+        {/* The four-week plan — the answer to "what do I do next", built from
+            their own record. Sits above the twelve-month card because it is the
+            nearer horizon and the one a student acts on today. */}
+        {home.visible.has('monthPlanCard')&&unlocks.isOpen('roadmap')&&(
+          <React.Suspense fallback={null}>
+            <MonthHomeCard
+              plan={user.monthPlan||null} isMobile={isMobile}
+              onOpen={()=>goRoadmap('month')}
+              onStart={()=>goRoadmap('month')}
+            />
+          </React.Suspense>
+        )}
+
         {home.visible.has('roadmapCard')&&unlocks.isOpen('roadmap')&&(
           <RoadmapHomeCard
             user={user} isMobile={isMobile}
@@ -11106,6 +11126,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           // ROADMAP_GATES in src/lib/roadmap/readiness.js), so the tab needs the
           // generic jump rather than a fixed pair of callbacks.
           onNavigate={goAnywhere}
+        />
+        {/* The coach is mounted here too, not only in Portfolio.
+            Every roadmap action, opportunity and dashboard on the month plan
+            carries an "Ask Medabrain" button, and those dispatch a focus event
+            (src/lib/medabrainFocus.js) that only a mounted panel can hear — so
+            without this the buttons would open nothing at all. Tabs are
+            exclusive, so exactly one instance is ever alive. */}
+        <PortfolioMedabrain
+          user={user} pathwayLabel={curPath?.label||'college prep'}
+          gradeLabel={gradeLabel}
+          isMobile={isMobile}
+          recentActivitySummary={recentActivitySummary}
+          goDest={goDest}
         />
       </div>
     );

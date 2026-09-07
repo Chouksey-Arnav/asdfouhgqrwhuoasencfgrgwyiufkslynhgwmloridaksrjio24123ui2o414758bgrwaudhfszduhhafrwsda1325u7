@@ -92,11 +92,15 @@ export const SUBVIEWS = {
   // one a student abandons and never finds again.
   roadmap: {
     state: 'roadmapView',
-    default: 'overview',
+    // 'month' is the default view, not 'overview': the four-week plan is the
+    // free-plan experience and the only screen in this pillar that answers "what
+    // do I do next" without a thirteen-question intake first. The twelve-month
+    // views sit behind it, addressable as before.
+    default: 'month',
     // 'climb' is the projection view — what finishing the year is worth,
     // measured against the app's own application-strength score. Addressable
     // like the rest because it is the screen a student sends to a parent.
-    ids: ['overview', 'year', 'climb', 'seasons', 'list', 'intake'],
+    ids: ['month', 'overview', 'year', 'climb', 'seasons', 'list', 'intake'],
   },
   progress: {
     state: 'progressView',

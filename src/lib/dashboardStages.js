@@ -110,6 +110,23 @@ export const HOME_MODULES = [
     adds: 'Your MedEx Score, sealed weekly',
   },
   {
+    // The four-week plan's presence on Home. It sits directly above the
+    // twelve-month card because it answers the nearer question — "what do I do
+    // in the next four weeks" against "what has to start now for a deadline in
+    // three months" — and the two are deliberately separate cards for that
+    // reason.
+    //
+    // It is earnable rather than always-on, but the bar is the lowest on this
+    // ladder: anything at all in the portfolio is enough for the plan to say
+    // something true, because it is built from whatever exists rather than from
+    // a template. A student with a completely empty account sees the four
+    // always-on modules and this appears the moment they log anything.
+    id: 'monthPlanCard',
+    label: 'Your month plan',
+    earns: (s) => s.hasMonthPlan || s.hasRoadmap || s.activities >= 1 || s.colleges >= 1 || s.deadlines >= 1 || s.clinicalHours > 0,
+    adds: 'What to do over the next four weeks, ranked, with a definition of done on each',
+  },
+  {
     id: 'roadmapCard',
     label: 'The roadmap\'s most urgent item',
     earns: (s) => s.hasRoadmap,
@@ -205,6 +222,7 @@ function normalizeSignals(raw) {
     scholarships: n(s.scholarships),
     hasMedexScore: !!s.hasMedexScore,
     hasRoadmap: !!s.hasRoadmap,
+    hasMonthPlan: !!s.hasMonthPlan,
   };
 }
 
