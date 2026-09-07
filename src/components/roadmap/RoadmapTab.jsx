@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
-  Map as MapIcon, Sparkles, RefreshCw, CalendarDays, Compass, ListChecks, Target,
+  Map as MapIcon, Sparkles, RefreshCw, CalendarDays, CalendarRange, Compass, ListChecks, Target,
   AlertTriangle, ShieldQuestion, Lightbulb, Plus, Download,
   Layers, Scale, Quote, X, Info, CheckCircle2, TrendingUp, ArrowRight, Circle, Lock,
 } from 'lucide-react';
@@ -34,6 +34,15 @@ import RoadmapTimeline from './RoadmapTimeline';
 import RoadmapPath from './RoadmapPath';
 import RoadmapAscent from './RoadmapAscent';
 import { computeRoadmapReadiness, readinessContext } from '../../lib/roadmap/readiness';
+import { aiLane } from '../../lib/aiLane';
+
+// ── The month plan loads on demand ────────────────────────────────────────────
+// Its rule engine reads the whole structured opportunity catalog, which is a
+// large data module. Imported statically it lands in the boot payload for every
+// student on every page, including the ones who never open this tab — so the
+// panel is lazy and the generator is imported at the moment a build is asked
+// for. See scripts/verifyPayload.mjs, which fails the build over exactly this.
+const MonthPlanPanel = React.lazy(() => import('./month/MonthPlanPanel'));
 import { DegradedNotice, trackColor, fmtDate, URGENCY_META } from './roadmapUi';
 import { dayKey, daysBetween } from '../../lib/timeline';
 
@@ -84,6 +93,11 @@ const ACCENT = C.violet;
 // burying the payoff behind four reference screens is how a plan becomes a
 // chore list. See the header of RoadmapAscent.jsx.
 export const ROADMAP_SUBNAV = [
+  // 'month' is FIRST and is the default, because it is the only screen here that
+  // answers the question the median student arrives with — "it is Tuesday, what
+  // do I do?" — and because it is the one that needs no intake, no thirteen
+  // questions and no prior build. See src/components/roadmap/month/MonthPlanPanel.jsx.
+  { id: 'month', ic: CalendarRange, label: 'This month', color: C.violet },
   { id: 'overview', ic: Compass, label: 'Overview', color: C.violet },
   { id: 'year', ic: CalendarDays, label: 'Your year', color: C.sky },
   { id: 'climb', ic: TrendingUp, label: 'The climb', color: C.green },
@@ -263,6 +277,54 @@ export default function RoadmapTab({
     saveUser({ ...user, roadmap: next });
     RoadmapStore.scheduleRoadmapPush(next, reason);
   }, [saveUser, user]);
+
+  // ── The month plan ────────────────────────────────────────────────────────
+  // Deliberately independent of the twelve-month roadmap: it needs no intake, no
+  // readiness gate and no prior build, because it is the free-plan experience and
+  // the first screen this tab shows. It reads the SAME portfolio fetch the year
+  // build uses (usePortfolioFacts above), so opening this tab costs one fetch and
+  // the two artifacts can never describe two different students.
+  // The signals and the staleness read are computed INSIDE the panel, off the
+  // lazy chunk, for the payload reason above.
+  const monthPlan = user?.monthPlan || null;
+  const [buildingMonth, setBuildingMonth] = useState(false);
+  const [monthStage, setMonthStage] = useState('');
+
+  // Same save-through-user contract the roadmap uses above, and the same reason
+  // the whole record is spread first: saveUser REPLACES rather than merges.
+  const commitMonth = useCallback((next) => {
+    if (!next) return;
+    saveUser({ ...user, monthPlan: next });
+  }, [saveUser, user]);
+
+  const buildMonth = useCallback(async ({ refresh = false } = {}) => {
+    if (buildingMonth) return;
+    setBuildingMonth(true);
+    setMonthStage('Reading your whole record…');
+    try {
+      const { portfolio: fresh } = await ensureFacts();
+      const args = {
+        user,
+        snapshot: fresh,
+        roadmap,
+        // The same lane expression the year build uses — see the note beside the
+        // deepen effect above for why a missing lane is charged to a whole school.
+        lane: user?.id || user?.email || aiLane(),
+        onStage: setMonthStage,
+      };
+      const { createMonthPlan, refreshMonthPlan } = await import('../../lib/monthPlan/generator');
+      const { plan } = refresh && monthPlan
+        ? await refreshMonthPlan(monthPlan, args)
+        : await createMonthPlan(args);
+      commitMonth(plan);
+      toast.success(refresh ? 'Your next month is ready.' : 'Your month is ready.');
+    } catch (err) {
+      toast.error(err?.message?.slice(0, 120) || 'Could not build your month. Try again.');
+    } finally {
+      setBuildingMonth(false);
+      setMonthStage('');
+    }
+  }, [buildingMonth, ensureFacts, user, roadmap, monthPlan, commitMonth]);
 
   // Adopt a newer roadmap from another device on mount.
   useEffect(() => {
@@ -458,6 +520,43 @@ export default function RoadmapTab({
   }, [roadmap]);
 
   // ── Screens ────────────────────────────────────────────────────────────────
+
+  // ── "This month" ──────────────────────────────────────────────────────────
+  // Rendered BEFORE the readiness gate, the intake and the intro screen, all of
+  // which belong to the twelve-month roadmap. A student who has never answered a
+  // roadmap question still gets a real, personal month out of their portfolio —
+  // which is the whole point of it being the free-plan default.
+  if (view === 'month') {
+    return (
+      <div>
+        <SubNav items={subnavItems} active="month" onChange={onViewChange} accent={C.violet} m={isMobile}
+          tourPrefix="roadmap-sub" hrefFor={hrefFor} locked={lockedItem} />
+        <div style={{ marginTop: 16 }}>
+          <React.Suspense fallback={<div style={{ ...glass({ padding: 24, textAlign: 'center' }), color: C.t3, fontSize: 12.5 }}>Loading your month…</div>}>
+          <MonthPlanPanel
+            plan={monthPlan}
+            user={user}
+            portfolio={portfolio}
+            roadmap={roadmap}
+            accent={C.violet}
+            isMobile={isMobile}
+            building={buildingMonth}
+            buildStage={monthStage}
+            stale={monthStale}
+            onBuild={() => buildMonth({ refresh: false })}
+            onRefresh={() => buildMonth({ refresh: true })}
+            onCommit={commitMonth}
+            goPortfolio={goPortfolio}
+            goOpportunities={() => onNavigate?.('portfolio', 'opportunities')}
+            goActivities={() => onNavigate?.('portfolio', 'resume')}
+            goAcademics={() => onNavigate?.('portfolio', 'resume')}
+            goYear={() => onViewChange?.('overview')}
+          />
+          </React.Suspense>
+        </div>
+      </div>
+    );
+  }
 
   if (building) return <BuildingScreen stage={stage} accent={accent} isMobile={isMobile} reducedMotion={reducedMotion} />;
 

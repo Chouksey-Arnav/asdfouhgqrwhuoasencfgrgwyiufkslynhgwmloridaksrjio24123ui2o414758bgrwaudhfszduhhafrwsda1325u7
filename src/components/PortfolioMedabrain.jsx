@@ -17,6 +17,7 @@ import { runSafetyPass } from '../lib/safety/pass';
 import CrisisResourceCard from './safety/CrisisResourceCard';
 import { buildTimeline, summarizeTimelineForPrompt } from '../lib/timeline';
 import { summarizeRoadmapForPrompt } from '../lib/roadmap/model';
+import { subscribeMedabrainFocus } from '../lib/medabrainFocus';
 import { renderMarkdown } from '../lib/renderMarkdown';
 import { parseAssistantDirective, describeAction, executeAction, labelForDestination } from '../lib/medabrainActions';
 import MedabrainLauncher from './MedabrainLauncher';
@@ -35,7 +36,49 @@ const SUGGESTIONS = [
   'Rank my upcoming deadlines by urgency',
 ];
 
-const RESOURCES = ['colleges', 'essays', 'deadlines', 'scholarships', 'activities', 'research_experience', 'skills_certifications', 'clinical_hours', 'recommenders', 'test_scores', 'awards', 'gpa_entries'];
+// ── The tracker, plus the student-intelligence rows the prompt already reads ──
+// The intel half used to be MISSING from this list while buildPortfolioSystemPrompt
+// was being handed `portfolioData?.schoolContext` and friends — which are undefined
+// on an object that never fetched them. The student-intelligence block was therefore
+// empty for every conversation on this surface: no constraints, no service log, no
+// check-in, and — the expensive one — no suppression list, so the specialist would
+// happily re-suggest a program the student had already declined as too expensive.
+const RESOURCES = [
+  'colleges', 'essays', 'deadlines', 'scholarships', 'activities', 'research_experience',
+  'skills_certifications', 'clinical_hours', 'recommenders', 'test_scores', 'awards', 'gpa_entries',
+  'school_context', 'constraints_profile', 'quick_notes', 'interest_history', 'service_logs',
+  'competitions', 'reflection_entries', 'checkins', 'recommendation_feedback',
+];
+
+/** Resource name → the key the prompt builder destructures it as. */
+const RESOURCE_KEYS = [
+  'colleges', 'essays', 'deadlines', 'scholarships', 'activities', 'research',
+  'skills', 'clinicalHours', 'recommenders', 'testScores', 'awards', 'gpaEntries',
+  'schoolContext', 'constraintsProfile', 'quickNotes', 'interestHistory', 'serviceLogs',
+  'competitions', 'reflectionsLog', 'checkins', 'recommendationFeedback',
+];
+
+// ── ZIP and state: matched on, never narrated ────────────────────────────────
+// constraints_profile carries zip_code/state_code under one narrow consent —
+// matching opportunities NEAR the student. Two different things happen to that row
+// here, and the split is deliberate:
+//
+//   • The PROSE that reaches the model (buildStudentIntelBlock's constraints
+//     paragraph) gets the STRIPPED row. Everything in that block is written into a
+//     prompt sent to a third-party provider, and a column that rides along by
+//     accident is a column disclosed for a purpose nobody agreed to. Same guard
+//     studentIntel/store.js and PlansTab.jsx apply.
+//   • The opportunity RANKING (buildOpportunityContext) gets the full row, because
+//     ranking programs by how near they are IS the consented purpose, and
+//     opportunityIntelBlock() emits names, fits, deadlines and costs — never the
+//     location itself. Without this the coach would rank against a student with no
+//     location while the Opportunities tab and the dashboard rank against one who
+//     has shared it, which is the same student getting two different answers.
+const stripUnconsentedLocation = (row) => {
+  if (!row) return null;
+  const { zip_code, state_code, ...rest } = row;
+  return rest;
+};
 
 // The Portfolio tab's dedicated AI — a small pull-tab that opens a chat panel calling
 // /api/groq with purpose:'portfolio' EXCLUSIVELY (its own Groq key pool — see api/groq.js
@@ -56,13 +99,24 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
   const [actionStatus, setActionStatus] = useState({});
   const listRef = useRef(null);
   const lastSendRef = useRef(0);
+  // ── The item this conversation is about, when one was named ───────────────
+  // A ref as well as state: `send` closes over the value at call time and the
+  // focus can arrive in the same tick as the open, so reading state there would
+  // send the first message without the block that was the whole point.
+  const [focus, setFocus] = useState(null);
+  const focusRef = useRef(null);
 
   const loadPortfolioData = useCallback(async () => {
     setDataLoading(true);
     try {
-      const [colleges, essays, deadlines, scholarships, activities, research, skills, clinicalHours, recommenders, testScores, awards, gpaEntries] =
-        await Promise.all(RESOURCES.map(r => listItems(r).catch(() => [])));
-      setPortfolioData({ colleges, essays, deadlines, scholarships, activities, research, skills, clinicalHours, recommenders, testScores, awards, gpaEntries });
+      const rows = await Promise.all(RESOURCES.map(r => listItems(r).catch(() => [])));
+      const data = Object.fromEntries(RESOURCE_KEYS.map((key, i) => [key, rows[i] || []]));
+      // See the note above stripUnconsentedLocation: the prose path gets the stripped
+      // row, the ranking path gets the full one, and the two are separate fields so
+      // neither can pick up the other's by accident.
+      data.constraintsProfileFull = data.constraintsProfile || [];
+      data.constraintsProfile = [stripUnconsentedLocation(data.constraintsProfile?.[0])].filter(Boolean);
+      setPortfolioData(data);
     } catch {
       // Non-fatal — the prompt builder treats missing arrays as empty, so a partial/failed
       // fetch degrades to "nothing tracked yet" rather than crashing the chat.
@@ -75,7 +129,29 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
     const next = !open;
     setOpen(next);
     if (next) loadPortfolioData(); // refresh on every open, so it never answers from stale data
+    // Closing ends the conversation about that one card. The next open is a
+    // fresh general chat rather than one still silently scoped to a roadmap
+    // action the student has since finished.
+    if (!next) { focusRef.current = null; setFocus(null); }
   }
+
+  // ── "Ask Medabrain about THIS" ────────────────────────────────────────────
+  // Any surface in the app can open this panel against one item — a roadmap
+  // action, an opportunity, the service dashboard — by dispatching a focus (see
+  // src/lib/medabrainFocus.js). What arrives is a small pre-rendered block about
+  // that one thing plus an opening question, NOT more of the student's history:
+  // the grounding above already carries their whole tracker.
+  useEffect(() => subscribeMedabrainFocus((detail) => {
+    if (!detail) return;
+    focusRef.current = detail;
+    setFocus(detail);
+    setOpen(true);
+    loadPortfolioData();
+    // Prefilled rather than sent: the question is a starting point and the
+    // student very often wants to change it before asking. Sending for them
+    // would spend their rate limit on a question they did not write.
+    if (detail.question) setInput(detail.question);
+  }), [loadPortfolioData]);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
@@ -110,6 +186,19 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
       // intake. Without this the two would offer the same student two different years.
       let roadmapSummary = null;
       try { roadmapSummary = summarizeRoadmapForPrompt(user?.roadmap); } catch { /* optional */ }
+      // Their four-week plan. Same argument as the roadmap above, one horizon in:
+      // this is the surface most asked "what should I do next", and the month plan
+      // has already answered it with a ranked list the student is looking at.
+      let monthPlanSummary = null;
+      try {
+        // Imported at send time rather than at module scope: the month-plan
+        // modules are otherwise pulled into the boot payload for every student
+        // on every page. See scripts/verifyPayload.mjs.
+        if (user?.monthPlan) {
+          const { summarizeMonthPlanForPrompt } = await import('../lib/monthPlan/context');
+          monthPlanSummary = summarizeMonthPlanForPrompt(user.monthPlan);
+        }
+      } catch { /* optional */ }
       const safety = await runSafetyPass(trimmed, { surface: 'portfolio' });
       const sys = buildPortfolioSystemPrompt({
         user, pathwayLabel, gradeLabel,
@@ -119,8 +208,11 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
         skills: portfolioData?.skills || [], clinicalHours: portfolioData?.clinicalHours || [],
         recommenders: portfolioData?.recommenders || [], testScores: portfolioData?.testScores || [],
         awards: portfolioData?.awards || [], gpaEntries: portfolioData?.gpaEntries || [],
-        recentActivitySummary, timelineSummary, roadmapSummary,
+        recentActivitySummary, timelineSummary, roadmapSummary, monthPlanSummary,
         safetyBlock: safety.block,
+        // The one item the student opened this conversation from, if any. Cleared
+        // once answered — see the focus subscription below.
+        focusBlock: focusRef.current?.block || '',
         // The student-intelligence digest — reads straight off the same shared snapshot this
         // panel already receives, so this costs no extra request. See src/lib/studentIntel/context.js.
         studentIntel: {
@@ -254,6 +346,25 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
                 <div style={{ fontSize: 10, color: C.t4, marginTop: 8, minHeight: 14 }}>
                   {dataLoading ? 'Reading your portfolio…' : counts ? `Currently grounded in: ${counts}` : 'Nothing tracked in Portfolio yet'}
                 </div>
+                {/* What this conversation is about, when the student arrived from a
+                    specific card. Visible and clearable, so nobody is ever talking to
+                    a coach that is silently scoped to something they have moved on from. */}
+                {focus?.label && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                    <MapPin size={11} color={C.violet} style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: 10.5, color: C.t2, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      About: {focus.label}
+                    </span>
+                    <button
+                      onClick={() => { focusRef.current = null; setFocus(null); }}
+                      aria-label="Stop focusing on this item"
+                      title="Talk about everything instead"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 8, color: C.t3 }}
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Messages */}
@@ -394,7 +505,7 @@ function buildOpportunityIntel(user, portfolioData) {
       deadlines: portfolioData?.deadlines || [],
       intel: {
         schoolContext: portfolioData?.schoolContext?.[0] || null,
-        constraints: portfolioData?.constraintsProfile?.[0] || null,
+        constraints: portfolioData?.constraintsProfileFull?.[0] || portfolioData?.constraintsProfile?.[0] || null,
         interestHistory: portfolioData?.interestHistory || [],
         serviceLogs: portfolioData?.serviceLogs || [],
         competitions: portfolioData?.competitions || [],

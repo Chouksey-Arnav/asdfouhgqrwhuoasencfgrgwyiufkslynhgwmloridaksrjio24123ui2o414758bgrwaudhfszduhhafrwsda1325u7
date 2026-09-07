@@ -17,7 +17,20 @@ import { showMedabrainToast } from '../lib/medabrainComments';
 import { getCached, setCached, dailyKey } from '../lib/aiCache';
 import { renderMarkdown } from '../lib/renderMarkdown';
 
+// ── Four tiers, not three ────────────────────────────────────────────────────
+// 'dream' exists because "reach" was flattening two genuinely different things:
+// the college you would be delighted to get into, and the one whose name is
+// written on the inside of your notebook. They deserve different amounts of
+// attention, and the month plan (src/lib/monthPlan/signals.js) gives the dream
+// and reach tiers disproportionate, specific effort — which it can only do if
+// the data tells them apart.
+//
+// Nothing breaks for a student who never picks it: with no dream marked, the
+// most selective college on the list is treated as the de-facto dream, flagged
+// as inferred, and never written back to their row.
+const DEFAULT_CATEGORY_ID = 'target';
 const CATEGORIES = [
+  { id: 'dream', label: 'Dream', color: C.violet },
   { id: 'reach', label: 'Reach', color: C.rose },
   { id: 'target', label: 'Target', color: C.blue },
   { id: 'safety', label: 'Safety', color: C.green },
@@ -415,7 +428,7 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
             ) : (
               <div style={CC({gap:8})}>
                 {recommendations.map(rec => {
-                  const cat = CATEGORIES.find(c => c.id === rec.category) || CATEGORIES[1];
+                  const cat = CATEGORIES.find(c => c.id === rec.category) || CATEGORIES.find(c => c.id === DEFAULT_CATEGORY_ID);
                   const busy = addingRec === rec.name;
                   return (
                     <div key={rec.name} style={{...glass2({padding:12}),borderLeft:`3px solid ${cat.color}`,background:`linear-gradient(120deg,${tint(cat.color,0.05)},rgba(255,255,255,0.02) 50%)`}}>
@@ -466,7 +479,7 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
             <span style={{fontSize:11.5,color:C.t3}}>Tap a school for its deadlines and checklist.</span>
           </div>
           {colleges.map(college => {
-            const cat = CATEGORIES.find(c => c.id === college.category) || CATEGORIES[1];
+            const cat = CATEGORIES.find(c => c.id === college.category) || CATEGORIES.find(c => c.id === DEFAULT_CATEGORY_ID);
             const items = checklists[college.id] || [];
             const doneCount = items.filter(i => i.done).length;
             const checklistPct = items.length ? Math.round((doneCount / items.length) * 100) : 0;
@@ -580,9 +593,10 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
       {colleges.length > 0 && (
         <Disclosure id="colleges-balance" icon={Target} color={C.violet} m={isMobile}
           title="Is my list balanced?"
-          sub={`${catCount('reach')} reach · ${catCount('target')} target · ${catCount('safety')} safety — plus what Meta Brain makes of that.`}>
+          sub={`${catCount('dream')} dream · ${catCount('reach')} reach · ${catCount('target')} target · ${catCount('safety')} safety — plus what Meta Brain makes of that.`}>
           <div style={CC({gap:12})}>
             <div style={G(4,12,{},true)}>
+              <StatTile icon={School} value={catCount('dream')} label="Dream" color={C.violet}/>
               <StatTile icon={School} value={catCount('reach')} label="Reach" color={C.rose}/>
               <StatTile icon={School} value={catCount('target')} label="Target" color={C.blue}/>
               <StatTile icon={School} value={catCount('safety')} label="Safety" color={C.green}/>

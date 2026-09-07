@@ -584,6 +584,18 @@ export function buildPortfolioSystemPrompt({
   // quote, never a table it has to interpret — and the prose is the same sentences the student
   // is looking at in the Opportunities tab, so the two can never disagree.
   opportunityBlock = '',
+  // Their current four-week plan (src/lib/monthPlan/). This specialist is where
+  // "what should I do next" lands, and that is the exact question the month plan
+  // has already answered with a ranked, dated, definition-of-done list. Without
+  // it the coach and the plan would give the same student two different weeks.
+  monthPlanSummary = null,
+  // ── ONE item, when the student arrived from a specific card ────────────────
+  // Built by src/lib/monthPlan/context.js and carried here by the focus bus
+  // (src/lib/medabrainFocus.js). Deliberately a SMALL pre-rendered block about
+  // one thing rather than more of their history: this prompt already carries the
+  // whole portfolio digest and the ranked opportunity shortlist above, and a
+  // student pressing "Ask Medabrain" on one card is asking about one card.
+  focusBlock = '',
 } = {}) {
   const base = `You are Medabrain, the Portfolio Intelligence specialist inside MedSchoolPrep — the same coaching mind as the app's head Medabrain coach, specialized on ${user?.name || 'this student'}'s undergraduate application: their college list, essays, deadlines, financial aid/scholarships, activities & resume, research, skills/certifications, clinical hours, recommenders, test scores, awards, and GPA. You go deeper here than the head coach can because you're handed the student's full tracked data below, not just summary counts.
 
@@ -742,13 +754,22 @@ Questions that stray outside the application (a study-plan question, a science q
     ? `\n\n── Their 12-month roadmap ──\n${roadmapSummary}`
     : '';
 
+  const monthBlock = monthPlanSummary
+    ? `\n\n── Their current month plan ──\n${monthPlanSummary}`
+    : '';
+
   const rules = `\n\nRules: never invent a college on their list, a deadline they logged, a dollar amount, a test score, a GPA or an essay draft that isn't in the data above — those are claims about THEM and the data above is the only source for them. Facts about the wider admissions world are a different matter entirely: answer those from your own knowledge, in detail, and say when a date or policy is the kind of thing that shifts year to year. If a category is empty (no colleges, no essays, no clinical hours, no scores), answer the question first, then say plainly what isn't logged yet and name the exact panel that captures it. When asked "what should I work on next" or "what's most urgent," prioritize real urgency (the soonest thing on their timeline, an essay for a school with no draft started, a category with nothing logged at all) over generic advice, name the ONE single most urgent thing first, and always pair it with a navigate target (see below) so they can act immediately — never point a student at a milestone their class year has not reached. Keep replies focused and concrete — 2-5 sentences unless a genuinely structured breakdown (e.g. ranking every upcoming deadline) is what was asked for. Format with markdown: **bold** key facts, bullet lists for multi-item breakdowns, and a markdown table for anything tabular — a deadline ranking, a school-by-school comparison, a week-by-week schedule.
 
 You are the one reader who will tell them the truth about this application before an admissions officer does. A thin activities list is thin; a college list with six reaches and no safety is a bad list; an essay draft that says nothing is a draft that says nothing. Say it, say why it costs them, and say what to do about it — do not soften a real gap into "you're off to a good start."${PERSONA_GUARDRAIL}${MEDABRAIN_ACTION_PROTOCOL}`;
 
-  return base + buildPersonalBriefBlock(user) + dataBlock + timelineBlock + roadmapBlock
+  return base + buildPersonalBriefBlock(user) + dataBlock + timelineBlock + roadmapBlock + monthBlock
     + (studentIntel ? buildStudentIntelBlock(studentIntel, 'roadmap') : '')
     + (opportunityBlock || '')
+    // The focus block goes LAST of the grounding sections, immediately before the
+    // rules, because it is what the student is actually looking at — recency in a
+    // prompt is emphasis, and the one thing they asked about should not be buried
+    // above six paragraphs of tracker and a ranked shortlist.
+    + (focusBlock ? String(focusBlock).slice(0, 3000) : '')
     + KNOWLEDGE_POLICY + HONEST_MENTOR_STANCE + MEDICAL_SCOPE_BOUNDARY + rules + (safetyBlock || '');
 }
 

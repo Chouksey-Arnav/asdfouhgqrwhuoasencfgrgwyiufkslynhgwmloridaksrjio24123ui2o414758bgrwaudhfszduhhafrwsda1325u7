@@ -20,6 +20,7 @@ When assigned a specific task, jump directly to the relevant files listed below:
 | **Common App Resume & Activities** | `src/components/ActivitiesResumePanel.jsx` | `src/lib/commonApp/activities.js`, `activityIntel.js` | `src/data/constants.js` | `scripts/verifyResumeBuilder.mjs` |
 | **Common App Mirror & Portfolio Sync** | `src/components/portfolio/CommonAppMirror.jsx`, `CommonAppMirrorBadge.jsx` | `src/lib/commonApp/sections.js`, `derive.js`, `sync.js`, `useCommonApp.js` | — (ledger rides the user record) | `scripts/verifyCommonApp.mjs` |
 | **Opportunity Intelligence** | `src/components/portfolio/OpportunityFeed.jsx`, `OpportunityCard.jsx` | `src/lib/opportunity/` (`ranking`, `schema`, `feedback`, `discovery`, `insights`) | `supabase/migrations/0028_opportunity_intelligence.sql` | `scripts/verifyOpportunityIntelligence.mjs` |
+| **Month Plan (adaptive 4-week roadmap)** | `src/components/roadmap/month/MonthPlanPanel.jsx` | `src/lib/monthPlan/` (`signals`, `rules`, `generator`, `adapt`, `context`) — reads opportunities through `src/lib/opportunity/` | `supabase/migrations/0026_student_intelligence.sql`, `0028_opportunity_intelligence.sql` | `scripts/verifyMonthPlan.mjs` |
 | **Portfolio Milestones & Roadmaps** | `src/components/PortfolioMilestones.jsx`, `PlansTab.jsx` | `src/lib/roadmap/generator.js`, `timeline.js` | `supabase/migrations/0015_roadmaps.sql` | `scripts/verifyTimeline.mjs`, `verifyRoadmap.mjs` |
 | **College & Scholarship Database** | `src/components/CollegeListPanel.jsx`, `ScholarshipDatabase.jsx` | `src/lib/collegeRecommend.js`, `scholarshipResearch.js` | `src/data/scholarships.js`, `opportunities.js` | `scripts/verifyOpportunities.mjs`, `verifyMedicalScholarships.mjs` |
 | **Mock Voice Interview Simulator** | `src/components/LiveVoiceInterview.jsx`, `InterviewPrepPanel.jsx` | `src/lib/speech.js`, `interviewScore.js` | `src/data/interviewQuestions.js`, `mmiCasperQuestions.js` | `scripts/verifyInterviewRealism.mjs` |
@@ -251,6 +252,15 @@ Below is the complete, itemized inventory of **every single file in the reposito
 - `src/lib/renderMarkdown.js` — Shared application utility / service for renderMarkdown.
 - `src/lib/rewardClaimQueue.js` — Shared application utility / service for rewardClaimQueue.
 - `src/lib/rewards.js` — Shared application utility / service for rewards.
+- `src/lib/monthPlan/model.js` — The month-plan document: its shape, its action states, the forbidden-claim scrubber, and every pure mutation.
+- `src/lib/monthPlan/signals.js` — Everything known about one student, read once, as numbers: colleges, academics, testing, activities, leadership, service, deadlines, constraints, wellbeing, feedback and the detected risks. Opportunities are read through `src/lib/opportunity/`, never from the catalogs directly.
+- `src/lib/monthPlan/rules.js` — The deterministic rules that turn those signals into ranked candidate actions, plus the capacity budget and the stepping-stone/funded/local alternatives.
+- `src/lib/monthPlan/generator.js` — Assembles the four-week plan; one optional Medabrain call for framing only, with a complete deterministic plan underneath it.
+- `src/lib/monthPlan/adapt.js` — What the plan does when a student marks an action done, paused, declined, too hard, too expensive, too far, ineligible, or needs-help.
+- `src/lib/monthPlan/context.js` — Small, pre-rendered Medabrain context for ONE action, opportunity, service record or leadership path — never a whole history.
+- `src/lib/monthPlan/store.js` — The month plan's two writes: recommendation_feedback in the opportunity layer's own append-only format (so a refusal is respected app-wide and decays correctly) and the weekly check-in.
+- `src/lib/monthPlan/yearly.js` — The declared, verified hooks a future yearly plan hangs off. Inert today; nothing is gated by it.
+- `src/lib/medabrainFocus.js` — The "Ask Medabrain about THIS" event bus that carries one item's context to the coach panel.
 - `src/lib/roadmap/catalog.js` — Roadmap generator and intake logic for catalog.
 - `src/lib/roadmap/dateAudit.js` — Roadmap generator and intake logic for dateAudit.
 - `src/lib/roadmap/generator.js` — Roadmap generator and intake logic for generator.
@@ -669,6 +679,12 @@ Below is the complete, itemized inventory of **every single file in the reposito
 - `src/components/quests/QuestPicker.jsx` — React UI component / panel for QuestPicker.
 - `src/components/quests/QuestStrip.jsx` — React UI component / panel for QuestStrip.
 - `src/components/quests/questIcons.js` — React UI component / panel for questIcons.
+- `src/components/roadmap/month/MonthPlanPanel.jsx` — "This month": the free-plan roadmap surface and the Roadmap tab's default view.
+- `src/components/roadmap/month/MonthActionCard.jsx` — One ranked action, with its reason, timing, effort, definition of done, evidence capture, ten-state control and Ask-Medabrain button.
+- `src/components/roadmap/month/MonthSections.jsx` — The opportunity action plan, activity keep/deepen/reduce, leadership path, service dashboard, academics, risks, reminders and adaptation log.
+- `src/components/roadmap/month/MonthCheckin.jsx` — The weekly check-in and the optional grading-quarter academic update.
+- `src/components/roadmap/month/MonthHomeCard.jsx` — The month plan's one-decision card on Home.
+- `src/components/roadmap/month/monthUi.jsx` — Shared month-plan vocabulary: states, domains, priorities, the meter, and the only component allowed to render a date.
 - `src/components/roadmap/RoadmapAscent.jsx` — React UI component / panel for RoadmapAscent.
 - `src/components/roadmap/RoadmapHomeCard.jsx` — React UI component / panel for RoadmapHomeCard.
 - `src/components/roadmap/RoadmapIntake.jsx` — React UI component / panel for RoadmapIntake.

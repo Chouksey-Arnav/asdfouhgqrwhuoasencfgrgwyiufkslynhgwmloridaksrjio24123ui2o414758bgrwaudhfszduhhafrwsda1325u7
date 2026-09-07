@@ -28,8 +28,8 @@
 // service_logs itself, which makes the opposite structurally impossible), and
 // a student's own most recent correction is what gets stated as current.
 // ─────────────────────────────────────────────────────────────────────────────
-import { serviceSummary } from './serviceAnalytics';
-import { activityCountGuidance, FRAME_NOTE } from './benchmarks';
+import { serviceSummary } from './serviceAnalytics.js';
+import { activityCountGuidance, FRAME_NOTE } from './benchmarks.js';
 
 const trunc = (s, n = 220) => (typeof s === 'string' && s.length > n ? `${s.slice(0, n)}…` : s);
 const byRecent = (a, b, key) => String(b?.[key] || b?.created_at || '').localeCompare(String(a?.[key] || a?.created_at || ''));

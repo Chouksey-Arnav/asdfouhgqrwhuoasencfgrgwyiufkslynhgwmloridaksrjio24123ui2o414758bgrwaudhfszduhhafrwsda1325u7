@@ -46,12 +46,27 @@ The application operates in a monorepo supporting two deployment models:
 - **Flashcards & FSRS:** Runs entirely client-side using `ts-fsrs` and `compromise` NLP in IndexedDB (`db.flashcards`).
 - **Track Outbox:** Offline user actions (saving colleges, scholarships) queue in `db.trackQueue` via `src/lib/trackQueue.js` and sync automatically when online.
 
-### 6. Earned Streak Engine
+### 6. The Month Plan Never Promises an Outcome
+- The adaptive four-week roadmap (`src/lib/monthPlan/`) may never promise admission, claim to secure a result, or guarantee a top-10/top-30 outcome.
+- This is enforced, not advised: `FORBIDDEN_CLAIM_PATTERNS`/`scrubClaims()` in `src/lib/monthPlan/model.js` strip any offending sentence before render, and `npm run verify:month-plan` greps every generated string.
+- Two further invariants hold there: every action traces to a named rule (`source: 'rule:<id>'`), and no closed opportunity is ever presented as open.
+
+### 7. One Opportunity System, Two Readers
+The month plan does **not** rank, date or judge an opportunity itself. It reads
+`src/lib/opportunity/` — the same `buildOpportunityContext` → `rankOpportunities`
+call the Opportunities tab, the Home card and Medabrain make — and re-buckets the
+result into four-week stances. Three rules follow, all asserted by
+`npm run verify:month-plan`:
+- **One reference format.** Opportunity-linked rows use `opportunity:<id>` (`refFor()` in `src/lib/opportunity/feedback.js`). A month-plan ref of any other shape breaks suppression across the app.
+- **Append, never update.** `recommendation_feedback` rows are append-only: the ranker decays a refusal over a school year and needs the original timestamp. Overwriting a row silently resets that decay.
+- **An unverified lead is never a dated commitment.** A record whose `dataState` is `ai_discovered` reaches the plan as a *verification* action with no due date, never as an application with one.
+
+### 8. Earned Streak Engine
 - A streak represents **completed work** (credits), NOT app opens (`src/lib/streak.js`).
 - Default goal is 4 credits (cleared by 1 verified pathway lesson or 2 quizzes).
 - Guarded by `npm run verify:streak`.
 
-### 7. COPPA & Legal Compliance Invariants
+### 9. COPPA & Legal Compliance Invariants
 - Minimum user age is **13** (`src/lib/ageGate.js`). Failed age checks immediately purge the account (`AgeBlockedStep.jsx`).
 - AdSense tag ordering: `tagForChildDirectedTreatment` is set *before* loading AdSense script in `index.html`.
 - YouTube embeds use `youtube-nocookie.com` across all lesson modules.
@@ -72,6 +87,7 @@ For instant file navigation, consult this quick index or `FILE_NAVIGATION.md`:
 | **Verification Quizzes** | `src/components/QuizRecommendationsPanel.jsx` | `src/lib/quizPersonalization.js` | `src/data/quizzes/index.js` | `scripts/auditQuizBankBalance.mjs` |
 | **Common App Resume** | `src/components/ActivitiesResumePanel.jsx` | `src/lib/commonApp/activities.js` | `src/data/constants.js` | `scripts/verifyResumeBuilder.mjs` |
 | **Common App Mirror & Sync** | `src/components/portfolio/CommonAppMirror.jsx`, `CommonAppMirrorBadge.jsx` | `src/lib/commonApp/` (`sections`, `derive`, `sync`) | — (ledger rides the user record) | `scripts/verifyCommonApp.mjs` |
+| **Month Plan (adaptive roadmap)** | `src/components/roadmap/month/MonthPlanPanel.jsx` | `src/lib/monthPlan/rules.js` | `supabase/migrations/0026_student_intelligence.sql` | `scripts/verifyMonthPlan.mjs` |
 | **Milestones & Roadmaps** | `src/components/PortfolioMilestones.jsx` | `src/lib/roadmap/generator.js` | `supabase/migrations/0015_roadmaps.sql` | `scripts/verifyRoadmap.mjs` |
 | **Parent Dashboard** | `src/components/parent/ParentApp.jsx` | `src/lib/parentApi.js` | `supabase/migrations/0006_parent_dashboard.sql` | `scripts/verifyParentDashboard.mjs` |
 | **AI Routing & Groq** | `src/components/MedabrainLauncher.jsx` | `api/groq.js` | `GROQ_SETUP.md` | `scripts/verifyMedabrainModes.mjs` |
@@ -102,6 +118,9 @@ npm run verify:parent
 
 # Earned Streak Audit
 npm run verify:streak
+
+# Month Plan (the adaptive four-week roadmap — the free-plan experience)
+npm run verify:month-plan
 
 # File Navigation Map Audit (Ensure 100% file coverage)
 python3 /home/jules/self_created_tools/verify_md_navigation.py

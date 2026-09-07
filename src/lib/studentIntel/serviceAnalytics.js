@@ -7,7 +7,7 @@
 // Nothing here is ever framed as verified — every function name and every
 // returned label says "logged" or "reported", never "confirmed" or "verified".
 // ─────────────────────────────────────────────────────────────────────────────
-import { benchmarkById, FRAME_NOTE } from './benchmarks';
+import { benchmarkById, FRAME_NOTE } from './benchmarks.js';
 
 const hoursOf = (row) => Number(row?.hours) || 0;
 const monthKey = (d) => String(d || '').slice(0, 7); // 'YYYY-MM'

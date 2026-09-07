@@ -145,12 +145,20 @@ export function buildOpportunityContext({
     : null;
 
   // ── The college list, as the shape of ambition it actually is ────────────
-  const listCounts = { reach: 0, target: 0, safety: 0, uncategorized: 0 };
+  // 'dream' is a real, selectable category on the college list (see CATEGORIES in
+  // src/components/CollegeListPanel.jsx) and it is counted with the reaches here:
+  // it is a reach the student has additionally told us they care most about, and
+  // dropping it into `uncategorized` would make the most ambitious list in the app
+  // read as the least legible one.
+  const listCounts = { dream: 0, reach: 0, target: 0, safety: 0, uncategorized: 0 };
   for (const c of colleges) {
     const k = String(c?.category || '').toLowerCase();
     if (listCounts[k] != null) listCounts[k] += 1; else listCounts.uncategorized += 1;
   }
-  const dreamSchools = colleges.filter((c) => c?.is_dream || c?.dream || String(c?.status || '') === 'dream').map((c) => c.name).filter(Boolean);
+  listCounts.reach += listCounts.dream;
+  const dreamSchools = colleges
+    .filter((c) => c?.is_dream || c?.dream || String(c?.category || '') === 'dream' || String(c?.status || '') === 'dream')
+    .map((c) => c.name).filter(Boolean);
 
   // ── Roadmap pressure ─────────────────────────────────────────────────────
   const roadmapItems = Array.isArray(roadmap?.items) ? roadmap.items : [];

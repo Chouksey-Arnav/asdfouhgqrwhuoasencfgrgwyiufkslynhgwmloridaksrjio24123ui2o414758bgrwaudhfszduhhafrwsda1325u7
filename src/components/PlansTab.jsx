@@ -74,6 +74,12 @@ const PORTFOLIO_RESOURCE_MAP = {
   service_logs: 'serviceLogs',
   competitions: 'competitions',
   checkins: 'checkins',
+  // Voluntary reflections (motivation, confidence, stress, barriers). Read for exactly one
+  // purpose: a student who has told us the load is heavy gets a SHORTER plan, never a longer
+  // one. Both the master plan and the month plan (src/lib/monthPlan/signals.js) key their
+  // capacity budget off it, and a planner blind to it will cheerfully schedule a student into
+  // the ground.
+  reflection_entries: 'reflectionsLog',
   recommendation_feedback: 'recommendationFeedback',
   activity_role_history: 'activityRoleHistory',
   // The student's own discovery inbox (supabase/migrations/0028_opportunity_intelligence.sql).

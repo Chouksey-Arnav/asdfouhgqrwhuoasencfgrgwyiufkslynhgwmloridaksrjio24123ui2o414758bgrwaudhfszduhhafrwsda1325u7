@@ -2,7 +2,7 @@
 // an email or push (see AGENTS.md). Both are OFFERS: a student can dismiss/skip and the app must
 // resume from where they left off rather than nagging, so every function here only ever answers
 // "would it be worth asking now", never "you must answer this".
-import { CHECKIN_CADENCE_DAYS, APPROX_QUARTER_STARTS, ACADEMIC_UPDATE_REMINDER_DAYS_BEFORE_QUARTER } from './benchmarks';
+import { CHECKIN_CADENCE_DAYS, APPROX_QUARTER_STARTS, ACADEMIC_UPDATE_REMINDER_DAYS_BEFORE_QUARTER } from './benchmarks.js';
 
 const DAY_MS = 86400000;
 
