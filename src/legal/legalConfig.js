@@ -34,8 +34,8 @@ export const LEGAL = {
   operatorDescription: 'a sole-operator educational technology service based in North Carolina, United States',
 
   // ── Contact ─────────────────────────────────────────────────────────────
-  contactEmail: 'meetsagecompanion@gmail.com',
-  privacyEmail: 'meetsagecompanion@gmail.com',
+  contactEmail: 'medschoolprepsupport@gmail.com',
+  privacyEmail: 'medschoolprepsupport@gmail.com',
   // COPPA / GDPR both require a physical address in the notice. See above.
   postalAddress: ADDRESS_PLACEHOLDER,
   postalState: 'North Carolina',
