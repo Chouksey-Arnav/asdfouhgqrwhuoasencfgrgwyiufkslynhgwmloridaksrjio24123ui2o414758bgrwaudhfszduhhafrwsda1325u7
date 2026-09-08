@@ -887,6 +887,7 @@ Below is the complete, itemized inventory of **every single file in the reposito
 - `scripts/verifyRetention.mjs` — Guards the exit prompt against becoming a dark pattern.
 - `scripts/verifyAiBudget.mjs` — Guards the API arithmetic, the never-budgeted safety lane, and the one-door property.
 - `scripts/verifyNewUserE2E.mjs` — Real-browser proof that a new account gets the guide, an established one gets the dashboard, and the SAT tab is gone.
+- `supabase/migrations/0029_parent_channel_sync.sql` — Back-fills three production-only hotfixes into the repo, closes the parent→student live-sync trigger gap, and adds the missing safety_events foreign-key index.
 - `scripts/verifyTabSwitch.mjs` — Automated audit / verification script for verifyTabSwitch.
 - `scripts/verifyTabSwitchE2E.mjs` — Automated audit / verification script for verifyTabSwitchE2E.
 - `scripts/verifyTimeline.mjs` — Automated audit / verification script for verifyTimeline.

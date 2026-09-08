@@ -104,7 +104,24 @@ result into four-week stances. Three rules follow, all asserted by
   tap, with no `beforeunload` and no shame button.
 - Guarded by `npm run verify:retention`.
 
-### 13. COPPA & Legal Compliance Invariants
+### 13. The Migrations Directory Must Rebuild Production
+- `supabase/migrations/` is applied BY HAND to one live Supabase project. The only thing keeping
+  it honest is `npm run verify:migrations`, which builds a throwaway Postgres from nothing,
+  applies the chain, and asserts the resulting schema. **CI runs it against a real Postgres
+  service; it is deliberately NOT in `npm run build`, because the Coolify image has no Postgres.**
+- Three fixes once existed only in production and not in the repo — including the baseline
+  `public` schema grants, without which every table answers "permission denied" for every role.
+  `0029_parent_channel_sync.sql` back-fills all three. **A hotfix applied in the Supabase SQL
+  editor is not done until it is a file in this directory.**
+- **Verified 2026-09-08:** the chain, applied to an empty database, reproduces production
+  byte-for-byte — 529 columns, identical md5. Re-check with the hash query in that migration's PR
+  description after any hand-applied change.
+- **The live-sync trigger is discovered, not listed** (`0027` + `0029`). It resolves a student id
+  from `user_id` OR `student_user_id` — the parent/student shared tables use the latter, and
+  missing that is exactly how the parent→student channel spent its whole life with no live-sync
+  signal. `checkLiveSyncTriggers` in `scripts/verifyMigrations.mjs` now fails the build on a gap.
+
+### 14. COPPA & Legal Compliance Invariants
 - Minimum user age is **13** (`src/lib/ageGate.js`). Failed age checks immediately purge the account (`AgeBlockedStep.jsx`).
 - AdSense tag ordering: `tagForChildDirectedTreatment` is set *before* loading AdSense script in `index.html`.
 - YouTube embeds use `youtube-nocookie.com` across all lesson modules.

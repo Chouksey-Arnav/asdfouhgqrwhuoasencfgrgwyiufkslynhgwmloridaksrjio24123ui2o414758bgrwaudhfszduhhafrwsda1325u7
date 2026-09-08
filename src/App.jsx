@@ -313,6 +313,7 @@ import FirstRunGuide from './components/home/FirstRunGuide';
 import DecisionCard from './components/home/DecisionCard';
 import StayForStreakModal from './components/streak/StayForStreakModal';
 import { firstRunPlan, recordOrientation, dismissFirstRun, pendingQuestions } from './lib/firstRun';
+import useRemoteDataRefresh from './lib/useRemoteDataRefresh';
 import { usage as aiUsageToday } from './lib/aiBudget';
 import { postMedabrain, BudgetError } from './lib/medabrainRequest';
 import { buildAvailabilityBlock, setAboutBlock as setMedabrainAbout } from './lib/medabrainProfile';
@@ -4924,6 +4925,23 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     })();
     return ()=>{ cancelled=true; };
   },[dbReady,user?.id,loadQuests]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── A parent assigning a quest has to reach an open tab ────────────────────
+  // The effect above runs once, keyed on [dbReady, user.id]. That is right for
+  // the student's own work — nothing else writes their quest rows — and wrong
+  // for the one write that comes from somebody ELSE: a parent assigning a quest
+  // from their own dashboard, on their own device, while the student's tab sits
+  // open. Without this the assignment appeared on the student's next reload,
+  // which for a tab left open all evening means the next day.
+  //
+  // Paired with supabase/migrations/0029_parent_channel_sync.sql, which is the
+  // other half: student_quests names its student column `student_user_id`, so
+  // 0027's version-bump trigger — which discovered tables by `user_id` — never
+  // attached to it and the signal this listens for was never sent.
+  useRemoteDataRefresh(useCallback(()=>{
+    if(!dbReady||!user) return;
+    loadQuests().then(rows=>{ if(rows?.length) refreshQuestEvents(rows); }).catch(()=>{});
+  },[dbReady,user,loadQuests])); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Re-derive whenever something a quest could possibly measure has moved. These are the same
   // counters every other derived surface in the app keys off, so a quest bar updates on exactly
