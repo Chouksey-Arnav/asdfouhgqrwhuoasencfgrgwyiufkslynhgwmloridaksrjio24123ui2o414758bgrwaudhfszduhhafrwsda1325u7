@@ -68,10 +68,22 @@ const fail = (m) => { failures += 1; console.error(`  ✗ ${m}`); };
 // only because the sweep was exhaustive. A route missing from the baseline is
 // measured and reported but cannot fail the build until it is recorded, so
 // adding one is a two-step, deliberate act.
+//
+// The ten /sat/* routes came out with the pillar (see RETIRED_TABS in
+// src/lib/routes.js). They could not simply stay: /sat/anything no longer parses,
+// so parsePath returns null, the router keeps whatever screen it is on, and all
+// ten measured Home. That is not a cheap check, it is Home measured eleven times
+// under ten wrong names — and it broke the build outright, because this file's
+// crash gate reads a route rendering far under its recorded size as an error
+// boundary. /sat/skills and /sat/library have the two largest recorded baselines
+// in that group, so their 50% floors (491 and 400) sat above Home's 370 and the
+// gate fired exactly as designed. It was right; the route list was stale.
+//
+// Their entries are gone from scripts/memoryBaseline.json too. They come back
+// with the pillar, re-measured — a baseline recorded before a pillar was sealed
+// is not a number to trust on the day it is unsealed.
 const ROUTES = [
   '/home',
-  '/sat/overview', '/sat/baseline', '/sat/diagnostic', '/sat/practice', '/sat/tests',
-  '/sat/review', '/sat/skills', '/sat/library', '/sat/toolkit', '/sat/scores',
   '/prep/diagnostic', '/prep/pathways', '/prep/quizzes', '/prep/flashcards', '/prep/coach', '/prep/library',
   '/portfolio/overview', '/portfolio/resume', '/portfolio/opportunities', '/portfolio/applying', '/portfolio/milestones',
   '/roadmap/overview', '/roadmap/year', '/roadmap/climb', '/roadmap/seasons', '/roadmap/list', '/roadmap/intake',
