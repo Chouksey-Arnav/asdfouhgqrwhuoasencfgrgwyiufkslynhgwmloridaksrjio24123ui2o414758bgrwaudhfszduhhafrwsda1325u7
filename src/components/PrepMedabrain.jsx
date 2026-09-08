@@ -10,7 +10,7 @@ import { runSafetyPass } from '../lib/safety/pass';
 import CrisisResourceCard from './safety/CrisisResourceCard';
 import { renderMarkdown } from '../lib/renderMarkdown';
 import MedabrainLauncher from './MedabrainLauncher';
-import { aiLane } from '../lib/aiLane';
+import { postMedabrain } from '../lib/medabrainRequest';
 // The tutoring slice of the student-intelligence tables, fetched once per session and shared with
 // the SAT panel. See src/lib/studentIntel/store.js — a failed load is never allowed to cost the
 // student a send, so it resolves to an empty digest rather than rejecting.
@@ -116,16 +116,15 @@ export default function PrepMedabrain({
         safetyBlock: safety.block,
         studentIntel: studentIntel ? { ...studentIntel, gradeLabel } : null,
       });
-      const res = await fetch('/api/groq', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system: sys, messages: nextMsgs.slice(-10), purpose: 'prep', maxTokens: 1400,
-          ...(safety.safetyTier ? { safetyTier: safety.safetyTier } : {}),
-          // Whose rate-limit budget this request spends. Without it every request from one
-          // school's NAT shares a single allowance — see src/lib/aiLane.js.
-          lane: aiLane(),
-        }),
+      // Assembled by src/lib/medabrainRequest.js, which is the one place the
+      // three cross-cutting concerns live: whose rate-limit budget this spends
+      // (the lane), whether it should be spent at all (the client budget), and
+      // what this particular student can actually open (the personalization
+      // block, so the specialist never sends them to a screen the nav has not
+      // given them yet).
+      const res = await postMedabrain({
+        system: sys, messages: nextMsgs.slice(-10), purpose: 'prep', maxTokens: 1400,
+        extra: safety.safetyTier ? { safetyTier: safety.safetyTier } : {},
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || `Medabrain error (${res.status})`);

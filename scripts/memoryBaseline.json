@@ -6,46 +6,6 @@
       "nodes": 549,
       "listeners": 289
     },
-    "/sat/overview": {
-      "nodes": 682,
-      "listeners": 440
-    },
-    "/sat/baseline": {
-      "nodes": 402,
-      "listeners": 402
-    },
-    "/sat/diagnostic": {
-      "nodes": 384,
-      "listeners": 402
-    },
-    "/sat/practice": {
-      "nodes": 421,
-      "listeners": 418
-    },
-    "/sat/tests": {
-      "nodes": 557,
-      "listeners": 409
-    },
-    "/sat/review": {
-      "nodes": 385,
-      "listeners": 408
-    },
-    "/sat/skills": {
-      "nodes": 982,
-      "listeners": 463
-    },
-    "/sat/library": {
-      "nodes": 800,
-      "listeners": 480
-    },
-    "/sat/toolkit": {
-      "nodes": 549,
-      "listeners": 414
-    },
-    "/sat/scores": {
-      "nodes": 407,
-      "listeners": 410
-    },
     "/prep/diagnostic": {
       "nodes": 828,
       "listeners": 458

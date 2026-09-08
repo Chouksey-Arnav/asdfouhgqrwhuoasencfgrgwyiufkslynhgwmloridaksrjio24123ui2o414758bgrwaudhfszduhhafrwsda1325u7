@@ -65,7 +65,11 @@
 export const NAV_KEYWORDS = {
   // ── Pillars ───────────────────────────────────────────────────────────────
   home: ['dashboard', 'start', 'today', 'front page'],
-  sat: ['test prep', 'act', 'digital sat', 'exam prep', 'practice test', 'mock test', 'my score', 'desmos'],
+  // The SAT pillar's keywords used to live here. It was pulled from the nav
+  // (see RETIRED_TABS in src/lib/routes.js), and a command palette that opens a
+  // destination the router no longer parses is worse than one that finds
+  // nothing — the student types "practice test", presses enter, and the app
+  // does not move. They come back with the pillar.
   prep: ['study', 'lessons', 'learn', 'curriculum', 'course'],
   portfolio: ['application', 'tracker', 'my record', 'admissions'],
   roadmap: ['year plan', 'twelve months', 'what is coming', 'long term', 'the path'],

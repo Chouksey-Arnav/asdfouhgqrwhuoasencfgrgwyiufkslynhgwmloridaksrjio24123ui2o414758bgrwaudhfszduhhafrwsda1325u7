@@ -80,8 +80,18 @@ const MINUTE_MS = 60 * 1000;
 // precision rather than no safety layer. But degraded is not free, so the
 // budgets here are set well past any honest usage: a chat turn costs at most one
 // classification, and the client only spends one on the ambiguous band.
-const MINUTE_LIMIT_BY_PURPOSE = { masterplan: 40, plan: 20, sat: 20, roadmap: 40, safety: 60, essaycoach: 20 };
-const DAILY_LIMIT_BY_PURPOSE = { masterplan: 150, plan: 60, sat: 200, roadmap: 40, safety: 900, essaycoach: 200 };
+//
+// ── 'ambient' — the paragraph nobody asked for ───────────────────────────────
+// Five Portfolio panels generate a one-paragraph read when they mount. They are
+// the highest-volume calls in the product and the lowest-intent ones: nobody
+// pressed anything, and on a shared free tier they were crowding out the
+// questions students actually typed. The client caps them at three a day per
+// student (see src/lib/aiBudget.js) and this is the server's own ceiling behind
+// that — deliberately the tightest per-minute allowance in the file, because a
+// student opening five tabs in ten seconds is the exact burst that 429s
+// somebody else's real question.
+const MINUTE_LIMIT_BY_PURPOSE = { masterplan: 40, plan: 20, sat: 20, roadmap: 40, safety: 60, essaycoach: 20, ambient: 4 };
+const DAILY_LIMIT_BY_PURPOSE = { masterplan: 150, plan: 60, sat: 200, roadmap: 40, safety: 900, essaycoach: 200, ambient: 12 };
 function minuteLimitFor(purpose) { return MINUTE_LIMIT_BY_PURPOSE[purpose] || MINUTE_LIMIT; }
 function dailyLimitFor(purpose) { return DAILY_LIMIT_BY_PURPOSE[purpose] || DAILY_LIMIT; }
 
@@ -134,6 +144,22 @@ function subjectFor(ip, lane) {
 // is served for free instead of re-hitting Groq.
 const responseCache = new Map(); // hash -> { content, model, expiresAt }
 const CACHE_TTL_MS = 10 * 60 * 1000;
+// ── Why some purposes get a much longer TTL ──────────────────────────────────
+// Ten minutes is the right default for a conversation: a student who rephrases
+// the same question inside ten minutes wanted the same answer, and one who asks
+// again tomorrow did not.
+//
+// It is the wrong default for the paragraph a panel generates when it mounts.
+// Those prompts are a deterministic function of a list the student is not
+// editing minute-to-minute — their college list, their tracked programs, their
+// weekly goals — so a ten-minute TTL means a student who opens the Portfolio
+// four times in an afternoon pays for four identical answers. The client caches
+// these for a day already (src/lib/aiCache.js), but the client cache is per
+// BROWSER: it does nothing for the same student on their phone, and nothing at
+// all for the second student whose list happens to hash the same. This is the
+// half that survives both.
+const CACHE_TTL_BY_PURPOSE = { ambient: 12 * 60 * 60 * 1000 };
+const cacheTtlFor = (purpose) => CACHE_TTL_BY_PURPOSE[purpose] || CACHE_TTL_MS;
 const CACHE_MAX_ENTRIES = 500;
 
 function hashKey(str) {
@@ -152,11 +178,11 @@ function getCachedResponse(key) {
   return entry;
 }
 
-function setCachedResponse(key, content, model) {
+function setCachedResponse(key, content, model, purpose) {
   if (responseCache.size >= CACHE_MAX_ENTRIES) {
     responseCache.delete(responseCache.keys().next().value); // evict oldest
   }
-  responseCache.set(key, { content, model, expiresAt: Date.now() + CACHE_TTL_MS });
+  responseCache.set(key, { content, model, expiresAt: Date.now() + cacheTtlFor(purpose) });
 }
 
 // ── Model tiers ────────────────────────────────────────────────────────────
@@ -1265,7 +1291,7 @@ Respond to the person before anything else. Acknowledge what they said, warmly a
     // attempts — a student whose build died on a vendor outage has not spent their day.
     addRequestToday(budgetSubject, purpose);
     if (lane) addRequestToday(`ip:${ip}`, purpose);
-    if (cacheable) setCachedResponse(cacheKey, content, modelUsed);
+    if (cacheable) setCachedResponse(cacheKey, content, modelUsed, purpose);
     const requestsUsedToday = getRequestsUsedToday(budgetSubject, purpose);
     return res.status(200).json({
       content,

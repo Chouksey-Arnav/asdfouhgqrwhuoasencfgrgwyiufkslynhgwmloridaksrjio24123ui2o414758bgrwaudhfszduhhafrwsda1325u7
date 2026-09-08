@@ -38,7 +38,7 @@ import {
 } from '../lib/turnTaking';
 import VoiceSelector from './VoiceSelector';
 import VoiceConsentGate from './VoiceConsentGate';
-import { aiLane } from '../lib/aiLane';
+import { postMedabrain } from '../lib/medabrainRequest';
 
 // A rotating pool of focus areas the interviewer can draw on — passed as *inspiration*, with an
 // explicit instruction to craft its own fresh questions and never repeat, so no two sessions feel
@@ -284,10 +284,9 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
   async function askInterviewer({ extraUser, maxTokens = 900, reasoningEffort = 'low' } = {}) {
     const messages = [...sessionRef.current.history];
     if (extraUser) messages.push({ role: 'user', content: extraUser });
-    const r = await fetch('/api/groq', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ system: sessionRef.current.system, messages, maxTokens, reasoningEffort, purpose: 'interview', lane: aiLane() }),
+    const r = await postMedabrain({
+      system: sessionRef.current.system, messages, maxTokens, purpose: 'interview',
+      extra: { reasoningEffort },
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d?.error || `Error ${r.status}`);

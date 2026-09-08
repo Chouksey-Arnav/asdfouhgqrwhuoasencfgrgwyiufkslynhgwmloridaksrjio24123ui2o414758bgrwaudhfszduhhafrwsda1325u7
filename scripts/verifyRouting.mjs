@@ -50,7 +50,7 @@ if (!navIds) fail('could not find NAV in src/App.jsx');
 else if (navIds.join() !== TABS.join()) fail(`NAV ${JSON.stringify(navIds)} !== TABS ${JSON.stringify(TABS)}`);
 else ok(`NAV matches TABS (${TABS.length} tabs)`);
 
-for (const [tab, name] of [['sat', 'SAT_SUBNAV'], ['prep', 'PREP_SUBNAV'], ['portfolio', 'PORTFOLIO_SUBNAV'], ['roadmap', 'ROADMAP_SUBNAV'], ['progress', 'PROGRESS_SUBNAV'], ['settings', 'SETTINGS_SUBNAV']]) {
+for (const [tab, name] of [['prep', 'PREP_SUBNAV'], ['portfolio', 'PORTFOLIO_SUBNAV'], ['roadmap', 'ROADMAP_SUBNAV'], ['progress', 'PROGRESS_SUBNAV'], ['settings', 'SETTINGS_SUBNAV']]) {
   const ids = idsIn(name);
   if (!ids) { fail(`could not find ${name} in src/App.jsx`); continue; }
   const known = SUBVIEWS[tab].ids;
@@ -90,14 +90,20 @@ for (const p of ['/sitemap.xml', '/robots.txt', '/favicon.png', '/api/groq', '/l
   // The parent surfaces are owned by AuthGate and ParentApp, exactly like /legal/* — if the app
   // router ever started claiming them, two navigation systems would fight over the address bar.
   '/parents', '/parents/signup', '/parents/login', '/family', '/family/students', '/family/student/abc', '/parent-invite',
-  '/portfolio/nonsense', '/nope', '/sat/practice/extra']) {
+  '/portfolio/nonsense', '/nope',
+  // The SAT pillar was pulled from the nav (see RETIRED_TABS in src/lib/routes.js).
+  // Its old URLs are in bookmarks and history, and they must now be rejected like
+  // any other unknown path rather than resolving to a tab that is not there — the
+  // router's answer to null is "keep the screen you are on and fix the address
+  // bar", which is the right landing for a link to a retired destination.
+  '/sat', '/sat/overview', '/sat/practice', '/sat/practice/extra']) {
   if (parsePath(p) !== null) fail(`${p} should not parse as an app route (got ${JSON.stringify(parsePath(p))})`);
 }
 // …and the aliases that must resolve, without pretending to be canonical.
 // Home is canonical at /home now, and a bare "/" is its alias — the reverse of the old rule.
 // See HOME_PATH in src/lib/routes.js for why the dashboard needed a name of its own.
 for (const [alias, expected] of [
-  ['/sat', '/sat/overview'], ['/prep', '/prep/pathways'], ['/prep/pathway', '/prep/pathways'],
+  ['/prep', '/prep/pathways'], ['/prep/pathway', '/prep/pathways'],
   ['/portfolio/', '/portfolio/overview'], ['/settings', '/settings/profile'],
   ['/home', '/home'], ['/', '/home'],
 ]) {
@@ -157,7 +163,7 @@ if (!failures) ok('every retired sub-view id resolves forward, normalizes, and n
 
 // ── 4. Boot precedence: URL wins, persisted state fills the gaps ─────────────
 section('Boot route');
-const persisted = { tab: 'progress', prepView: 'coach', portfolioView: 'essays', progressView: 'performance', satView: 'skills' };
+const persisted = { tab: 'progress', prepView: 'coach', portfolioView: 'essays', progressView: 'performance' };
 const bootBare = bootRoute(persisted, '/');
 if (bootBare.tab !== 'progress' || bootBare.progressView !== 'performance') fail('a bare "/" should resume the persisted view');
 const bootDeep = bootRoute(persisted, '/portfolio/milestones');
@@ -165,9 +171,13 @@ if (bootDeep.tab !== 'portfolio' || bootDeep.portfolioView !== 'milestones') fai
 if (bootDeep.prepView !== 'coach') fail('a deep link should not discard the persisted state it says nothing about');
 const bootJunk = bootRoute(persisted, '/nope');
 if (bootJunk.tab !== 'progress') fail('an unknown URL should fall back to persisted state');
-const bootBadPersist = bootRoute({ tab: 'zzz', satView: 'zzz' }, '/');
-if (bootBadPersist.tab !== 'home' || bootBadPersist.satView !== SUBVIEWS.sat.default) fail('corrupt persisted state should degrade to defaults');
-if (normalizePath('/sat/practice/') !== '/sat/practice') fail('normalizePath should drop the trailing slash');
+const bootBadPersist = bootRoute({ tab: 'zzz', prepView: 'zzz' }, '/');
+if (bootBadPersist.tab !== 'home' || bootBadPersist.prepView !== SUBVIEWS.prep.default) fail('corrupt persisted state should degrade to defaults');
+// A returning student has 'sat' sitting in their persisted view state from before
+// the pillar was pulled. It must degrade to Home rather than boot the app into a
+// tab that no longer renders.
+if (bootRoute({ tab: 'sat' }, '/').tab !== 'home') fail('persisted state naming a retired tab should degrade to Home');
+if (normalizePath('/prep/quizzes/') !== '/prep/quizzes') fail('normalizePath should drop the trailing slash');
 if (!failures) ok('URL beats persisted state, junk falls back, corrupt state degrades');
 
 // ── 5. The SEO files agree with the routes ──────────────────────────────────
@@ -216,7 +226,7 @@ else {
   for (const p of ['/sitemap.xml', '/robots.txt', '/assets/app.js', '/api/groq']) {
     if (re.test(p)) fail(`vercel.json would rewrite ${p} to index.html`);
   }
-  for (const p of ['/sat/practice', '/prep/pathways', '/settings/family', '/parents', '/family', '/login', '/']) {
+  for (const p of ['/prep/pathways', '/settings/family', '/parents', '/family', '/login', '/']) {
     if (!re.test(p)) fail(`vercel.json would NOT serve the app at ${p}`);
   }
 }
@@ -227,7 +237,7 @@ if (!/navigateFallbackDenylist/.test(vite)) fail('vite.config.js has no navigate
 else {
   const denylist = [/\/[^/?]+\.[^/?]+$/, /^\/api\//]; // mirrors vite.config.js
   if (!denylist.some((re) => re.test('/sitemap.xml'))) fail('the service-worker denylist does not cover /sitemap.xml');
-  if (denylist.some((re) => re.test('/sat/practice'))) fail('the service-worker denylist would break offline app routes');
+  if (denylist.some((re) => re.test('/prep/pathways'))) fail('the service-worker denylist would break offline app routes');
 }
 if (!failures) ok('vercel.json, server.js and the service worker all pass files through');
 

@@ -21,7 +21,7 @@
 // dependency for flashcard generation to work.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { aiLane } from '../aiLane.js';
+import { postMedabrain } from '../medabrainRequest';
 
 export const AI_POLISH_MAX_CARDS = 40;
 const NOTES_EXCERPT_CHARS = 2000;
@@ -61,10 +61,8 @@ Rules: Only include a card in "edits" if you actually improved its wording (a ty
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const res = await fetch('/api/groq', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ system, message, tier: 'scout', purpose: 'prep', maxTokens: 3000, lane: aiLane() }),
+    const res = await postMedabrain({
+      system, message, tier: 'scout', purpose: 'prep', maxTokens: 3000,
       signal: controller.signal,
     });
     if (!res.ok) return null;

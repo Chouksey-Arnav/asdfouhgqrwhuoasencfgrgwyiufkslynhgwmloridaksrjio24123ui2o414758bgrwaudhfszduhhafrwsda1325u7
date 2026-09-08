@@ -30,7 +30,7 @@ import WeeklyGoalTile from './WeeklyGoalTile';
 // commitment. The urge to close the bar only shows up on the second kind.
 // ─────────────────────────────────────────────────────────────────────────────
 export default function WeeklyGoalsBoard({
-  user, snapshot, loading = false, onSaveUser, onOpen, askMedabrain, isMobile = false,
+  user, snapshot, loading = false, onSaveUser, onOpen, askMedabrain, askAmbient, isMobile = false,
   benchmarks = {}, clinicalHoursTotal = 0, accent = C.blue,
 }) {
   const [picking, setPicking] = useState(false);
@@ -103,10 +103,13 @@ export default function WeeklyGoalsBoard({
     setAiRead({ loading: true, content: null, error: null });
     const lines = summary.rows.filter((r) => r.target != null)
       .map((r) => `${r.metric.short}: ${r.value}/${r.target} ${r.metric.unit} (${r.pct}%)`).join('; ');
-    askMedabrain(
+    (askAmbient || askMedabrain)(
       `This student set their own weekly Portfolio goals and is ${summary.daysLeft} day(s) from the end of the week. Their real progress: ${lines}. In 2-3 sentences, speak to them directly: name the one goal to push on first and why, and acknowledge anything already finished. Never invent a number that isn't listed, and never tell them what their goal should have been — they chose these.`,
     ).then((content) => {
       if (cancelled) return;
+      // A null answer means today's ambient budget is spent (see
+      // askAmbientMedabrain in App.jsx). Not an error, and never shown as one.
+      if (!content) { setAiRead(null); return; }
       setCached(readKey, content);
       setAiRead({ loading: false, content, error: null });
     }).catch((err) => { if (!cancelled) setAiRead({ loading: false, content: null, error: err.message }); });

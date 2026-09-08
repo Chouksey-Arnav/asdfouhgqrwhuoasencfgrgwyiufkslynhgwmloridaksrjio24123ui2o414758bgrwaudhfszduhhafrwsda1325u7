@@ -9,7 +9,7 @@ import { C, glass2, pill, btn, btnSm, tint, R, CC } from '../lib/theme';
 import { renderMarkdown } from '../lib/renderMarkdown';
 import { buildLessonDifficultyPrompt, FEEDBACK_LABELS } from '../lib/lessonFeedback';
 import { helpResourcesFor } from '../lib/lessonResources';
-import { aiLane } from '../lib/aiLane';
+import { postMedabrain } from '../lib/medabrainRequest';
 
 // ── "How did that land?" ──────────────────────────────────────────────────────
 //
@@ -101,24 +101,18 @@ export default function LessonDifficultyCheck({
         lessonNote,
         feedbackSummary,
       });
-      const res = await fetch('/api/groq', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system: sys,
-          messages: [{
-            role: 'user',
-            content: chosen === 'too_easy'
-              ? 'This passage is way too easy for me. I need something a lot better — go deeper.'
-              : 'This passage was too hard for me. Please explain it properly, from the start.',
-          }],
-          purpose: 'prep',
-          lane: aiLane(),
-          // The long form is the deliverable here, not a chat turn — a truncated "deeper
-          // passage" that stops mid-sentence is worse than not offering one.
-          maxTokens: 1100,
-          tier: 'guide',
-        }),
+      const res = await postMedabrain({
+        system: sys,
+        messages: [{
+          role: 'user',
+          content: chosen === 'too_easy'
+            ? 'This passage is way too easy for me. I need something a lot better — go deeper.'
+            : 'This passage was too hard for me. Please explain it properly, from the start.',
+        }],
+        purpose: 'prep',
+        // The long form is the deliverable here, not a chat turn — a truncated
+        // "deeper passage" that stops mid-sentence is worse than not offering one.
+        maxTokens: 1100,
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || `Medabrain error (${res.status})`);

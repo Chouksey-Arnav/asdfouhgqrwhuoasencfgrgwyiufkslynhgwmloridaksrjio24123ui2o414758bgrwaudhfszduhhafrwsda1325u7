@@ -9,7 +9,7 @@ import { calibrateFeedback, buildRubricPrompt } from './interviewScore';
 import { scrubThinking } from './interviewReply';
 import { getStationType } from './interviewPanel';
 import { STATION_FORMATS } from '../data/mmiStations';
-import { aiLane } from './aiLane.js';
+import { postMedabrain } from './medabrainRequest';
 
 // Every framing ends the same way, and it is the sentence that keeps this appropriate for the
 // student who is actually using it. These are 14- to 18-year-olds previewing a format they will
@@ -82,11 +82,8 @@ This was written under a five-minute clock covering all ${section.probes.length}
 // chain-of-thought note in api/groq.js. Rating is a judgment call, so the effort stays high and the
 // budget covers it; a spoken conversational turn makes the opposite trade (see LiveVoiceInterview).
 async function askModel({ system, message, maxTokens, signal }) {
-  const r = await fetch('/api/groq', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ system, message, maxTokens, purpose: 'interview', tier: 'sage', lane: aiLane() }),
-    signal,
+  const r = await postMedabrain({
+    system, message, maxTokens, purpose: 'interview', tier: 'sage', signal,
   });
   const d = await r.json();
   if (!r.ok) throw new Error(d?.error || `Error ${r.status}`);

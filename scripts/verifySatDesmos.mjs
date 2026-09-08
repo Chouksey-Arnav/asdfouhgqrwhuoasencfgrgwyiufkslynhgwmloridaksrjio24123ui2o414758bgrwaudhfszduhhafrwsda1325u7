@@ -19,6 +19,21 @@
 //         node scripts/verifySatDesmos.mjs
 import { chromium } from 'playwright';
 
+// ── The SAT pillar is not reachable right now ────────────────────────────────
+// It was pulled from the nav (see RETIRED_TABS in src/lib/routes.js): the tab
+// has no URL, so this script's whole premise — drive a browser to /sat and look
+// at what renders — cannot hold. It skips rather than fails, because the pillar
+// itself is intact and this check becomes meaningful again the moment 'sat' goes
+// back into TABS. The pure SAT audits (the question bank, the forms, the score
+// scales) are unaffected and still run in `npm run audit:all`.
+{
+  const { TABS } = await import(new URL('../src/lib/routes.js', import.meta.url).href);
+  if (!TABS.includes('sat')) {
+    console.log('\nSAT pillar is retired from the nav — skipping this browser check.\n');
+    process.exit(0);
+  }
+}
+
 const BASE = process.env.SAT_CHECK_URL || 'http://localhost:5173';
 const LIVE = process.env.SAT_DESMOS_LIVE === '1';
 

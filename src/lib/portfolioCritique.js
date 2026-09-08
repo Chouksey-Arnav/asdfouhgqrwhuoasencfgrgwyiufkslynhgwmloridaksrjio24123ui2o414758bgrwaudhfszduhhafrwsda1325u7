@@ -36,7 +36,7 @@
 import { HONEST_MENTOR_STANCE, PERSONA_GUARDRAIL, getDreamRoleLabel, getWhyMedicineLabel } from './studentProfile';
 import { hoursPerYear, scoreActivity, analyzeSlate, PILLARS } from './activityIntel';
 import { analyzeAcademics, gpaBand, gpaPercentileContext, roleProfile, recommendByAcademics } from './academicIntel';
-import { aiLane } from './aiLane.js';
+import { postMedabrain } from './medabrainRequest';
 
 // ── Shared framing ───────────────────────────────────────────────────────────
 const READER_FRAME = `You are Medabrain, the Portfolio Intelligence specialist inside MedSchoolPrep, reading a high-school student's activities and academic record the way an admissions officer with forty more files to get through actually reads them.
@@ -325,13 +325,9 @@ export function readBand(score) {
 // is right now: a student edits three descriptions, asks again, and being told
 // about problems they just fixed is the one failure this feature cannot survive.
 export async function runPortfolioRead({ system, message, maxTokens = 1400, signal = null }) {
-  const res = await fetch('/api/groq', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      system, message, purpose: 'portfolio', tier: 'sage', lane: aiLane(),
-      maxTokens, temperature: 0.4, noCache: true,
-    }),
+  const res = await postMedabrain({
+    system, message, purpose: 'portfolio', tier: 'sage', maxTokens,
+    extra: { temperature: 0.4, noCache: true },
     signal,
   });
   const data = await res.json().catch(() => ({}));

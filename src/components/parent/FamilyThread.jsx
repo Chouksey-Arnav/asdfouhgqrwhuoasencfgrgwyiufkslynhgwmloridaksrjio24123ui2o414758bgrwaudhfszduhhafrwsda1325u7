@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { C, glass2, btn, btnG, inp, CC, R, pill, tint, onTint, CONTROL_TRANSITION } from '../../lib/theme';
 import * as ParentAPI from '../../lib/parentApi';
+import useRemoteDataRefresh from '../../lib/useRemoteDataRefresh';
 
 const KINDS = {
   note: { icon: MessageSquare, hue: () => C.violet, label: 'Note', verb: 'Send note' },
@@ -185,6 +186,24 @@ export default function FamilyThread({ linkId, role, counterparty, onUnreadChang
   }, [linkId, onUnreadChange]);
 
   useEffect(() => { load({ markRead: true }); }, [load]);
+
+  // ── The other half of a conversation arriving ──────────────────────────────
+  // Everything above loads once, when the thread opens. That is the whole story
+  // for the person typing; it is not the story for the person being typed at,
+  // who is the entire point of a thread. A parent sends a message while the
+  // student has this screen open and, without this, the student sees it on their
+  // next navigation.
+  //
+  // Deliberately WITHOUT markRead: a message that arrives while the tab is open
+  // but nobody is looking has not been read, and silently clearing its unread
+  // badge would lose it. Marking read stays tied to OPENING the thread, which is
+  // the only act that means somebody actually looked.
+  //
+  // The signal only reaches the student — /api/sync-state is a student-only
+  // endpoint (see supabase/migrations/0029_parent_channel_sync.sql for why the
+  // trigger bumps the student's counter and not the parent's) — so on the parent
+  // side this hook simply never fires and the thread behaves exactly as before.
+  useRemoteDataRefresh(useCallback(() => { load(); }, [load]));
 
   const send = async (e) => {
     e.preventDefault();

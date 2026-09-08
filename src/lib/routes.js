@@ -17,7 +17,33 @@
 // The hook that wires this to history lives in ./useAppRouter.js.
 
 /** Top-level tabs, in nav order. Must match NAV in src/App.jsx. */
-export const TABS = ['home', 'sat', 'prep', 'portfolio', 'roadmap', 'plans', 'progress', 'settings'];
+export const TABS = ['home', 'prep', 'portfolio', 'roadmap', 'plans', 'progress', 'settings'];
+
+/**
+ * ── The SAT pillar is not in TABS, and this is where that is recorded ────────
+ *
+ * The tab shipped sealed behind a beta cover (src/lib/betaFlags.js): visible in
+ * the nav, blurred, inert, unreachable by keyboard. That was a reasonable way
+ * to ship an unfinished pillar and a bad way to greet a new student. A nav row
+ * that cannot be used is a row that has to be explained, and the first thing a
+ * fourteen-year-old did with it was tap it — twice — before concluding
+ * something was broken. It was the second item in the nav, so it was the second
+ * thing everybody tapped.
+ *
+ * So the tab is gone from the nav and from this table until the pillar is
+ * genuinely ready. Nothing else was deleted: src/components/sat/, src/lib/sat/
+ * and src/data/sat/ are all still here and still build, and restoring the
+ * pillar is putting 'sat' back in this array, restoring SUBVIEWS.sat, and
+ * re-adding the NAV row in App.jsx.
+ *
+ * `/sat` and `/sat/anything` therefore no longer parse as app routes, which is
+ * exactly what parsePath already does with any path it does not recognize: it
+ * returns null, useAppRouter keeps whatever screen the app is on and rewrites
+ * the address bar in place. An old bookmark lands on the student's last screen
+ * rather than on an error, which is the correct outcome for a link to a
+ * destination that no longer exists.
+ */
+export const RETIRED_TABS = ['sat'];
 
 /**
  * Tabs that own a SubNav, and the sub-view ids that bar can select.
@@ -28,11 +54,6 @@ export const TABS = ['home', 'sat', 'prep', 'portfolio', 'roadmap', 'plans', 'pr
  * never quietly end up without a URL.
  */
 export const SUBVIEWS = {
-  sat: {
-    state: 'satView',
-    default: 'overview',
-    ids: ['overview', 'baseline', 'diagnostic', 'practice', 'tests', 'review', 'skills', 'library', 'toolkit', 'scores'],
-  },
   prep: {
     state: 'prepView',
     default: 'pathways',
@@ -372,8 +393,8 @@ export function parsePath(pathname) {
   let view = null;
   const sub = SUBVIEWS[tab];
   if (sub) {
-    // `/sat` (no sub-view) is a legitimate hand-typed URL: accept it and let the
-    // caller's replaceState normalize it to /sat/overview.
+    // `/prep` (no sub-view) is a legitimate hand-typed URL: accept it and let the
+    // caller's replaceState normalize it to /prep/pathways.
     if (parts[1] && sub.ids.includes(parts[1])) { view = parts[1]; i = 2; }
     // A retired sub-view id (see `aliases` above) resolves to whatever replaced
     // it. The route it produces is canonical, so useAppRouter's state→URL sync
@@ -411,7 +432,6 @@ export function bootRoute(persisted = {}, pathname = typeof window !== 'undefine
   const fromUrl = parsePath(pathname);
   const base = {
     tab: TABS.includes(persisted.tab) ? persisted.tab : 'home',
-    satView: SUBVIEWS.sat.ids.includes(persisted.satView) ? persisted.satView : SUBVIEWS.sat.default,
     prepView: SUBVIEWS.prep.ids.includes(persisted.prepView) ? persisted.prepView : SUBVIEWS.prep.default,
     portfolioView: resolveView('portfolio', persisted.portfolioView) || SUBVIEWS.portfolio.default,
     roadmapView: SUBVIEWS.roadmap.ids.includes(persisted.roadmapView) ? persisted.roadmapView : SUBVIEWS.roadmap.default,
@@ -437,7 +457,7 @@ export function bootRoute(persisted = {}, pathname = typeof window !== 'undefine
  * used every render to decide whether the address bar is still telling the
  * truth.
  */
-export function routeFromState({ tab, satView, prepView, portfolioView, roadmapView, progressView, settingsView, overlay = null }) {
-  const views = { sat: satView, prep: prepView, portfolio: portfolioView, roadmap: roadmapView, progress: progressView, settings: settingsView };
+export function routeFromState({ tab, prepView, portfolioView, roadmapView, progressView, settingsView, overlay = null }) {
+  const views = { prep: prepView, portfolio: portfolioView, roadmap: roadmapView, progress: progressView, settings: settingsView };
   return { tab, view: SUBVIEWS[tab] ? views[tab] : null, overlay };
 }

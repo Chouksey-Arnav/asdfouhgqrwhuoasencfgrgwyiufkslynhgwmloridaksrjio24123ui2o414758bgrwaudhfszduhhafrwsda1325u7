@@ -54,10 +54,9 @@ function idsIn(constName) {
   const block = app.slice(start, app.indexOf('\n];', start));
   return [...block.matchAll(/\{id:'([^']+)'/g)].map((m) => m[1]);
 }
-// SAT_SUBNAV is deliberately absent. The SAT pillar is sealed for v1
-// (src/lib/betaFlags.js) — its sub-nav renders behind SatBetaCover and cannot be
-// reached, clicked or tabbed into, so gating it would be gating a screen nobody
-// can open. The tab itself still appears in NAV, carrying a BETA badge.
+// SAT_SUBNAV is deliberately absent, and now so is the SAT tab: the pillar was
+// pulled from the nav entirely (see RETIRED_TABS in src/lib/routes.js). Gating a
+// destination that does not render is gating nothing.
 const SUBNAV_CONST = { prep: 'PREP_SUBNAV', portfolio: 'PORTFOLIO_SUBNAV', progress: 'PROGRESS_SUBNAV' };
 const LABELS = {};
 for (const id of idsIn('NAV') || []) LABELS[id] = null;
@@ -171,11 +170,14 @@ for (const [label, signals, expect] of STEPS) {
 
 // ── 5. Sticky, escape hatch, and existing accounts ──────────────────────────
 section('Sticky unlocks, escape hatch, existing accounts');
-const earned = unlockState(NEW_USER, { ...FRESH, quizzes: 9 });
+const earned = unlockState(NEW_USER, { ...FRESH, quizzes: 9, lessons: 9 });
 const recorded = unlock.recordUnlocks(NEW_USER, earned.pending);
-if (!recorded?.unlockedFeatures?.includes('portfolio')) fail('recordUnlocks did not persist an earned unlock');
+// 'portfolio' is no longer gated at all (it is the half of the app a student can
+// act on with no prior work — see the note at the top of UNLOCK_RULES), so the
+// sticky-write is asserted on the nearest gate a study action actually opens.
+if (!recorded?.unlockedFeatures?.includes('prep/quizzes')) fail('recordUnlocks did not persist an earned unlock');
 // Signals regress (the student deleted the quiz) — the tab must not vanish.
-if (!unlockState(recorded, FRESH).isOpen('portfolio')) fail('an unlocked tab re-locked when its signal regressed');
+if (!unlockState(recorded, FRESH).isOpen('prep', 'quizzes')) fail('an unlocked tab re-locked when its signal regressed');
 else ok('unlocks are sticky across signal regression');
 
 const everything = unlockState({ ...NEW_USER, navMode: NAV_MODES.EVERYTHING }, FRESH);
@@ -237,7 +239,7 @@ section('"Unlocks next" copy');
 const topNext = fresh.locked('');
 if (!topNext.length) fail('a fresh account is shown no upcoming top-level unlocks');
 if (topNext.some((r) => r.id.includes('/'))) fail("locked('') leaked a sub-view into the top-level list");
-if (fresh.locked('sat').length) fail("locked('sat') returned rules for the sealed SAT pillar");
+if (fresh.locked('sat').length) fail("locked('sat') returned rules for the retired SAT pillar");
 if (!failures) ok(`fresh account is told about ${topNext.length} upcoming pillars, nearest first: ${topNext.map((r) => r.label).join(' → ')}`);
 
 // ── 7. App.jsx actually routes its nav through the gate ─────────────────────
@@ -252,6 +254,63 @@ for (const [needle, why] of [
   if (!app.includes(needle)) fail(why);
 }
 if (!failures) ok('App.jsx filters its nav through featureUnlock');
+
+// ── 8. Grade opens doors early, and never closes one ────────────────────────
+// The ladder above is written for the student the app was hardest on: a ninth
+// grader who has done nothing. It is wrong for a junior and harmful for a
+// senior, so rules carry `openFor` — a list of grades the gate is open on sight
+// for. These are the properties that keep that additive rather than a second,
+// competing access system.
+section('Grade adaptivity');
+{
+  const GRADES = unlock.KNOWN_GRADES;
+  const openIds = (gradeStage) => {
+    const st = unlockState(NEW_USER, { ...FRESH, gradeStage });
+    return GATED_IDS.filter((id) => openById(st, id));
+  };
+
+  // 8a. An unknown grade must behave exactly as the ladder always did. Every
+  //     fixture in this file and every account with no graduation year lands
+  //     here, so a regression would be invisible everywhere else.
+  if (openIds(null).length !== 0) fail('an account with no known grade got a grade-opened surface');
+  else ok('an unknown grade gets the plain ladder, unchanged');
+
+  // 8b. Strictly nested: whatever a freshman can see, a sophomore can; whatever
+  //     a sophomore can, a junior can. A grade that took something away would
+  //     mean a student losing a surface on August 1, which breaks the one-way
+  //     guarantee at the top of featureUnlock.js.
+  const ORDER = ['freshman', 'sophomore', 'junior', 'senior'];
+  for (let i = 1; i < ORDER.length; i++) {
+    const younger = new Set(openIds(ORDER[i - 1]));
+    const lost = [...younger].filter((id) => !openIds(ORDER[i]).includes(id));
+    if (lost.length) fail(`${ORDER[i]} sees less than ${ORDER[i - 1]}: lost ${lost.join(', ')}`);
+  }
+  if (!failures) ok(`access is monotonic across ${ORDER.join(' → ')}`);
+
+  // 8c. The actual product decision, stated as numbers so a change to it is a
+  //     visible change to this file rather than a silent one.
+  const counts = Object.fromEntries(ORDER.map((g) => [g, openIds(g).length]));
+  if (counts.freshman !== 0) fail(`a freshman should get the plain ladder, got ${counts.freshman} grade-opened surfaces`);
+  if (!(counts.sophomore > counts.freshman)) fail('a sophomore should get more than a freshman');
+  if (!(counts.junior > counts.sophomore)) fail('a junior should get more than a sophomore');
+  if (counts.senior !== counts.junior) fail('a senior and a junior should both have the whole Portfolio open');
+  else ok(`freshman ${counts.freshman} → sophomore ${counts.sophomore} → junior ${counts.junior} → senior ${counts.senior} grade-opened surfaces`);
+
+  // 8d. A junior's Portfolio has nothing left to earn. Junior year IS the
+  //     application year; a gate in front of any of it is a gate in front of
+  //     the work they are actually doing.
+  const juniorLocked = GATED_IDS.filter((id) => id.startsWith('portfolio') && !openIds('junior').includes(id));
+  if (juniorLocked.length) fail(`a junior still has to earn ${juniorLocked.join(', ')}`);
+  else ok('a junior opens the whole Portfolio on day one');
+
+  // 8e. `openFor` may only ever name real grades.
+  for (const id of GATED_IDS) {
+    const g = unlock.gradesFor(id);
+    if (!g) continue;
+    const bad = g.filter((x) => !GRADES.includes(x));
+    if (bad.length) fail(`${id}: openFor names unknown grade(s) ${bad.join(', ')}`);
+  }
+}
 
 console.log(failures ? `\n${failures} problem(s)\n` : '\nNav unlocking OK\n');
 process.exit(failures ? 1 : 0);

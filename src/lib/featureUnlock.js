@@ -97,7 +97,51 @@ export const EMPTY_SIGNALS = {
   // Seniors and juniors in application season don't get to wait for the
   // application half of the product — for them it IS the product.
   applicationUrgent: false,
+  // ── The grade this student is in today ────────────────────────────────────
+  // Read by `openFor` (see below) and by nothing else. Absent — which is the
+  // shape of every fixture and of any account whose year we do not know yet —
+  // means no rule opens on grade alone, so the ladder behaves exactly as it did
+  // before grade adaptivity existed. Derived, never stored: see gradeStageFor()
+  // in gradeBand.js.
+  gradeStage: null,
 };
+
+/**
+ * ── GRADE OPENS DOORS EARLY. IT NEVER CLOSES ONE. ───────────────────────────
+ *
+ * The ladder above is written for the student the app was hardest on: a ninth
+ * grader who has done nothing yet and needs the thirty-eight doors reduced to
+ * four. For that student it is exactly right, and it stays exactly as it was.
+ *
+ * It is wrong for a junior, and actively harmful for a senior. A twelfth grader
+ * in October does not need to be told to log two activities before the app will
+ * show them the recommender tracker — recommendation letters ARE their October.
+ * `applicationUrgent` was the first patch on this and it only ever covered
+ * seniors, in a handful of rules, with no way to say anything about the two
+ * years in between.
+ *
+ * `openFor` is the general form: a list of grade keys for which a gate is open
+ * from the first second, in addition to whatever `at()` says. It is strictly
+ * additive — there is no `closeFor`, and there can never be one, because a rule
+ * that took a surface away from a student who had earned it would break the
+ * one-way guarantee at the top of this file.
+ *
+ * The shape of the resulting product, by grade:
+ *
+ *   freshman   the ladder, unchanged. Portfolio's front door (overview, the
+ *              college list, activities) is open like it is for everyone; the
+ *              recommenders/interviews/research end of it is still earned.
+ *   sophomore  + activities, opportunities, grades, shadowing hours. The
+ *              record-keeping half of the Portfolio, which is the half a tenth
+ *              grader can genuinely fill in.
+ *   junior     the whole Portfolio, from day one. Junior year IS the
+ *              application year; there is nothing in that tab a junior should
+ *              have to earn access to.
+ *   senior/gap the same, and for a much more urgent reason.
+ */
+const GRADE_KEYS_ALL = ['freshman', 'sophomore', 'junior', 'senior', 'gap'];
+const SOPHOMORE_UP = ['sophomore', 'junior', 'senior', 'gap'];
+const JUNIOR_UP = ['junior', 'senior', 'gap'];
 
 /**
  * Anything a student has done that counts as "using the app". The unlock
@@ -123,13 +167,21 @@ export function studyActions(s) {
  */
 export const UNLOCK_RULES = [
   // ── Top-level pillars ────────────────────────────────────────────────────
-  {
-    id: 'portfolio',
-    label: 'Portfolio',
-    hint: 'Finish one lesson or quiz to start building your application.',
-    at: (s) => studyActions(s) >= 1 || s.applicationUrgent,
-    progress: (s) => [Math.min(studyActions(s), 1), 1],
-  },
+  //
+  // 'portfolio' used to be gated here, on one lesson or quiz. It is not any
+  // more, and the reason is the one thing every new-student review agreed on:
+  // the Portfolio is the half of this product a student can act on with no
+  // prior work at all. Adding the college you already want to go to, and
+  // logging the club you have already been in for two years, are the two
+  // easiest true things a fourteen-year-old can put into this app — and they
+  // are worth far more to every downstream feature than the lesson we were
+  // making them finish first. Gating that behind a study action taught the
+  // wrong lesson twice: that the app is a quiz app, and that the record of your
+  // life is a reward for using it.
+  //
+  // Its INSIDES still ladder, and now they ladder by grade too (see `openFor`).
+  // So a freshman opens Portfolio to a college list, an activity log and their
+  // milestones, and a senior opens it to all of it.
   {
     id: 'plans',
     label: 'Plans',
@@ -239,18 +291,21 @@ export const UNLOCK_RULES = [
   // the student is already on, rather than as a missing pill on a nav row.
   {
     id: 'portfolio/applying:essays',
+    openFor: JUNIOR_UP,
     label: 'Essays',
     hint: 'Add a college to your list — essay prompts come from your schools.',
     at: (s) => s.colleges >= 1,
   },
   {
     id: 'portfolio/resume',
+    openFor: SOPHOMORE_UP,
     label: 'Activities',
     hint: 'Add a college to your list, then log what you\'ve actually done.',
     at: (s) => s.colleges >= 1 || s.activities >= 1,
   },
   {
     id: 'portfolio/opportunities',
+    openFor: SOPHOMORE_UP,
     label: 'Opportunities',
     hint: 'Log one activity — matches are ranked against what you\'ve already done.',
     at: (s) => s.activities >= 1,
@@ -269,24 +324,28 @@ export const UNLOCK_RULES = [
     // where it lands on the real form is genuinely motivating, and that is much
     // earlier than a student would find the screen on their own.
     id: 'portfolio/commonapp',
+    openFor: JUNIOR_UP,
     label: 'Common App',
     hint: 'Log one activity or add a college — then this shows exactly where it lands on the real form.',
     at: (s) => s.activities >= 1 || s.colleges >= 1,
   },
   {
     id: 'portfolio/opportunities:tracked',
+    openFor: SOPHOMORE_UP,
     label: 'What you\u2019re tracking',
     hint: 'Track a program or scholarship and it shows up here with its deadline.',
     at: (s) => s.trackedItems >= 1 || s.activities >= 1,
   },
   {
     id: 'portfolio/applying:calc',
+    openFor: JUNIOR_UP,
     label: 'Chances',
     hint: 'Add a college to your list — the calculator compares you against real schools.',
     at: (s) => s.colleges >= 1,
   },
   {
     id: 'portfolio/applying:aid',
+    openFor: JUNIOR_UP,
     label: 'Financial aid',
     hint: 'Add 2 colleges — aid is a comparison between schools, not a single number.',
     at: (s) => s.colleges >= 2,
@@ -294,6 +353,7 @@ export const UNLOCK_RULES = [
   },
   {
     id: 'portfolio/applying:recommenders',
+    openFor: JUNIOR_UP,
     label: 'Recommenders',
     // Named in the review as a day-one tab that made no sense: you cannot ask
     // for a letter about work you have not logged yet.
@@ -303,6 +363,7 @@ export const UNLOCK_RULES = [
   },
   {
     id: 'portfolio/applying:interview',
+    openFor: JUNIOR_UP,
     label: 'Interviews',
     hint: 'Log 2 activities — interview answers are built from your own experiences.',
     at: (s) => s.activities >= 2 || s.applicationUrgent,
@@ -326,12 +387,14 @@ export const UNLOCK_RULES = [
   // section's unlock condition points.
   {
     id: 'portfolio/resume:academics',
+    openFor: SOPHOMORE_UP,
     label: 'Grades',
     hint: 'Add one college — your GPA is read against the schools you\'re aiming at.',
     at: (s) => s.colleges >= 1 || s.applicationUrgent,
   },
   {
     id: 'portfolio/resume:clinical',
+    openFor: SOPHOMORE_UP,
     label: 'Shadowing & hours',
     // The example the review gave, and the clearest case in the app: the
     // pathway's first lesson is what tells a student what shadowing IS and why
@@ -342,6 +405,7 @@ export const UNLOCK_RULES = [
   },
   {
     id: 'portfolio/resume:research',
+    openFor: JUNIOR_UP,
     label: 'Research',
     hint: 'Log 2 activities — research goes on top of a record, not instead of one.',
     at: (s) => s.activities >= 2 || s.applicationUrgent,
@@ -349,6 +413,7 @@ export const UNLOCK_RULES = [
   },
   {
     id: 'portfolio/resume:credentials',
+    openFor: JUNIOR_UP,
     label: 'Skills & certs',
     hint: 'Log 3 activities — certifications are the last layer of a résumé, not the first.',
     at: (s) => s.activities >= 3 || s.applicationUrgent,
@@ -427,7 +492,12 @@ export function unlockState(user, rawSignals) {
   const open = new Set(stickySet);
   for (const rule of UNLOCK_RULES) {
     let on = false;
-    try { on = !!rule.at(s); } catch { on = false; }
+    // Grade first, and deliberately outside the try: `openFor` is plain data
+    // and cannot throw, so a rule whose `at()` is broken still honors the grade
+    // it was tagged for rather than silently locking a senior out of their own
+    // application. See the header above GRADE_KEYS_ALL.
+    if (rule.openFor && s.gradeStage && rule.openFor.includes(s.gradeStage)) on = true;
+    if (!on) { try { on = !!rule.at(s); } catch { on = false; } }
     if (on) { earned.push(rule.id); open.add(rule.id); }
   }
 
@@ -519,3 +589,27 @@ export function seedExistingAccount(user, signals) {
       : (user.unlockedFeatures || []),
   };
 }
+
+/**
+ * The grades a gate opens on sight for, or null when it has no grade tag.
+ * Exported so a surface can say "this opens junior year" rather than only
+ * "log two activities" — for a tenth grader both are true, and the second one
+ * alone reads as the app not knowing what year it is.
+ */
+export function gradesFor(id) {
+  const r = RULE_BY_ID.get(id);
+  return r?.openFor ? [...r.openFor] : null;
+}
+
+/**
+ * Everything a grade opens that the ladder would not have. The Portfolio's
+ * own "what you can do right now" copy reads this so a junior is told the tab
+ * is fully open BECAUSE they are a junior, rather than being left to notice.
+ */
+export function gradeOpenedIds(gradeStage) {
+  if (!gradeStage) return [];
+  return UNLOCK_RULES.filter((r) => r.openFor?.includes(gradeStage)).map((r) => r.id);
+}
+
+/** Every grade key the ladder knows how to reason about. */
+export const KNOWN_GRADES = GRADE_KEYS_ALL;

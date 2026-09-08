@@ -1291,6 +1291,16 @@ function mergeUserRecord(local, remote) {
   if (local.resourceNotes || remote.resourceNotes) {
     merged.resourceNotes = { ...(remote.resourceNotes || {}), ...(local.resourceNotes || {}) };
   }
+  // `orientation` gets the same object merge rather than the whole-object
+  // overwrite the spread above would give it. The two first-run questions
+  // (src/lib/firstRun.js) are answered one tap apart and can legitimately be
+  // answered on two devices — a student who taps the first on their phone and
+  // finishes on a laptop would otherwise have one of the two answers silently
+  // dropped, and be asked it again. Local still wins per key, which is right:
+  // the device holding the newer answer is the one the student is looking at.
+  if (local.orientation || remote.orientation) {
+    merged.orientation = { ...(remote.orientation || {}), ...(local.orientation || {}) };
+  }
   return merged;
 }
 

@@ -616,6 +616,81 @@ async function checkConcurrency(conn, db) {
 
 // ── Deletion semantics ──────────────────────────────────────────────────────
 
+/**
+ * ── The live-sync trigger reaches every table a client reads back ────────────
+ *
+ * 0027 attaches its version-bump trigger by DISCOVERING tables rather than
+ * listing them, specifically so a table added later cannot be silently missed.
+ * It was silently missing three tables from the day it shipped, because the
+ * predicate itself was the bug: it looked for a `user_id` column, and
+ * parent_links, parent_messages and student_quests name theirs
+ * `student_user_id`. The parent-to-student channel — the one where another
+ * PERSON is waiting — was the only part of the app with no live-sync signal at
+ * all, and nothing anywhere said so.
+ *
+ * That is exactly the shape of failure a build gate exists for: silent, invisible
+ * in review, and only reproducible with two devices and two accounts. So the
+ * discovery rule is asserted here rather than trusted, and the exclusions are
+ * named individually — adding a table to the exclusion list is now a visible
+ * edit to this file rather than an accident of a column name.
+ */
+function checkLiveSyncTriggers(conn, db) {
+  section('Live-sync triggers reach every per-user table');
+
+  // Deliberately excluded, each for a reason stated in 0027/0029.
+  const EXCLUDED = new Set([
+    'user_data_version',   // the counter itself
+    'progress_sync',       // carries its own `rev`; bumping would refetch every few seconds
+    'sessions', 'otp_codes', 'login_attempts', 'email_verifications', // sign-in bookkeeping
+    'safety_events',       // nothing client-facing reads it (0023)
+    'parent_link_events',  // audit trail of parent_links, which is itself covered
+  ]);
+
+  const rows = query(conn, db, `
+    select c.relname,
+           exists (
+             select 1 from pg_trigger t
+             where t.tgrelid = c.oid and not t.tgisinternal
+               and pg_get_triggerdef(t.oid) like '%bump_user_data_version%'
+           ) as has_trigger
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public' and c.relkind = 'r'
+      and exists (
+        select 1 from pg_attribute a
+        where a.attrelid = c.oid and a.attnum > 0 and not a.attisdropped
+          and a.attname in ('user_id', 'student_user_id')
+      )
+  `).split('\n').filter(Boolean).map(line => line.split('|').map(x => x.trim()));
+
+  const missing = rows.filter(([name, has]) => has === 'f' && !EXCLUDED.has(name)).map(([n]) => n);
+  const covered = rows.filter(([, has]) => has === 't').map(([n]) => n);
+
+  assert('every per-user table that is not explicitly excluded has the version trigger',
+    missing.length === 0,
+    missing.length ? `missing on: ${missing.join(', ')} — add to the exclusion list in 0029 (with a reason) or let the discovery loop find it` : '');
+
+  // The regression itself, named: the three tables keyed on student_user_id.
+  for (const t of ['parent_links', 'parent_messages', 'student_quests']) {
+    assert(`${t} (keyed on student_user_id) is covered`, covered.includes(t),
+      'this is the exact gap 0029 exists to close — the parent-to-student channel had no live-sync signal');
+  }
+
+  // …and the exclusions really are excluded, so a future widening of the
+  // predicate cannot quietly start bumping the counter on every debounced push.
+  for (const t of ['progress_sync', 'safety_events', 'parent_link_events']) {
+    assert(`${t} is deliberately NOT triggered`, !covered.includes(t),
+      'bumping from this table would either loop or be pure noise — see the exclusion list in 0029');
+  }
+
+  // The function has to be able to read BOTH column names, or attaching the
+  // trigger to the three tables above would fire it into a no-op every time.
+  const src = query(conn, db, `select pg_get_functiondef('public.bump_user_data_version()'::regprocedure)`);
+  assert('bump_user_data_version() resolves a student id under either column name',
+    src.includes('user_id') && src.includes('student_user_id'),
+    'the trigger would attach and then silently do nothing');
+}
+
 async function checkDeletionSemantics(conn, db) {
   section('Account deletion revokes links instead of erasing them');
 
@@ -851,6 +926,7 @@ await withDatabase(async (conn) => {
   } else {
     checkManifest(conn, db);
     checkFunctionExposure(conn, db);
+    checkLiveSyncTriggers(conn, db);
     checkConstraints(conn, db);
     await checkConcurrency(conn, db);
     await checkDeletionSemantics(conn, db);

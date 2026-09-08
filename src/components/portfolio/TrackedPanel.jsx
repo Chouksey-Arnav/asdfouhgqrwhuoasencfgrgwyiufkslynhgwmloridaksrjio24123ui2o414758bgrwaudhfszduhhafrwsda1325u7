@@ -65,7 +65,7 @@ const LOG_DAYS = 10;
 const FILTER_THRESHOLD = 6;
 
 export default function TrackedPanel({
-  snapshot, loading = false, accent = C.blue, askMedabrain, onOpen, onRefresh,
+  snapshot, loading = false, accent = C.blue, askMedabrain, askAmbient, onOpen, onRefresh,
   pendingEntries = [], trackStatus = {}, isMobile = false, user = null,
 }) {
   const [query, setQuery] = useState('');
@@ -94,8 +94,11 @@ export default function TrackedPanel({
     if (cached) { setAiReport({ loading: false, content: cached, error: null }); return; }
     let cancelled = false;
     setAiReport({ loading: true, content: null, error: null });
-    askMedabrain(buildReportPrompt(report, items))
-      .then((content) => { if (!cancelled) { setCached(key, content); setAiReport({ loading: false, content, error: null }); } })
+    (askAmbient || askMedabrain)(buildReportPrompt(report, items))
+      // A null answer means the ambient budget is spent for today (see
+      // askAmbientMedabrain in App.jsx). That is not an error and must never
+      // render as one — the panel simply has no paragraph today.
+      .then((content) => { if (cancelled) return; if (!content) { setAiReport(null); return; } setCached(key, content); setAiReport({ loading: false, content, error: null }); })
       .catch((err) => { if (!cancelled) setAiReport({ loading: false, content: null, error: err.message }); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- askMedabrain is recreated every render by App.jsx

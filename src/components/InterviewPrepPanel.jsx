@@ -20,7 +20,7 @@ import { scrubThinking } from '../lib/interviewReply';
 import { rateStation } from '../lib/interviewFeedback';
 import { takeInterviewIntent } from '../lib/interviewIntent';
 import * as DB from '../lib/db';
-import { aiLane } from '../lib/aiLane';
+import { postMedabrain } from '../lib/medabrainRequest';
 
 // The rubric itself — the seven-point MMI scale, the AAMC competencies, the band definitions —
 // lives in lib/interviewScore.js and is built by buildRubricPrompt() so the instruction the model
@@ -148,13 +148,11 @@ export default function InterviewPrepPanel({
     const pathLabel = PATHWAY_LABELS[setKey] || pathway?.label || 'General Admissions';
     const framing = `You are rating one practice answer from a high school student (grades 9-12) preparing for college admissions and scholarship interviews — not medical, graduate, or professional-school interviews (never reference the MMI, CASPer, or clinical vignettes). Pathway: ${pathLabel}. Question: "${stdQuestion}". Student's answer: "${answer}".`;
     const system = `${framing}\n\n${buildRubricPrompt({ stationKey: 'standard', hasActor: false })}\n\nThey are a teenager: be blunt about the work and never unkind about the person, and make every criticism carry its fix.`;
-    const r = await fetch('/api/groq', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      // Sized for the thinking as well as the words: on this model family, reasoning tokens come
-      // out of the same allowance, and a budget cut to the length of the visible rating returns an
-      // empty response (or, before api/groq.js was fixed, the raw deliberation).
-      body: JSON.stringify({ system, message: answer, maxTokens: 1400, tier: 'sage', purpose: 'interview', lane: aiLane() }),
+    // maxTokens is sized for the thinking as well as the words: on this model
+    // family, reasoning tokens come out of the same allowance, and a budget cut
+    // to the length of the visible rating returns an empty response.
+    const r = await postMedabrain({
+      system, message: answer, maxTokens: 1400, tier: 'sage', purpose: 'interview',
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d?.error || `Error ${r.status}`);

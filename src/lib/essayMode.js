@@ -42,6 +42,7 @@ import { PROMPT_SECURITY_GUARDRAIL, HONEST_MENTOR_STANCE } from './studentProfil
 import { AI_POLICY_PROMPT_CLAUSE } from './aiPolicy';
 import { MEDICAL_SCOPE_BOUNDARY } from './safety/prompts';
 import { looksLikeGhostwritingRequest, ESSAY_DECLINE_MESSAGE, inspectEssayReply } from '../../api/_lib/essayProseGuard.js';
+import { postMedabrain } from './medabrainRequest';
 
 // Re-exported so essay-mode callers have one import, and so the client and the
 // server are provably using the same predicate rather than two similar ones.
@@ -146,20 +147,15 @@ ${arcSummary}` : '';
  * exists rather than each surface assembling its own fetch.
  */
 export async function askEssayCoach({ message, history = null, system, signal = null }) {
-  const res = await fetch('/api/groq', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      system,
-      message,
-      messages: history,
-      purpose: 'essaycoach',
-      maxTokens: 700,
-      // Slightly below the app default: a question that cuts is a precision
-      // instrument, and sampling noise here reads as the coach wandering.
-      temperature: 0.6,
-      noCache: true,
-    }),
+  const res = await postMedabrain({
+    system,
+    message,
+    messages: history,
+    purpose: 'essaycoach',
+    maxTokens: 700,
+    // temperature slightly below the app default: a question that cuts is a
+    // precision instrument, and sampling noise here reads as the coach wandering.
+    extra: { temperature: 0.6, noCache: true },
     signal,
   });
   const data = await res.json().catch(() => ({}));
